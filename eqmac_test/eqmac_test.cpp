@@ -45,9 +45,17 @@ int main(int argc, char** argv)
 
     int spawn_info_address = player_spawn_info;
 
-    for (int i = 0; i < 4096; i++)
+    int spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
+
+    spawn_info_address = spawn_next_spawn_info;
+
+    //spawn_prev_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_PREV_SPAWN_INFO_POINTER, 4);
+
+    //spawn_info_address = spawn_prev_spawn_info;
+
+    for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
     {
-        int spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
+        spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
 
         if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
         {

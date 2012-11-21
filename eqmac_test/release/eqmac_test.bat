@@ -1,0 +1,2 @@
+eqmac_test
+pause

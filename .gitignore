@@ -2,6 +2,8 @@
 ## Eclipse
 #################
 
+*.exe
+
 *.pydevproject
 .project
 .metadata
@@ -43,7 +45,7 @@ local.properties
 
 # Build results
 [Dd]ebug/
-[Rr]elease/
+#[Rr]elease/
 *_i.c
 *_p.c
 *.ilk

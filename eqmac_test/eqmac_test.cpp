@@ -49,10 +49,6 @@ int main(int argc, char** argv)
 
     spawn_info_address = spawn_next_spawn_info;
 
-    //spawn_prev_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_PREV_SPAWN_INFO_POINTER, 4);
-
-    //spawn_info_address = spawn_prev_spawn_info;
-
     for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
     {
         spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
@@ -64,7 +60,9 @@ int main(int argc, char** argv)
 
         std::string spawn_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40);
 
-        std::cout << "Spawn Name: " << spawn_name << " " << "(" << "0x" << std::hex << spawn_info_address << std::dec << ")" << std::endl;
+        BYTE spawn_type = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_TYPE);
+
+        std::cout << "Spawn Name: " << spawn_name << " " << "[" << std::dec << spawn_type << "]" << " " << "(" << "0x" << std::hex << spawn_info_address << std::dec << ")" << std::endl;
 
         num_spawns++;
 

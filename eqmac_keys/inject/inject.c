@@ -25,14 +25,16 @@ int file_exists(char *filename)
 
 void enable_debug_privileges()
 {
-    HANDLE hToken;
+    HANDLE token;
 
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
     {
         TOKEN_PRIVILEGES tp;
+        TOKEN_PRIVILEGES tp_previous;
+
+        DWORD cb_previous = sizeof(TOKEN_PRIVILEGES);
+
         LUID luid;
-        TOKEN_PRIVILEGES tpPrevious;
-        DWORD cbPrevious = sizeof(TOKEN_PRIVILEGES);
 
         if (LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid))
         {
@@ -42,31 +44,31 @@ void enable_debug_privileges()
 
             AdjustTokenPrivileges
             (
-                hToken,
+                token,
                 FALSE,
                 &tp,
                 sizeof(TOKEN_PRIVILEGES),
-                &tpPrevious,
-                &cbPrevious
+                &tp_previous,
+                &cb_previous
             );
 
-            tpPrevious.PrivilegeCount            = 1;
-            tpPrevious.Privileges[0].Luid        = luid;
-            tpPrevious.Privileges[0].Attributes |= (SE_PRIVILEGE_ENABLED);
+            tp_previous.PrivilegeCount            = 1;
+            tp_previous.Privileges[0].Luid        = luid;
+            tp_previous.Privileges[0].Attributes |= (SE_PRIVILEGE_ENABLED);
     
             AdjustTokenPrivileges
             (
-                hToken,
+                token,
                 FALSE,
-                &tpPrevious,
-                cbPrevious,
+                &tp_previous,
+                cb_previous,
                 NULL,
                 NULL
             );
         }
     }
 
-    CloseHandle(hToken);
+    CloseHandle(token);
 }
 
 int main()

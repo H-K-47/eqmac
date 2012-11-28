@@ -38,6 +38,27 @@
           <ZeroTerminate>1</ZeroTerminate>
           <Address>007987E4</Address>
         </CheatEntry>
+        <CheatEntry>
+          <ID>117</ID>
+          <Description>"Safe Point Y"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>0079896C</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>118</ID>
+          <Description>"Safe Point X"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>00798970</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>119</ID>
+          <Description>"Safe Point Z"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>00798974</Address>
+        </CheatEntry>
       </CheatEntries>
     </CheatEntry>
     <CheatEntry>
@@ -109,214 +130,121 @@
       </CheatEntries>
     </CheatEntry>
     <CheatEntry>
-      <ID>76</ID>
-      <Description>"Spawn Info Begin"</Description>
-      <ShowAsHex>1</ShowAsHex>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>000000</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>9</ID>
-      <Description>"Spawn Info"</Description>
-      <ShowAsHex>1</ShowAsHex>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>eqgame.exe+3F94CC</Address>
-      <CheatEntries>
-        <CheatEntry>
-          <ID>16</ID>
-          <Description>"0x01 Name"</Description>
-          <Color>80000008</Color>
-          <VariableType>String</VariableType>
-          <Length>40</Length>
-          <Unicode>0</Unicode>
-          <ZeroTerminate>1</ZeroTerminate>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>1</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>39</ID>
-          <Description>"0x?? Last Name / Title"</Description>
-          <Color>80000008</Color>
-          <VariableType>String</VariableType>
-          <Length>20</Length>
-          <Unicode>0</Unicode>
-          <ZeroTerminate>1</ZeroTerminate>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>9999</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>37</ID>
-          <Description>"0x48 Y"</Description>
-          <Color>80000008</Color>
-          <VariableType>Float</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>48</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>18</ID>
-          <Description>"0x4C X"</Description>
-          <Color>80000008</Color>
-          <VariableType>Float</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>4C</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>17</ID>
-          <Description>"0x50 Z"</Description>
-          <Color>80000008</Color>
-          <VariableType>Float</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>50</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>20</ID>
-          <Description>"0x54 Heading"</Description>
-          <Color>80000008</Color>
-          <VariableType>Float</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>54</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>19</ID>
-          <Description>"0x5C Movement Speed"</Description>
-          <Color>80000008</Color>
-          <VariableType>Float</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>5C</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>24</ID>
-          <Description>"0x78 Next Spawn Info Pointer"</Description>
-          <ShowAsHex>1</ShowAsHex>
-          <Color>80000008</Color>
-          <VariableType>4 Bytes</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>78</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>72</ID>
-          <Description>"0x7C Prev Spawn Info Pointer"</Description>
-          <ShowAsHex>1</ShowAsHex>
-          <Color>80000008</Color>
-          <VariableType>4 Bytes</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>7C</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>71</ID>
-          <Description>"0x80 ??"</Description>
-          <ShowAsHex>1</ShowAsHex>
-          <Color>80000008</Color>
-          <VariableType>4 Bytes</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>80</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>70</ID>
-          <Description>"0x84 Actor Info Pointer"</Description>
-          <ShowAsHex>1</ShowAsHex>
-          <Color>80000008</Color>
-          <VariableType>4 Bytes</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>84</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>58</ID>
-          <Description>"0x88 Char Info Pointer"</Description>
-          <ShowAsHex>1</ShowAsHex>
-          <Color>80000008</Color>
-          <VariableType>4 Bytes</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>88</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>59</ID>
-          <Description>"0x8C ??"</Description>
-          <ShowAsHex>1</ShowAsHex>
-          <Color>80000008</Color>
-          <VariableType>Array of byte</VariableType>
-          <ByteLength>4</ByteLength>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>8C</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>51</ID>
-          <Description>"0xAD Level"</Description>
-          <Color>80000008</Color>
-          <VariableType>4 Bytes</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>AD</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>10</ID>
-          <Description>"0xB1 Standing State"</Description>
-          <ShowAsHex>1</ShowAsHex>
-          <Color>80000008</Color>
-          <VariableType>Byte</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>B1</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>45</ID>
-          <Description>"0x98 HP Max"</Description>
-          <Color>80000008</Color>
-          <VariableType>4 Bytes</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>98</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>46</ID>
-          <Description>"0x9C HP Current"</Description>
-          <Color>80000008</Color>
-          <VariableType>4 Bytes</VariableType>
-          <Address>eqgame.exe+3F94CC</Address>
-          <Offsets>
-            <Offset>9C</Offset>
-          </Offsets>
-        </CheatEntry>
-      </CheatEntries>
-    </CheatEntry>
-    <CheatEntry>
       <ID>55</ID>
       <Description>"unknown Spawn Info"</Description>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>eqgame.exe+3F94E0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>108</ID>
+      <Description>"Player Spawn Info"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3F94CC</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>9</ID>
+      <Description>"Target Actor Info"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3F94eC</Address>
+      <Offsets>
+        <Offset>84</Offset>
+      </Offsets>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>110</ID>
+          <Description>"0x184 Animation"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>184</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>114</ID>
+          <Description>"0x244 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>244</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>113</ID>
+          <Description>"0x248 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>248</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>112</ID>
+          <Description>"0x260 this == 2 if both Holding"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>260</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>115</ID>
+          <Description>"0x264 Is Holding Secondary"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>264</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>116</ID>
+          <Description>"0x268 Is Holding Primary"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>268</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>111</ID>
+          <Description>"0x32D Is Not Moving"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>32D</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>109</ID>
+          <Description>"0x438 Is LFG"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>438</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
     </CheatEntry>
     <CheatEntry>
       <ID>53</ID>
@@ -327,13 +255,77 @@
       <Address>eqgame.exe+3F94EC</Address>
       <CheatEntries>
         <CheatEntry>
-          <ID>73</ID>
-          <Description>"0x44 ??"</Description>
+          <ID>92</ID>
+          <Description>"0x01 Name"</Description>
           <Color>80000008</Color>
-          <VariableType>Byte</VariableType>
+          <VariableType>String</VariableType>
+          <Length>40</Length>
+          <Unicode>0</Unicode>
+          <ZeroTerminate>1</ZeroTerminate>
           <Address>eqgame.exe+3F94EC</Address>
           <Offsets>
-            <Offset>44</Offset>
+            <Offset>1</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>97</ID>
+          <Description>"0x48 Y"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>48</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>98</ID>
+          <Description>"0x4C X"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>4C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>99</ID>
+          <Description>"0x50 Z"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>50</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>100</ID>
+          <Description>"0x54 Heading"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>54</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>101</ID>
+          <Description>"0x5C Movement Speed"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>5C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>102</ID>
+          <Description>"0x78 Next Spawn Info Pointer"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>78</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -359,7 +351,53 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>103</ID>
+          <Description>"0x84 Actor Info Pointer"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>104</ID>
+          <Description>"0x88 Char Info Pointer"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>88</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>105</ID>
+          <Description>"0x8C ??"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Array of byte</VariableType>
+          <ByteLength>4</ByteLength>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>8C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>81</ID>
+          <Description>"0x94 ??"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Array of byte</VariableType>
+          <ByteLength>4</ByteLength>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>94</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>121</ID>
           <Description>"0xA8 Type"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
@@ -429,6 +467,26 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>95</ID>
+          <Description>"0x98 HP Max"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>98</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>96</ID>
+          <Description>"0x9C HP Current"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>9C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>85</ID>
           <Description>"0x108 Is Linkdead"</Description>
           <Color>80000008</Color>
@@ -436,6 +494,39 @@
           <Address>eqgame.exe+3F94EC</Address>
           <Offsets>
             <Offset>108</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>93</ID>
+          <Description>"0x10C ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>10C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>94</ID>
+          <Description>"0x122 Is AFK"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>11C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>91</ID>
+          <Description>"0x12C Last Name / Title"</Description>
+          <Color>80000008</Color>
+          <VariableType>String</VariableType>
+          <Length>32</Length>
+          <Unicode>0</Unicode>
+          <ZeroTerminate>1</ZeroTerminate>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>12C</Offset>
           </Offsets>
         </CheatEntry>
       </CheatEntries>
@@ -466,7 +557,7 @@
       <CheatEntries>
         <CheatEntry>
           <ID>23</ID>
-          <Description>"Timer"</Description>
+          <Description>"0xC8 Timer"</Description>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+3F9510</Address>
@@ -496,7 +587,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>62</ID>
-          <Description>"Is Stunned"</Description>
+          <Description>"0x3440 Is Stunned"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F9510</Address>
@@ -620,11 +711,11 @@
       <Address>eqgame.exe+230870</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>84</ID>
-      <Description>"No description"</Description>
+      <ID>120</ID>
+      <Description>"No Fall Damage (Value = 151)"</Description>
       <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>04CFFE48</Address>
+      <VariableType>Byte</VariableType>
+      <Address>007B9648</Address>
     </CheatEntry>
   </CheatEntries>
   <CheatCodes>
@@ -736,6 +827,38 @@
         <Byte>04</Byte>
         <Byte>00</Byte>
         <Byte>56</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Fall Damage</Description>
+      <Address>004BFF53</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>BFF53</ModuleNameOffset>
+      <Before>
+        <Byte>F6</Byte>
+        <Byte>3B</Byte>
+        <Byte>C3</Byte>
+        <Byte>74</Byte>
+        <Byte>0E</Byte>
+      </Before>
+      <Actual>
+        <Byte>81</Byte>
+        <Byte>3D</Byte>
+        <Byte>48</Byte>
+        <Byte>96</Byte>
+        <Byte>7B</Byte>
+        <Byte>00</Byte>
+        <Byte>97</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>75</Byte>
+        <Byte>02</Byte>
+        <Byte>33</Byte>
+        <Byte>F6</Byte>
+        <Byte>66</Byte>
       </After>
     </CodeEntry>
   </CheatCodes>

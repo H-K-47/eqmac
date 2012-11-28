@@ -12,9 +12,11 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME  0x040 // STRING [0x20]
 #define EVERQUEST_OFFSET_ZONE_INFO_LONG_NAME   0x060 // STRING [0x80]
 
-#define EVERQUEST_CHAR_INFO_POINTER               0x007F94E8 // POINTER to STRUCT
-#define EVERQUEST_OFFSET_CHAR_INFO_NAME           0x0002 // STRING [0x40]
-#define EVERQUEST_OFFSET_CHAR_INFO_STANDING_STATE 0x0B64 // BYTE ; EVERQUEST_STANDING_STATE_x
+#define EVERQUEST_CHAR_INFO_POINTER                   0x007F94E8 // POINTER to STRUCT
+#define EVERQUEST_OFFSET_CHAR_INFO_NAME               0x0002 // STRING [0x40]
+#define EVERQUEST_OFFSET_CHAR_INFO_IS_STUNNED         0x0098 // BYTE
+#define EVERQUEST_OFFSET_CHAR_INFO_STANDING_STATE     0x0B64 // BYTE ; EVERQUEST_STANDING_STATE_x
+#define EVERQUEST_OFFSET_CHAR_INFO_SPAWN_INFO_POINTER 0x0D74 // POINTER to STRUCT
 
 #define EVERQUEST_SPAWN_INFO_BEGIN_POINTER 0x00000000 // POINTER to STRUCT
 
@@ -25,7 +27,6 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_SPAWN_INFO_NULL 0x00000000
 
 #define EVERQUEST_OFFSET_SPAWN_INFO_NAME                    0x0001 // STRING [0x40]
-#define EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME               0xFFFF // STRING [0x20] ; title for NPCs
 #define EVERQUEST_OFFSET_SPAWN_INFO_Y                       0x0048 // FLOAT
 #define EVERQUEST_OFFSET_SPAWN_INFO_X                       0x004C // FLOAT
 #define EVERQUEST_OFFSET_SPAWN_INFO_Z                       0x0050 // FLOAT
@@ -38,14 +39,26 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_OFFSET_SPAWN_INFO_TYPE                    0x00A8 // BYTE ; EVERQUEST_SPAWN_INFO_TYPE_x
 #define EVERQUEST_OFFSET_SPAWN_INFO_CLASS                   0x00A9 // BYTE ; EVERQUEST_CLASS_x
 #define EVERQUEST_OFFSET_SPAWN_INFO_RACE                    0x00AA // BYTE ; EVERQUEST_RACE_x
-#define EVERQUEST_OFFSET_SPAWN_INFO_LEVEL                   0x00AD // BYTE
+#define EVERQUEST_OFFSET_SPAWN_INFO_LEVEL                   0x00AD // DWORD
 #define EVERQUEST_OFFSET_SPAWN_INFO_STANDING_STATE          0x00B1 // BYTE ; EVERQUEST_STANDING_STATE_x
+#define EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX                  0x0098 // DWORD
+#define EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT              0x009C // DWORD
+#define EVERQUEST_OFFSET_SPAWN_INFO_IS_LINKDEAD             0x0108 // BYTE
+#define EVERQUEST_OFFSET_SPAWN_INFO_IS_AFK                  0x0122 // BYTE
+#define EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME               0x012C // STRING [0x20]
 
 #define EVERQUEST_SPAWNS_MAX 4096
 
 #define EVERQUEST_SPAWN_INFO_TYPE_PLAYER 0
 #define EVERQUEST_SPAWN_INFO_TYPE_NPC    1
 #define EVERQUEST_SPAWN_INFO_TYPE_CORPSE 2
+
+#define EVERQUEST_OFFSET_ACTOR_INFO_ANIMATION            0x0184 // BYTE
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH      0x0260 // DWORD
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY 0x0264 // DWORD
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY   0x0268 // DWORD
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_NOT_MOVING        0x032D // BYTE
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_LFG               0x0438 // BYTE
 
 #define EVERQUEST_RACE_UNKNOWN   0
 #define EVERQUEST_RACE_HUMAN     1
@@ -83,6 +96,12 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_CLASS_BEASTLORD    15
 #define EVERQUEST_CLASS_BERSERKER    16
 
+#define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT       0x004B459C
+#define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE 0x007F9510
+
+//typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
+//static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
+
 std::string everquest_get_zone_player_name(memory &memory)
 {
     return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME, 0x40);
@@ -108,10 +127,25 @@ int everquest_get_player_spawn_info(memory &memory)
     return memory.read_bytes(EVERQUEST_PLAYER_SPAWN_INFO_POINTER, 4);
 }
 
+int everquest_get_player_actor_info(memory &memory)
+{
+    int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+    return memory.read_bytes(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER, 4);
+}
+
 int everquest_get_target_spawn_info(memory &memory)
 {
     return memory.read_bytes(EVERQUEST_TARGET_SPAWN_INFO_POINTER, 4);
 }
+
+int everquest_get_target_actor_info(memory &memory)
+{
+    int target_spawn_info = everquest_get_target_spawn_info(memory);
+
+    return memory.read_bytes(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER, 4);
+}
+
 
 int everquest_get_merchant_spawn_info(memory &memory)
 {

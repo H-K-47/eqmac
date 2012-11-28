@@ -28,6 +28,13 @@ IniRead, resolution_height, %ini_file%, Resolution, Height
 
 GroupAdd, everquest, %EVERQUEST_TITLE%
 
+Hotkey, IfWinActive, %EVERQUEST_TITLE%
+Hotkey, XButton1, do_multi
+Hotkey, XButton2, do_sit
+Hotkey, MButton,  do_heal
+
+Return
+
 ; press tilde to switch between client windows (EQWindows)
 `::
 ;WinActivateBottom, %EVERQUEST_TITLE%
@@ -38,7 +45,7 @@ SendInput, {Alt down}
 SendInput, {Alt up}
 Return
 
-~XButton1::
+do_multi:
 Loop, 6
 {
     SendInput, 0
@@ -48,7 +55,7 @@ Loop, 6
 }
 Return
 
-~XButton2::
+do_sit:
 Loop, 6
 {
     SendInput, 5
@@ -58,7 +65,7 @@ Loop, 6
 }
 Return
 
-MButton::
+do_heal:
 Loop, 6
 {
     SendInput, 8

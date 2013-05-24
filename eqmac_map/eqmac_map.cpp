@@ -67,6 +67,21 @@ bool window_always_on_top = false;
 
 bool window_start_maximized = false;
 
+int menu_id = 0;
+
+int menu_value = -1;
+
+int menu_num_items = -1;
+
+bool menu_in_use = false;
+
+const int MENU_APP_EXIT                   = 0;
+const int MENU_MAP_DRAW_INFO_TEXT_TOGGLE  = 1;
+const int MENU_MAP_DRAW_LINES_TOGGLE      = 2;
+const int MENU_MAP_DRAW_POINTS_TOGGLE     = 3;
+const int MENU_MAP_DRAW_SPAWNS_TOGGLE     = 4;
+const int MENU_MAP_DRAW_SPAWN_LIST_TOGGLE = 5;
+
 bool mouse_dragging = false;
 
 int mouse_dragging_start_x = 0;
@@ -1417,6 +1432,85 @@ void hotkeys(int key, int x, int y)
     }  
 }
 
+void menu(int value)
+{
+    menu_value = value;
+
+    switch (value)
+    {
+        case MENU_APP_EXIT:
+            glutDestroyWindow(window_id);
+            exit(0);
+            break;
+
+        case MENU_MAP_DRAW_INFO_TEXT_TOGGLE:
+            map_draw_info_text_toggle();
+            break;
+
+        case MENU_MAP_DRAW_LINES_TOGGLE:
+            map_draw_lines_toggle();
+            break;
+
+        case MENU_MAP_DRAW_POINTS_TOGGLE:
+            map_draw_points_toggle();
+            break;
+
+        case MENU_MAP_DRAW_SPAWNS_TOGGLE:
+            map_draw_spawns_toggle();
+            break;
+
+        case MENU_MAP_DRAW_SPAWN_LIST_TOGGLE:
+            map_draw_spawn_list_toggle();
+            break;
+    }
+
+    glutPostRedisplay();
+} 
+void menu_create()
+{
+    menu_id = glutCreateMenu(menu);
+
+    glutSetMenu(menu_id);
+
+    //glutSetMenuFont(menu_id, font_name); broken
+
+    glutAddMenuEntry("Information Text (F1)",                    MENU_MAP_DRAW_INFO_TEXT_TOGGLE);
+    glutAddMenuEntry("Lines            (F2)",                    MENU_MAP_DRAW_LINES_TOGGLE);
+    glutAddMenuEntry("Points           (F3)",                    MENU_MAP_DRAW_POINTS_TOGGLE);
+    glutAddMenuEntry("Spawns           (F4)",                    MENU_MAP_DRAW_SPAWNS_TOGGLE);
+    glutAddMenuEntry("----------------------------", -1);
+    glutAddMenuEntry("Spawn List       (Backspace)",             MENU_MAP_DRAW_SPAWN_LIST_TOGGLE);
+    glutAddMenuEntry("----------------------------", -1);
+    glutAddMenuEntry("Exit",                                     MENU_APP_EXIT);
+
+    menu_num_items = glutGet(GLUT_MENU_NUM_ITEMS);
+
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
+void menu_destroy()
+{
+    glutDestroyMenu(menu_id);
+}
+
+void menu_recreate()
+{
+    menu_destroy();
+    menu_create();
+}
+
+void menu_status(int status, int x, int y)
+{
+    if (status == GLUT_MENU_IN_USE)
+    {
+        menu_in_use = true;
+    }
+    else
+    {
+        menu_in_use = false;
+    }
+}
+
 void mouse(int button, int state, int x, int y)
 {
     if (state == GLUT_UP)
@@ -1448,11 +1542,13 @@ void mouse(int button, int state, int x, int y)
         SetCursor(LoadCursor(NULL, IDC_HAND));
     }
 
+/*
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
     {
         map_offset_x += (map_origin_x - x) * map_zoom;
         map_offset_y += (map_origin_y - y) * map_zoom;
     }
+*/
 
     if (button == GLUT_MIDDLE_BUTTON && state == GLUT_UP)
     {
@@ -2250,6 +2346,8 @@ int main(int argc, char** argv)
 
     window_hwnd = FindWindow("FREEGLUT", application_name.c_str());
 
+    menu_create();
+
     parse_ini(ini_file);
 
     glutDisplayFunc(render);
@@ -2260,6 +2358,7 @@ int main(int argc, char** argv)
     glutMouseFunc(mouse);
     glutMouseWheelFunc(mouse_wheel);
     glutMotionFunc(motion);
+    glutMenuStatusFunc(menu_status);
 
     glutTimerFunc(100,  update_process, 0);
     glutTimerFunc(1000, update_zone,    0);

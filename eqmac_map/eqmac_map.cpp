@@ -75,12 +75,20 @@ int menu_num_items = -1;
 
 bool menu_in_use = false;
 
-const int MENU_APP_EXIT                   = 0;
-const int MENU_MAP_DRAW_INFO_TEXT_TOGGLE  = 1;
-const int MENU_MAP_DRAW_LINES_TOGGLE      = 2;
-const int MENU_MAP_DRAW_POINTS_TOGGLE     = 3;
-const int MENU_MAP_DRAW_SPAWNS_TOGGLE     = 4;
-const int MENU_MAP_DRAW_SPAWN_LIST_TOGGLE = 5;
+enum menu_value_t
+{
+    MENU_APP_EXIT,
+    MENU_MAP_DRAW_INFO_TEXT_TOGGLE,
+    MENU_MAP_DRAW_LINES_TOGGLE,
+    MENU_MAP_DRAW_POINTS_TOGGLE,
+    MENU_MAP_DRAW_SPAWNS_TOGGLE,
+    MENU_PARSE_INI_FILES,
+    MENU_MAP_DRAW_SPAWN_TYPE_PLAYER_TOGGLE,
+    MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE,
+    MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE,
+    MENU_MAP_DRAW_SPAWN_LIST_TOGGLE,
+    MENU_MAP_DRAW_FPS_TOGGLE,
+};
 
 bool mouse_dragging = false;
 
@@ -445,6 +453,92 @@ void parse_ini(std::string ini_filename)
     }
 }
 
+void parse_ini_files()
+{
+    parse_ini(ini_file);
+    parse_ini(map_zone_ini_file.str());
+}
+
+void draw_color_black()
+{
+    glColor3ub(0, 0, 0);
+}
+
+void draw_color_white()
+{
+    glColor3ub(255, 255, 255);
+}
+
+void draw_color_128()
+{
+    glColor3ub(128, 128, 128);
+}
+
+void draw_color_64()
+{
+    glColor3ub(64, 64, 64);
+}
+
+void draw_color_red()
+{
+    glColor3ub(255, 0, 0);
+}
+
+void draw_color_green()
+{
+    glColor3ub(0, 255, 0);
+}
+
+void draw_color_blue()
+{
+    glColor3ub(0, 0, 255);
+}
+
+void draw_color_yellow()
+{
+    glColor3ub(255, 255, 0);
+}
+
+void draw_color_magenta()
+{
+    glColor3ub(255, 0, 255);
+}
+
+void draw_color_teal()
+{
+    glColor3ub(0, 255, 255);
+}
+
+void draw_color_pink()
+{
+    glColor3ub(255, 128, 255);
+}
+
+void draw_color_fuschia()
+{
+    glColor3ub(255, 0, 128);
+}
+
+void draw_color_orange()
+{
+    glColor3ub(255, 128, 0);
+}
+
+void draw_color_purple()
+{
+    glColor3ub(128, 0, 255);
+}
+
+void draw_color_lime()
+{
+    glColor3ub(128, 255, 0);
+}
+
+void draw_color_brown()
+{
+    glColor3ub(128, 64, 0);
+}
+
 void draw_bitmap_characters(float x, float y, void *font, std::string text)
 {
     glRasterPos2f(x, y);
@@ -732,19 +826,19 @@ void draw_spawn_list()
         switch (spawn_type)
         {
             case EVERQUEST_SPAWN_INFO_TYPE_PLAYER:
-                glColor3ub(255, 0, 0);
+                draw_color_red();
                 break;
 
             case EVERQUEST_SPAWN_INFO_TYPE_NPC:
-                glColor3ub(255, 255, 255);
+                draw_color_white();
                 break;
 
             case EVERQUEST_SPAWN_INFO_TYPE_CORPSE:
-                glColor3ub(255, 255, 0);
+                draw_color_yellow();
                 break;
 
             default:
-                glColor3ub(255, 255, 255);
+                draw_color_white();
         }
 
         draw_bitmap_string(offset_x, offset_y, font_name, spawn_list_text.str());
@@ -766,7 +860,7 @@ void draw_spawn_list()
             std::stringstream spawn_count_text;
             spawn_count_text << "Total Spawns: " << spawn_count_total;
 
-            glColor3ub(255, 0, 255);
+            draw_color_magenta();
 
             draw_bitmap_string(offset_x, offset_y, font_name, spawn_count_text.str());
         }
@@ -830,6 +924,11 @@ void map_draw_spawn_type_corpse_toggle()
     toggle_bool(map_draw_spawn_type_corpse);
 }
 
+void map_draw_fps_toggle()
+{
+    toggle_bool(map_draw_fps);
+}
+
 void map_center()
 {
     map_offset_x = 0;
@@ -869,6 +968,12 @@ void map_zoom_in()
 void map_zoom_out()
 {
     map_zoom += map_zoom_multiplier * map_zoom;
+}
+
+void map_reset()
+{
+    map_zoom_reset();
+    map_center();
 }
 
 void map_max_z_increase()
@@ -1225,8 +1330,8 @@ void update_spawns(int value)
 void keyboard(unsigned char key, int x, int y)
 {
     //std::stringstream key_buffer;
-    //key_buffer << "Key: " << (int)key;
-    //MessageBox(NULL, key_buffer.str().c_str(), "key", MB_OK | MB_ICONINFORMATION);
+    //key_buffer << "key: " << (int)key;
+    //MessageBox(NULL, key_buffer.str().c_str(), "keyboard", MB_OK | MB_ICONINFORMATION);
 
     switch (key)
     {
@@ -1236,13 +1341,11 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
         case 8: // Backspace
-            //glutFullScreenToggle(); // crashes eqw
             map_draw_spawn_list_toggle();
             break;
 
         case 32: // Space
-            map_zoom_reset();
-            map_center();
+            map_reset();
             break;
 
         case 119: // w
@@ -1262,11 +1365,11 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
         case 48: // 0
-            map_center();
+            map_zoom = 10.0;
             break;
 
         case 49: // 1
-            map_zoom = 1.0;
+            map_zoom_reset();
             break;
 
         case 50: // 2
@@ -1302,7 +1405,7 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
         case 13: // Enter
-            map_zoom_reset();
+            map_center();
             break;
 
         case 43: // Numpad Add
@@ -1357,8 +1460,7 @@ void hotkeys(int key, int x, int y)
             break;
 
         case GLUT_KEY_F5:
-            parse_ini(ini_file);
-            parse_ini(map_zone_ini_file.str());
+            parse_ini_files();
             break;
 
         case GLUT_KEY_F6:
@@ -1374,6 +1476,7 @@ void hotkeys(int key, int x, int y)
             break;
 
         case GLUT_KEY_F9:
+            //glutFullScreenToggle(); // crashes eqw
             map_draw_spawn_list_toggle();
             break;
 
@@ -1382,13 +1485,12 @@ void hotkeys(int key, int x, int y)
             break;
 
         case GLUT_KEY_F11:
-            //glutFullScreenToggle(); // crashes eqw
             spawn_line_toggle();
             break;
 
-        //case GLUT_KEY_F12: // broken, does not work
-            //window_always_on_top_toggle();
-            //break;
+        case GLUT_KEY_F12:
+            window_always_on_top_toggle();
+            break;
 
         case GLUT_KEY_UP:
             map_scroll_up();
@@ -1426,7 +1528,7 @@ void hotkeys(int key, int x, int y)
             map_max_z_increase();
             break;
 
-        //case GLUT_KEY_DELETE: // broken, does not work
+        //case GLUT_KEY_DELETE: // delete key not available to hotkeys function, moved to keyboard function
             //map_max_z_decrease();
             //break;
     }  
@@ -1459,29 +1561,66 @@ void menu(int value)
             map_draw_spawns_toggle();
             break;
 
+        case MENU_PARSE_INI_FILES:
+            parse_ini_files();
+            break;
+
+        case MENU_MAP_DRAW_SPAWN_TYPE_PLAYER_TOGGLE:
+            map_draw_spawn_type_player_toggle();
+            break;
+
+        case MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE:
+            map_draw_spawn_type_npc_toggle();
+            break;
+
+        case MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE:
+            map_draw_spawn_type_corpse_toggle();
+            break;
+
         case MENU_MAP_DRAW_SPAWN_LIST_TOGGLE:
             map_draw_spawn_list_toggle();
+            break;
+
+        case MENU_MAP_DRAW_FPS_TOGGLE:
+            map_draw_fps_toggle();
             break;
     }
 
     glutPostRedisplay();
-} 
+}
+
+void menu_add_separator()
+{
+    std::string menu_separator = "-------------------------------------";
+
+    glutAddMenuEntry(menu_separator.c_str(), -1);
+}
+
 void menu_create()
 {
     menu_id = glutCreateMenu(menu);
 
     glutSetMenu(menu_id);
 
-    //glutSetMenuFont(menu_id, font_name); broken
+    // glutSetMenuFont(menu_id, font_name); // broken, glutSetMenuFont function not included
 
-    glutAddMenuEntry("Information Text (F1)",                    MENU_MAP_DRAW_INFO_TEXT_TOGGLE);
-    glutAddMenuEntry("Lines            (F2)",                    MENU_MAP_DRAW_LINES_TOGGLE);
-    glutAddMenuEntry("Points           (F3)",                    MENU_MAP_DRAW_POINTS_TOGGLE);
-    glutAddMenuEntry("Spawns           (F4)",                    MENU_MAP_DRAW_SPAWNS_TOGGLE);
-    glutAddMenuEntry("----------------------------", -1);
-    glutAddMenuEntry("Spawn List       (Backspace)",             MENU_MAP_DRAW_SPAWN_LIST_TOGGLE);
-    glutAddMenuEntry("----------------------------", -1);
-    glutAddMenuEntry("Exit",                                     MENU_APP_EXIT);
+    glutAddMenuEntry("Information Text    (F1)",                 MENU_MAP_DRAW_INFO_TEXT_TOGGLE);
+    menu_add_separator();
+    glutAddMenuEntry("Lines               (F2)",                 MENU_MAP_DRAW_LINES_TOGGLE);
+    glutAddMenuEntry("Points              (F3)",                 MENU_MAP_DRAW_POINTS_TOGGLE);
+    glutAddMenuEntry("Spawns              (F4)",                 MENU_MAP_DRAW_SPAWNS_TOGGLE);
+    menu_add_separator();
+    glutAddMenuEntry("Reload Config Files (F5)",                 MENU_PARSE_INI_FILES);
+    menu_add_separator();
+    glutAddMenuEntry("Players             (F6)",                 MENU_MAP_DRAW_SPAWN_TYPE_PLAYER_TOGGLE);
+    glutAddMenuEntry("NPCs                (F7)",                 MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE);
+    glutAddMenuEntry("Corpses             (F8)",                 MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE);
+    menu_add_separator();
+    glutAddMenuEntry("Spawn List          (F9 or Backspace)",    MENU_MAP_DRAW_SPAWN_LIST_TOGGLE);
+    menu_add_separator();
+    glutAddMenuEntry("Frames Per Second",                        MENU_MAP_DRAW_FPS_TOGGLE);
+    menu_add_separator();
+    glutAddMenuEntry("Exit                (Escape)",             MENU_APP_EXIT);
 
     menu_num_items = glutGet(GLUT_MENU_NUM_ITEMS);
 
@@ -1535,6 +1674,7 @@ void mouse(int button, int state, int x, int y)
         mouse_dragging = true;
     }
 
+/*
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
     {
         //glutSetCursor(GLUT_CURSOR_CROSSHAIR);
@@ -1542,7 +1682,6 @@ void mouse(int button, int state, int x, int y)
         SetCursor(LoadCursor(NULL, IDC_HAND));
     }
 
-/*
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_UP)
     {
         map_offset_x += (map_origin_x - x) * map_zoom;
@@ -1606,9 +1745,30 @@ void render()
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    if (memory.get_process_hwnd() == NULL)
+    {
+        draw_color_magenta();
+
+        std::string error_text = "ERROR: EverQuest window not found!";
+
+        draw_bitmap_string
+        (
+            (window_width  / 2) - (glutBitmapLength(font_name, (unsigned char*)error_text.c_str()) / 2),
+            (window_height / 2) + font_size,
+            font_name,
+            error_text
+        );
+
+        map_draw_spawn_list = false;
+
+        //glutSwapBuffers();
+
+        //return;
+    }
+
     if (map_draw_spawn_list == true)
     {
-        glColor3ub(255, 255, 255);
+        draw_color_white();
 
         draw_spawn_list();
 
@@ -1873,7 +2033,7 @@ void render()
             switch (map_spawn.type)
             {
                 case EVERQUEST_SPAWN_INFO_TYPE_PLAYER:
-                    glColor3ub(255, 0, 0);
+                    draw_color_red();
                     draw_square(spawn_map_x, spawn_map_y, 4);
                     break;
 
@@ -1881,11 +2041,11 @@ void render()
                 {
                     if (map_spawn.movement_speed > 0)
                     {
-                        glColor3ub(128, 128, 128);
+                        draw_color_128();
                     }
                     else
                     {
-                        glColor3ub(64, 64, 64);
+                        draw_color_64();
                     }
 
                     draw_plus(spawn_map_x, spawn_map_y, 4);
@@ -1897,7 +2057,7 @@ void render()
                 {
                     if (map_spawn.is_player_corpse == true)
                     {
-                        glColor3ub(255, 0, 255);
+                        draw_color_magenta();
 
                         if (map_draw_player_corpse_line == true)
                         {
@@ -1906,7 +2066,7 @@ void render()
                     }
                     else
                     {
-                        glColor3ub(255, 255, 0);
+                        draw_color_yellow();
                     }
 
                     draw_cross(spawn_map_x, spawn_map_y, 4);
@@ -1915,7 +2075,7 @@ void render()
                 }
 
                 default:
-                    glColor3ub(64, 64, 64);
+                    draw_color_64();
                     draw_plus(spawn_map_x, spawn_map_y, 4);
             }
 
@@ -2053,7 +2213,7 @@ void render()
             {
                 if (map_spawn.type != EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
                 {
-                    glColor3ub(0, 255, 255);
+                    draw_color_teal();
 
                     draw_arrow_by_heading(spawn_map_x, spawn_map_y, map_spawn.heading, arrow_by_heading_size, false);
                 }
@@ -2077,7 +2237,7 @@ void render()
 
                     if (found_spawn == true)
                     {
-                        glColor3ub(0.0, 255, 255);
+                        draw_color_teal();
 
                         draw_line(player_map_x, player_map_y, spawn_map_x, spawn_map_y);
                     }
@@ -2088,7 +2248,7 @@ void render()
             {
                 if (map_draw_target_line == true)
                 {
-                    glColor3ub(0, 255, 0);
+                    draw_color_green();
 
                     draw_line(player_map_x, player_map_y, spawn_map_x, spawn_map_y);
 
@@ -2105,7 +2265,7 @@ void render()
         num_spawns_ex = num_spawns;
     }
 
-    glColor3ub(255, 0, 255);
+    draw_color_magenta();
 
     draw_plus(player_map_x, player_map_y, 4);
 
@@ -2134,6 +2294,15 @@ void render()
         draw_time_count = 0;
     }
 
+    if (memory.get_process_hwnd() == NULL)
+    {
+        player_x = 0;
+        player_y = 0;
+        player_z = 0;
+        player_heading = 0;
+        player_movement_speed = 0;
+    }
+
     if (map_draw_info_text == true)
     {
         std::vector<std::string> map_info_text;
@@ -2158,6 +2327,14 @@ void render()
         map_info_text.push_back(map_info_text_buffer.str());
         map_info_text_buffer.str("");
 
+        map_info_text_buffer << "Window Always On Top: " << get_bool_string(window_always_on_top);
+        map_info_text.push_back(map_info_text_buffer.str());
+        map_info_text_buffer.str("");
+
+        map_info_text_buffer << "Center On Target: " << get_bool_string(map_center_on_target);
+        map_info_text.push_back(map_info_text_buffer.str());
+        map_info_text_buffer.str("");
+
         map_info_text_buffer << "Zoom: " << map_zoom;
         map_info_text.push_back(map_info_text_buffer.str());
         map_info_text_buffer.str("");
@@ -2172,14 +2349,14 @@ void render()
 
         if (map_max_z_positive > 0)
         {
-            map_info_text_buffer << "Z Positive: " << map_max_z_positive;
+            map_info_text_buffer << "Z Positive Max: " << map_max_z_positive;
             map_info_text.push_back(map_info_text_buffer.str());
             map_info_text_buffer.str("");
         }
 
         if (map_max_z_negative > 0)
         {
-            map_info_text_buffer << "Z Negative: " << map_max_z_negative;
+            map_info_text_buffer << "Z Negative Max: " << map_max_z_negative;
             map_info_text.push_back(map_info_text_buffer.str());
             map_info_text_buffer.str("");
         }
@@ -2233,18 +2410,6 @@ void render()
         map_info_text_buffer.str("");
 
 /*
-        map_info_text_buffer << "Window Always On Top: " << get_bool_string(window_always_on_top);
-        map_info_text.push_back(map_info_text_buffer.str());
-        map_info_text_buffer.str("");
-*/
-
-/*
-        map_info_text_buffer << "Center On Target: " << get_bool_string(map_center_on_target);
-        map_info_text.push_back(map_info_text_buffer.str());
-        map_info_text_buffer.str("");
-*/
-
-/*
         map_info_text_buffer << "Spawn Filter: " << get_bool_string(spawn_filter_enabled);
         map_info_text.push_back(map_info_text_buffer.str());
         map_info_text_buffer.str("");
@@ -2252,9 +2417,12 @@ void render()
 
         if (spawn_filter_enabled == true)
         {
-            map_info_text_buffer << "Spawn Filter Name: " << spawn_filter_name;
-            map_info_text.push_back(map_info_text_buffer.str());
-            map_info_text_buffer.str("");
+            //map_info_text_buffer << "Spawn Filter Name: " << spawn_filter_name;
+            //map_info_text.push_back(map_info_text_buffer.str());
+            //map_info_text_buffer.str("");
+
+            map_info_text.push_back("Spawn Filter Name: ");
+            map_info_text.push_back(spawn_filter_name);
         }
 
 /*
@@ -2265,21 +2433,24 @@ void render()
 
         if (spawn_line_enabled == true)
         {
-            map_info_text_buffer << "Spawn Line Name: " << spawn_line_name;
-            map_info_text.push_back(map_info_text_buffer.str());
-            map_info_text_buffer.str("");
+            //map_info_text_buffer << "Spawn Line Name: " << spawn_line_name;
+            //map_info_text.push_back(map_info_text_buffer.str());
+            //map_info_text_buffer.str("");
+
+            map_info_text.push_back("Spawn Line Name: ");
+            map_info_text.push_back(spawn_line_name);
         }
 
         if (map_max_spawn_distance > 0)
         {
-            map_info_text_buffer << "Spawn Distance: " << map_max_spawn_distance;
+            map_info_text_buffer << "Spawn Distance Max: " << map_max_spawn_distance;
             map_info_text.push_back(map_info_text_buffer.str());
             map_info_text_buffer.str("");
         }
 
         if (map_max_spawn_distance_z > 0)
         {
-            map_info_text_buffer << "Spawn Z Distance: " << map_max_spawn_distance_z;
+            map_info_text_buffer << "Spawn Z Distance Max: " << map_max_spawn_distance_z;
             map_info_text.push_back(map_info_text_buffer.str());
             map_info_text_buffer.str("");
         }
@@ -2304,7 +2475,7 @@ void render()
         int map_info_text_index = 1;
         foreach (std::string map_info_text_value, map_info_text)
         {
-            draw_bitmap_string(0, 0 + (font_size * map_info_text_index), font_name, map_info_text_value);
+            draw_bitmap_string(0 + 1, 0 + (font_size * map_info_text_index), font_name, map_info_text_value);
             map_info_text_index++;
         }
     }

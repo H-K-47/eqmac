@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <map>
 #include <string>
 #include <sstream>
 
@@ -13,10 +14,80 @@
 
 #include "eqmac.hpp"
 
-memory memory;
+//memory memory;
 
-int main(int argc, char** argv)
+struct map_spawn_t
 {
+    int address;
+
+    int count;
+
+    std::string name;
+    std::string last_name;
+
+    float x, y, z;
+
+    float distance;
+    float distance_z;
+
+    float heading;
+
+    float movement_speed;
+
+    BYTE standing_state;
+
+    BYTE type;
+    int level;
+    BYTE race;
+    BYTE _class; // class is a keyword
+
+    int hp;
+    int hp_max;
+
+    bool is_target;
+    bool is_player_corpse;
+
+    int is_holding_both;
+    int is_holding_secondary;
+    int is_holding_primary;
+};
+
+std::map<std::string, map_spawn_t> spawn_list;
+std::map<std::string, map_spawn_t>::iterator spawn_list_it;
+std::pair<std::map<std::string, map_spawn_t>::iterator, bool> spawn_list_ret;
+
+int main()
+{
+    map_spawn_t map_spawn_a;
+
+    map_spawn_a.count = 99;
+
+    map_spawn_t map_spawn_z;
+
+    map_spawn_z.count = 10;
+
+    spawn_list.insert(std::pair<std::string, map_spawn_t>("an orc", map_spawn_a));
+
+    spawn_list.insert(std::pair<std::string, map_spawn_t>("Captain Fuck You", map_spawn_z));
+
+    map_spawn_z.count = 8;
+
+    spawn_list_ret = spawn_list.insert(std::pair<std::string, map_spawn_t>("Captain Fuck You", map_spawn_z));
+
+    if (spawn_list_ret.second == false)
+    {
+        std::cout << "element 'z' already existed";
+        std::cout << " with a value of " << spawn_list_ret.first->second.count << std::endl;
+
+        spawn_list_ret.first->second.count++;
+    }
+
+    for (spawn_list_it = spawn_list.begin(); spawn_list_it != spawn_list.end(); spawn_list_it++)
+    {
+        std::cout << (*spawn_list_it).first << " => " << (*spawn_list_it).second.count << std::endl;
+    }
+
+    /*
     memory.enable_debug_privileges();
 
     HWND everquest_hwnd = FindWindow(NULL, everquest_title.c_str());
@@ -72,6 +143,7 @@ int main(int argc, char** argv)
     std::cout << "Number of Spawns: " << num_spawns << std::endl;
 
     memory.close();
+    */
 
     return 0;
 }

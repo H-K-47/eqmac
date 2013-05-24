@@ -1,8 +1,34 @@
 #define WINVER 0x0500
+
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <map>
+#include <string>
+#include <sstream>
+#include <algorithm>
+#include <cmath>
+
+#include <boost/algorithm/string.hpp>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+
+#include <boost/range/algorithm.hpp>
+
+#include <boost/foreach.hpp>
+#define foreach BOOST_FOREACH
+
 #include <windows.h>
 #include <psapi.h>
 
 #include <winbase.h>
+
+#include "memory.hpp"
+
+#include "eqmac.hpp"
+
+const std::string ini_file = "eqmac_keys.ini";
 
 #define APPLICATION_NAME       "EQMac Keys"
 #define APPLICATION_CLASS_NAME "eqmac_keys"
@@ -27,11 +53,10 @@
 #define VK_8 0x38
 #define VK_9 0x39
 
-#define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT       0x004B459C
-#define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE 0x007F9510
-
 typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
 static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
+
+memory memory;
 
 HANDLE module;
 
@@ -39,63 +64,457 @@ HANDLE window_thread;
 
 DWORD window_thread_id;
 
-void enable_debug_privileges()
+struct map_spawn_t
 {
-    HANDLE token;
+    int address;
 
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
+    int count;
+
+    int spawn_id;
+    int owner_id;
+
+    std::string name;
+    std::string last_name;
+
+    float x, y, z;
+
+    float distance;
+    float distance_z;
+
+    float heading;
+
+    float movement_speed;
+
+    int standing_state;
+
+    int type;
+    int level;
+    int race;
+    int _class; // class is a keyword
+
+    int hp;
+    int hp_max;
+
+    bool is_target;
+    bool is_player_corpse;
+
+    int is_holding_both;
+    int is_holding_secondary;
+    int is_holding_primary;
+};
+
+std::vector<map_spawn_t> map_spawns;
+std::vector<map_spawn_t>::iterator map_spawns_it;
+
+struct sort_spawns_by_distance_t
+{
+    bool operator() (const map_spawn_t& map_spawn1, const map_spawn_t& map_spawn2)
     {
-        TOKEN_PRIVILEGES tp;
-        TOKEN_PRIVILEGES tp_previous;
+        return map_spawn1.distance > map_spawn2.distance;
+    }
+};
 
-        DWORD cb_previous = sizeof(TOKEN_PRIVILEGES);
+std::string warp_to_spawn_name = "";
+std::vector<std::string> warp_to_spawn_name_data;
 
-        LUID luid;
+float calculate_distance(float x1, float y1, float x2, float y2)
+{
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+}
 
-        if (LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luid))
-        {
-            tp.PrivilegeCount           = 1;
-            tp.Privileges[0].Luid       = luid;
-            tp.Privileges[0].Attributes = 0;
-
-            AdjustTokenPrivileges
-            (
-                token,
-                FALSE,
-                &tp,
-                sizeof(TOKEN_PRIVILEGES),
-                &tp_previous,
-                &cb_previous
-            );
-
-            tp_previous.PrivilegeCount            = 1;
-            tp_previous.Privileges[0].Luid        = luid;
-            tp_previous.Privileges[0].Attributes |= (SE_PRIVILEGE_ENABLED);
-    
-            AdjustTokenPrivileges
-            (
-                token,
-                FALSE,
-                &tp_previous,
-                cb_previous,
-                NULL,
-                NULL
-            );
-        }
+void update_spawns()
+{
+    if (memory.get_process_id() == 0)
+    {
+        return;
     }
 
-    CloseHandle(token);
+    map_spawns.clear();
+
+    int player_spawn_info = everquest_get_player_spawn_info(memory);
+    int target_spawn_info = everquest_get_target_spawn_info(memory);
+
+    float player_y = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
+    float player_x = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
+    float player_z = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
+
+    int spawn_info_address = player_spawn_info;
+
+    int spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
+
+    spawn_info_address = spawn_next_spawn_info;
+
+    for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
+    {
+        spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
+
+        if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
+        {
+            break;
+        }
+
+        int spawn_actor_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER, 4);
+
+        map_spawn_t map_spawn;
+
+        map_spawn.address = spawn_info_address;
+
+        map_spawn.spawn_id = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID, 2);
+        map_spawn.owner_id = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID, 2);
+
+        map_spawn.name      = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME,      0x40);
+        map_spawn.last_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME, 0x20);
+
+        map_spawn.y = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Y);
+        map_spawn.x = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_X);
+        map_spawn.z = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Z);
+
+        map_spawn.distance = calculate_distance(player_x, player_y, map_spawn.x, map_spawn.y);
+
+        map_spawn.distance_z = map_spawn.z - player_z;
+
+        map_spawn.heading = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HEADING);
+
+        map_spawn.movement_speed = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED);
+
+        map_spawn.standing_state = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_STANDING_STATE);
+
+        map_spawn.type   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_TYPE);
+        map_spawn.level  = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LEVEL);
+        map_spawn.race   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_RACE);
+        map_spawn._class = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
+
+        map_spawn.hp     = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT, 4);
+        map_spawn.hp_max = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX,     4);
+
+        map_spawn.is_target = (spawn_info_address == target_spawn_info ? true : false);
+
+        map_spawn.is_player_corpse = false;
+
+        if (map_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
+        {
+            std::string player_name = memory.read_string(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40);
+
+            std::size_t found = map_spawn.name.find(player_name);
+
+            if (found != std::string::npos)
+            {
+                map_spawn.is_player_corpse = true;
+            }
+        }
+
+        map_spawn.is_holding_both      = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH,      4);
+        map_spawn.is_holding_secondary = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY, 4);
+        map_spawn.is_holding_primary   = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY,   4);
+
+        map_spawns.push_back(map_spawn);
+
+        spawn_info_address = spawn_next_spawn_info;
+    }
 }
 
 void timer_keys(HWND hwnd)
 {
+    HWND foreground_hwnd = GetForegroundWindow();
+
+    DWORD foreground_process_id;
+    GetWindowThreadProcessId(foreground_hwnd, &foreground_process_id);
+
+    if (foreground_process_id != GetCurrentProcessId())
+    {
+        return;
+    }
+
     if (GetAsyncKeyState(VK_F12))
     {
         //MessageBox(NULL, "VK_F12", "timer_keys", MB_OK | MB_ICONINFORMATION);
 
+        memory.set_process_by_id(foreground_process_id);
+
+        if (memory.get_process_id() == 0)
+        {
+            return;
+        }
+
+        bool warp_point_ex = false;
+
+        if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+        {
+            warp_point_ex = true;
+        }
+        else
+        {
+            warp_point_ex = false;
+        }
+
+        int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+        std::string zone_short_name = everquest_get_zone_short_name(memory);
+
+        boost::algorithm::to_lower(zone_short_name);
+
+        std::stringstream zone_ini;
+        zone_ini << "keys/" << zone_short_name << ".ini";
+
+        std::fstream file;
+        file.open(zone_ini.str().c_str(), std::ios::in);
+
+        if (!file.is_open())
+        {
+            return;
+        }
+
+        file.close();
+
+        boost::property_tree::ptree pt;
+        boost::property_tree::ini_parser::read_ini(zone_ini.str(), pt);
+
+        float warp_y, warp_x, warp_z, warp_heading;
+
+        if (warp_point_ex == true)
+        {
+            warp_y = pt.get<float>("WarpPointEx.Y");
+            warp_x = pt.get<float>("WarpPointEx.X");
+            warp_z = pt.get<float>("WarpPointEx.Z");
+
+            warp_heading = pt.get<float>("WarpPointEx.Heading");
+        }
+        else
+        {
+            warp_y = pt.get<float>("WarpPoint.Y");
+            warp_x = pt.get<float>("WarpPoint.X");
+            warp_z = pt.get<float>("WarpPoint.Z");
+
+            warp_heading = pt.get<float>("WarpPoint.Heading");
+        }
+
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z, warp_z);
+
+        memory.write_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HEADING, warp_heading);
+
         everquest_function_warp_to_safe_point(EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE);
 
-        Sleep(100);
+        Sleep(1000);
+    }
+
+    if (GetAsyncKeyState(VK_F8))
+    {
+        //MessageBox(NULL, "VK_F8", "timer_keys", MB_OK | MB_ICONINFORMATION);
+
+        memory.set_process_by_id(foreground_process_id);
+
+        if (memory.get_process_id() == 0)
+        {
+            return;
+        }
+
+        bool warp_to_spawn_ex = false;
+
+        if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+        {
+            warp_to_spawn_ex = true;
+        }
+        else
+        {
+            warp_to_spawn_ex = false;
+        }
+
+        int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+        std::fstream file;
+        file.open(ini_file.c_str(), std::ios::in);
+
+        if (!file.is_open())
+        {
+            return;
+        }
+
+        file.close();
+
+        boost::property_tree::ptree pt;
+        boost::property_tree::ini_parser::read_ini(ini_file, pt);
+
+        bool warp_to_spawn_enabled = pt.get<bool>("WarpToSpawn.bEnabled", false);
+
+        if (warp_to_spawn_enabled == false)
+        {
+            return;
+        }
+
+        bool warp_to_spawn_target = pt.get<bool>("WarpToSpawn.bTarget", false);
+
+        bool warp_to_spawn_skip_corpses = pt.get<bool>("WarpToSpawn.bSkipCorpses", true);
+
+        std::string warp_to_spawn_name_type = "WarpToSpawn.sName";
+
+        if (warp_to_spawn_ex == true)
+        {
+            warp_to_spawn_name_type = "WarpToSpawn.sNameEx";
+            
+        }
+
+        warp_to_spawn_name = pt.get<std::string>(warp_to_spawn_name_type, warp_to_spawn_name);
+
+        if (warp_to_spawn_name.size())
+        {
+            boost::split(warp_to_spawn_name_data, warp_to_spawn_name, boost::is_any_of(","));
+        }
+        else
+        {
+            return;
+        }
+
+        update_spawns();
+
+        std::sort(map_spawns.begin(), map_spawns.end(), sort_spawns_by_distance_t());
+
+        bool found_spawn = false;
+
+        float warp_y = 0;
+        float warp_x = 0;
+        float warp_z = 0;
+
+        float warp_heading = 0;
+
+        int warp_target_address = EVERQUEST_SPAWN_INFO_NULL;
+
+        foreach (map_spawn_t map_spawn, map_spawns)
+        {
+
+            foreach(std::string warp_to_spawn_name_data_value, warp_to_spawn_name_data)
+            {
+                if (warp_to_spawn_skip_corpses == true)
+                {
+                    if (map_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
+                    {
+                        continue;
+                    }
+                }
+
+                std::size_t found = map_spawn.name.find(warp_to_spawn_name_data_value);
+
+                if (found != std::string::npos)
+                {
+                    found_spawn = true;
+
+                    warp_y = map_spawn.y;
+                    warp_x = map_spawn.x;
+                    warp_z = map_spawn.z + 1.0;
+
+                    warp_heading = map_spawn.heading;
+
+                    warp_target_address = map_spawn.address;
+
+                    break;
+                }
+            }
+        }
+
+        if (found_spawn == false)
+        {
+            return;
+        }
+
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z, warp_z);
+
+        memory.write_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HEADING, warp_heading);
+
+        everquest_function_warp_to_safe_point(EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE);
+
+        if (warp_to_spawn_target == true)
+        {
+            if (warp_target_address != EVERQUEST_SPAWN_INFO_NULL)
+            {
+                Sleep(100);
+
+                memory.write_bytes(EVERQUEST_TARGET_SPAWN_INFO_POINTER, warp_target_address, 4);
+            }
+        }
+
+        Sleep(1000);
+    }
+
+    if (GetAsyncKeyState(VK_F7))
+    {
+        //MessageBox(NULL, "VK_F7", "timer_keys", MB_OK | MB_ICONINFORMATION);
+
+        memory.set_process_by_id(foreground_process_id);
+
+        if (memory.get_process_id() == 0)
+        {
+            return;
+        }
+
+        int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+        std::fstream file;
+        file.open(ini_file.c_str(), std::ios::in);
+
+        if (!file.is_open())
+        {
+            return;
+        }
+
+        file.close();
+
+        boost::property_tree::ptree pt;
+        boost::property_tree::ini_parser::read_ini(ini_file, pt);
+
+        bool warp_to_spawn_enabled = pt.get<bool>("WarpToSpawn.bEnabled", false);
+
+        if (warp_to_spawn_enabled == false)
+        {
+            return;
+        }
+
+        update_spawns();
+
+        std::sort(map_spawns.begin(), map_spawns.end(), sort_spawns_by_distance_t());
+
+        bool found_spawn = false;
+
+        float warp_y = 0;
+        float warp_x = 0;
+        float warp_z = 0;
+
+        float warp_heading = 0;
+
+        int target_address = everquest_get_target_spawn_info(memory);
+
+        foreach (map_spawn_t map_spawn, map_spawns)
+        {
+            if (map_spawn.address == target_address)
+            {
+                found_spawn = true;
+
+                warp_y = map_spawn.y;
+                warp_x = map_spawn.x;
+                warp_z = map_spawn.z + 1.0;
+
+                warp_heading = map_spawn.heading;
+
+                break;
+            }
+        }
+
+        if (found_spawn == false)
+        {
+            return;
+        }
+
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
+        memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z, warp_z);
+
+        memory.write_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HEADING, warp_heading);
+
+        everquest_function_warp_to_safe_point(EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE);
+
+        Sleep(1000);
     }
 }
 
@@ -209,7 +628,7 @@ extern "C" BOOL APIENTRY DllMain(HANDLE dll, DWORD reason, LPVOID reserved)
     {
         //MessageBox(NULL, "fdwReason == DLL_PROCESS_ATTACH", "DllMain", MB_OK | MB_ICONINFORMATION);
 
-        enable_debug_privileges();
+        memory.enable_debug_privileges();
 
         window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, 0, 0, &window_thread_id);
     }

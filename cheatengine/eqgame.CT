@@ -158,12 +158,45 @@
       <CheatEntries>
         <CheatEntry>
           <ID>110</ID>
+          <Description>"0x90 GM"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>90</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>125</ID>
+          <Description>"0xA1 (1=stunned, 5=swimming)"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>A1</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>123</ID>
           <Description>"0x184 Animation"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
             <Offset>184</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>124</ID>
+          <Description>"0x189 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>189</Offset>
             <Offset>84</Offset>
           </Offsets>
         </CheatEntry>
@@ -254,6 +287,16 @@
       <VariableType>4 Bytes</VariableType>
       <Address>eqgame.exe+3F94EC</Address>
       <CheatEntries>
+        <CheatEntry>
+          <ID>121</ID>
+          <Description>"0x00 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>0</Offset>
+          </Offsets>
+        </CheatEntry>
         <CheatEntry>
           <ID>92</ID>
           <Description>"0x01 Name"</Description>
@@ -397,7 +440,17 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>121</ID>
+          <ID>134</ID>
+          <Description>"0xA0 Guild ID"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>A0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>133</ID>
           <Description>"0xA8 Type"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
@@ -712,10 +765,57 @@
     </CheatEntry>
     <CheatEntry>
       <ID>120</ID>
-      <Description>"No Fall Damage (Value = 151)"</Description>
+      <Description>"No Fall Damage (Value = 151) (This is the Zone ID and 151 is the Bazaar)"</Description>
       <Color>80000008</Color>
       <VariableType>Byte</VariableType>
       <Address>007B9648</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>126</ID>
+      <Description>"Graphics DLL Base Address Pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3F9C50</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>135</ID>
+          <Description>"Show FPS = 1"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F9C50</Address>
+          <Offsets>
+            <Offset>A4F770</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>128</ID>
+      <Description>"First Guild Name"</Description>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>96</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>007F9C94</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>129</ID>
+      <Description>"Second Guild Name"</Description>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>96</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>007F9CF4</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>136</ID>
+      <Description>"Player Is In Game?"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+398550</Address>
     </CheatEntry>
   </CheatEntries>
   <CheatCodes>
@@ -859,6 +959,134 @@
         <Byte>33</Byte>
         <Byte>F6</Byte>
         <Byte>66</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Do Hot Button</Description>
+      <Address>004209BD</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>209BD</ModuleNameOffset>
+      <Before>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>5E</Byte>
+        <Byte>59</Byte>
+        <Byte>C3</Byte>
+      </Before>
+      <Actual>
+        <Byte>53</Byte>
+      </Actual>
+      <After>
+        <Byte>56</Byte>
+        <Byte>57</Byte>
+        <Byte>8B</Byte>
+        <Byte>3D</Byte>
+        <Byte>CC</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>mov 06 = Climbing a ladder - Code :and byte ptr [edi+00000189],00</Description>
+      <Address>00505022</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>105022</ModuleNameOffset>
+      <Before>
+        <Byte>45</Byte>
+        <Byte>EF</Byte>
+        <Byte>01</Byte>
+        <Byte>EB</Byte>
+        <Byte>07</Byte>
+      </Before>
+      <Actual>
+        <Byte>80</Byte>
+        <Byte>A7</Byte>
+        <Byte>89</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>D8</Byte>
+        <Byte>15</Byte>
+        <Byte>68</Byte>
+        <Byte>53</Byte>
+        <Byte>5E</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Set Is Swimming - Code :mov [ecx+000000A1],al</Description>
+      <Address>0050BB15</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>10BB15</ModuleNameOffset>
+      <Before>
+        <Byte>00</Byte>
+        <Byte>8A</Byte>
+        <Byte>44</Byte>
+        <Byte>24</Byte>
+        <Byte>0C</Byte>
+      </Before>
+      <Actual>
+        <Byte>88</Byte>
+        <Byte>81</Byte>
+        <Byte>A1</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>66</Byte>
+        <Byte>83</Byte>
+        <Byte>BE</Byte>
+        <Byte>0A</Byte>
+        <Byte>01</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :je EQGfx_Dx8.t3dSetActorInvisible+1B</Description>
+      <Address>033ADCDD</Address>
+      <ModuleName>EQGfx_Dx8.DLL</ModuleName>
+      <ModuleNameOffset>DCDD</ModuleNameOffset>
+      <Before>
+        <Byte>24</Byte>
+        <Byte>04</Byte>
+        <Byte>8B</Byte>
+        <Byte>48</Byte>
+        <Byte>0C</Byte>
+      </Before>
+      <Actual>
+        <Byte>74</Byte>
+        <Byte>0C</Byte>
+      </Actual>
+      <After>
+        <Byte>81</Byte>
+        <Byte>C9</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of je EQGfx_Dx8.t3dSetActorInvisible+1B</Description>
+      <Address>0352DCDD</Address>
+      <ModuleName>EQGfx_Dx8.DLL</ModuleName>
+      <ModuleNameOffset>DCDD</ModuleNameOffset>
+      <Before>
+        <Byte>24</Byte>
+        <Byte>04</Byte>
+        <Byte>8B</Byte>
+        <Byte>48</Byte>
+        <Byte>0C</Byte>
+      </Before>
+      <Actual>
+        <Byte>74</Byte>
+        <Byte>0C</Byte>
+      </Actual>
+      <After>
+        <Byte>81</Byte>
+        <Byte>C9</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
       </After>
     </CodeEntry>
   </CheatCodes>

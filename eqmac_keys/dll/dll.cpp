@@ -66,83 +66,63 @@ void timer_keys(HWND hwnd)
         return;
     }
 
-    if (GetAsyncKeyState(VK_CONTROL))
+    if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
     {
-        if (GetAsyncKeyState(VK_1))
+        if (GetAsyncKeyState(VK_1) & 0x8000)
         {
             everquest_function_do_hot_button(0);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_2))
+        if (GetAsyncKeyState(VK_2) & 0x8000)
         {
             everquest_function_do_hot_button(1);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_3))
+        if (GetAsyncKeyState(VK_3) & 0x8000)
         {
             everquest_function_do_hot_button(2);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_4))
+        if (GetAsyncKeyState(VK_4) & 0x8000)
         {
             everquest_function_do_hot_button(3);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_5))
+        if (GetAsyncKeyState(VK_5) & 0x8000)
         {
             everquest_function_do_hot_button(4);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_6))
+        if (GetAsyncKeyState(VK_6) & 0x8000)
         {
             everquest_function_do_hot_button(5);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_7))
+        if (GetAsyncKeyState(VK_7) & 0x8000)
         {
             everquest_function_do_hot_button(6);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_8))
+        if (GetAsyncKeyState(VK_8) & 0x8000)
         {
             everquest_function_do_hot_button(7);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_9))
+        if (GetAsyncKeyState(VK_9) & 0x8000)
         {
             everquest_function_do_hot_button(8);
-
-            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_0))
+        if (GetAsyncKeyState(VK_0) & 0x8000)
         {
             everquest_function_do_hot_button(9);
-
-            Sleep(1000);
         }
     }
 }
 
 void on_create(HWND hwnd)
 {
-    SetTimer(hwnd, ID_TIMER_KEYS, 100, 0);
+    SetTimer(hwnd, ID_TIMER_KEYS, 1, 0);
 }
 
 void on_destroy(HWND hwnd)

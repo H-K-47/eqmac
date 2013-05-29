@@ -1,0 +1,7 @@
+gm fly walk mode!
+0x0054DF3d
+from
+eqgame.exe+14DF3D - 0F85 F5000000 - jne eqgame.exe+14E038
+to
+eqgame.exe+14DF3D - E9 F6000000 - jmp eqgame.exe+14E038
+eqgame.exe+14DF42 - 90 - nop

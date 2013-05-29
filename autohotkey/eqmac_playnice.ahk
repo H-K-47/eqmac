@@ -127,6 +127,8 @@ OnExit:
 
 SetTimer, TimerPlayNice, Off
 
+Sleep, 1000
+
 PlayNice_Disable()
 
 DllCall("FreeLibrary", "Ptr", psapi_dll_handle)

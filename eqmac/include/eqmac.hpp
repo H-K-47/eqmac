@@ -9,6 +9,10 @@
 
 const std::string everquest_title = "EQW beta 2.32";
 
+#define EVERQUEST_GRAPHICS_DLL_POINTER 0x007F9C50 // EQGfx_Dx8.DLL
+
+#define EVERQUEST_IS_IN_GAME 0x00798550 // BYTE
+
 #define EVERQUEST_ZONE_INFO_STRUCTURE           0x00798784 // STRUCT
 #define EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME  0x0000 // STRING [0x40]
 #define EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME   0x0040 // STRING [0x20]
@@ -56,6 +60,7 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID                0x0096 // WORD
 #define EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX                  0x0098 // DWORD
 #define EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT              0x009C // DWORD
+#define EVERQUEST_OFFSET_SPAWN_INFO_GUILD_ID                0x00A0 // WORD
 #define EVERQUEST_OFFSET_SPAWN_INFO_TYPE                    0x00A8 // BYTE ; EVERQUEST_SPAWN_INFO_TYPE_x
 #define EVERQUEST_OFFSET_SPAWN_INFO_CLASS                   0x00A9 // BYTE ; EVERQUEST_CLASS_x
 #define EVERQUEST_OFFSET_SPAWN_INFO_RACE                    0x00AA // BYTE ; EVERQUEST_RACE_x
@@ -117,11 +122,36 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_CLASS_BEASTLORD    15
 #define EVERQUEST_CLASS_BERSERKER    16
 
+#define EVERQUEST_GUILD_NAMES_BEGIN 0x007F9C94
+#define EVERQUEST_GUILD_NAME_SIZE 0x60
+
+#define EVERQUEST_GUILD_NAMES_MAX 512
+
+#define EVERQUEST_GUILD_ID_NULL 0xFFFF // WORD // = 65535
+
+#define EVERQUEST_STANDING_STATE_STANDING 0x64
+#define EVERQUEST_STANDING_STATE_FROZEN   0x66 // mesmerised / feared ; You lose control of yourself!
+#define EVERQUEST_STANDING_STATE_LOOTING  0x69 // looting or bind wound
+#define EVERQUEST_STANDING_STATE_SITTING  0x6E
+#define EVERQUEST_STANDING_STATE_DUCKING  0x6F // crouching
+#define EVERQUEST_STANDING_STATE_FEIGNED  0x73 // feign death
+#define EVERQUEST_STANDING_STATE_DEAD     0x78
+
 #define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT       0x004B459C
 #define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE 0x007F9510
 
 //typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
 //static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
+
+#define EVERQUEST_FUNCTION_DO_HOT_BUTTON 0x004209BD
+
+//typedef void __stdcall _everquest_function_do_hot_button(int button_index);
+//static _everquest_function_do_hot_button *everquest_function_do_hot_button = (_everquest_function_do_hot_button *)EVERQUEST_FUNCTION_DO_HOT_BUTTON;
+
+bool everquest_is_in_game(memory &memory)
+{
+    return memory.read_any<BYTE>(EVERQUEST_IS_IN_GAME);
+}
 
 std::string everquest_get_zone_player_name(memory &memory)
 {
@@ -335,6 +365,30 @@ std::string everquest_get_class_short_name(int _class)
     }
 
     return class_short_name;
+}
+
+std::string everquest_get_guild_name(memory &memory, int guild_id)
+{
+    if (guild_id == EVERQUEST_GUILD_ID_NULL)
+    {
+        return "No Guild";
+    }
+
+    int guild_name_address = EVERQUEST_GUILD_NAMES_BEGIN;
+
+    for (int i = 0; i < EVERQUEST_GUILD_NAMES_MAX; i++)
+    {
+        if (i == guild_id)
+        {
+            std::string guild_name = memory.read_string(guild_name_address, EVERQUEST_GUILD_NAME_SIZE);
+
+            return guild_name;
+        }
+
+        guild_name_address = guild_name_address + EVERQUEST_GUILD_NAME_SIZE;
+    }
+
+    return "Unknown Guild";
 }
 
 #endif // EQMAC_HPP

@@ -15,6 +15,8 @@ Global cpu_core_index := 2
 Global resolution_width  := 1680 ; 1920 ; 1280
 Global resolution_height := 1050 ; 1080 ; 720
 
+Global clients := Array()
+
 EnableDebugPrivileges()
 
 psapi_dll_handle := DllCall("LoadLibrary", "Str", "Psapi.dll")
@@ -32,12 +34,24 @@ Hotkey, IfWinActive, %EVERQUEST_TITLE%
 Hotkey, XButton1, do_multi
 Hotkey, XButton2, do_sit
 Hotkey, MButton,  do_heal
+Hotkey, F11, do_text
 
+Return
+
+; fix alt bug
+~Up::
+~Down::
+~Left::
+~Right::
+~w::
+~a::
+~s::
+~d::
+SendInput, {Alt up}
 Return
 
 ; press tilde to switch between client windows (EQWindows)
 `::
-;WinActivateBottom, %EVERQUEST_TITLE%
 GroupActivate, everquest
 WinSet, AlwaysOnTop, On
 WinSet, AlwaysOnTop, Off
@@ -46,33 +60,63 @@ SendInput, {Alt up}
 Return
 
 do_multi:
-Loop, 6
-{
-    SendInput, 0
-    Sleep, 100
-    GroupActivate, everquest
-    Sleep, 100
-}
+SendInput, ^0
+Sleep, 100
 Return
 
 do_sit:
-Loop, 6
-{
-    SendInput, 5
-    Sleep, 100
-    GroupActivate, everquest
-    Sleep, 100
-}
+SendInput, ^5
+Sleep, 100
 Return
 
 do_heal:
-Loop, 6
-{
-    SendInput, 8
-    Sleep, 100
-    GroupActivate, everquest
-    Sleep, 100
-}
+SendInput, ^8
+Sleep, 100
+Return
+
+do_text:
+SendInput, azxcvbnm1
+Return
+
+Numpad0::
+NumpadIns::
+GetClients()
+Return
+
+Numpad1::
+NumpadEnd::
+activate_client := clients[1]
+WinActivate, ahk_pid %activate_client%
+Return
+
+Numpad2::
+NumpadDown::
+activate_client := clients[2]
+WinActivate, ahk_pid %activate_client%
+Return
+
+Numpad3::
+NumpadPgDn::
+activate_client := clients[3]
+WinActivate, ahk_pid %activate_client%
+Return
+
+Numpad4::
+NumpadLeft::
+activate_client := clients[4]
+WinActivate, ahk_pid %activate_client%
+Return
+
+Numpad5::
+NumpadClear::
+activate_client := clients[5]
+WinActivate, ahk_pid %activate_client%
+Return
+
+Numpad6::
+NumpadRight::
+activate_client := clients[6]
+WinActivate, ahk_pid %activate_client%
 Return
 
 ; press control+tilde for borderless fullscreen windowed mode
@@ -99,20 +143,6 @@ Return
 
 SetProcessAffinityMask()
 {
-    IfWinNotActive, %EVERQUEST_TITLE%
-    {
-        Return
-    }
-
-    WinGet, active_process_id, PID, A
-
-    script_process_id := DllCall("GetCurrentProcessId")
-
-    If (active_process_id = script_process_id)
-    {
-        Return
-    }
-
     psapi_size := 4096
 
     psapi_size := VarSetCapacity(psapi_processes, psapi_size)
@@ -159,6 +189,51 @@ SetProcessAffinityMask()
 
                     cpu_core_index := cpu_core_index * 2
                 }
+            }
+        }
+
+        DllCall("CloseHandle", "Ptr", psapi_process_handle)
+    }
+}
+
+GetClients()
+{
+    clients = 
+
+    clients := Array()
+
+    psapi_size := 4096
+
+    psapi_size := VarSetCapacity(psapi_processes, psapi_size)
+    DllCall("Psapi.dll\EnumProcesses", "Ptr", &psapi_processes, "UInt", psapi_size, "UIntP", psapi_process)
+
+    Loop, % psapi_process // 4
+    {
+        psapi_process_id := NumGet(psapi_processes, A_Index * 4, "UInt")
+
+        psapi_process_handle := DllCall("OpenProcess", "UInt", 0x001F0FFF, "Int", false, "UInt", psapi_process_id, "Ptr")
+
+        If (!psapi_process_handle)
+        {
+            Continue
+        }
+
+        VarSetCapacity(psapi_process_name, psapi_size, 0)
+        psapi_result := DllCall("Psapi.dll\GetModuleBaseName", "Ptr", psapi_process_handle, "Ptr", 0, "Str", psapi_process_name, "UInt", A_IsUnicode ? psapi_size // 2 : psapi_size)
+
+        If (!psapi_result)
+        {
+            If psapi_result := DllCall("Psapi.dll\GetProcessImageFileName", "Ptr", psapi_process_handle, "Str", psapi_process_name, "UInt", A_IsUnicode ? psapi_size // 2 : psapi_size)
+            {
+                SplitPath, psapi_process_name, psapi_process_name
+            }
+        }
+
+        If (psapi_result && psapi_process_name)
+        {
+            If psapi_process_name = %EVERQUEST_CLIENT%
+            {
+                clients.Insert(psapi_process_id)
             }
         }
 

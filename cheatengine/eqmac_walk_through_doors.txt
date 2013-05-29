@@ -1,0 +1,7 @@
+walk through doors and over objects
+
+eqgame.exe+1048BD - 75 28 - jne eqgame.exe+1048E7
+
+eqgame.exe+1048BD - EB 28 - jmp eqgame.exe+1048E7
+
+                     

@@ -5,6 +5,114 @@ Global EVERQUEST_CLIENT := "eqgame.exe"
 
 Global EVERQUEST_TITLE := "EQW beta 2.32"
 
+Global EVERQUEST_GFX_DLL := "EQGfx_Dx8.DLL"
+
+Global EVERQUEST_ZONE_INFO_STRUCTURE := 0x00798784 ; STRUCT
+Global EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME  := 0x000 ; STRING [0x40]
+Global EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME   := 0x040 ; STRING [0x20]
+Global EVERQUEST_OFFSET_ZONE_INFO_LONG_NAME    := 0x060 ; STRING [0x80]
+
+Global EVERQUEST_PLAYER_SPAWN_INFO_POINTER   := 0x007F94CC ; POINTER to STRUCT
+Global EVERQUEST_TARGET_SPAWN_INFO_POINTER   := 0x007F94EC ; POINTER to STRUCT
+
+Global EVERQUEST_SPAWN_INFO_NULL := 0x00000000
+
+Global EVERQUEST_SPAWNS_MAX := 4096
+
+Global EVERQUEST_SPAWN_INFO_TYPE_PLAYER := 0
+Global EVERQUEST_SPAWN_INFO_TYPE_NPC    := 1
+Global EVERQUEST_SPAWN_INFO_TYPE_CORPSE := 2
+
+Global EVERQUEST_OFFSET_SPAWN_INFO_NAME                    := 0x0001 ; STRING [0x40]
+Global EVERQUEST_OFFSET_SPAWN_INFO_Y                       := 0x0048 ; FLOAT
+Global EVERQUEST_OFFSET_SPAWN_INFO_X                       := 0x004C ; FLOAT
+Global EVERQUEST_OFFSET_SPAWN_INFO_Z                       := 0x0050 ; FLOAT
+Global EVERQUEST_OFFSET_SPAWN_INFO_HEADING                 := 0x0054 ; FLOAT ; facing direction, rotation
+Global EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED          := 0x005C ; FLOAT
+Global EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER := 0x0078 ; POINTER to STRUCT
+Global EVERQUEST_OFFSET_SPAWN_INFO_PREV_SPAWN_INFO_POINTER := 0x007C ; POINTER to STRUCT
+Global EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER      := 0x0084 ; POINTER to STRUCT
+Global EVERQUEST_OFFSET_SPAWN_INFO_CHAR_INFO_POINTER       := 0x0088 ; POINTER to STRUCT
+Global EVERQUEST_OFFSET_SPAWN_INFO_AVATAR_HEIGHT           := 0x008C ; FLOAT
+Global EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID                := 0x0094 ; WORD
+Global EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID                := 0x0096 ; WORD
+Global EVERQUEST_OFFSET_SPAWN_INFO_TYPE                    := 0x00A8 ; BYTE ; EVERQUEST_SPAWN_INFO_TYPE_x
+Global EVERQUEST_OFFSET_SPAWN_INFO_CLASS                   := 0x00A9 ; BYTE ; EVERQUEST_CLASS_x
+Global EVERQUEST_OFFSET_SPAWN_INFO_RACE                    := 0x00AA ; BYTE ; EVERQUEST_RACE_x
+Global EVERQUEST_OFFSET_SPAWN_INFO_LEVEL                   := 0x00AD ; BYTE
+Global EVERQUEST_OFFSET_SPAWN_INFO_HIDE_STATE              := 0x00AE ; BYTE
+Global EVERQUEST_OFFSET_SPAWN_INFO_STANDING_STATE          := 0x00B1 ; BYTE ; EVERQUEST_STANDING_STATE_x
+Global EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX                  := 0x0098 ; DWORD
+Global EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT              := 0x009C ; DWORD
+Global EVERQUEST_OFFSET_SPAWN_INFO_IS_LINKDEAD             := 0x0108 ; BYTE
+Global EVERQUEST_OFFSET_SPAWN_INFO_IS_AFK                  := 0x0122 ; BYTE
+Global EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME               := 0x012C ; STRING [0x20]
+
+Global EVERQUEST_CAMERA_POINTER := 0x0063B928 ; POINTER to STRUCT
+Global EVERQUEST_OFFSET_CAMERA_Y                 := 0x08 ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_X                 := 0x0C ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_Z                 := 0x10 ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_HEADING           := 0x14 ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_PITCH             := 0x18 ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_FIELD_OF_VIEW     := 0x20 ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_ASPECT_RATIO      := 0x24 ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_WORLD_SCALE       := 0x28 ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_DRAW_DISTANCE     := 0x30 ; FLOAT
+Global EVERQUEST_OFFSET_CAMERA_RESOLUTION_WIDTH  := 0x48 ; DWORD
+Global EVERQUEST_OFFSET_CAMERA_RESOLUTION_HEIGHT := 0x4C ; DWORD
+
+Global EVERQUEST_OFFSET_GFX_DLL_FOG_COLOR               := 0xA4F8C8
+Global EVERQUEST_OFFSET_GFX_DLL_FOG_DRAW_DISTANCE_START := 0xA4F8CC
+Global EVERQUEST_OFFSET_GFX_DLL_FOG_DRAW_DISTANCE_STOP  := 0xA4F8D0
+
+; EQGfx_Dx8.t3dSetCameraLocation
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLocation := 0x419B0
+
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLocation_Y       := 0x4B ; 89 01    - mov [ecx],eax
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLocation_X       := 0x50 ; 89 41 04 - mov [ecx+04],eax
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLocation_Z       := 0x56 ; 89 51 08 - mov [ecx+08],edx
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLocation_HEADING := 0x5C ; 89 46 14 - mov [esi+14],eax
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLocation_PITCH   := 0x62 ; 89 4E 18 - mov [esi+18],ecx
+
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_Y_BYTES       := "89,01"
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_X_BYTES       := "89,41,04"
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_Z_BYTES       := "89,51,08"
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_HEADING_BYTES := "89,46,14"
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_PITCH_BYTES   := "89,4E,18"
+
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_Y_SIZE       := 2
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_X_SIZE       := 3
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_Z_SIZE       := 3
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_HEADING_SIZE := 3
+Global EVERQUEST_GFX_DLL_t3dSetCameraLocation_PITCH_SIZE   := 3
+
+; EQGfx_Dx8.t3dSetCameraLens
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLens := 0x41950
+
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLens_FIELD_OF_VIEW := 0x3F ; D9 59 20 - fstp dword ptr [ecx+20]
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetCameraLens_DRAW_DISTANCE := 0x4C ; 89 41 30 - mov [ecx+30],eax
+
+Global EVERQUEST_GFX_DLL_t3dSetCameraLens_FIELD_OF_VIEW_BYTES := "D9,59,20"
+Global EVERQUEST_GFX_DLL_t3dSetCameraLens_DRAW_DISTANCE_BYTES := "89,41,30"
+
+Global EVERQUEST_GFX_DLL_t3dSetCameraLens_FIELD_OF_VIEW_SIZE := 3
+Global EVERQUEST_GFX_DLL_t3dSetCameraLens_DRAW_DISTANCE_SIZE := 3
+
+; EQGfx_Dx8.t3dSetFog
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetFog := 0x6BED0
+
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetFog_FOG_DRAW_DISTANCE_START := 0x2F ; 89 1D CCF81A04 - mov [EQGfx_Dx8.DLL+A4F8CC],ebx
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetFog_FOG_DRAW_DISTANCE_STOP  := 0x44 ; 89 1D D0F81A04 - mov [EQGfx_Dx8.DLL+A4F8D0],ebx
+Global EVERQUEST_OFFSET_GFX_DLL_t3dSetFog_FOG_COLOR               := 0x4C ; 89 0D C8F81A04 - mov [EQGfx_Dx8.DLL+A4F8C8],ecx
+
+Global EVERQUEST_GFX_DLL_t3dSetFog_FOG_DRAW_DISTANCE_START_BYTES := "89,1D,CC,F8,1A,04"
+Global EVERQUEST_GFX_DLL_t3dSetFog_FOG_DRAW_DISTANCE_STOP_BYTES  := "89,1D,D0,F8,1A,04"
+Global EVERQUEST_GFX_DLL_t3dSetFog_FOG_COLOR_BYTES               := "89,0D,C8,F8,1A,04"
+
+Global EVERQUEST_GFX_DLL_t3dSetFog_FOG_DRAW_DISTANCE_START_SIZE := 6
+Global EVERQUEST_GFX_DLL_t3dSetFog_FOG_DRAW_DISTANCE_STOP_SIZE  := 6
+Global EVERQUEST_GFX_DLL_t3dSetFog_FOG_COLOR_SIZE               := 6
+
 ; eqgame.exe+AAAD1 - 74 0C - je eqgame.exe+AAADF
 Global EVERQUEST_ASM_PLAY_NICE_JUMP       := 0x004AAAD1
 Global EVERQUEST_ASM_PLAY_NICE_JUMP_BYTES := "74,0C"
@@ -13,3 +121,126 @@ Global EVERQUEST_ASM_PLAY_NICE_JUMP_SIZE  := 2
 ; eqgame.exe+AAAD3 - FF 35 68967900 - push [eqgame.exe+399668]
 ; eqgame.exe+AAAD9 - FF 15 5C315E00 - call dword ptr [eqgame.exe+1E315C] -> kernel32.Sleep
 Global EVERQUEST_ASM_PLAY_NICE_SLEEP := 0x00799668 ; DWORD ; eqgame.exe+399668
+
+Global EVERQUEST_SPEED_HACK_SPEED_MODIFIER := 0x00602410
+
+Global EVERQUEST_CAMERA_PITCH_DEFAULT := -8.5 ; 119.5 + 8.5 = 128 everquest degrees = 90 degrees
+
+Global EVERQUEST_CAMERA_PITCH_MIN := -119.5
+Global EVERQUEST_CAMERA_PITCH_MAX := 119.5
+
+Global EVERQUEST_CAMERA_FIELD_OF_VIEW_FIRST_PERSON_DEFAULT := 55
+Global EVERQUEST_CAMERA_FIELD_OF_VIEW_THIRD_PERSON_DEFAULT := 45
+
+Global EVERQUEST_FIELD_OF_VIEW_MIN := 1
+Global EVERQUEST_FIELD_OF_VIEW_MAX := 125
+
+Global EVERQUEST_DRAW_DISTANCE_MIN := 1
+Global EVERQUEST_DRAW_DISTANCE_MAX := 9999
+
+Global EVERQUEST_CAMERA_VIEW := 0x0063BE68 ; DWORD ; EVERQUEST_CAMERA_VIEW_x
+
+Global EVERQUEST_CAMERA_VIEW_FIRST_PERSON   := 0
+Global EVERQUEST_CAMERA_VIEW_THIRD_PERSON_1 := 1
+Global EVERQUEST_CAMERA_VIEW_THIRD_PERSON_2 := 2
+Global EVERQUEST_CAMERA_VIEW_THIRD_PERSON_3 := 3
+Global EVERQUEST_CAMERA_VIEW_THIRD_PERSON_4 := 4
+Global EVERQUEST_CAMERA_VIEW_THIRD_PERSON_5 := 5
+Global EVERQUEST_CAMERA_VIEW_THIRD_PERSON_OVERHEAD := EVERQUEST_CAMERA_VIEW_THIRD_PERSON_1
+Global EVERQUEST_CAMERA_VIEW_THIRD_PERSON_CHASE    := EVERQUEST_CAMERA_VIEW_THIRD_PERSON_2
+Global EVERQUEST_CAMERA_VIEW_THIRD_PERSON_TETHER   := EVERQUEST_CAMERA_VIEW_THIRD_PERSON_5
+
+Global EVERQUEST_CAMERA_HEADING_MIN := 0
+Global EVERQUEST_CAMERA_HEADING_MAX := 512
+
+Global EVERQUEST_MOUSE_X := 0x008092E8 ; DWORD
+Global EVERQUEST_MOUSE_Y := 0x008092EC ; DWORD
+
+Global EVERQUEST_STANDING_STATE_STANDING := 0x64
+Global EVERQUEST_STANDING_STATE_FROZEN   := 0x66 ; mesmerized / feared ; You lose control of yourself!
+Global EVERQUEST_STANDING_STATE_LOOTING  := 0x69 ; looting or bind wound
+Global EVERQUEST_STANDING_STATE_SITTING  := 0x6E
+Global EVERQUEST_STANDING_STATE_DUCKING  := 0x6F ; crouching
+Global EVERQUEST_STANDING_STATE_FEIGNED  := 0x73 ; feign death
+Global EVERQUEST_STANDING_STATE_DEAD     := 0x78
+
+Global EVERQUEST_IS_ATTACKING_READ_ONLY := 0x0063DB28
+Global EVERQUEST_IS_ATTACKING_TOGGLE    := 0x007F6FFC
+
+Global EVERQUEST_IS_ATTACKING_READ_ONLY_TRUE := 257
+Global EVERQUEST_IS_ATTACKING_TOGGLE_TRUE    := 65536
+
+everquest_GetZonePlayerName()
+{
+    zone_info := EVERQUEST_ZONE_INFO_STRUCTURE
+    zone_player_name := Memory_ReadString(everquest_process_handle, zone_info + EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME, 0x40)
+
+    Return, zone_player_name
+}
+
+everquest_GetZoneShortName()
+{
+    zone_info := EVERQUEST_ZONE_INFO_STRUCTURE
+    zone_short_name := Memory_ReadString(everquest_process_handle, zone_info + EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME, 0x20)
+
+    Return, zone_short_name
+}
+
+everquest_GetZoneLongName()
+{
+    zone_info := EVERQUEST_ZONE_INFO_STRUCTURE
+    zone_long_name := Memory_ReadString(everquest_process_handle, zone_info + EVERQUEST_OFFSET_ZONE_INFO_LONG_NAME,  0x80)
+
+    Return, zone_long_name
+}
+
+everquest_GetCharInfoPointer()
+{
+    char_info := Memory_Read(everquest_process_handle, EVERQUEST_CHAR_INFO_POINTER)
+
+    Return, char_info
+}
+
+everquest_GetPlayerSpawnInfoPointer()
+{
+    player_spawn_info := Memory_Read(everquest_process_handle, EVERQUEST_PLAYER_SPAWN_INFO_POINTER)
+
+    Return, player_spawn_info
+}
+
+everquest_GetTargetSpawnInfoPointer()
+{
+    target_spawn_info := Memory_Read(everquest_process_handle, EVERQUEST_TARGET_SPAWN_INFO_POINTER)
+
+    Return, target_spawn_info
+}
+
+everquest_GetPlayerActorInfoPointer()
+{
+    player_spawn_info := Memory_Read(everquest_process_handle, EVERQUEST_PLAYER_SPAWN_INFO_POINTER)
+
+    player_actor_info := Memory_Read(everquest_process_handle, player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER)
+
+    Return, player_actor_info
+}
+
+everquest_GetCameraPointer()
+{
+    camera := Memory_Read(everquest_process_handle, EVERQUEST_CAMERA_POINTER)
+
+    Return, camera
+}
+
+everquest_GetDllAddress(dll_name)
+{
+    address := Memory_GetModuleBase(everquest_process_id, dll_name)
+
+    Return, address
+}
+
+everquest_GetGfxDllAddress()
+{
+    address := Memory_GetModuleBase(everquest_process_id, EVERQUEST_GFX_DLL)
+
+    Return, address
+}

@@ -14,8 +14,6 @@
 
 #include <boost/math/constants/constants.hpp>
 
-#include <boost/math/special_functions/round.hpp>
-
 #include <boost/range/algorithm.hpp>
 
 #include <boost/foreach.hpp>
@@ -49,7 +47,7 @@ double draw_time_stop;
 
 int draw_time_count = 0;
 
-int draw_fps = 0;
+double draw_fps = 0.0;
 
 int window_id = 0;
 
@@ -67,17 +65,15 @@ bool window_always_on_top = false;
 
 bool window_start_maximized = false;
 
-int menu_id = 0;
+WNDPROC window_proc_freeglut;
 
-int menu_value = -1;
+LRESULT CALLBACK window_proc_hook(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam);
 
-int menu_num_items = -1;
+HMENU window_menu;
 
-bool menu_in_use = false;
-
-enum menu_value_t
+enum window_menu_id_t
 {
-    MENU_APP_EXIT,
+    MENU_APP_EXIT = 10000,
     MENU_MAP_DRAW_INFO_TEXT_TOGGLE,
     MENU_MAP_DRAW_LINES_TOGGLE,
     MENU_MAP_DRAW_POINTS_TOGGLE,
@@ -87,6 +83,10 @@ enum menu_value_t
     MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE,
     MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE,
     MENU_MAP_DRAW_SPAWN_LIST_TOGGLE,
+    MENU_SPAWN_FILTER_TOGGLE,
+    MENU_SPAWN_LINE_TOGGLE,
+    MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE,
+    MENU_MAP_CENTER_ON_TARGET_TOGGLE,
     MENU_MAP_DRAW_FPS_TOGGLE,
 };
 
@@ -247,6 +247,8 @@ struct map_spawn_t
     int race;
     int _class; // class is a keyword
 
+    int guild_id;
+
     int hp;
     int hp_max;
 
@@ -359,7 +361,7 @@ void parse_ini(std::string ini_filename)
 
     if (window_offset_x > -1 && window_offset_y > -1)
     {
-        glutPositionWindow(window_offset_x,window_offset_y);
+        glutPositionWindow(window_offset_x, window_offset_y);
     }
 
     window_center = pt.get<bool>("Window.bCenter", window_center);
@@ -601,6 +603,106 @@ void draw_square(float x, float y, int size)
         glVertex2f(x2, y1);
         glVertex2f(x2, y2);
         glVertex2f(x1, y2);
+    glEnd();
+}
+
+void draw_triangle(float x, float y, int size)
+{
+    glBegin(GL_POLYGON);
+        glVertex2f(x, y - size * 2);
+        glVertex2f(x - 0.866f * size, y - 0.5f * size);
+        glVertex2f(x + 0.866f * size, y - 0.5f * size);
+    glEnd();
+}
+
+void draw_circle(float x, float y, float radius, bool filled = true)
+{
+    int num_segments = 10 * sqrtf(radius);
+
+    if (filled == true)
+    {
+        glBegin(GL_TRIANGLE_FAN);
+    }
+    else
+    {
+        glLineWidth(1.0f);
+        
+        glBegin(GL_LINE_LOOP);
+    }
+
+    float angle;
+    for (int i = 0; i < num_segments; i++)
+    {
+        angle = i * 2 * PI / num_segments;
+
+        glVertex2f
+        (
+            x + (cos(angle) * radius),
+            y + (sin(angle) * radius)
+        );
+    }
+
+    glEnd();
+}
+
+/*
+// http://slabode.exofire.net/circle_draw.shtml
+void draw_circle_ex(float cx, float cy, float radius)
+{
+    int num_segments = 10 * sqrtf(radius);
+
+    float theta = 2 * PI / num_segments;
+
+    float tangetial_factor = tanf(theta);
+    float radial_factor    = cosf(theta);
+
+    float x = radius;
+    float y = 0;
+
+    glBegin(GL_LINE_LOOP);
+
+    for(int i = 0; i < num_segments; i++)
+    {
+        glVertex2f(x + cx, y + cy);
+
+        float tx = -y;
+        float ty = x;
+
+        x += tx * tangetial_factor;
+        y += ty * tangetial_factor;
+
+        x *= radial_factor;
+        y *= radial_factor;
+    }
+
+    glEnd();
+}
+*/
+
+// http://slabode.exofire.net/circle_draw.shtml
+void draw_circle_ex(float cx, float cy, float radius)
+{
+    int num_segments = 10 * sqrtf(radius);
+
+    float theta = 2 * PI / float(num_segments);
+    float c = cosf(theta);
+    float s = sinf(theta);
+    float t;
+
+    float x = radius;
+    float y = 0;
+
+    glBegin(GL_LINE_LOOP);
+
+    for(int i = 0; i < num_segments; i++)
+    {
+        glVertex2f(x + cx, y + cy);
+
+        t = x;
+        x = c * x - s * y;
+        y = s * t + c * y;
+    }
+
     glEnd();
 }
 
@@ -867,6 +969,19 @@ void draw_spawn_list()
     }
 }
 
+void draw_error_text(std::string text)
+{
+    int error_text_length = glutBitmapLength(font_name, (unsigned char*)text.c_str());
+
+    draw_bitmap_string
+    (
+        (window_width  / 2) - (error_text_length / 2),
+        (window_height / 2) + font_size,
+        font_name,
+        text
+    );
+}
+
 void spawn_filter_toggle()
 {
     toggle_bool(spawn_filter_enabled);
@@ -927,6 +1042,11 @@ void map_draw_spawn_type_corpse_toggle()
 void map_draw_fps_toggle()
 {
     toggle_bool(map_draw_fps);
+}
+
+void map_center_on_target_toggle()
+{
+    toggle_bool(map_center_on_target);
 }
 
 void map_center()
@@ -1113,7 +1233,7 @@ void update_zone(int value)
 {
     glutTimerFunc(1000, update_zone, 0);
 
-    if (memory.get_process_hwnd() == NULL)
+    if (memory.get_process_hwnd() == NULL || everquest_is_in_game(memory) == false)
     {
         glutSetWindowTitle(application_name.c_str());
         return;
@@ -1236,7 +1356,7 @@ void update_zone(int value)
 
 void update_spawns(int value)
 {
-    if (memory.get_process_hwnd() == NULL)
+    if (memory.get_process_hwnd() == NULL || everquest_is_in_game(memory) == false)
     {
         return;
     }
@@ -1271,8 +1391,8 @@ void update_spawns(int value)
 
         map_spawn.address = spawn_info_address;
 
-        map_spawn.spawn_id = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID, 2);
-        map_spawn.owner_id = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID, 2);
+        map_spawn.spawn_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID);
+        map_spawn.owner_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID);
 
         map_spawn.name      = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME,      0x40);
         map_spawn.last_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME, 0x20);
@@ -1295,6 +1415,8 @@ void update_spawns(int value)
         map_spawn.level  = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LEVEL);
         map_spawn.race   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_RACE);
         map_spawn._class = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
+
+        map_spawn.guild_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_GUILD_ID);
 
         map_spawn.hp     = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT, 4);
         map_spawn.hp_max = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX,     4);
@@ -1534,122 +1656,6 @@ void hotkeys(int key, int x, int y)
     }  
 }
 
-void menu(int value)
-{
-    menu_value = value;
-
-    switch (value)
-    {
-        case MENU_APP_EXIT:
-            glutDestroyWindow(window_id);
-            exit(0);
-            break;
-
-        case MENU_MAP_DRAW_INFO_TEXT_TOGGLE:
-            map_draw_info_text_toggle();
-            break;
-
-        case MENU_MAP_DRAW_LINES_TOGGLE:
-            map_draw_lines_toggle();
-            break;
-
-        case MENU_MAP_DRAW_POINTS_TOGGLE:
-            map_draw_points_toggle();
-            break;
-
-        case MENU_MAP_DRAW_SPAWNS_TOGGLE:
-            map_draw_spawns_toggle();
-            break;
-
-        case MENU_PARSE_INI_FILES:
-            parse_ini_files();
-            break;
-
-        case MENU_MAP_DRAW_SPAWN_TYPE_PLAYER_TOGGLE:
-            map_draw_spawn_type_player_toggle();
-            break;
-
-        case MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE:
-            map_draw_spawn_type_npc_toggle();
-            break;
-
-        case MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE:
-            map_draw_spawn_type_corpse_toggle();
-            break;
-
-        case MENU_MAP_DRAW_SPAWN_LIST_TOGGLE:
-            map_draw_spawn_list_toggle();
-            break;
-
-        case MENU_MAP_DRAW_FPS_TOGGLE:
-            map_draw_fps_toggle();
-            break;
-    }
-
-    glutPostRedisplay();
-}
-
-void menu_add_separator()
-{
-    std::string menu_separator = "-------------------------------------";
-
-    glutAddMenuEntry(menu_separator.c_str(), -1);
-}
-
-void menu_create()
-{
-    menu_id = glutCreateMenu(menu);
-
-    glutSetMenu(menu_id);
-
-    // glutSetMenuFont(menu_id, font_name); // broken, glutSetMenuFont function not included
-
-    glutAddMenuEntry("Information Text    (F1)",                 MENU_MAP_DRAW_INFO_TEXT_TOGGLE);
-    menu_add_separator();
-    glutAddMenuEntry("Lines               (F2)",                 MENU_MAP_DRAW_LINES_TOGGLE);
-    glutAddMenuEntry("Points              (F3)",                 MENU_MAP_DRAW_POINTS_TOGGLE);
-    glutAddMenuEntry("Spawns              (F4)",                 MENU_MAP_DRAW_SPAWNS_TOGGLE);
-    menu_add_separator();
-    glutAddMenuEntry("Reload Config Files (F5)",                 MENU_PARSE_INI_FILES);
-    menu_add_separator();
-    glutAddMenuEntry("Players             (F6)",                 MENU_MAP_DRAW_SPAWN_TYPE_PLAYER_TOGGLE);
-    glutAddMenuEntry("NPCs                (F7)",                 MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE);
-    glutAddMenuEntry("Corpses             (F8)",                 MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE);
-    menu_add_separator();
-    glutAddMenuEntry("Spawn List          (F9 or Backspace)",    MENU_MAP_DRAW_SPAWN_LIST_TOGGLE);
-    menu_add_separator();
-    glutAddMenuEntry("Frames Per Second",                        MENU_MAP_DRAW_FPS_TOGGLE);
-    menu_add_separator();
-    glutAddMenuEntry("Exit                (Escape)",             MENU_APP_EXIT);
-
-    menu_num_items = glutGet(GLUT_MENU_NUM_ITEMS);
-
-    glutAttachMenu(GLUT_RIGHT_BUTTON);
-}
-
-void menu_destroy()
-{
-    glutDestroyMenu(menu_id);
-}
-
-void menu_recreate()
-{
-    menu_destroy();
-    menu_create();
-}
-
-void menu_status(int status, int x, int y)
-{
-    if (status == GLUT_MENU_IN_USE)
-    {
-        menu_in_use = true;
-    }
-    else
-    {
-        menu_in_use = false;
-    }
-}
-
 void mouse(int button, int state, int x, int y)
 {
     if (state == GLUT_UP)
@@ -1733,7 +1739,7 @@ void reshape(int w, int h)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    glOrtho(0, window_width, window_height, 0, 0, 1);
+    glOrtho(0, window_width, window_height, 0, -1, 1);
 }
 
 void render()
@@ -1749,21 +1755,26 @@ void render()
     {
         draw_color_magenta();
 
-        std::string error_text = "ERROR: EverQuest window not found!";
-
-        draw_bitmap_string
-        (
-            (window_width  / 2) - (glutBitmapLength(font_name, (unsigned char*)error_text.c_str()) / 2),
-            (window_height / 2) + font_size,
-            font_name,
-            error_text
-        );
+        draw_error_text("ERROR: EverQuest window not found!");
 
         map_draw_spawn_list = false;
 
-        //glutSwapBuffers();
+        glutSwapBuffers();
 
-        //return;
+        return;
+    }
+
+    if (everquest_is_in_game(memory) == false)
+    {
+        draw_color_magenta();
+
+        draw_error_text("ERROR: You are not in game!");
+
+        map_draw_spawn_list = false;
+
+        glutSwapBuffers();
+
+        return;
     }
 
     if (map_draw_spawn_list == true)
@@ -1789,21 +1800,25 @@ void render()
 
     float player_movement_speed = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED);
 
+    int target_spawn_info = everquest_get_target_spawn_info(memory);
+
+    float target_y = memory.read_any<float>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
+    float target_x = memory.read_any<float>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
+    float target_z = memory.read_any<float>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
+
+    float target_heading = memory.read_any<float>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HEADING);
+
+    float target_movement_speed = memory.read_any<float>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED);
+
     map_draw_x = player_x;
     map_draw_y = player_y;
 
     if (map_center_on_target == true)
     {
-        int target_spawn_info = everquest_get_target_spawn_info(memory);
-
         if (target_spawn_info != player_spawn_info)
         {
             if (target_spawn_info != EVERQUEST_SPAWN_INFO_NULL)
             {
-                float target_y = memory.read_any<float>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
-                float target_x = memory.read_any<float>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
-                //float target_z = memory.read_any<float>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
-
                 map_draw_x = target_x;
                 map_draw_y = target_y;
             }
@@ -2128,7 +2143,13 @@ void render()
 
                         if (map_draw_spawn_guild_name == true)
                         {
-                            // TODO
+                            if (map_spawn.guild_id != EVERQUEST_GUILD_ID_NULL)
+                            {
+                                std::stringstream buffer;
+                                buffer << "<" << everquest_get_guild_name(memory, map_spawn.guild_id) << ">";
+
+                                spawn_extra_text.push_back(buffer.str());
+                            }
                         }
                     }
 
@@ -2178,9 +2199,38 @@ void render()
                     if (map_draw_spawn_standing_state == true)
                     {
                         std::stringstream buffer;
-                        buffer << "Standing State: " << map_spawn.standing_state;
+                        buffer << "State: ";
 
-                        // TODO
+                        switch (map_spawn.standing_state)
+                        {
+                            case EVERQUEST_STANDING_STATE_STANDING:
+                                buffer << "Standing";
+                                break;
+
+                            case EVERQUEST_STANDING_STATE_FROZEN:
+                                buffer << "Mesmerised / Feared";
+                                break;
+
+                            case EVERQUEST_STANDING_STATE_LOOTING:
+                                buffer << "Looting / Bind Wound";
+                                break;
+
+                            case EVERQUEST_STANDING_STATE_SITTING:
+                                buffer << "Sitting";
+                                break;
+
+                            case EVERQUEST_STANDING_STATE_DUCKING:
+                                buffer << "Ducking";
+                                break;
+
+                            case EVERQUEST_STANDING_STATE_FEIGNED:
+                                buffer << "Feign Death";
+                                break;
+
+                            case EVERQUEST_STANDING_STATE_DEAD:
+                                buffer << "Dead";
+                                break;
+                        }
 
                         spawn_extra_text.push_back(buffer.str());
                     }
@@ -2191,10 +2241,10 @@ void render()
                         {
                             std::stringstream buffer;
 
-                            buffer << "Is Holding: ";
-                            buffer << "P" << map_spawn.is_holding_primary;
-                            buffer << " ";
-                            buffer << "S" << map_spawn.is_holding_secondary;
+                            buffer << "Holding: ";
+                            buffer << "(Pri): " << map_spawn.is_holding_primary;
+                            buffer << " ; ";
+                            buffer << "(Sec): " << map_spawn.is_holding_secondary;
 
                             spawn_extra_text.push_back(buffer.str());
                         }
@@ -2283,24 +2333,18 @@ void render()
 
     draw_time = draw_time_stop - draw_time_start;
 
-    if (draw_time < 1.0)
+    if (draw_time > 0.0)
     {
         draw_time_count++;
     }
-    else
-    {
-        draw_fps = boost::math::round(draw_time_count / draw_time);
 
+    draw_fps = draw_time_count / draw_time;
+
+    if (draw_time_count > 0)
+    {
         draw_time_count = 0;
-    }
 
-    if (memory.get_process_hwnd() == NULL)
-    {
-        player_x = 0;
-        player_y = 0;
-        player_z = 0;
-        player_heading = 0;
-        player_movement_speed = 0;
+        draw_time = 0;
     }
 
     if (map_draw_info_text == true)
@@ -2462,8 +2506,6 @@ void render()
         map_info_text.push_back(map_info_text_buffer.str());
         map_info_text_buffer.str("");
 
-        player_heading = boost::math::round(player_heading);
-
         map_info_text_buffer << "Heading: " << player_heading;
         map_info_text.push_back(map_info_text_buffer.str());
         map_info_text_buffer.str("");
@@ -2471,6 +2513,24 @@ void render()
         map_info_text_buffer << "Speed: " << player_movement_speed;
         map_info_text.push_back(map_info_text_buffer.str());
         map_info_text_buffer.str("");
+
+        if (target_spawn_info != player_spawn_info)
+        {
+            if (target_spawn_info != EVERQUEST_SPAWN_INFO_NULL)
+            {
+                map_info_text_buffer << "Target Loc: " << target_y << ", " << target_x << ", " << target_z;
+                map_info_text.push_back(map_info_text_buffer.str());
+                map_info_text_buffer.str("");
+
+                map_info_text_buffer << "Target Heading: " << target_heading;
+                map_info_text.push_back(map_info_text_buffer.str());
+                map_info_text_buffer.str("");
+
+                map_info_text_buffer << "Target Speed: " << target_movement_speed;
+                map_info_text.push_back(map_info_text_buffer.str());
+                map_info_text_buffer.str("");
+            }
+        }
 
         int map_info_text_index = 1;
         foreach (std::string map_info_text_value, map_info_text)
@@ -2496,7 +2556,177 @@ void init()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    glOrtho(0, window_width, window_height, 0, 0, 1);
+    glOrtho(0, window_width, window_height, 0, -1, 1);
+}
+
+void menu_toggle_checkmark_by_bool(int menu_id, bool b)
+{
+    UINT check_type = MF_UNCHECKED;
+
+    if (b)
+    {
+        check_type = MF_CHECKED;
+    }
+    else
+    {
+        check_type = MF_UNCHECKED;
+    }
+
+    CheckMenuItem(window_menu, menu_id, check_type);
+}
+
+void menu_update_checkmarks()
+{
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_INFO_TEXT_TOGGLE, map_draw_info_text);
+
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_LINES_TOGGLE, map_draw_lines);
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_POINTS_TOGGLE, map_draw_points);
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_SPAWNS_TOGGLE, map_draw_spawns);
+
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_SPAWN_TYPE_PLAYER_TOGGLE, map_draw_spawn_type_player);
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE, map_draw_spawn_type_npc);
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE, map_draw_spawn_type_corpse);
+
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_SPAWN_LIST_TOGGLE, map_draw_spawn_list);
+
+    menu_toggle_checkmark_by_bool(MENU_SPAWN_FILTER_TOGGLE, spawn_filter_enabled);
+    menu_toggle_checkmark_by_bool(MENU_SPAWN_LINE_TOGGLE, spawn_line_enabled);
+
+    menu_toggle_checkmark_by_bool(MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE, window_always_on_top);
+
+    menu_toggle_checkmark_by_bool(MENU_MAP_CENTER_ON_TARGET_TOGGLE, map_center_on_target);
+    menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_FPS_TOGGLE, map_draw_fps);
+}
+
+void menu_append_separator()
+{
+    AppendMenu(window_menu, MF_SEPARATOR, 0, "");
+}
+
+void menu_create()
+{
+    window_menu = CreatePopupMenu();
+
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_INFO_TEXT_TOGGLE,         "Information Text\tF1");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_LINES_TOGGLE,             "Lines\tF2");
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_POINTS_TOGGLE,            "Points\tF3");
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_SPAWNS_TOGGLE,            "Spawns\tF4");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_PARSE_INI_FILES,                   "Reload Config Files\tF5");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_SPAWN_TYPE_PLAYER_TOGGLE, "Players\tF6");
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE,    "NPCs\tF7");
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE, "Corpses\tF8");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_SPAWN_LIST_TOGGLE,        "Spawn List\tF9");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_SPAWN_FILTER_TOGGLE,               "Spawn Filter\tF10");
+    AppendMenu(window_menu, MF_STRING, MENU_SPAWN_LINE_TOGGLE,                 "Spawn Line\tF11");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE,       "Window Always On Top\tF12");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_CENTER_ON_TARGET_TOGGLE,       "Center On Target");
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_FPS_TOGGLE,               "Frames Per Second");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_APP_EXIT,                          "Exit\tEscape");
+
+    menu_update_checkmarks();
+
+    SetMenu(window_hwnd, window_menu);
+}
+
+void window_message_command(HWND hwnd, int command, int notify_code, HWND hwnd_item)
+{
+    switch (command) 
+    {
+        case MENU_APP_EXIT:
+            glutDestroyWindow(window_id);
+            exit(0);
+            break;
+
+        case MENU_MAP_DRAW_INFO_TEXT_TOGGLE:
+            map_draw_info_text_toggle();
+            break;
+
+        case MENU_MAP_DRAW_LINES_TOGGLE:
+            map_draw_lines_toggle();
+            break;
+
+        case MENU_MAP_DRAW_POINTS_TOGGLE:
+            map_draw_points_toggle();
+            break;
+
+        case MENU_MAP_DRAW_SPAWNS_TOGGLE:
+            map_draw_spawns_toggle();
+            break;
+
+        case MENU_PARSE_INI_FILES:
+            parse_ini_files();
+            break;
+
+        case MENU_MAP_DRAW_SPAWN_TYPE_PLAYER_TOGGLE:
+            map_draw_spawn_type_player_toggle();
+            break;
+
+        case MENU_MAP_DRAW_SPAWN_TYPE_NPC_TOGGLE:
+            map_draw_spawn_type_npc_toggle();
+            break;
+
+        case MENU_MAP_DRAW_SPAWN_TYPE_CORPSE_TOGGLE:
+            map_draw_spawn_type_corpse_toggle();
+            break;
+
+        case MENU_MAP_DRAW_SPAWN_LIST_TOGGLE:
+            map_draw_spawn_list_toggle();
+            break;
+
+        case MENU_SPAWN_FILTER_TOGGLE:
+            spawn_filter_toggle();
+            break;
+
+        case MENU_SPAWN_LINE_TOGGLE:
+            spawn_line_toggle();
+            break;
+
+        case MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE:
+            window_always_on_top_toggle();
+            break;
+
+        case MENU_MAP_CENTER_ON_TARGET_TOGGLE:
+            map_center_on_target_toggle();
+            break;
+
+        case MENU_MAP_DRAW_FPS_TOGGLE:
+            map_draw_fps_toggle();
+            break;
+    }
+}
+
+LRESULT CALLBACK window_proc_hook(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+{
+    switch (message)
+    {
+        case WM_COMMAND:
+            window_message_command(hwnd, LOWORD(wparam), HIWORD(wparam), (HWND)lparam);
+            break;
+
+        case WM_RBUTTONDOWN:
+            POINT p;
+            p.x = LOWORD(lparam);
+            p.y = HIWORD(lparam);
+
+            ClientToScreen(hwnd, &p);
+
+            menu_update_checkmarks();
+
+            TrackPopupMenu(window_menu, TPM_LEFTALIGN | TPM_RIGHTBUTTON , p.x, p.y, 0, hwnd, NULL);
+            break;
+    }
+
+    LRESULT result = CallWindowProc(window_proc_freeglut, hwnd, message, wparam, lparam);
+
+    return result;
 }
 
 int main(int argc, char** argv)
@@ -2517,7 +2747,9 @@ int main(int argc, char** argv)
 
     window_hwnd = FindWindow("FREEGLUT", application_name.c_str());
 
-    menu_create();
+    window_proc_freeglut = (WNDPROC)GetWindowLongPtr(window_hwnd, GWL_WNDPROC);
+
+    SetWindowLongPtr(window_hwnd, GWL_WNDPROC, (LONG_PTR)window_proc_hook);
 
     parse_ini(ini_file);
 
@@ -2529,7 +2761,6 @@ int main(int argc, char** argv)
     glutMouseFunc(mouse);
     glutMouseWheelFunc(mouse_wheel);
     glutMotionFunc(motion);
-    glutMenuStatusFunc(menu_status);
 
     glutTimerFunc(100,  update_process, 0);
     glutTimerFunc(1000, update_zone,    0);
@@ -2550,6 +2781,8 @@ int main(int argc, char** argv)
     }
 
     init();
+
+    menu_create();
 
     glutMainLoop();
 

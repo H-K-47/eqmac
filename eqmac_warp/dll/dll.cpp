@@ -53,6 +53,10 @@ const std::string ini_file = "eqmac_warp.ini";
 #define VK_8 0x38
 #define VK_9 0x39
 
+#define VK_G 0x47
+
+#define VK_ALT VK_MENU
+
 typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
 static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
 
@@ -215,6 +219,61 @@ void update_spawns()
 
 void timer_keys(HWND hwnd)
 {
+    boost::property_tree::ptree pt;
+    boost::property_tree::ini_parser::read_ini(ini_file, pt);
+
+    bool auto_gate_enabled = pt.get<bool>("AutoGate.bEnabled", false);
+
+    if (auto_gate_enabled == true)
+    {
+        int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+        int player_hp_current = memory.read_bytes(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT, 4);
+        int player_hp_max     = memory.read_bytes(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX,     4);
+
+        float player_hp_percent = (player_hp_current * 100) / player_hp_max;
+
+        int   auto_gate_health_points_minimum  = pt.get<float>("AutoGate.iHealthPointsMinimum");
+        float auto_gate_health_percent_minimum = pt.get<float>("AutoGate.fHealthPercentMinimum");
+
+        bool auto_gate_ready = false;
+
+        if (player_hp_current < auto_gate_health_points_minimum)
+        {
+            if (player_hp_max > auto_gate_health_points_minimum)
+            {
+                auto_gate_ready = true;
+            }
+        }
+
+        if (player_hp_percent < auto_gate_health_percent_minimum)
+        {
+            auto_gate_ready = true;
+        }
+
+        if (auto_gate_health_points_minimum <= 0)
+        {
+            auto_gate_ready = false;
+        }
+
+        if (auto_gate_health_percent_minimum <= 0.0)
+        {
+            auto_gate_ready = false;
+        }
+
+        int target_spawn_info = everquest_get_target_spawn_info(memory);
+
+        if (target_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
+        {
+            auto_gate_ready = false;
+        }
+
+        if (auto_gate_ready == true)
+        {
+            memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
+        }
+    }
+
     HWND foreground_hwnd = GetForegroundWindow();
 
     DWORD foreground_process_id;
@@ -343,7 +402,7 @@ void timer_keys(HWND hwnd)
             return;
         }
 
-        bool warp_to_spawn_target = pt.get<bool>("WarpToSpawn.bTarget", false);
+        bool warp_to_spawn_do_target = pt.get<bool>("WarpToSpawn.bDoTarget", false);
 
         bool warp_to_spawn_skip_corpses = pt.get<bool>("WarpToSpawn.bSkipCorpses", true);
 
@@ -425,7 +484,7 @@ void timer_keys(HWND hwnd)
 
         everquest_function_warp_to_safe_point(EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE);
 
-        if (warp_to_spawn_target == true)
+        if (warp_to_spawn_do_target == true)
         {
             if (warp_target_address != EVERQUEST_SPAWN_INFO_NULL)
             {
@@ -464,9 +523,9 @@ void timer_keys(HWND hwnd)
         boost::property_tree::ptree pt;
         boost::property_tree::ini_parser::read_ini(ini_file, pt);
 
-        bool warp_to_spawn_enabled = pt.get<bool>("WarpToSpawn.bEnabled", false);
+        bool warp_to_target_enabled = pt.get<bool>("WarpToTarget.bEnabled", false);
 
-        if (warp_to_spawn_enabled == false)
+        if (warp_to_target_enabled == false)
         {
             return;
         }
@@ -515,6 +574,26 @@ void timer_keys(HWND hwnd)
         everquest_function_warp_to_safe_point(EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE);
 
         Sleep(1000);
+    }
+
+    if (GetAsyncKeyState(VK_G))
+    {
+        memory.set_process_by_id(foreground_process_id);
+
+        if (memory.get_process_id() == 0)
+        {
+            return;
+        }
+
+        if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+        {
+            if (GetAsyncKeyState(VK_ALT) & 0x8000)
+            {
+                int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+                memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
+            }
+        }
     }
 }
 

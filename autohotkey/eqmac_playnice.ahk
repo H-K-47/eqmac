@@ -4,7 +4,7 @@
 
 Global ini_file := "eqmac_playnice.ini"
 
-Global sleep_time_foreground := 33
+Global sleep_time_foreground := 10
 
 Global sleep_time_background := 100
 
@@ -56,7 +56,7 @@ PlayNice_Enable()
 
                 everquest_process_handle := Memory_GetProcessHandle(everquest_process_id)
 
-                 Memory_WriteNops(everquest_process_handle, EVERQUEST_ASM_PLAY_NICE_JUMP, EVERQUEST_ASM_PLAY_NICE_JUMP_SIZE)
+                Memory_WriteNops(everquest_process_handle, EVERQUEST_ASM_PLAY_NICE_JUMP, EVERQUEST_ASM_PLAY_NICE_JUMP_SIZE)
 
                 If (psapi_process_id = active_process_id)
                 {

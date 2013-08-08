@@ -57,9 +57,6 @@ const std::string ini_file = "eqmac_warp.ini";
 
 #define VK_ALT VK_MENU
 
-typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
-static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
-
 memory memory;
 
 HANDLE module;
@@ -68,63 +65,19 @@ HANDLE window_thread;
 
 DWORD window_thread_id;
 
-struct map_spawn_t
-{
-    int address;
-
-    int count;
-
-    int spawn_id;
-    int owner_id;
-
-    std::string name;
-    std::string last_name;
-
-    float x, y, z;
-
-    float distance;
-    float distance_z;
-
-    float heading;
-
-    float movement_speed;
-
-    int standing_state;
-
-    int type;
-    int level;
-    int race;
-    int _class; // class is a keyword
-
-    int hp;
-    int hp_max;
-
-    bool is_target;
-    bool is_player_corpse;
-
-    int is_holding_both;
-    int is_holding_secondary;
-    int is_holding_primary;
-};
-
-std::vector<map_spawn_t> map_spawns;
-std::vector<map_spawn_t>::iterator map_spawns_it;
+std::vector<everquest_spawn_t> everquest_spawns;
+std::vector<everquest_spawn_t>::iterator everquest_spawns_it;
 
 struct sort_spawns_by_distance_t
 {
-    bool operator() (const map_spawn_t& map_spawn1, const map_spawn_t& map_spawn2)
+    bool operator() (const everquest_spawn_t& everquest_spawn1, const everquest_spawn_t& everquest_spawn2)
     {
-        return map_spawn1.distance > map_spawn2.distance;
+        return everquest_spawn1.distance > everquest_spawn2.distance;
     }
 };
 
 std::string warp_to_spawn_name = "";
 std::vector<std::string> warp_to_spawn_name_data;
-
-float calculate_distance(float x1, float y1, float x2, float y2)
-{
-    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
-}
 
 void update_spawns()
 {
@@ -133,88 +86,7 @@ void update_spawns()
         return;
     }
 
-    map_spawns.clear();
-
-    int player_spawn_info = everquest_get_player_spawn_info(memory);
-    int target_spawn_info = everquest_get_target_spawn_info(memory);
-
-    float player_y = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
-    float player_x = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
-    float player_z = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
-
-    int spawn_info_address = player_spawn_info;
-
-    int spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
-
-    spawn_info_address = spawn_next_spawn_info;
-
-    for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
-    {
-        spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
-
-        if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
-        {
-            break;
-        }
-
-        int spawn_actor_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER, 4);
-
-        map_spawn_t map_spawn;
-
-        map_spawn.address = spawn_info_address;
-
-        map_spawn.spawn_id = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID, 2);
-        map_spawn.owner_id = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID, 2);
-
-        map_spawn.name      = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME,      0x40);
-        map_spawn.last_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME, 0x20);
-
-        map_spawn.y = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Y);
-        map_spawn.x = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_X);
-        map_spawn.z = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Z);
-
-        map_spawn.distance = calculate_distance(player_x, player_y, map_spawn.x, map_spawn.y);
-
-        map_spawn.distance_z = map_spawn.z - player_z;
-
-        map_spawn.heading = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HEADING);
-
-        map_spawn.movement_speed = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED);
-
-        map_spawn.standing_state = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_STANDING_STATE);
-
-        map_spawn.type   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_TYPE);
-        map_spawn.level  = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LEVEL);
-        map_spawn.race   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_RACE);
-        map_spawn._class = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
-
-        map_spawn.hp     = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT, 4);
-        map_spawn.hp_max = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX,     4);
-
-        map_spawn.is_target = (spawn_info_address == target_spawn_info ? true : false);
-
-        map_spawn.is_player_corpse = false;
-
-        if (map_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
-        {
-            std::string player_name = memory.read_string(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40);
-
-            std::size_t found = map_spawn.name.find(player_name);
-
-            if (found != std::string::npos)
-            {
-                map_spawn.is_player_corpse = true;
-            }
-        }
-
-        map_spawn.is_holding_both      = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH,      4);
-        map_spawn.is_holding_secondary = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY, 4);
-        map_spawn.is_holding_primary   = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY,   4);
-
-        map_spawns.push_back(map_spawn);
-
-        spawn_info_address = spawn_next_spawn_info;
-    }
+    everquest_update_spawns(memory, everquest_spawns);
 }
 
 void timer_keys(HWND hwnd)
@@ -228,12 +100,12 @@ void timer_keys(HWND hwnd)
     {
         int player_spawn_info = everquest_get_player_spawn_info(memory);
 
-        int player_hp_current = memory.read_bytes(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT, 4);
-        int player_hp_max     = memory.read_bytes(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX,     4);
+        int player_hp_current = memory.read_any<DWORD>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT);
+        int player_hp_max     = memory.read_any<DWORD>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX);
 
         float player_hp_percent = (player_hp_current * 100) / player_hp_max;
 
-        int   auto_gate_health_points_minimum  = pt.get<float>("AutoGate.iHealthPointsMinimum");
+        int   auto_gate_health_points_minimum  = pt.get<int>("AutoGate.iHealthPointsMinimum");
         float auto_gate_health_percent_minimum = pt.get<float>("AutoGate.fHealthPercentMinimum");
 
         bool auto_gate_ready = false;
@@ -427,7 +299,7 @@ void timer_keys(HWND hwnd)
 
         update_spawns();
 
-        std::sort(map_spawns.begin(), map_spawns.end(), sort_spawns_by_distance_t());
+        std::sort(everquest_spawns.begin(), everquest_spawns.end(), sort_spawns_by_distance_t());
 
         bool found_spawn = false;
 
@@ -439,32 +311,32 @@ void timer_keys(HWND hwnd)
 
         int warp_target_address = EVERQUEST_SPAWN_INFO_NULL;
 
-        foreach (map_spawn_t map_spawn, map_spawns)
+        foreach (everquest_spawn_t everquest_spawn, everquest_spawns)
         {
 
             foreach(std::string warp_to_spawn_name_data_value, warp_to_spawn_name_data)
             {
                 if (warp_to_spawn_skip_corpses == true)
                 {
-                    if (map_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
+                    if (everquest_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
                     {
                         continue;
                     }
                 }
 
-                std::size_t found = map_spawn.name.find(warp_to_spawn_name_data_value);
+                std::size_t found = everquest_spawn.name.find(warp_to_spawn_name_data_value);
 
                 if (found != std::string::npos)
                 {
                     found_spawn = true;
 
-                    warp_y = map_spawn.y;
-                    warp_x = map_spawn.x;
-                    warp_z = map_spawn.z + 1.0;
+                    warp_y = everquest_spawn.y;
+                    warp_x = everquest_spawn.x;
+                    warp_z = everquest_spawn.z + 1.0;
 
-                    warp_heading = map_spawn.heading;
+                    warp_heading = everquest_spawn.heading;
 
-                    warp_target_address = map_spawn.address;
+                    warp_target_address = everquest_spawn.address;
 
                     break;
                 }
@@ -490,7 +362,7 @@ void timer_keys(HWND hwnd)
             {
                 Sleep(100);
 
-                memory.write_bytes(EVERQUEST_TARGET_SPAWN_INFO_POINTER, warp_target_address, 4);
+                memory.write_any<DWORD>(EVERQUEST_TARGET_SPAWN_INFO_POINTER, warp_target_address);
             }
         }
 
@@ -532,7 +404,7 @@ void timer_keys(HWND hwnd)
 
         update_spawns();
 
-        std::sort(map_spawns.begin(), map_spawns.end(), sort_spawns_by_distance_t());
+        std::sort(everquest_spawns.begin(), everquest_spawns.end(), sort_spawns_by_distance_t());
 
         bool found_spawn = false;
 
@@ -544,17 +416,17 @@ void timer_keys(HWND hwnd)
 
         int target_address = everquest_get_target_spawn_info(memory);
 
-        foreach (map_spawn_t map_spawn, map_spawns)
+        foreach (everquest_spawn_t everquest_spawn, everquest_spawns)
         {
-            if (map_spawn.address == target_address)
+            if (everquest_spawn.address == target_address)
             {
                 found_spawn = true;
 
-                warp_y = map_spawn.y;
-                warp_x = map_spawn.x;
-                warp_z = map_spawn.z + 1.0;
+                warp_y = everquest_spawn.y;
+                warp_x = everquest_spawn.x;
+                warp_z = everquest_spawn.z + 1.0;
 
-                warp_heading = map_spawn.heading;
+                warp_heading = everquest_spawn.heading;
 
                 break;
             }

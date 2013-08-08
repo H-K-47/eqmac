@@ -2,6 +2,8 @@
 #define EQMAC_HPP
 
 #include <string>
+#include <vector>
+#include <cmath>
 
 #include <windows.h>
 
@@ -79,12 +81,22 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_SPAWN_INFO_TYPE_NPC    1
 #define EVERQUEST_SPAWN_INFO_TYPE_CORPSE 2
 
-#define EVERQUEST_OFFSET_ACTOR_INFO_ANIMATION            0x0184 // BYTE
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH      0x0260 // DWORD
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY 0x0264 // DWORD
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY   0x0268 // DWORD
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_NOT_MOVING        0x032D // BYTE
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_LFG               0x0438 // BYTE
+#define EVERQUEST_OFFSET_ACTOR_TIME_STAMP                    0x0058 // DWORD
+#define EVERQUEST_OFFSET_ACTOR_TIME_STAMP_LAST_TICK          0x005C // DWORD
+#define EVERQUEST_OFFSET_ACTOR_CASTING_SPELL_TIME_STAMP      0x00CC // DWORD
+#define EVERQUEST_OFFSET_ACTOR_CASTING_SPELL_TIME_STAMP_EX   0x00E0 // DWORD
+#define EVERQUEST_OFFSET_ACTOR_INFO_ANIMATION                0x0184 // BYTE
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH          0x0260 // DWORD
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY     0x0264 // DWORD
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY       0x0268 // DWORD
+#define EVERQUEST_OFFSET_ACTOR_INFO_CASTING_SPELL_ID         0x027C // WORD
+#define EVERQUEST_OFFSET_ACTOR_INFO_CASTING_SPELL_GEM_NUMBER 0x027E // BYTE
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_NOT_MOVING            0x032D // BYTE
+#define EVERQUEST_OFFSET_ACTOR_INFO_IS_LFG                   0x0438 // BYTE
+
+#define EVERQUEST_CASTING_SPELL_ID_NULL 0xFFFF
+
+#define EVERQUEST_CASTING_SPELL_GEM_NUMBER_SINGING 255
 
 #define EVERQUEST_RACE_UNKNOWN   0
 #define EVERQUEST_RACE_HUMAN     1
@@ -140,13 +152,65 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT       0x004B459C
 #define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE 0x007F9510
 
-//typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
-//static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
+typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
+static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
 
 #define EVERQUEST_FUNCTION_DO_HOT_BUTTON 0x004209BD
 
-//typedef void __stdcall _everquest_function_do_hot_button(int button_index);
-//static _everquest_function_do_hot_button *everquest_function_do_hot_button = (_everquest_function_do_hot_button *)EVERQUEST_FUNCTION_DO_HOT_BUTTON;
+typedef void __stdcall _everquest_function_do_hot_button(int button_index);
+static _everquest_function_do_hot_button *everquest_function_do_hot_button = (_everquest_function_do_hot_button *)EVERQUEST_FUNCTION_DO_HOT_BUTTON;
+
+#define EVERQUEST_FUNCTION_CAST_SPELL 0x00000000
+
+typedef void __stdcall _everquest_function_cast_spell(int gem_index, int spell_id);
+static _everquest_function_cast_spell *everquest_function_cast_spell = (_everquest_function_cast_spell *)EVERQUEST_FUNCTION_CAST_SPELL;
+
+struct everquest_spawn_t
+{
+    int address;
+
+    int count;
+
+    int spawn_id;
+    int owner_id;
+    int guild_id;
+
+    std::string name;
+    std::string last_name;
+
+    float x;
+    float y;
+    float z;
+
+    float distance;
+    float distance_z;
+
+    float heading;
+
+    float movement_speed;
+
+    int standing_state;
+
+    int type;
+    int level;
+    int race;
+    int _class; // class is a keyword
+
+    int hp;
+    int hp_max;
+
+    bool is_target;
+    bool is_player_corpse;
+
+    int is_holding_both;
+    int is_holding_secondary;
+    int is_holding_primary;
+};
+
+float everquest_calculate_distance(float x1, float y1, float x2, float y2)
+{
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+}
 
 bool everquest_is_in_game(memory &memory)
 {
@@ -170,37 +234,37 @@ std::string everquest_get_zone_long_name(memory &memory)
 
 int everquest_get_char_info(memory &memory)
 {
-    return memory.read_bytes(EVERQUEST_CHAR_INFO_POINTER, 4);
+    return memory.read_any<DWORD>(EVERQUEST_CHAR_INFO_POINTER);
 }
 
 int everquest_get_player_spawn_info(memory &memory)
 {
-    return memory.read_bytes(EVERQUEST_PLAYER_SPAWN_INFO_POINTER, 4);
+    return memory.read_any<DWORD>(EVERQUEST_PLAYER_SPAWN_INFO_POINTER);
 }
 
 int everquest_get_player_actor_info(memory &memory)
 {
     int player_spawn_info = everquest_get_player_spawn_info(memory);
 
-    return memory.read_bytes(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER, 4);
+    return memory.read_any<DWORD>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
 }
 
 int everquest_get_target_spawn_info(memory &memory)
 {
-    return memory.read_bytes(EVERQUEST_TARGET_SPAWN_INFO_POINTER, 4);
+    return memory.read_any<DWORD>(EVERQUEST_TARGET_SPAWN_INFO_POINTER);
 }
 
 int everquest_get_target_actor_info(memory &memory)
 {
     int target_spawn_info = everquest_get_target_spawn_info(memory);
 
-    return memory.read_bytes(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER, 4);
+    return memory.read_any<DWORD>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
 }
 
 
 int everquest_get_merchant_spawn_info(memory &memory)
 {
-    return memory.read_bytes(EVERQUEST_MERCHANT_SPAWN_INFO_POINTER, 4);
+    return memory.read_any<DWORD>(EVERQUEST_MERCHANT_SPAWN_INFO_POINTER);
 }
 
 std::string everquest_get_race_short_name(int race)
@@ -389,6 +453,107 @@ std::string everquest_get_guild_name(memory &memory, int guild_id)
     }
 
     return "Unknown Guild";
+}
+
+WORD everquest_get_player_casting_spell_id(memory &memory)
+{
+    int player_actor_info = everquest_get_player_actor_info(memory);
+
+    return memory.read_any<WORD>(player_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_CASTING_SPELL_ID);
+}
+
+BYTE everquest_get_player_casting_spell_gem_number(memory &memory)
+{
+    int player_actor_info = everquest_get_player_actor_info(memory);
+
+    return memory.read_any<BYTE>(player_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_CASTING_SPELL_GEM_NUMBER);
+}
+
+void everquest_update_spawns(memory &memory, std::vector<everquest_spawn_t> &everquest_spawns)
+{
+    everquest_spawns.clear();
+
+    int player_spawn_info = everquest_get_player_spawn_info(memory);
+    int target_spawn_info = everquest_get_target_spawn_info(memory);
+
+    float player_y = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
+    float player_x = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
+    float player_z = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
+
+    int spawn_info_address = player_spawn_info;
+
+    int spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
+
+    spawn_info_address = spawn_next_spawn_info;
+
+    for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
+    {
+        spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
+
+        if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
+        {
+            break;
+        }
+
+        int spawn_actor_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
+
+        everquest_spawn_t everquest_spawn;
+
+        everquest_spawn.address = spawn_info_address;
+
+        everquest_spawn.spawn_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID);
+        everquest_spawn.owner_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID);
+        everquest_spawn.guild_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_GUILD_ID);
+
+        everquest_spawn.name      = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME,      0x40);
+        everquest_spawn.last_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME, 0x20);
+
+        everquest_spawn.y = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Y);
+        everquest_spawn.x = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_X);
+        everquest_spawn.z = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Z);
+
+        everquest_spawn.distance = everquest_calculate_distance(player_x, player_y, everquest_spawn.x, everquest_spawn.y);
+
+        everquest_spawn.distance_z = everquest_spawn.z - player_z;
+
+        everquest_spawn.heading = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HEADING);
+
+        everquest_spawn.movement_speed = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED);
+
+        everquest_spawn.standing_state = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_STANDING_STATE);
+
+        everquest_spawn.type   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_TYPE);
+        everquest_spawn.level  = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LEVEL);
+        everquest_spawn.race   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_RACE);
+        everquest_spawn._class = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
+
+        everquest_spawn.hp     = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT);
+        everquest_spawn.hp_max = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX);
+
+        everquest_spawn.is_target = (spawn_info_address == target_spawn_info ? true : false);
+
+        everquest_spawn.is_player_corpse = false;
+
+        if (everquest_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
+        {
+            std::string player_name = memory.read_string(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40);
+
+            std::size_t found = everquest_spawn.name.find(player_name);
+
+            if (found != std::string::npos)
+            {
+                everquest_spawn.is_player_corpse = true;
+            }
+        }
+
+        everquest_spawn.is_holding_both      = memory.read_any<DWORD>(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH);
+        everquest_spawn.is_holding_secondary = memory.read_any<DWORD>(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY);
+        everquest_spawn.is_holding_primary   = memory.read_any<DWORD>(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY);
+
+        everquest_spawns.push_back(everquest_spawn);
+
+        spawn_info_address = spawn_next_spawn_info;
+    }
 }
 
 #endif // EQMAC_HPP

@@ -43,9 +43,6 @@ const std::string ini_file = "eqmac_keys.ini";
 #define VK_8 0x38
 #define VK_9 0x39
 
-typedef void __stdcall _everquest_function_do_hot_button(int button_index);
-static _everquest_function_do_hot_button *everquest_function_do_hot_button = (_everquest_function_do_hot_button *)EVERQUEST_FUNCTION_DO_HOT_BUTTON;
-
 memory memory;
 
 HANDLE module;

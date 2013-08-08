@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <iterator>
 #include <string>
 #include <sstream>
 #include <cmath>
@@ -134,6 +135,8 @@ bool map_draw_info_text = true;
 
 bool map_draw_spawn_list = false;
 
+unsigned int map_spawn_list_index = 0;
+
 bool map_draw_fps = false;
 
 bool map_draw_lines     = true;
@@ -219,49 +222,8 @@ struct map_point_t
 std::vector<map_point_t> map_points;
 std::vector<map_point_t>::iterator map_points_it;
 
-struct map_spawn_t
-{
-    int address;
-
-    int count;
-
-    int spawn_id;
-    int owner_id;
-
-    std::string name;
-    std::string last_name;
-
-    float x, y, z;
-
-    float distance;
-    float distance_z;
-
-    float heading;
-
-    float movement_speed;
-
-    int standing_state;
-
-    int type;
-    int level;
-    int race;
-    int _class; // class is a keyword
-
-    int guild_id;
-
-    int hp;
-    int hp_max;
-
-    bool is_target;
-    bool is_player_corpse;
-
-    int is_holding_both;
-    int is_holding_secondary;
-    int is_holding_primary;
-};
-
-std::vector<map_spawn_t> map_spawns;
-std::vector<map_spawn_t>::iterator map_spawns_it;
+std::vector<everquest_spawn_t> map_spawns;
+std::vector<everquest_spawn_t>::iterator map_spawns_it;
 
 bool spawn_filter_enabled = false;
 
@@ -275,10 +237,10 @@ bool spawn_line_enabled = false;
 std::string spawn_line_name = "";
 std::vector<std::string> spawn_line_name_data;
 
-std::map<std::string, map_spawn_t> spawn_list;
-std::map<std::string, map_spawn_t>::iterator spawn_list_it;
-std::map<std::string, map_spawn_t>::iterator spawn_list_it_ex;
-std::pair<std::map<std::string, map_spawn_t>::iterator,bool> spawn_list_ret;
+std::map<std::string, everquest_spawn_t> spawn_list;
+std::map<std::string, everquest_spawn_t>::iterator spawn_list_it;
+std::map<std::string, everquest_spawn_t>::iterator spawn_list_it_ex;
+std::pair<std::map<std::string, everquest_spawn_t>::iterator,bool> spawn_list_ret;
 
 float calculate_distance(float x1, float y1, float x2, float y2)
 {
@@ -848,7 +810,7 @@ void draw_spawn_list()
 
     int spawn_info_address = player_spawn_info;
 
-    int spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
+    int spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
 
     spawn_info_address = spawn_next_spawn_info;
 
@@ -858,14 +820,14 @@ void draw_spawn_list()
 
     for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
     {
-        spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
+        spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
 
         if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
         {
             break;
         }
 
-        map_spawn_t map_spawn;
+        everquest_spawn_t map_spawn;
 
         map_spawn.count = 1;
 
@@ -881,7 +843,7 @@ void draw_spawn_list()
 
         if (spawn_name.size())
         {
-            spawn_list_ret = spawn_list.insert(std::pair<std::string, map_spawn_t>(spawn_name, map_spawn));
+            spawn_list_ret = spawn_list.insert(std::pair<std::string, everquest_spawn_t>(spawn_name, map_spawn));
 
             if (spawn_list_ret.second == false)
             {
@@ -907,16 +869,15 @@ void draw_spawn_list()
     int offset_x = font_size;
     int offset_y = font_size;
 
-    int spawn_count_total = 0;
+    spawn_list_it = spawn_list.begin();
+    std::advance(spawn_list_it, map_spawn_list_index);
 
-    for (spawn_list_it = spawn_list.begin(); spawn_list_it != spawn_list.end(); spawn_list_it++)
+    for (spawn_list_it = spawn_list_it; spawn_list_it != spawn_list.end(); spawn_list_it++)
     {
         std::stringstream spawn_list_text;
         spawn_list_text << (*spawn_list_it).second.name;
 
         int spawn_count = (*spawn_list_it).second.count;
-
-        spawn_count_total += spawn_count;
 
         if (spawn_count > 1)
         {
@@ -960,12 +921,17 @@ void draw_spawn_list()
         if (spawn_list_it_ex == spawn_list.end())
         {
             std::stringstream spawn_count_text;
-            spawn_count_text << "Total Spawns: " << spawn_count_total;
+            spawn_count_text << "Total Spawns: " << spawn_list.size();
 
             draw_color_magenta();
 
             draw_bitmap_string(offset_x, offset_y, font_name, spawn_count_text.str());
         }
+    }
+
+    if (map_spawn_list_index > spawn_list.size())
+    {
+        map_spawn_list_index = spawn_list.size() - 1;
     }
 }
 
@@ -1007,6 +973,8 @@ void map_draw_info_text_toggle()
 void map_draw_spawn_list_toggle()
 {
     toggle_bool(map_draw_spawn_list);
+
+    map_spawn_list_index = 0;
 }
 
 void map_draw_lines_toggle()
@@ -1233,7 +1201,7 @@ void update_zone(int value)
 {
     glutTimerFunc(1000, update_zone, 0);
 
-    if (memory.get_process_hwnd() == NULL || everquest_is_in_game(memory) == false)
+    if (memory.get_process_hwnd() == NULL)
     {
         glutSetWindowTitle(application_name.c_str());
         return;
@@ -1356,95 +1324,12 @@ void update_zone(int value)
 
 void update_spawns(int value)
 {
-    if (memory.get_process_hwnd() == NULL || everquest_is_in_game(memory) == false)
+    if (memory.get_process_hwnd() == NULL)
     {
         return;
     }
 
-    map_spawns.clear();
-
-    int player_spawn_info = everquest_get_player_spawn_info(memory);
-    int target_spawn_info = everquest_get_target_spawn_info(memory);
-
-    float player_y = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
-    float player_x = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
-    float player_z = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
-
-    int spawn_info_address = player_spawn_info;
-
-    int spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
-
-    spawn_info_address = spawn_next_spawn_info;
-
-    for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
-    {
-        spawn_next_spawn_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER, 4);
-
-        if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
-        {
-            break;
-        }
-
-        int spawn_actor_info = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER, 4);
-
-        map_spawn_t map_spawn;
-
-        map_spawn.address = spawn_info_address;
-
-        map_spawn.spawn_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID);
-        map_spawn.owner_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID);
-
-        map_spawn.name      = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME,      0x40);
-        map_spawn.last_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME, 0x20);
-
-        map_spawn.y = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Y);
-        map_spawn.x = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_X);
-        map_spawn.z = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Z);
-
-        map_spawn.distance = calculate_distance(player_x, player_y, map_spawn.x, map_spawn.y);
-
-        map_spawn.distance_z = map_spawn.z - player_z;
-
-        map_spawn.heading = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HEADING);
-
-        map_spawn.movement_speed = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED);
-
-        map_spawn.standing_state = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_STANDING_STATE);
-
-        map_spawn.type   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_TYPE);
-        map_spawn.level  = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LEVEL);
-        map_spawn.race   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_RACE);
-        map_spawn._class = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
-
-        map_spawn.guild_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_GUILD_ID);
-
-        map_spawn.hp     = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT, 4);
-        map_spawn.hp_max = memory.read_bytes(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX,     4);
-
-        map_spawn.is_target = (spawn_info_address == target_spawn_info ? true : false);
-
-        map_spawn.is_player_corpse = false;
-
-        if (map_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
-        {
-            std::string player_name = memory.read_string(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40);
-
-            std::size_t found = map_spawn.name.find(player_name);
-
-            if (found != std::string::npos)
-            {
-                map_spawn.is_player_corpse = true;
-            }
-        }
-
-        map_spawn.is_holding_both      = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH,      4);
-        map_spawn.is_holding_secondary = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY, 4);
-        map_spawn.is_holding_primary   = memory.read_bytes(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY,   4);
-
-        map_spawns.push_back(map_spawn);
-
-        spawn_info_address = spawn_next_spawn_info;
-    }
+    everquest_update_spawns(memory, map_spawns);
 
     glutTimerFunc(100, update_spawns, 0);
 }
@@ -1556,7 +1441,22 @@ void keyboard(unsigned char key, int x, int y)
             break;
 
         case 127: // Delete
-            map_max_z_decrease();
+            if (map_draw_spawn_list == true)
+            {
+                if (map_spawn_list_index >= 10)
+                {
+                    map_spawn_list_index -= 10;
+                }
+
+                if (map_spawn_list_index < 10)
+                {
+                    map_spawn_list_index = 0;
+                }
+            }
+            else
+            {
+                map_max_z_decrease();
+            }
             break;
     }
 }
@@ -1631,27 +1531,65 @@ void hotkeys(int key, int x, int y)
             break;
 
         case GLUT_KEY_HOME:
-            map_center();
+            if (map_draw_spawn_list == true)
+            {
+                map_spawn_list_index = 0;
+            }
+            else
+            {
+                map_center();
+            }
             break;
 
         case GLUT_KEY_END:
-            map_zoom_reset();
+            if (map_draw_spawn_list == true)
+            {
+                map_spawn_list_index = spawn_list.size() - 1;
+            }
+            else
+            {
+                map_zoom_reset();
+            }
             break;
 
         case GLUT_KEY_PAGE_UP:
-            map_zoom_in();
+            if (map_draw_spawn_list == true)
+            {
+                map_spawn_list_index++;
+            }
+            else
+            {
+                map_zoom_in();
+            }
             break;
 
         case GLUT_KEY_PAGE_DOWN:
-            map_zoom_out();
+            if (map_draw_spawn_list == true)
+            {
+                if (map_spawn_list_index > 0)
+                {
+                    map_spawn_list_index--;
+                }
+            }
+            else
+            {
+                map_zoom_out();
+            }
             break;
 
         case GLUT_KEY_INSERT:
-            map_max_z_increase();
+            if (map_draw_spawn_list == true)
+            {
+                map_spawn_list_index += 10;
+            }
+            else
+            {
+                map_max_z_increase();
+            }
             break;
 
         //case GLUT_KEY_DELETE: // delete key not available to hotkeys function, moved to keyboard function
-            //map_max_z_decrease();
+            //
             //break;
     }  
 }
@@ -1671,7 +1609,6 @@ void mouse(int button, int state, int x, int y)
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
     {
         //glutSetCursor(GLUT_CURSOR_CYCLE);
-
         SetCursor(LoadCursor(NULL, IDC_SIZEALL));
 
         mouse_dragging_start_x = x;
@@ -1684,7 +1621,6 @@ void mouse(int button, int state, int x, int y)
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
     {
         //glutSetCursor(GLUT_CURSOR_CROSSHAIR);
-
         SetCursor(LoadCursor(NULL, IDC_HAND));
     }
 
@@ -1956,7 +1892,7 @@ void render()
     {
         num_spawns = 0;
 
-        foreach (map_spawn_t map_spawn, map_spawns)
+        foreach (everquest_spawn_t map_spawn, map_spawns)
         {
             if (map_draw_spawn_type_player == false)
             {

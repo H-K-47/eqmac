@@ -965,6 +965,17 @@ void window_always_on_top_toggle()
     set_window_always_on_top(window_hwnd, window_always_on_top);
 }
 
+void window_border_toggle()
+{
+    LONG old_style = GetWindowLong(window_hwnd, GWL_STYLE);
+
+    LONG new_style = old_style ^ (WS_CAPTION | WS_THICKFRAME);
+
+    SetWindowLong(window_hwnd, GWL_STYLE, new_style);
+
+    SetWindowPos(window_hwnd, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+}
+
 void map_draw_info_text_toggle()
 {
     toggle_bool(map_draw_info_text);
@@ -1457,6 +1468,10 @@ void keyboard(unsigned char key, int x, int y)
             {
                 map_max_z_decrease();
             }
+            break;
+
+        case 98: // b
+            window_border_toggle();
             break;
     }
 }
@@ -2089,6 +2104,21 @@ void render()
                         }
                     }
 
+                    if (map_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_NPC)
+                    {
+                        if (map_draw_spawn_level_race_class == true)
+                        {
+                            if (map_spawn._class == EVERQUEST_CLASS_MERCHANT)
+                            {
+                                std::stringstream buffer;
+
+                                buffer << "(Merchant)";
+
+                                spawn_extra_text.push_back(buffer.str());
+                            }
+                        }
+                    }
+
                     if (map_draw_spawn_location == true)
                     {
                         std::stringstream buffer;
@@ -2561,6 +2591,7 @@ void menu_create()
     AppendMenu(window_menu, MF_STRING, MENU_SPAWN_LINE_TOGGLE,                 "Spawn Line\tF11");
     menu_append_separator();
     AppendMenu(window_menu, MF_STRING, MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE,       "Window Always On Top\tF12");
+    //AppendMenu(window_menu, MF_STRING, MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE,       "Window Border\tB");
     menu_append_separator();
     AppendMenu(window_menu, MF_STRING, MENU_MAP_CENTER_ON_TARGET_TOGGLE,       "Center On Target");
     AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_FPS_TOGGLE,               "Frames Per Second");

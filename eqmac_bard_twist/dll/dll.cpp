@@ -174,6 +174,9 @@ void timer_keys(HWND hwnd)
 
     if (memory.get_process_id() == 0)
     {
+        //MessageBox(hwnd, "Error: Process ID not found!", APPLICATION_NAME, MB_OK | MB_ICONERROR);
+        //DestroyWindow(hwnd);
+
         return;
     }
 
@@ -183,6 +186,9 @@ void timer_keys(HWND hwnd)
 
     if (player_class != EVERQUEST_CLASS_BARD)
     {
+        //MessageBox(hwnd, "Error: You are not a Bard!", APPLICATION_NAME, MB_OK | MB_ICONINFORMATION);
+        //DestroyWindow(hwnd);
+
         return;
     }
 
@@ -191,17 +197,26 @@ void timer_keys(HWND hwnd)
         check_duck_to_deactivate();
     }
 
-    if (GetAsyncKeyState(VK_B))
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+        (GetAsyncKeyState(VK_B) & 0x8000)
+    )
     {
-        if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
-        {
-            if (GetAsyncKeyState(VK_ALT) & 0x8000)
-            {
-                toggle_bool(bard_twist_activated);
+        toggle_bool(bard_twist_activated);
 
-                Sleep(1000);
-            }
-        }
+        Sleep(1000);
+    }
+
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+        (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+    )
+    {
+        DestroyWindow(hwnd);
     }
 }
 
@@ -343,7 +358,7 @@ void on_destroy(HWND hwnd)
     DWORD exit_code;
     GetExitCodeThread(window_thread, &exit_code);
 
-    //FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
+    FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
 
     CloseHandle(window_thread);
 

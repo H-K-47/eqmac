@@ -13,8 +13,7 @@ Gui, Add, Button, vButtonRefreshProcesses gButtonRefreshProcesses Default, Refre
 Gui, Add, Text,,
 Gui, Add, Checkbox, vCheckboxSpeedHack, Speed Hack
 Gui, Add, Text,, Speed Multiplier:
-Gui, Add, Checkbox, vCheckboxSpeedHackBard, Speed Hack Bard
-Gui, Add, DropDownList, vDropDownListSpeedModifier w320 Choose1, 1.0||1.25|1.5|1.75|2.0|4.0|6.0|8.0|10.0 ;|100.0
+Gui, Add, DropDownList, vDropDownListSpeedModifier w320 Choose1, 1.0||1.25|1.5|1.75|2.0|4.0|6.0|8.0|10.0|20.0 ;|100.0
 Gui, Add, Checkbox, vCheckboxScripts ym, Scripts
 Gui, Add, ListView, vListViewScripts +HwndListViewHwndScripts VScroll Grid -Multi Checked NoSortHdr w640 h480, Enabled|Name|Description|Enable|Disable|
 
@@ -225,39 +224,6 @@ If (is_checked = 0)
 }
 
 GuiControlGet, speed_modifier,, DropDownListSpeedModifier
-
-GuiControlGet, is_checked,, CheckboxSpeedHackBard
-If (is_checked = 1)
-{
-    player_spawn_info := everquest_GetPlayerSpawnInfoPointer()
-
-    player_y := Memory_ReadFloat(everquest_process_handle, player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y)
-    player_x := Memory_ReadFloat(everquest_process_handle, player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X)
-
-    target_spawn_info := everquest_GetTargetSpawnInfoPointer()
-
-    target_y := Memory_ReadFloat(everquest_process_handle, target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y)
-    target_x := Memory_ReadFloat(everquest_process_handle, target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X)
-
-    target_movement_speed := Memory_ReadFloat(everquest_process_handle, target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED)
-
-    target_distance := CalculateDistance(player_x, player_y, target_x, target_y)
-
-    If (target_spawn_info != EVERQUEST_SPAWN_INFO_NULL)
-    {
-        if (target_movement_speed > 0.1)
-        {
-            If (target_distance > 35)
-            {
-                speed_modifier := target_movement_speed * 0.90
-            }
-            Else
-            {
-                speed_modifier := target_movement_speed
-            }
-        }
-    }
-}
 
 Memory_WriteFloat(everquest_process_handle, EVERQUEST_SPEED_HACK_SPEED_MODIFIER, speed_modifier)
 

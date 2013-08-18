@@ -115,6 +115,16 @@ void timer_keys(HWND hwnd)
             everquest_function_do_hot_button(9);
         }
     }
+
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+        (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+    )
+    {
+        DestroyWindow(hwnd);
+    }
 }
 
 void on_create(HWND hwnd)
@@ -129,7 +139,7 @@ void on_destroy(HWND hwnd)
     DWORD exit_code;
     GetExitCodeThread(window_thread, &exit_code);
 
-    //FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
+    FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
 
     CloseHandle(window_thread);
 

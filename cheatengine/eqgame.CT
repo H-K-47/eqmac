@@ -84,7 +84,18 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>48</ID>
+          <ID>138</ID>
+          <Description>"0x8C ??"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>8C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>143</ID>
           <Description>"0x9E Is Stunned"</Description>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
@@ -127,6 +138,26 @@
             <Offset>D74</Offset>
           </Offsets>
         </CheatEntry>
+        <CheatEntry>
+          <ID>48</ID>
+          <Description>"0x135E ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>135E</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>142</ID>
+          <Description>"0x1708 Air Supply when swimming underwater, 70dec = full"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>1708</Offset>
+          </Offsets>
+        </CheatEntry>
       </CheatEntries>
     </CheatEntry>
     <CheatEntry>
@@ -158,6 +189,17 @@
       <CheatEntries>
         <CheatEntry>
           <ID>110</ID>
+          <Description>"0x50 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>50</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>151</ID>
           <Description>"0x90 GM"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
@@ -197,6 +239,28 @@
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
             <Offset>189</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>144</ID>
+          <Description>"0x194 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>194</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>148</ID>
+          <Description>"0x198 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>198</Offset>
             <Offset>84</Offset>
           </Offsets>
         </CheatEntry>
@@ -274,6 +338,17 @@
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
             <Offset>438</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>137</ID>
+          <Description>"0x43C Is Trader"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>43C</Offset>
             <Offset>84</Offset>
           </Offsets>
         </CheatEntry>
@@ -460,6 +535,16 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>139</ID>
+          <Description>"0xAC ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>AC</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>89</ID>
           <Description>"0xA9 Class"</Description>
           <Color>80000008</Color>
@@ -540,6 +625,17 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>146</ID>
+          <Description>"0x100 Array of Bytes"</Description>
+          <Color>80000008</Color>
+          <VariableType>Array of byte</VariableType>
+          <ByteLength>32</ByteLength>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>100</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>85</ID>
           <Description>"0x108 Is Linkdead"</Description>
           <Color>80000008</Color>
@@ -547,6 +643,16 @@
           <Address>eqgame.exe+3F94EC</Address>
           <Offsets>
             <Offset>108</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>145</ID>
+          <Description>"0x10A Is Levitating?"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>10A</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -816,6 +922,70 @@
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>eqgame.exe+398550</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>140</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>005E6F4C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>141</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0062C8C0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>147</ID>
+      <Description>"Jumping value"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007985FC</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>149</ID>
+      <Description>"Is Autoattack on or off?"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F6FFE</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>150</ID>
+      <Description>"Music?"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9490</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>152</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>0079897C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>154</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E60EC</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>153</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E85DC</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>155</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E7378</Address>
     </CheatEntry>
   </CheatEntries>
   <CheatCodes>
@@ -1087,6 +1257,291 @@
         <Byte>00</Byte>
         <Byte>00</Byte>
         <Byte>00</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :jmp eqgame.exe+12FEF2 ; JE to JMP for no ANONYMOUS in /who</Description>
+      <Address>0052FE9C</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>12FE9C</ModuleNameOffset>
+      <Before>
+        <Byte>F0</Byte>
+        <Byte>FD</Byte>
+        <Byte>FF</Byte>
+        <Byte>FF</Byte>
+        <Byte>50</Byte>
+      </Before>
+      <Actual>
+        <Byte>EB</Byte>
+        <Byte>54</Byte>
+      </Actual>
+      <After>
+        <Byte>8B</Byte>
+        <Byte>4D</Byte>
+        <Byte>F8</Byte>
+        <Byte>8D</Byte>
+        <Byte>46</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of jne eqgame.exe+130060 ; NOP to show NPCs in /who</Description>
+      <Address>0052FE80</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>12FE80</ModuleNameOffset>
+      <Before>
+        <Byte>A8</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>0F</Byte>
+        <Byte>85</Byte>
+        <Byte>DA</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>8D</Byte>
+        <Byte>85</Byte>
+        <Byte>24</Byte>
+        <Byte>FF</Byte>
+        <Byte>FF</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of jne eqgame.exe+FC40C ; NOP to follow NPCs (requires non-group members NOP too)</Description>
+      <Address>004FC278</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>FC278</ModuleNameOffset>
+      <Before>
+        <Byte>98</Byte>
+        <Byte>A8</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>0F</Byte>
+        <Byte>85</Byte>
+        <Byte>8E</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>3B</Byte>
+        <Byte>05</Byte>
+        <Byte>CC</Byte>
+        <Byte>94</Byte>
+        <Byte>7F</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of je eqgame.exe+FC40C ; NOP to follow non-group members</Description>
+      <Address>004FC2A7</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>FC2A7</ModuleNameOffset>
+      <Before>
+        <Byte>27</Byte>
+        <Byte>FD</Byte>
+        <Byte>FF</Byte>
+        <Byte>85</Byte>
+        <Byte>C0</Byte>
+      </Before>
+      <Actual>
+        <Byte>0F</Byte>
+        <Byte>84</Byte>
+        <Byte>5F</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>8B</Byte>
+        <Byte>0D</Byte>
+        <Byte>CC</Byte>
+        <Byte>94</Byte>
+        <Byte>7F</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :je eqgame.exe+ADEC5 ; JE to JMP to see underwater with no fog</Description>
+      <Address>004ADDE6</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>ADDE6</ModuleNameOffset>
+      <Before>
+        <Byte>8B</Byte>
+        <Byte>75</Byte>
+        <Byte>08</Byte>
+        <Byte>3B</Byte>
+        <Byte>F2</Byte>
+      </Before>
+      <Actual>
+        <Byte>0F</Byte>
+        <Byte>84</Byte>
+        <Byte>D9</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>D9</Byte>
+        <Byte>05</Byte>
+        <Byte>60</Byte>
+        <Byte>96</Byte>
+        <Byte>79</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :cmp cl,10 ; check if NPC class is Banker</Description>
+      <Address>00532B37</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>132B37</ModuleNameOffset>
+      <Before>
+        <Byte>E9</Byte>
+        <Byte>94</Byte>
+        <Byte>02</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>80</Byte>
+        <Byte>F9</Byte>
+        <Byte>10</Byte>
+      </Actual>
+      <After>
+        <Byte>75</Byte>
+        <Byte>3F</Byte>
+        <Byte>39</Byte>
+        <Byte>1D</Byte>
+        <Byte>FC</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of jne eqgame.exe+132B7B ; NOP to bank at any NPC</Description>
+      <Address>00532B3A</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>132B3A</ModuleNameOffset>
+      <Before>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>80</Byte>
+        <Byte>F9</Byte>
+        <Byte>10</Byte>
+      </Before>
+      <Actual>
+        <Byte>75</Byte>
+        <Byte>3F</Byte>
+      </Actual>
+      <After>
+        <Byte>39</Byte>
+        <Byte>1D</Byte>
+        <Byte>FC</Byte>
+        <Byte>94</Byte>
+        <Byte>7F</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of jna eqgame.exe+13FDA6 ; NOP to jump without delays</Description>
+      <Address>0053FD9E</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>13FD9E</ModuleNameOffset>
+      <Before>
+        <Byte>82</Byte>
+        <Byte>C8</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>76</Byte>
+        <Byte>06</Byte>
+      </Actual>
+      <After>
+        <Byte>89</Byte>
+        <Byte>1D</Byte>
+        <Byte>FC</Byte>
+        <Byte>85</Byte>
+        <Byte>79</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of jnl eqgame.exe+13FDEC ; NOP to jump while fatigued</Description>
+      <Address>0053FDD7</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>13FDD7</ModuleNameOffset>
+      <Before>
+        <Byte>5E</Byte>
+        <Byte>13</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>5A</Byte>
+      </Before>
+      <Actual>
+        <Byte>7D</Byte>
+        <Byte>13</Byte>
+      </Actual>
+      <After>
+        <Byte>A3</Byte>
+        <Byte>F8</Byte>
+        <Byte>85</Byte>
+        <Byte>79</Byte>
+        <Byte>00</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of jne eqgame.exe+132C78 ; NOP to train at any guildmaster regardless of class</Description>
+      <Address>00532BCA</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>132BCA</ModuleNameOffset>
+      <Before>
+        <Byte>83</Byte>
+        <Byte>C2</Byte>
+        <Byte>10</Byte>
+        <Byte>3B</Byte>
+        <Byte>D7</Byte>
+      </Before>
+      <Actual>
+        <Byte>0F</Byte>
+        <Byte>85</Byte>
+        <Byte>A8</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>39</Byte>
+        <Byte>1D</Byte>
+        <Byte>04</Byte>
+        <Byte>95</Byte>
+        <Byte>7F</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :je eqgame.exe+104E27 ; JE to JMP to walk underwater / sink to the bottom</Description>
+      <Address>00504DF5</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>104DF5</ModuleNameOffset>
+      <Before>
+        <Byte>8F</Byte>
+        <Byte>98</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>74</Byte>
+        <Byte>30</Byte>
+      </Actual>
+      <After>
+        <Byte>89</Byte>
+        <Byte>01</Byte>
+        <Byte>6A</Byte>
+        <Byte>00</Byte>
+        <Byte>D9</Byte>
       </After>
     </CodeEntry>
   </CheatCodes>

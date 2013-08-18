@@ -156,7 +156,7 @@ void timer_keys(HWND hwnd)
         return;
     }
 
-    if (GetAsyncKeyState(VK_F12))
+    if (GetAsyncKeyState(VK_F12) & 0x8000)
     {
         //MessageBox(NULL, "VK_F12", "timer_keys", MB_OK | MB_ICONINFORMATION);
 
@@ -230,7 +230,7 @@ void timer_keys(HWND hwnd)
         Sleep(1000);
     }
 
-    if (GetAsyncKeyState(VK_F8))
+    if (GetAsyncKeyState(VK_F8) & 0x8000)
     {
         //MessageBox(NULL, "VK_F8", "timer_keys", MB_OK | MB_ICONINFORMATION);
 
@@ -369,7 +369,7 @@ void timer_keys(HWND hwnd)
         Sleep(1000);
     }
 
-    if (GetAsyncKeyState(VK_F7))
+    if (GetAsyncKeyState(VK_F7) & 0x8000)
     {
         //MessageBox(NULL, "VK_F7", "timer_keys", MB_OK | MB_ICONINFORMATION);
 
@@ -448,7 +448,12 @@ void timer_keys(HWND hwnd)
         Sleep(1000);
     }
 
-    if (GetAsyncKeyState(VK_G))
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+        (GetAsyncKeyState(VK_G) & 0x8000)
+    )
     {
         memory.set_process_by_id(foreground_process_id);
 
@@ -457,15 +462,19 @@ void timer_keys(HWND hwnd)
             return;
         }
 
-        if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
-        {
-            if (GetAsyncKeyState(VK_ALT) & 0x8000)
-            {
-                int player_spawn_info = everquest_get_player_spawn_info(memory);
+        int player_spawn_info = everquest_get_player_spawn_info(memory);
 
-                memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
-            }
-        }
+        memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
+    }
+
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+        (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
+    )
+    {
+        DestroyWindow(hwnd);
     }
 }
 
@@ -481,7 +490,7 @@ void on_destroy(HWND hwnd)
     DWORD exit_code;
     GetExitCodeThread(window_thread, &exit_code);
 
-    //FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
+    FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
 
     CloseHandle(window_thread);
 

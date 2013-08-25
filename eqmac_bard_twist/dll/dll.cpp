@@ -42,8 +42,9 @@ const std::string ini_file = "eqmac_bard_twist.ini";
 #define WINDOW_HEIGHT 320
 #define WINDOW_WIDTH  240
 
-#define ID_TIMER_KEYS       10001
-#define ID_TIMER_BARD_TWIST 10002
+#define ID_TIMER_SET_PROCESS 10001
+#define ID_TIMER_KEYS        10002
+#define ID_TIMER_BARD_TWIST  10003
 
 #define VK_0 0x30
 #define VK_1 0x31
@@ -168,33 +169,36 @@ bool twist_hot_button(int hot_button)
     return true;
 }
 
+void timer_set_process(HWND hwnd)
+{
+    HWND foreground_hwnd = GetForegroundWindow();
+
+    DWORD foreground_process_id;
+    GetWindowThreadProcessId(foreground_hwnd, &foreground_process_id);
+
+    if (foreground_process_id != GetCurrentProcessId())
+    {
+        return;
+    }
+
+    memory.set_process_by_id(GetCurrentProcessId());
+}
+
 void timer_keys(HWND hwnd)
 {
-    memory.set_process_by_id(GetCurrentProcessId());
-
     if (memory.get_process_id() == 0)
     {
-        //MessageBox(hwnd, "Error: Process ID not found!", APPLICATION_NAME, MB_OK | MB_ICONERROR);
-        //DestroyWindow(hwnd);
-
         return;
     }
 
-    int player_spawn_info = everquest_get_player_spawn_info(memory);
-
-    BYTE player_class = memory.read_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
-
-    if (player_class != EVERQUEST_CLASS_BARD)
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+        (GetAsyncKeyState(VK_BACK) & 0x8000)
+    )
     {
-        //MessageBox(hwnd, "Error: You are not a Bard!", APPLICATION_NAME, MB_OK | MB_ICONINFORMATION);
-        //DestroyWindow(hwnd);
-
-        return;
-    }
-
-    if (bard_twist_duck_to_deactivate == true)
-    {
-        check_duck_to_deactivate();
+        DestroyWindow(hwnd);
     }
 
     if
@@ -204,24 +208,44 @@ void timer_keys(HWND hwnd)
         (GetAsyncKeyState(VK_B) & 0x8000)
     )
     {
+        int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+        BYTE player_class = memory.read_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
+
+        if (player_class != EVERQUEST_CLASS_BARD)
+        {
+            everquest_function_chat_write(APPLICATION_NAME " Error: You are not a Bard.", 10, 1);
+
+            return;
+        }
+
         toggle_bool(bard_twist_activated);
 
-        Sleep(1000);
-    }
+        if (bard_twist_activated == true)
+        {
+            everquest_function_chat_write(APPLICATION_NAME " activated.", 10, 1);
+        }
+        else
+        {
+            everquest_function_chat_write(APPLICATION_NAME " deactivated.", 10, 1);
+        }
 
-    if
-    (
-        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
-    )
-    {
-        DestroyWindow(hwnd);
+        Sleep(1000);
     }
 }
 
 void timer_bard_twist(HWND hwnd)
 {
+    if (memory.get_process_id() == 0)
+    {
+        return;
+    }
+
+    if (bard_twist_duck_to_deactivate == true)
+    {
+        check_duck_to_deactivate();
+    }
+
     if (bard_twist_activated == false)
     {
         return;
@@ -346,19 +370,22 @@ void timer_bard_twist(HWND hwnd)
 
 void on_create(HWND hwnd)
 {
-    SetTimer(hwnd, ID_TIMER_KEYS,       1, 0);
-    SetTimer(hwnd, ID_TIMER_BARD_TWIST, 1, 0);
+    SetTimer(hwnd, ID_TIMER_SET_PROCESS,  1, 0);
+    SetTimer(hwnd, ID_TIMER_KEYS,         1, 0);
+    SetTimer(hwnd, ID_TIMER_BARD_TWIST,   1, 0);
+
+    everquest_function_chat_write(APPLICATION_NAME " loaded.", 10, 1);
 }
 
 void on_destroy(HWND hwnd)
 {
+    KillTimer(hwnd, ID_TIMER_SET_PROCESS);
     KillTimer(hwnd, ID_TIMER_KEYS);
     KillTimer(hwnd, ID_TIMER_BARD_TWIST);
 
-    DWORD exit_code;
-    GetExitCodeThread(window_thread, &exit_code);
+    everquest_function_chat_write(APPLICATION_NAME " unloaded.", 10, 1);
 
-    FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
+    FreeLibraryAndExitThread((HINSTANCE)module, 0);
 
     CloseHandle(window_thread);
 
@@ -369,6 +396,10 @@ void on_timer(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     switch (wparam)
     {
+        case ID_TIMER_SET_PROCESS:
+            timer_set_process(hwnd);
+            break;
+
         case ID_TIMER_KEYS:
             timer_keys(hwnd);
             break;

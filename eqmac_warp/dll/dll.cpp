@@ -40,7 +40,9 @@ const std::string ini_file = "eqmac_warp.ini";
 #define WINDOW_HEIGHT 320
 #define WINDOW_WIDTH  240
 
-#define ID_TIMER_KEYS 10001
+#define ID_TIMER_SET_PROCESS 10001
+#define ID_TIMER_KEYS        10002
+#define ID_TIMER_AUTO_GATE   10003
 
 #define VK_0 0x30
 #define VK_1 0x31
@@ -89,63 +91,8 @@ void update_spawns()
     everquest_update_spawns(memory, everquest_spawns);
 }
 
-void timer_keys(HWND hwnd)
+void timer_set_process(HWND hwnd)
 {
-    boost::property_tree::ptree pt;
-    boost::property_tree::ini_parser::read_ini(ini_file, pt);
-
-    bool auto_gate_enabled = pt.get<bool>("AutoGate.bEnabled", false);
-
-    if (auto_gate_enabled == true)
-    {
-        int player_spawn_info = everquest_get_player_spawn_info(memory);
-
-        int player_hp_current = memory.read_any<DWORD>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT);
-        int player_hp_max     = memory.read_any<DWORD>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX);
-
-        float player_hp_percent = (player_hp_current * 100) / player_hp_max;
-
-        int   auto_gate_health_points_minimum  = pt.get<int>("AutoGate.iHealthPointsMinimum");
-        float auto_gate_health_percent_minimum = pt.get<float>("AutoGate.fHealthPercentMinimum");
-
-        bool auto_gate_ready = false;
-
-        if (player_hp_current < auto_gate_health_points_minimum)
-        {
-            if (player_hp_max > auto_gate_health_points_minimum)
-            {
-                auto_gate_ready = true;
-            }
-        }
-
-        if (player_hp_percent < auto_gate_health_percent_minimum)
-        {
-            auto_gate_ready = true;
-        }
-
-        if (auto_gate_health_points_minimum <= 0)
-        {
-            auto_gate_ready = false;
-        }
-
-        if (auto_gate_health_percent_minimum <= 0.0)
-        {
-            auto_gate_ready = false;
-        }
-
-        int target_spawn_info = everquest_get_target_spawn_info(memory);
-
-        if (target_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
-        {
-            auto_gate_ready = false;
-        }
-
-        if (auto_gate_ready == true)
-        {
-            memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
-        }
-    }
-
     HWND foreground_hwnd = GetForegroundWindow();
 
     DWORD foreground_process_id;
@@ -156,17 +103,42 @@ void timer_keys(HWND hwnd)
         return;
     }
 
+    memory.set_process_by_id(GetCurrentProcessId());
+}
+
+void timer_keys(HWND hwnd)
+{
+    if (memory.get_process_id() == 0)
+    {
+        return;
+    }
+
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+        (GetAsyncKeyState(VK_BACK) & 0x8000)
+    )
+    {
+        DestroyWindow(hwnd);
+    }
+
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+        (GetAsyncKeyState(VK_G) & 0x8000)
+    )
+    {
+        everquest_function_chat_write(APPLICATION_NAME " is instant gating.", 10, 1);
+
+        int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+        memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
+    }
+
     if (GetAsyncKeyState(VK_F12) & 0x8000)
     {
-        //MessageBox(NULL, "VK_F12", "timer_keys", MB_OK | MB_ICONINFORMATION);
-
-        memory.set_process_by_id(foreground_process_id);
-
-        if (memory.get_process_id() == 0)
-        {
-            return;
-        }
-
         bool warp_point_ex = false;
 
         if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
@@ -219,6 +191,8 @@ void timer_keys(HWND hwnd)
             warp_heading = pt.get<float>("WarpPoint.Heading");
         }
 
+        everquest_function_chat_write(APPLICATION_NAME " is warping.", 10, 1);
+
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z, warp_z);
@@ -232,15 +206,6 @@ void timer_keys(HWND hwnd)
 
     if (GetAsyncKeyState(VK_F8) & 0x8000)
     {
-        //MessageBox(NULL, "VK_F8", "timer_keys", MB_OK | MB_ICONINFORMATION);
-
-        memory.set_process_by_id(foreground_process_id);
-
-        if (memory.get_process_id() == 0)
-        {
-            return;
-        }
-
         bool warp_to_spawn_ex = false;
 
         if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
@@ -313,7 +278,6 @@ void timer_keys(HWND hwnd)
 
         foreach (everquest_spawn_t everquest_spawn, everquest_spawns)
         {
-
             foreach(std::string warp_to_spawn_name_data_value, warp_to_spawn_name_data)
             {
                 if (warp_to_spawn_skip_corpses == true)
@@ -348,6 +312,8 @@ void timer_keys(HWND hwnd)
             return;
         }
 
+        everquest_function_chat_write(APPLICATION_NAME " is warping to spawn.", 10, 1);
+
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z, warp_z);
@@ -371,15 +337,6 @@ void timer_keys(HWND hwnd)
 
     if (GetAsyncKeyState(VK_F7) & 0x8000)
     {
-        //MessageBox(NULL, "VK_F7", "timer_keys", MB_OK | MB_ICONINFORMATION);
-
-        memory.set_process_by_id(foreground_process_id);
-
-        if (memory.get_process_id() == 0)
-        {
-            return;
-        }
-
         int player_spawn_info = everquest_get_player_spawn_info(memory);
 
         std::fstream file;
@@ -437,6 +394,8 @@ void timer_keys(HWND hwnd)
             return;
         }
 
+        everquest_function_chat_write(APPLICATION_NAME " is warping to target.", 10, 1);
+
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z, warp_z);
@@ -447,50 +406,90 @@ void timer_keys(HWND hwnd)
 
         Sleep(1000);
     }
+}
 
-    if
-    (
-        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_G) & 0x8000)
-    )
+void timer_auto_gate(HWND hwnd)
+{
+    if (memory.get_process_id() == 0)
     {
-        memory.set_process_by_id(foreground_process_id);
-
-        if (memory.get_process_id() == 0)
-        {
-            return;
-        }
-
-        int player_spawn_info = everquest_get_player_spawn_info(memory);
-
-        memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
+        return;
     }
 
-    if
-    (
-        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
-    )
+    boost::property_tree::ptree pt;
+    boost::property_tree::ini_parser::read_ini(ini_file, pt);
+
+    bool auto_gate_enabled = pt.get<bool>("AutoGate.bEnabled", false);
+
+    if (auto_gate_enabled == false)
     {
-        DestroyWindow(hwnd);
+        return;
     }
+
+    int target_spawn_info = everquest_get_target_spawn_info(memory);
+
+    if (target_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
+    {
+        return;
+    }
+
+    int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+    int player_hp_current = memory.read_any<DWORD>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT);
+    int player_hp_max     = memory.read_any<DWORD>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX);
+
+    float player_hp_percent = (player_hp_current * 100) / player_hp_max;
+
+    int   auto_gate_health_points_minimum  = pt.get<int>("AutoGate.iHealthPointsMinimum");
+    float auto_gate_health_percent_minimum = pt.get<float>("AutoGate.fHealthPercentMinimum");
+
+    if (player_hp_current > auto_gate_health_points_minimum)
+    {
+        return;
+    }
+
+    if (player_hp_max <= auto_gate_health_points_minimum)
+    {
+        return;
+    }
+
+    if (player_hp_percent > auto_gate_health_percent_minimum)
+    {
+        return;
+    }
+
+    if (auto_gate_health_points_minimum <= 0)
+    {
+        return;
+    }
+
+    if (auto_gate_health_percent_minimum <= 0.0)
+    {
+        return;
+    }
+
+    everquest_function_chat_write(APPLICATION_NAME " is auto gating.", 10, 1);
+
+    memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
 }
 
 void on_create(HWND hwnd)
 {
-    SetTimer(hwnd, ID_TIMER_KEYS, 100, 0);
+    SetTimer(hwnd, ID_TIMER_SET_PROCESS, 1, 0);
+    SetTimer(hwnd, ID_TIMER_KEYS,        1, 0);
+    SetTimer(hwnd, ID_TIMER_AUTO_GATE,   1, 0);
+
+    everquest_function_chat_write(APPLICATION_NAME " loaded.", 10, 1);
 }
 
 void on_destroy(HWND hwnd)
 {
+    KillTimer(hwnd, ID_TIMER_SET_PROCESS);
     KillTimer(hwnd, ID_TIMER_KEYS);
+    KillTimer(hwnd, ID_TIMER_AUTO_GATE);
 
-    DWORD exit_code;
-    GetExitCodeThread(window_thread, &exit_code);
+    everquest_function_chat_write(APPLICATION_NAME " unloaded.", 10, 1);
 
-    FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
+    FreeLibraryAndExitThread((HINSTANCE)module, 0);
 
     CloseHandle(window_thread);
 
@@ -501,8 +500,16 @@ void on_timer(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     switch (wparam)
     {
+        case ID_TIMER_SET_PROCESS:
+            timer_set_process(hwnd);
+            break;
+
         case ID_TIMER_KEYS:
             timer_keys(hwnd);
+            break;
+
+        case ID_TIMER_AUTO_GATE:
+            timer_auto_gate(hwnd);
             break;
     }
 }

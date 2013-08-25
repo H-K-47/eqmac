@@ -15,6 +15,8 @@ const std::string everquest_title = "EQW beta 2.32";
 
 #define EVERQUEST_IS_IN_GAME 0x00798550 // BYTE
 
+#define EVERQUEST_IS_AUTO_ATTACK_ENABLED 0x007F6FFE // BYTE
+
 #define EVERQUEST_ZONE_INFO_STRUCTURE           0x00798784 // STRUCT
 #define EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME  0x0000 // STRING [0x40]
 #define EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME   0x0040 // STRING [0x20]
@@ -32,12 +34,37 @@ const std::string everquest_title = "EQW beta 2.32";
 
 #define EVERQUEST_ITEMS_INFO_POINTER 0x007F94A0 // POINTER to STRUCT
 
-// 0x007F94E0
 #define EVERQUEST_CHAR_INFO_POINTER                   0x007F94E8 // POINTER to STRUCT
 #define EVERQUEST_OFFSET_CHAR_INFO_NAME               0x0002 // STRING [0x40]
 #define EVERQUEST_OFFSET_CHAR_INFO_IS_STUNNED         0x0098 // BYTE
+#define EVERQUEST_OFFSET_CHAR_INFO_BUFFS_STRUCTURE    0x0264 // STRUCT [0x0F] ; 15 buffs max
 #define EVERQUEST_OFFSET_CHAR_INFO_STANDING_STATE     0x0B64 // BYTE ; EVERQUEST_STANDING_STATE_x
+#define EVERQUEST_OFFSET_CHAR_INFO_PLATINUM           0x0B68 // DWORD
+#define EVERQUEST_OFFSET_CHAR_INFO_GOLD               0x0B6C // DWORD
+#define EVERQUEST_OFFSET_CHAR_INFO_SILVER             0x0B70 // DWORD
+#define EVERQUEST_OFFSET_CHAR_INFO_COPPER             0x0B74 // DWORD
+#define EVERQUEST_OFFSET_CHAR_INFO_BANK_PLATINUM      0x0B78 // DWORD
+#define EVERQUEST_OFFSET_CHAR_INFO_BANK_GOLD          0x0B7C // DWORD
+#define EVERQUEST_OFFSET_CHAR_INFO_BANK_SILVER        0x0B80 // DWORD
+#define EVERQUEST_OFFSET_CHAR_INFO_BANK_COPPER        0x0B84 // DWORD
 #define EVERQUEST_OFFSET_CHAR_INFO_SPAWN_INFO_POINTER 0x0D74 // POINTER to STRUCT
+
+#define EVERQUEST_BUFFS_STRUCTURE_BUFF_SIZE 0x0A // 0x10
+#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_UNKNOWN_0x00     0x00
+#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_CASTER_LEVEL     0x01 // BYTE ; level of player who casted the buff
+#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_MODIFIER         0x02 // BYTE ; divide by 10 to get Bard song modifier
+#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_IS_DAMAGE_SHIELD 0x03 // BYTE ; damage shield = -1
+#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_SPELL_ID         0x04 // WORD
+#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_DURATION         0x06 // DWORD ; seconds = duration * 6
+//#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_DAMAGE_ABSORB    0x0C // DWORD
+
+#define EVERQUEST_BUFFS_MAX 15
+
+#define EVERQUEST_BUFF_SPELL_ID_NULL 0xFFFF
+
+#define EVERQUEST_BUFF_TYPE_DETRIMENTAL           0
+#define EVERQUEST_BUFF_TYPE_BENEFICIAL            1
+#define EVERQUEST_BUFF_TYPE_BENEFICIAL_GROUP_ONLY 2
 
 #define EVERQUEST_SPAWN_INFO_BEGIN_POINTER 0x007F94E0 // POINTER to STRUCT
 
@@ -147,7 +174,9 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_CLASS_WIZARD_GUILDMASTER       28
 #define EVERQUEST_CLASS_MAGICIAN_GUILDMASTER     29
 #define EVERQUEST_CLASS_ENCHANTER_GUILDMASTER    30
-#define EVERQUEST_CLASS_BEASTLORD_GUILDMASTER    31
+#define EVERQUEST_CLASS_BEASTLORD_GUILDMASTER    31 // EVERQUEST_CLASS_BEASTLORD + 16
+#define EVERQUEST_CLASS_GUILDMASTER_BEGIN        EVERQUEST_CLASS_WARRIOR_GUILDMASTER
+#define EVERQUEST_CLASS_GUILDMASTER_END          EVERQUEST_CLASS_BEASTLORD_GUILDMASTER
 #define EVERQUEST_CLASS_MERCHANT     32
 #define EVERQUEST_CLASS_BERSERKER    -1
 
@@ -192,6 +221,11 @@ static _everquest_function_do_hot_button *everquest_function_do_hot_button = (_e
 
 typedef void __stdcall _everquest_function_cast_spell(int gem_index, int spell_id);
 static _everquest_function_cast_spell *everquest_function_cast_spell = (_everquest_function_cast_spell *)EVERQUEST_FUNCTION_CAST_SPELL;
+
+#define EVERQUEST_FUNCTION_CHAT_WRITE 0x0000537F99
+
+typedef void __stdcall _everquest_function_chat_write(char* text, int color = 10, int value = 1);
+static _everquest_function_chat_write *everquest_function_chat_write = (_everquest_function_chat_write *)EVERQUEST_FUNCTION_CHAT_WRITE;
 
 struct everquest_spawn_t
 {
@@ -243,6 +277,11 @@ float everquest_calculate_distance(float x1, float y1, float x2, float y2)
 bool everquest_is_in_game(memory &memory)
 {
     return memory.read_any<BYTE>(EVERQUEST_IS_IN_GAME);
+}
+
+bool everquest_is_auto_attack_enabled(memory &memory)
+{
+    return memory.read_any<BYTE>(EVERQUEST_IS_AUTO_ATTACK_ENABLED);
 }
 
 std::string everquest_get_zone_player_name(memory &memory)

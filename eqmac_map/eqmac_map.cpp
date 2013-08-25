@@ -2108,11 +2108,29 @@ void render()
                     {
                         if (map_draw_spawn_level_race_class == true)
                         {
+                            if (map_spawn._class == EVERQUEST_CLASS_BANKER)
+                            {
+                                std::stringstream buffer;
+
+                                buffer << "(Banker)";
+
+                                spawn_extra_text.push_back(buffer.str());
+                            }
+
                             if (map_spawn._class == EVERQUEST_CLASS_MERCHANT)
                             {
                                 std::stringstream buffer;
 
                                 buffer << "(Merchant)";
+
+                                spawn_extra_text.push_back(buffer.str());
+                            }
+
+                            if (map_spawn._class >= EVERQUEST_CLASS_GUILDMASTER_BEGIN && map_spawn._class <= EVERQUEST_CLASS_GUILDMASTER_END)
+                            {
+                                std::stringstream buffer;
+
+                                buffer << "(Guildmaster)";
 
                                 spawn_extra_text.push_back(buffer.str());
                             }

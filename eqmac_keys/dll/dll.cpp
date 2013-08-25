@@ -43,6 +43,8 @@ const std::string ini_file = "eqmac_keys.ini";
 #define VK_8 0x38
 #define VK_9 0x39
 
+#define VK_ALT VK_MENU
+
 memory memory;
 
 HANDLE module;
@@ -60,6 +62,16 @@ void timer_keys(HWND hwnd)
 
     if (foreground_process_id == GetCurrentProcessId())
     {
+        if
+        (
+            (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+            (GetAsyncKeyState(VK_ALT) & 0x8000) &&
+            (GetAsyncKeyState(VK_BACK) & 0x8000)
+        )
+        {
+            DestroyWindow(hwnd);
+        }
+
         return;
     }
 
@@ -115,31 +127,22 @@ void timer_keys(HWND hwnd)
             everquest_function_do_hot_button(9);
         }
     }
-
-    if
-    (
-        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
-    )
-    {
-        DestroyWindow(hwnd);
-    }
 }
 
 void on_create(HWND hwnd)
 {
     SetTimer(hwnd, ID_TIMER_KEYS, 1, 0);
+
+    everquest_function_chat_write(APPLICATION_NAME " loaded.", 10, 1);
 }
 
 void on_destroy(HWND hwnd)
 {
     KillTimer(hwnd, ID_TIMER_KEYS);
 
-    DWORD exit_code;
-    GetExitCodeThread(window_thread, &exit_code);
+    everquest_function_chat_write(APPLICATION_NAME " unloaded.", 10, 1);
 
-    FreeLibraryAndExitThread((HINSTANCE)module, exit_code);
+    FreeLibraryAndExitThread((HINSTANCE)module, 0);
 
     CloseHandle(window_thread);
 

@@ -1,4 +1,4 @@
-#SingleInstance, Off
+#SingleInstance, On
 #Persistent
 
 #Include, eqmac.ahk
@@ -14,6 +14,14 @@ Gui, Add, Text,,
 Gui, Add, Checkbox, vCheckboxSpeedHack, Speed Hack
 Gui, Add, Text,, Speed Multiplier:
 Gui, Add, DropDownList, vDropDownListSpeedModifier w320 Choose1, 1.0||1.25|1.5|1.75|2.0|4.0|6.0|8.0|10.0|20.0 ;|100.0
+Gui, Add, Text,,
+Gui, Add, Edit, vEditTargetName gEditTargetName w320
+Gui, Add, Button, vButtonTargetName gButtonTargetName, Target by Name
+Gui, Add, Text,,
+Gui, Add, DropDownList, vDropDownListSpawnList Sort w320
+Gui, Add, Button, vButtonTargetSpawnList gButtonTargetSpawnList, Target by Spawn List
+Gui, Add, Button, vButtonRefreshSpawnList gButtonRefreshSpawnList x+8 yp, Refresh Spawn List
+Gui, Add, Text,,
 Gui, Add, Checkbox, vCheckboxScripts ym, Scripts
 Gui, Add, ListView, vListViewScripts +HwndListViewHwndScripts VScroll Grid -Multi Checked NoSortHdr w640 h480, Enabled|Name|Description|Enable|Disable|
 
@@ -204,6 +212,8 @@ If (speed_modifier > -1)
 UpdateListViewScripts()
 UpdateListViewColumnsScripts()
 
+Gosub, ButtonRefreshSpawnList
+
 SetTimer, TimerSpeedHack, 1
 
 SetTimer, TimerScripts, 1
@@ -346,6 +356,8 @@ Loop % LV_GetCount()
 
         If script_instruction_type = byte
         {
+            script_instruction_value = 0x%script_instruction_value% ; pre-append 0x
+
             Memory_WriteEx(everquest_process_handle, script_instruction_address, script_instruction_value, 1)
         }
 
@@ -406,12 +418,129 @@ Loop, % psapi_process // 4
     {
         If psapi_process_name = %EVERQUEST_CLIENT%
         {
-            GuiControl,, DropDownListProcesses, %psapi_process_id%:%psapi_process_name%
+            everquest_process_id := psapi_process_id
+
+            everquest_process_handle := Memory_GetProcessHandle(everquest_process_id)
+
+            player_spawn_info := everquest_GetPlayerSpawnInfoPointer()
+
+            player_name := Memory_ReadString(everquest_process_handle, player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40)
+
+            If player_name = 
+            {
+                GuiControl,, DropDownListProcesses, %psapi_process_name%:%psapi_process_id%
+            }
+            Else
+            {
+                GuiControl,, DropDownListProcesses, %psapi_process_name%:%psapi_process_id%:%player_name%
+            }
         }
     }
 }
 
 GuiControl, ChooseString, DropDownListProcesses, Dynamic
+Return
+
+ButtonRefreshSpawnList:
+GuiControl,, DropDownListSpawnList, |
+
+player_spawn_info := everquest_GetPlayerSpawnInfoPointer()
+
+spawn_info_address := player_spawn_info
+
+spawn_next_spawn_info := Memory_Read(everquest_process_handle,  spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER)
+
+spawn_info_address := spawn_next_spawn_info
+
+Loop, %EVERQUEST_SPAWNS_MAX%
+{
+    spawn_next_spawn_info := Memory_Read(everquest_process_handle,  spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER)
+
+    If (spawn_next_spawn_info = EVERQUEST_SPAWN_INFO_NULL)
+    {
+        Break
+    }
+
+    spawn_name := Memory_ReadString(everquest_process_handle, spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40)
+
+    GuiControl,, DropDownListSpawnList, %spawn_name%:%spawn_info_address%
+
+    spawn_info_address := spawn_next_spawn_info
+}
+
+GuiControl, Choose, DropDownListSpawnList, 1
+Return
+
+ButtonTargetSpawnList:
+GuiControlGet, spawn_list_text,, DropDownListSpawnList
+
+If spawn_list_text = 
+{
+    Return
+}
+
+StringSplit, spawn_list_text_vars, spawn_list_text, :
+
+target_address = %spawn_list_text_vars2%
+
+Memory_Write(everquest_process_handle, EVERQUEST_TARGET_SPAWN_INFO_POINTER, target_address)
+Return
+
+EditTargetName:
+Gosub, ButtonTargetName
+Return
+
+ButtonTargetName:
+GuiControlGet, target_name,, EditTargetName
+
+If target_name = 
+{
+    Return
+}
+
+player_spawn_info := everquest_GetPlayerSpawnInfoPointer()
+
+spawn_info_address := player_spawn_info
+
+spawn_next_spawn_info := Memory_Read(everquest_process_handle,  spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER)
+
+spawn_info_address := spawn_next_spawn_info
+
+Loop, %EVERQUEST_SPAWNS_MAX%
+{
+    spawn_next_spawn_info := Memory_Read(everquest_process_handle,  spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER)
+
+    If (spawn_next_spawn_info = EVERQUEST_SPAWN_INFO_NULL)
+    {
+        Break
+    }
+
+    spawn_name := Memory_ReadString(everquest_process_handle, spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40)
+
+    spawn_type := Memory_ReadEx(everquest_process_handle, spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, 1)
+
+    If (spawn_type = EVERQUEST_SPAWN_INFO_TYPE_PLAYER)
+    {
+        If target_name = %spawn_name%
+        {
+            Memory_Write(everquest_process_handle, EVERQUEST_TARGET_SPAWN_INFO_POINTER, spawn_info_address)
+
+            Break
+        }
+    }
+
+    If (spawn_type = EVERQUEST_SPAWN_INFO_TYPE_NPC)
+    {
+        IfInString, spawn_name, %target_name%
+        {
+            Memory_Write(everquest_process_handle, EVERQUEST_TARGET_SPAWN_INFO_POINTER, spawn_info_address)
+
+            Break
+        }
+    }
+
+    spawn_info_address := spawn_next_spawn_info
+}
 Return
 
 TimerUpdateTitle:
@@ -429,7 +558,7 @@ IfNotEqual, processes_text, Dynamic
 {
     StringSplit, processes_text_vars, processes_text, :
 
-    selected_process_id = %processes_text_vars1%
+    selected_process_id = %processes_text_vars2%
 
     everquest_process_id := selected_process_id
 

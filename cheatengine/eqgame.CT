@@ -2,6 +2,34 @@
 <CheatTable CheatEngineTableVersion="14">
   <CheatEntries>
     <CheatEntry>
+      <ID>0</ID>
+      <Description>"unknown"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>0079856C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"SHIFT is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00799738</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"CTRL is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0079973C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>3</ID>
+      <Description>"ALT is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00799740</Address>
+    </CheatEntry>
+    <CheatEntry>
       <ID>25</ID>
       <Description>"Show FPS"</Description>
       <Color>80000008</Color>
@@ -9,7 +37,7 @@
       <Address>EQGfx_Dx8.dll+A4F770</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>3</ID>
+      <ID>26</ID>
       <Description>"Zone Info"</Description>
       <Color>80000008</Color>
       <VariableType>String</VariableType>
@@ -95,6 +123,26 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>171</ID>
+          <Description>"0x94 Current EXP"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>94</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>172</ID>
+          <Description>"0x9C Current HP"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>9C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>143</ID>
           <Description>"0x9E Is Stunned"</Description>
           <ShowAsHex>1</ShowAsHex>
@@ -117,6 +165,66 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>173</ID>
+          <Description>"0x264 Buff 1 Unknown"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>264</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>176</ID>
+          <Description>"0x265 Buff 1 Level of person who casted buff"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>265</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>178</ID>
+          <Description>"0x266 Buff 1 Modifier (Bard songs) (divide by 10 to get float value)"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>266</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>179</ID>
+          <Description>"0x267 Buff 1 Unknown"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>267</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>175</ID>
+          <Description>"0x268 Buff 1 ID"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>268</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>174</ID>
+          <Description>"0x26A Buff 1 Ticks (seconds = duration * 6)"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>26A</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>49</ID>
           <Description>"0xB64 Standing State"</Description>
           <ShowAsHex>1</ShowAsHex>
@@ -125,6 +233,86 @@
           <Address>eqgame.exe+3F94E8</Address>
           <Offsets>
             <Offset>B64</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>163</ID>
+          <Description>"0xB68 Platinum"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B68</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>164</ID>
+          <Description>"0xB6C Gold"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B6C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>165</ID>
+          <Description>"0xB70 Silver"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B70</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>166</ID>
+          <Description>"0xB74 Copper"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B74</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>167</ID>
+          <Description>"0xB78 Bank Platinum"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B78</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>170</ID>
+          <Description>"0xB7C Bank Gold"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B7C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>169</ID>
+          <Description>"0xB80 Bank Silver"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B80</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>168</ID>
+          <Description>"0xB84 Bank Copper"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B84</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -780,7 +968,7 @@
       <Address>eqgame.exe+3CF1FC</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>26</ID>
+      <ID>152</ID>
       <Description>"Fog unknown"</Description>
       <Color>80000008</Color>
       <VariableType>Byte</VariableType>
@@ -960,7 +1148,7 @@
       <Address>007F9490</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>152</ID>
+      <ID>153</ID>
       <Description>"No description"</Description>
       <Color>80000008</Color>
       <VariableType>Float</VariableType>
@@ -974,18 +1162,60 @@
       <Address>005E60EC</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>153</ID>
+      <ID>155</ID>
       <Description>"No description"</Description>
       <Color>80000008</Color>
       <VariableType>Float</VariableType>
       <Address>005E85DC</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>155</ID>
+      <ID>156</ID>
       <Description>"No description"</Description>
       <Color>80000008</Color>
       <VariableType>Float</VariableType>
       <Address>005E7378</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>157</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E7810</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>158</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>008092D8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>160</ID>
+      <Description>"SHIFT is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0080931C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>162</ID>
+      <Description>"CTRL is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00809320</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>159</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00809328</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>161</ID>
+      <Description>"ALT is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0080932C</Address>
     </CheatEntry>
   </CheatEntries>
   <CheatCodes>

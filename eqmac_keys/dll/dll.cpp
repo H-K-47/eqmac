@@ -18,8 +18,6 @@
 
 #include "eqmac.hpp"
 
-const std::string ini_file = "eqmac_keys.ini";
-
 #define APPLICATION_NAME       "EQMac Keys"
 #define APPLICATION_CLASS_NAME "eqmac_keys"
 #define APPLICATION_DLL_NAME   "eqmac_keys.dll"
@@ -55,18 +53,18 @@ DWORD window_thread_id;
 
 void timer_keys(HWND hwnd)
 {
-    HWND foreground_hwnd = GetForegroundWindow();
+    if (memory.get_process_id() == 0)
+    {
+        return;
+    }
 
-    DWORD foreground_process_id;
-    GetWindowThreadProcessId(foreground_hwnd, &foreground_process_id);
-
-    if (foreground_process_id == GetCurrentProcessId())
+    if (memory.is_foreground_window_current_process_id() == true)
     {
         if
         (
-            (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-            (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-            (GetAsyncKeyState(VK_BACK) & 0x8000)
+            (GetAsyncKeyState(VK_CONTROL)) &&
+            (GetAsyncKeyState(VK_ALT)) &&
+            (GetAsyncKeyState(VK_BACK))
         )
         {
             DestroyWindow(hwnd);
@@ -75,76 +73,88 @@ void timer_keys(HWND hwnd)
         return;
     }
 
-    if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+    if (GetAsyncKeyState(VK_CONTROL))
     {
-        if (GetAsyncKeyState(VK_1) & 0x8000)
+        if (GetAsyncKeyState(VK_1))
         {
             everquest_function_do_hot_button(0);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_2) & 0x8000)
+        if (GetAsyncKeyState(VK_2))
         {
             everquest_function_do_hot_button(1);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_3) & 0x8000)
+        if (GetAsyncKeyState(VK_3))
         {
             everquest_function_do_hot_button(2);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_4) & 0x8000)
+        if (GetAsyncKeyState(VK_4))
         {
             everquest_function_do_hot_button(3);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_5) & 0x8000)
+        if (GetAsyncKeyState(VK_5))
         {
             everquest_function_do_hot_button(4);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_6) & 0x8000)
+        if (GetAsyncKeyState(VK_6))
         {
             everquest_function_do_hot_button(5);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_7) & 0x8000)
+        if (GetAsyncKeyState(VK_7))
         {
             everquest_function_do_hot_button(6);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_8) & 0x8000)
+        if (GetAsyncKeyState(VK_8))
         {
             everquest_function_do_hot_button(7);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_9) & 0x8000)
+        if (GetAsyncKeyState(VK_9))
         {
             everquest_function_do_hot_button(8);
+            Sleep(1000);
         }
 
-        if (GetAsyncKeyState(VK_0) & 0x8000)
+        if (GetAsyncKeyState(VK_0))
         {
             everquest_function_do_hot_button(9);
+            Sleep(1000);
         }
     }
 }
 
 void on_create(HWND hwnd)
 {
+    memory.set_process_by_id(GetCurrentProcessId());
+
     SetTimer(hwnd, ID_TIMER_KEYS, 1, 0);
 
-    everquest_function_chat_write(APPLICATION_NAME " loaded.", 10, 1);
+    everquest_function_chat_write_ex(APPLICATION_NAME " loaded.");
 }
 
 void on_destroy(HWND hwnd)
 {
     KillTimer(hwnd, ID_TIMER_KEYS);
 
-    everquest_function_chat_write(APPLICATION_NAME " unloaded.", 10, 1);
+    everquest_function_chat_write_ex(APPLICATION_NAME " unloaded.");
 
     FreeLibraryAndExitThread((HINSTANCE)module, 0);
 
-    CloseHandle(window_thread);
+    ExitThread(0);
 
     PostQuitMessage(0);
 }
@@ -242,7 +252,7 @@ extern "C" BOOL APIENTRY DllMain(HANDLE dll, DWORD reason, LPVOID reserved)
 
         memory.enable_debug_privileges();
 
-        window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, 0, 0, &window_thread_id);
+        window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, dll, 0, &window_thread_id);
     }
 
     if (reason == DLL_PROCESS_DETACH)

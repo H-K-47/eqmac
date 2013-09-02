@@ -2,13 +2,6 @@
 <CheatTable CheatEngineTableVersion="14">
   <CheatEntries>
     <CheatEntry>
-      <ID>0</ID>
-      <Description>"unknown"</Description>
-      <Color>80000008</Color>
-      <VariableType>Byte</VariableType>
-      <Address>0079856C</Address>
-    </CheatEntry>
-    <CheatEntry>
       <ID>1</ID>
       <Description>"SHIFT is pressed"</Description>
       <Color>80000008</Color>
@@ -16,14 +9,14 @@
       <Address>00799738</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>2</ID>
+      <ID>5</ID>
       <Description>"CTRL is pressed"</Description>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>0079973C</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>3</ID>
+      <ID>6</ID>
       <Description>"ALT is pressed"</Description>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -325,6 +318,16 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>232</ID>
+          <Description>"0xB94 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>B94</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>52</ID>
           <Description>"0xD14 ??"</Description>
           <Color>80000008</Color>
@@ -363,6 +366,16 @@
           <Address>eqgame.exe+3F94E8</Address>
           <Offsets>
             <Offset>D74</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>231</ID>
+          <Description>"0xE88 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>E88</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -466,6 +479,17 @@
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
             <Offset>189</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>230</ID>
+          <Description>"0x190 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>190</Offset>
             <Offset>84</Offset>
           </Offsets>
         </CheatEntry>
@@ -967,7 +991,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>93</ID>
-          <Description>"0x10C ??"</Description>
+          <Description>"0x10C Body Type (11 is untargetable)"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -1035,6 +1059,37 @@
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>eqgame.exe+3F94F8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"Time of Day Pointer?"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9494</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>0</ID>
+          <Description>"Time of Day"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9494</Address>
+          <Offsets>
+            <Offset>4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>3</ID>
+          <Description>"????"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9494</Address>
+          <Offsets>
+            <Offset>6</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
     </CheatEntry>
     <CheatEntry>
       <ID>22</ID>
@@ -1332,34 +1387,6 @@
       <Address>008092D8</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>160</ID>
-      <Description>"SHIFT is pressed"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>0080931C</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>162</ID>
-      <Description>"CTRL is pressed"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>00809320</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>159</ID>
-      <Description>"No description"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>00809328</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>161</ID>
-      <Description>"ALT is pressed"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>0080932C</Address>
-    </CheatEntry>
-    <CheatEntry>
       <ID>180</ID>
       <Description>"No description"</Description>
       <Color>80000008</Color>
@@ -1388,26 +1415,89 @@
       <Address>122DF774</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>184</ID>
-      <Description>"Trade Target"</Description>
+      <ID>220</ID>
+      <Description>"Keyboard"</Description>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
-      <Address>007F94C8</Address>
+      <Address>8092E0</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>226</ID>
+          <Description>"SHIFT is pressed"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0080931C</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>162</ID>
+          <Description>"CTRL is pressed"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>00809320</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>159</ID>
+          <Description>"NUMLOCK is enabled"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>00809328</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>161</ID>
+          <Description>"ALT is pressed"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0080932C</Address>
+        </CheatEntry>
+      </CheatEntries>
     </CheatEntry>
     <CheatEntry>
       <ID>185</ID>
-      <Description>"Mouse X"</Description>
+      <Description>"Mouse"</Description>
+      <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
-      <Address>008092E8</Address>
+      <Address>008092E4</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>221</ID>
+          <Description>"Mouse X"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>008092E8</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>186</ID>
+          <Description>"Mouse Y"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>008092EC</Address>
+        </CheatEntry>
+      </CheatEntries>
     </CheatEntry>
     <CheatEntry>
-      <ID>186</ID>
-      <Description>"Mouse Y"</Description>
+      <ID>222</ID>
+      <Description>"Mouse Look State"</Description>
+      <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
-      <Address>008092EC</Address>
+      <Address>7985EA</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>219</ID>
+      <Description>"Mouse Click State"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798614</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>223</ID>
+      <Description>"Mouse Button Is Held Down"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798628</Address>
     </CheatEntry>
     <CheatEntry>
       <ID>191</ID>
@@ -1454,6 +1544,877 @@
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>007CE45A</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>208</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007CF204</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>209</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F956C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>211</ID>
+      <Description>"12042dec  0x2F0A"</Description>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>32</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>00601674</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>212</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>005DB1DC</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>214</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E8C80</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>216</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E8D2C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>215</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E8D3C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>213</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E8D54</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>217</ID>
+      <Description>"Camera Actor?"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>7F9810</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>224</ID>
+      <Description>"Is In Chat Mode"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>79856C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>225</ID>
+      <Description>"Client HWND"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>798540</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>227</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>10A9F26C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>228</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>005DB33A</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>239</ID>
+      <Description>"pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>7F9510</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>285</ID>
+          <Description>"while holding an item on mouse cursor = 1"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>7F9510</Address>
+          <Offsets>
+            <Offset>40</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>297</ID>
+          <Description>"while holding a hotkey on mouse cursor = 1"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>7F9510</Address>
+          <Offsets>
+            <Offset>42</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>229</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>7F951C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>234</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>07B8F408</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>233</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9574</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>282</ID>
+      <Description>"Target Spawn Info"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3F94EC</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>284</ID>
+          <Description>"0x01 Name"</Description>
+          <Color>80000008</Color>
+          <VariableType>String</VariableType>
+          <Length>40</Length>
+          <Unicode>0</Unicode>
+          <ZeroTerminate>1</ZeroTerminate>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>1</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>248</ID>
+      <Description>"UI draw state? 1 = normal, 2 = fullscreen ui, 3 = fullscreen no ui"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>0063B918</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>238</ID>
+      <Description>"Is Trade Window Open (OLD UI)"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>eqgame.exe+3D0258</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>184</ID>
+      <Description>"Trade Target"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F94C8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>256</ID>
+      <Description>"another Pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9550</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>241</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9550</Address>
+          <Offsets>
+            <Offset>10</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>300</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9550</Address>
+          <Offsets>
+            <Offset>A0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>255</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9550</Address>
+          <Offsets>
+            <Offset>A4</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>309</ID>
+      <Description>"another Pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9590</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>310</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9590</Address>
+          <Offsets>
+            <Offset>571C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>311</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9590</Address>
+          <Offsets>
+            <Offset>5801</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>253</ID>
+      <Description>"Old UI Pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9574</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>254</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>280</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>8</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>249</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>E64</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>315</ID>
+          <Description>"scribe and memorize spell progress bar"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>E96</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>247</ID>
+          <Description>"UI state ; set to 0=main,1=abilities,2=combat,3=social,4=inventory,5=spell book,12=help"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>E88</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>246</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>E89</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>259</ID>
+          <Description>"tracking or options window is open"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F2BC</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>245</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F2C4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>258</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F2C8</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>317</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F2CC</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>257</ID>
+          <Description>"last mouse click state on UI button (0 = left, 1 = right)"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F2D4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>251</ID>
+          <Description>"UI button push state"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Array of byte</VariableType>
+          <ByteLength>6</ByteLength>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F2D6</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>250</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F30C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>304</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F310</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>303</ID>
+          <Description>"trade window is open; set to 1 to show the trade window UI"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F314</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>302</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F318</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>242</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F31C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>243</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F320</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>305</ID>
+          <Description>"tracking window is open"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F324</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>307</ID>
+          <Description>""</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F32C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>308</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F330</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>316</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F33E</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>320</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F342</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>289</ID>
+          <Description>"selected item index in tracking list"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>63208</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>319</ID>
+          <Description>"address of the first item being traded"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>6323C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>288</ID>
+          <Description>"name of the first item being traded"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>String</VariableType>
+          <Length>64</Length>
+          <Unicode>0</Unicode>
+          <ZeroTerminate>1</ZeroTerminate>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>0</Offset>
+            <Offset>6323C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>286</ID>
+          <Description>"address of the second item being traded"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>63240</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>290</ID>
+          <Description>"address of the second item being traded"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>String</VariableType>
+          <Length>64</Length>
+          <Unicode>0</Unicode>
+          <ZeroTerminate>1</ZeroTerminate>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>0</Offset>
+            <Offset>63240</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>287</ID>
+          <Description>"x"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>6325C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>240</ID>
+          <Description>"Is Mouse Button Being Clicked?"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>63F88</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>252</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>63F8C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>244</ID>
+          <Description>"while Trading an item = 1,   if it is 1 you can pick up items in inventory"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>63F98</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>293</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>897D0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>292</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>897D4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>291</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>89934</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>294</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>89D90</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>260</ID>
+          <Description>"options window is open"</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>98B7C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>318</ID>
+          <Description>""</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>98CF8</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>264</ID>
+          <Description>""</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>98CE8</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>261</ID>
+          <Description>""</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>98D10</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>262</ID>
+          <Description>""</Description>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>98D14</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>235</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>4</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>eqgame.exe+2F0A56</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>236</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>4</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>eqgame.exe+2F0A96</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>237</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>349b91e</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>295</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>12</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>eqgame.exe+2F0BC0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>296</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>12</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>eqgame.exe+2F0C01</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>298</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>864b0ce</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>299</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>864b15e</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>301</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007D0254</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>4</ID>
+      <Description>"chat mode is not enabled?"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>0079856C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>263</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798734</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>314</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798738</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>313</ID>
+      <Description>"You have moved and are no longer hidden!"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798780</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>306</ID>
+      <Description>"Tracking Is Enabled (0035 = True, FFFF = False) ; Set to 29 and you will longer be hidden!"</Description>
+      <Color>80000008</Color>
+      <VariableType>2 Bytes</VariableType>
+      <Address>007989E2</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>312</ID>
+      <Description>"Tracking Target Info Pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3989F0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>321</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>00809478</Address>
+      <Offsets>
+        <Offset>17E40</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>322</ID>
+      <Description>"chat text pointer?"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9518</Address>
     </CheatEntry>
   </CheatEntries>
   <CheatCodes>
@@ -2085,7 +3046,7 @@
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Code :jae eqgame.exe+1321C8 ; NOP to trade from far away</Description>
+      <Description>Code :jae eqgame.exe+1321C8 ; JAE to JMP to trade from far away</Description>
       <Address>00532188</Address>
       <ModuleName>eqgame.exe</ModuleName>
       <ModuleNameOffset>132188</ModuleNameOffset>
@@ -2109,7 +3070,7 @@
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Code :jae eqgame.exe+1328E8 ; NOP to trade from far away</Description>
+      <Description>Code :jae eqgame.exe+1328E8 ; JAE to JMP to trade from far away</Description>
       <Address>005328AC</Address>
       <ModuleName>eqgame.exe</ModuleName>
       <ModuleNameOffset>1328AC</ModuleNameOffset>
@@ -2133,7 +3094,7 @@
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Change of jne eqgame.exe+13EAF0 ; NOP to cast spells while moving, never interrupted</Description>
+      <Description>Change of jne eqgame.exe+13EAF0 ; NOP to disable movement updates to client/server</Description>
       <Address>0053EAC0</Address>
       <ModuleName>eqgame.exe</ModuleName>
       <ModuleNameOffset>13EAC0</ModuleNameOffset>
@@ -2154,6 +3115,136 @@
         <Byte>2D</Byte>
         <Byte>03</Byte>
         <Byte>00</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :cmp ecx,0B ; check if body type is 11 which means target is untargetable</Description>
+      <Address>004C1472</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>C1472</ModuleNameOffset>
+      <Before>
+        <Byte>88</Byte>
+        <Byte>0C</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>83</Byte>
+        <Byte>F9</Byte>
+        <Byte>0B</Byte>
+      </Actual>
+      <After>
+        <Byte>74</Byte>
+        <Byte>38</Byte>
+        <Byte>83</Byte>
+        <Byte>F9</Byte>
+        <Byte>41</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of je eqgame.exe+E5ACB ; check if trading with an NPC</Description>
+      <Address>004E5ABC</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>E5ABC</ModuleNameOffset>
+      <Before>
+        <Byte>A8</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>01</Byte>
+      </Before>
+      <Actual>
+        <Byte>74</Byte>
+        <Byte>0D</Byte>
+      </Actual>
+      <After>
+        <Byte>53</Byte>
+        <Byte>50</Byte>
+        <Byte>E8</Byte>
+        <Byte>AE</Byte>
+        <Byte>9C</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :call eqgame.exe+E590C ; open trade window function</Description>
+      <Address>004EDD56</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>EDD56</ModuleNameOffset>
+      <Before>
+        <Byte>22</Byte>
+        <Byte>FF</Byte>
+        <Byte>FF</Byte>
+        <Byte>FF</Byte>
+        <Byte>56</Byte>
+      </Before>
+      <Actual>
+        <Byte>E8</Byte>
+        <Byte>B1</Byte>
+        <Byte>7B</Byte>
+        <Byte>FF</Byte>
+        <Byte>FF</Byte>
+      </Actual>
+      <After>
+        <Byte>E9</Byte>
+        <Byte>17</Byte>
+        <Byte>FF</Byte>
+        <Byte>FF</Byte>
+        <Byte>FF</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of je eqgame.exe+7B6DD ; JE to JMP to bandicoot trade 12042 push 00002F0A</Description>
+      <Address>0007B6B6</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>7B6B5</ModuleNameOffset>
+      <Before>
+        <Byte>86</Byte>
+        <Byte>64</Byte>
+        <Byte>2D</Byte>
+        <Byte>06</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>74</Byte>
+        <Byte>26</Byte>
+      </Actual>
+      <After>
+        <Byte>8B</Byte>
+        <Byte>0D</Byte>
+        <Byte>90</Byte>
+        <Byte>94</Byte>
+        <Byte>7F</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :or word ptr [eqgame.exe+3989E2],FF ; set is tracking to false</Description>
+      <Address>004C23D7</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>C23D7</ModuleNameOffset>
+      <Before>
+        <Byte>0D</Byte>
+        <Byte>90</Byte>
+        <Byte>94</Byte>
+        <Byte>7F</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>66</Byte>
+        <Byte>83</Byte>
+        <Byte>0D</Byte>
+        <Byte>E2</Byte>
+        <Byte>89</Byte>
+        <Byte>79</Byte>
+        <Byte>00</Byte>
+        <Byte>FF</Byte>
+      </Actual>
+      <After>
+        <Byte>6A</Byte>
+        <Byte>01</Byte>
+        <Byte>68</Byte>
+        <Byte>0E</Byte>
+        <Byte>01</Byte>
       </After>
     </CodeEntry>
   </CheatCodes>

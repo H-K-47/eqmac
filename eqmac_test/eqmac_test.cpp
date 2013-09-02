@@ -24,6 +24,13 @@ int main()
 
     memory.set_process_by_hwnd(everquest_hwnd);
 
+    if (memory.get_process_id() == 0)
+    {
+        std::cout << "Error: EverQuest window not found!" << std::endl;
+
+        return 0;
+    }
+
     std::string zone_short_name = everquest_get_zone_short_name(memory);
 
     boost::algorithm::to_lower(zone_short_name);

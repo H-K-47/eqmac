@@ -38,8 +38,7 @@
 #define WINDOW_HEIGHT 320
 #define WINDOW_WIDTH  240
 
-#define ID_TIMER_SET_PROCESS 10001
-#define ID_TIMER_KEYS        10002
+#define ID_TIMER_KEYS 10001
 
 #define VK_0 0x30
 #define VK_1 0x31
@@ -81,7 +80,20 @@ void load_buffs()
         {
             std::getline(file, line);
 
-            std::size_t found = line.find("#");
+            if (line.size() == 0)
+            {
+                continue;
+            }
+
+            std::size_t found;
+
+            found = line.find("#");
+            if (found != std::string::npos)
+            {
+                continue;
+            }
+
+            found = line.find("//");
             if (found != std::string::npos)
             {
                 continue;
@@ -113,21 +125,6 @@ void load_buffs()
     }
 }
 
-void timer_set_process(HWND hwnd)
-{
-    HWND foreground_hwnd = GetForegroundWindow();
-
-    DWORD foreground_process_id;
-    GetWindowThreadProcessId(foreground_hwnd, &foreground_process_id);
-
-    if (foreground_process_id != GetCurrentProcessId())
-    {
-        return;
-    }
-
-    memory.set_process_by_id(GetCurrentProcessId());
-}
-
 void timer_keys(HWND hwnd)
 {
     if (memory.get_process_id() == 0)
@@ -135,11 +132,16 @@ void timer_keys(HWND hwnd)
         return;
     }
 
+    if (memory.is_foreground_window_current_process_id() == false)
+    {
+        return;
+    }
+
     if
     (
-        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_BACK) & 0x8000)
+        (GetAsyncKeyState(VK_CONTROL)) &&
+        (GetAsyncKeyState(VK_ALT)) &&
+        (GetAsyncKeyState(VK_BACK))
     )
     {
         DestroyWindow(hwnd);
@@ -147,11 +149,11 @@ void timer_keys(HWND hwnd)
 
     if
     (
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_B) & 0x8000)
+        (GetAsyncKeyState(VK_ALT)) &&
+        (GetAsyncKeyState(VK_B))
     )
     {
-        everquest_function_chat_write(APPLICATION_NAME ":", 10, 1);
+        everquest_function_chat_write_ex(APPLICATION_NAME ":");
 
         int char_spawn_info = everquest_get_char_info(memory);
 
@@ -195,8 +197,7 @@ void timer_keys(HWND hwnd)
             int buff_seconds = buff_total_seconds % 60;
 
             std::stringstream buff_duration;
-
-            //buff_duration << "Time: ";
+            //buff_duration << buff_hours << ":" << buff_minutes << ":" << buff_seconds;
 
             if (buff_hours > 0)
             {
@@ -221,7 +222,7 @@ void timer_keys(HWND hwnd)
                 }
             }
 
-            std::string buff_name = "*Unknown Buff";
+            std::string buff_name = "*Unknown Buff*";
 
             if (buffs_list.size() > 0)
             {
@@ -239,14 +240,14 @@ void timer_keys(HWND hwnd)
             std::stringstream buff_text;
             buff_text << i + 1 << ":" << " " << buff_name << " " << "(" << buff_duration.str() << ")";
 
-            everquest_function_chat_write((char*)buff_text.str().c_str(), 10, 1);
+            everquest_function_chat_write_ex((char*)buff_text.str().c_str());
 
             buffs_structure_address += EVERQUEST_BUFFS_STRUCTURE_BUFF_SIZE;
         }
 
         if (buffs_found == false)
         {
-            everquest_function_chat_write("You do not have any buffs.", 10, 1);
+            everquest_function_chat_write_ex("You do not have any buffs.");
         }
 
         Sleep(1000);
@@ -255,24 +256,24 @@ void timer_keys(HWND hwnd)
 
 void on_create(HWND hwnd)
 {
-    SetTimer(hwnd, ID_TIMER_SET_PROCESS, 1, 0);
-    SetTimer(hwnd, ID_TIMER_KEYS,        1, 0);
+    memory.set_process_by_id(GetCurrentProcessId());
 
     load_buffs();
 
-    everquest_function_chat_write(APPLICATION_NAME " loaded.", 10, 1);
+    SetTimer(hwnd, ID_TIMER_KEYS, 1, 0);
+
+    everquest_function_chat_write_ex(APPLICATION_NAME " loaded.");
 }
 
 void on_destroy(HWND hwnd)
 {
-    KillTimer(hwnd, ID_TIMER_SET_PROCESS);
     KillTimer(hwnd, ID_TIMER_KEYS);
 
-    everquest_function_chat_write(APPLICATION_NAME " unloaded.", 10, 1);
+    everquest_function_chat_write_ex(APPLICATION_NAME " unloaded.");
 
     FreeLibraryAndExitThread((HINSTANCE)module, 0);
 
-    CloseHandle(window_thread);
+    ExitThread(0);
 
     PostQuitMessage(0);
 }
@@ -281,10 +282,6 @@ void on_timer(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     switch (wparam)
     {
-        case ID_TIMER_SET_PROCESS:
-            timer_set_process(hwnd);
-            break;
-
         case ID_TIMER_KEYS:
             timer_keys(hwnd);
             break;
@@ -374,7 +371,7 @@ extern "C" BOOL APIENTRY DllMain(HANDLE dll, DWORD reason, LPVOID reserved)
 
         memory.enable_debug_privileges();
 
-        window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, 0, 0, &window_thread_id);
+        window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, dll, 0, &window_thread_id);
     }
 
     if (reason == DLL_PROCESS_DETACH)

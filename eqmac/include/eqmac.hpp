@@ -25,6 +25,10 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X 0x01EC // FLOAT
 #define EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z 0x01F0 // FLOAT
 
+#define EVERQUEST_ZONE_INFO_PLAYER_NAME_SIZE 0x40
+#define EVERQUEST_ZONE_INFO_SHORT_NAME_SIZE  0x20
+#define EVERQUEST_ZONE_INFO_LONG_NAME_SIZE   0x80
+
 #define EVERQUEST_WORLD_INFO_POINTER       0x007F9494 // POINTER to STRUCT
 #define EVERQUEST_OFFSET_WORLD_INFO_HOUR   0x04 // BYTE
 #define EVERQUEST_OFFSET_WORLD_INFO_MINUTE 0x05 // BYTE
@@ -32,7 +36,11 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_OFFSET_WORLD_INFO_MONTH  0x07 // BYTE
 #define EVERQUEST_OFFSET_WORLD_INFO_YEAR   0x08 // BYTE
 
+// 007F949C ??
 #define EVERQUEST_ITEMS_INFO_POINTER 0x007F94A0 // POINTER to STRUCT
+
+// ??
+//#define EVERQUEST_DOORS_INFO_POINTER 0x007F94B8 // POINTER to STRUCT
 
 #define EVERQUEST_CHAR_INFO_POINTER                   0x007F94E8 // POINTER to STRUCT
 #define EVERQUEST_OFFSET_CHAR_INFO_NAME               0x0002 // STRING [0x40]
@@ -48,6 +56,8 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_OFFSET_CHAR_INFO_BANK_SILVER        0x0B80 // DWORD
 #define EVERQUEST_OFFSET_CHAR_INFO_BANK_COPPER        0x0B84 // DWORD
 #define EVERQUEST_OFFSET_CHAR_INFO_SPAWN_INFO_POINTER 0x0D74 // POINTER to STRUCT
+
+#define EVERQUEST_CHAR_INFO_NAME_SIZE 0x40
 
 #define EVERQUEST_BUFFS_STRUCTURE_BUFF_SIZE 0x0A // 0x10
 #define EVERQUEST_OFFSET_BUFFS_STRUCTURE_UNKNOWN_0x00     0x00
@@ -103,6 +113,9 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME               0x012C // STRING [0x20]
 
 #define EVERQUEST_SPAWNS_MAX 4096
+
+#define EVERQUEST_SPAWN_INFO_NAME_SIZE      0x40
+#define EVERQUEST_SPAWN_INFO_LAST_NAME_SIZE 0x20
 
 #define EVERQUEST_SPAWN_INFO_TYPE_PLAYER 0
 #define EVERQUEST_SPAWN_INFO_TYPE_NPC    1
@@ -206,26 +219,81 @@ BYTE EVERQUEST_ASM_PLAY_NICE_JUMP_BYTES[] = {0x74, 0x0C};
 // call eqgame.exe+15833D
 #define EVERQUEST_ASM_PLAY_NICE_SLEEP_IS_ENABLED 0x008063D0 // DWORD ; eqgame.exe+4063D0
 
+#define EVERQUEST_MOUSE_X 0x008092E8 // DWORD
+#define EVERQUEST_MOUSE_Y 0x008092EC // DWORD
+
+#define EVERQUEST_MOUSE_CLICK_STATE 0x00798614 // DWORD
+
+#define EVERQUEST_MOUSE_CLICK_STATE_LEFT  0x01000001
+#define EVERQUEST_MOUSE_CLICK_STATE_RIGHT 0x00010100
+#define EVERQUEST_MOUSE_CLICK_STATE_BOTH  0x01010101
+
+#define EVERQUEST_MOUSE_BUTTON_IS_HELD_DOWN 0x00798628 // DWORD
+
+#define EVERQUEST_MOUSE_LOOK_STATE 0x007985EA // DWORD
+
+#define EVERQUEST_MOUSE_LOOK_STATE_FALSE 0x00010000
+#define EVERQUEST_MOUSE_LOOK_STATE_TRUE  0x00010001
+
 #define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT       0x004B459C
 #define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE 0x007F9510
 
 typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
 static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
 
+// CHotButtonWnd__DoHotButton
 #define EVERQUEST_FUNCTION_DO_HOT_BUTTON 0x004209BD
 
 typedef void __stdcall _everquest_function_do_hot_button(int button_index);
 static _everquest_function_do_hot_button *everquest_function_do_hot_button = (_everquest_function_do_hot_button *)EVERQUEST_FUNCTION_DO_HOT_BUTTON;
 
-#define EVERQUEST_FUNCTION_CAST_SPELL 0x00000000
+// EQ_Character__CastSpell
+#define EVERQUEST_FUNCTION_CAST_SPELL 0x004C483B
 
 typedef void __stdcall _everquest_function_cast_spell(int gem_index, int spell_id);
 static _everquest_function_cast_spell *everquest_function_cast_spell = (_everquest_function_cast_spell *)EVERQUEST_FUNCTION_CAST_SPELL;
 
-#define EVERQUEST_FUNCTION_CHAT_WRITE 0x0000537F99
+// CEverQuest__dsp_chat
+#define EVERQUEST_FUNCTION_CHAT_WRITE 0x00537F99
 
-typedef void __stdcall _everquest_function_chat_write(char* text, int color = 10, int value = 1);
+typedef void __stdcall _everquest_function_chat_write(char* text, int color = 10, BYTE value = 1);
 static _everquest_function_chat_write *everquest_function_chat_write = (_everquest_function_chat_write *)EVERQUEST_FUNCTION_CHAT_WRITE;
+
+// CEverQuest__dsp_chat2
+#define EVERQUEST_FUNCTION_CHAT_WRITE_EX 0x005380FD
+
+typedef void __stdcall _everquest_function_chat_write_ex(char* text);
+static _everquest_function_chat_write_ex *everquest_function_chat_write_ex = (_everquest_function_chat_write_ex *)EVERQUEST_FUNCTION_CHAT_WRITE_EX;
+
+// chat write eqstr strings
+// call 00550EFE
+
+// CTextureFont__DrawWrappedText
+#define EVERQUEST_FUNCTION_DRAW_WRAPPED_TEXT 0x005A4970
+
+// EQ_LoadingS__WriteTextHD
+#define EVERQUEST_FUNCTION_WRITE_TEXT_HD       0x00452DE9
+#define EVERQUEST_FUNCTION_WRITE_TEXT_HD_VALUE 0x0063D3B0
+
+typedef void __stdcall _everquest_function_write_text_hd(char* text, int x, int y, int color = 15, int value);
+static _everquest_function_write_text_hd *everquest_function_write_text_hd = (_everquest_function_write_text_hd *)EVERQUEST_FUNCTION_WRITE_TEXT_HD;
+
+// CDisplay__WriteTextHD2
+#define EVERQUEST_FUNCTION_WRITE_TEXT_HD_2 0x004AA5AA
+
+typedef void __stdcall _everquest_function_write_text_hd_2(char* text, int x, int y, int color = 15);
+static _everquest_function_write_text_hd_2 *everquest_function_write_text_hd_2 = (_everquest_function_write_text_hd_2 *)EVERQUEST_FUNCTION_WRITE_TEXT_HD_2;
+
+#define EVERQUEST_FUNCTION_SET_STANDING_STATE 0x0050BE3C
+
+typedef void __stdcall _everquest_function_set_standing_state(BYTE standing_state);
+static _everquest_function_set_standing_state *everquest_function_set_standing_state = (_everquest_function_set_standing_state *)EVERQUEST_FUNCTION_SET_STANDING_STATE;
+
+// call eqgame.exe+E590C
+#define EVERQUEST_FUNCTION_OPEN_TRADE_WINDOW 0x004E590C
+
+typedef void __stdcall _everquest_function_open_trade_window();
+static _everquest_function_open_trade_window *everquest_function_open_trade_window = (_everquest_function_open_trade_window *)EVERQUEST_FUNCTION_OPEN_TRADE_WINDOW;
 
 struct everquest_spawn_t
 {
@@ -286,17 +354,17 @@ bool everquest_is_auto_attack_enabled(memory &memory)
 
 std::string everquest_get_zone_player_name(memory &memory)
 {
-    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME, 0x40);
+    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME, EVERQUEST_ZONE_INFO_PLAYER_NAME_SIZE);
 }
 
 std::string everquest_get_zone_short_name(memory &memory)
 {
-    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME, 0x20);
+    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME, EVERQUEST_ZONE_INFO_SHORT_NAME_SIZE);
 }
 
 std::string everquest_get_zone_long_name(memory &memory)
 {
-    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_LONG_NAME, 0x80);
+    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_LONG_NAME, EVERQUEST_ZONE_INFO_LONG_NAME_SIZE);
 }
 
 int everquest_get_char_info(memory &memory)
@@ -580,8 +648,8 @@ void everquest_update_spawns(memory &memory, std::vector<everquest_spawn_t> &eve
         everquest_spawn.owner_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID);
         everquest_spawn.guild_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_GUILD_ID);
 
-        everquest_spawn.name      = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME,      0x40);
-        everquest_spawn.last_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME, 0x20);
+        everquest_spawn.name      = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME,      EVERQUEST_SPAWN_INFO_NAME_SIZE);
+        everquest_spawn.last_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME, EVERQUEST_SPAWN_INFO_LAST_NAME_SIZE);
 
         everquest_spawn.y = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Y);
         everquest_spawn.x = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_X);
@@ -611,7 +679,7 @@ void everquest_update_spawns(memory &memory, std::vector<everquest_spawn_t> &eve
 
         if (everquest_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
         {
-            std::string player_name = memory.read_string(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, 0x40);
+            std::string player_name = memory.read_string(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, EVERQUEST_SPAWN_INFO_NAME_SIZE);
 
             std::size_t found = everquest_spawn.name.find(player_name);
 

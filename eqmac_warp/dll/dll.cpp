@@ -40,9 +40,9 @@ const std::string ini_file = "eqmac_warp.ini";
 #define WINDOW_HEIGHT 320
 #define WINDOW_WIDTH  240
 
-#define ID_TIMER_SET_PROCESS 10001
-#define ID_TIMER_KEYS        10002
-#define ID_TIMER_AUTO_GATE   10003
+#define ID_TIMER_KEYS      10001
+#define ID_TIMER_AUTO_GATE 10002
+#define ID_TIMER_FOLLOW    10003
 
 #define VK_0 0x30
 #define VK_1 0x31
@@ -55,6 +55,7 @@ const std::string ini_file = "eqmac_warp.ini";
 #define VK_8 0x38
 #define VK_9 0x39
 
+#define VK_F 0x46
 #define VK_G 0x47
 
 #define VK_ALT VK_MENU
@@ -69,6 +70,13 @@ DWORD window_thread_id;
 
 std::vector<everquest_spawn_t> everquest_spawns;
 std::vector<everquest_spawn_t>::iterator everquest_spawns_it;
+
+bool warp_follow_activated = false;
+
+void toggle_bool(bool &b)
+{
+    b = !b;
+}
 
 struct sort_spawns_by_distance_t
 {
@@ -91,21 +99,6 @@ void update_spawns()
     everquest_update_spawns(memory, everquest_spawns);
 }
 
-void timer_set_process(HWND hwnd)
-{
-    HWND foreground_hwnd = GetForegroundWindow();
-
-    DWORD foreground_process_id;
-    GetWindowThreadProcessId(foreground_hwnd, &foreground_process_id);
-
-    if (foreground_process_id != GetCurrentProcessId())
-    {
-        return;
-    }
-
-    memory.set_process_by_id(GetCurrentProcessId());
-}
-
 void timer_keys(HWND hwnd)
 {
     if (memory.get_process_id() == 0)
@@ -113,11 +106,16 @@ void timer_keys(HWND hwnd)
         return;
     }
 
+    if (memory.is_foreground_window_current_process_id() == false)
+    {
+        return;
+    }
+
     if
     (
-        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_BACK) & 0x8000)
+        (GetAsyncKeyState(VK_CONTROL)) &&
+        (GetAsyncKeyState(VK_ALT)) &&
+        (GetAsyncKeyState(VK_BACK))
     )
     {
         DestroyWindow(hwnd);
@@ -125,23 +123,46 @@ void timer_keys(HWND hwnd)
 
     if
     (
-        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_G) & 0x8000)
+        (GetAsyncKeyState(VK_CONTROL)) &&
+        (GetAsyncKeyState(VK_ALT)) &&
+        (GetAsyncKeyState(VK_G))
     )
     {
-        everquest_function_chat_write(APPLICATION_NAME " is instant gating.", 10, 1);
+        everquest_function_chat_write_ex(APPLICATION_NAME " is instant gating.");
 
         int player_spawn_info = everquest_get_player_spawn_info(memory);
 
         memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
+
+        Sleep(1000);
     }
 
-    if (GetAsyncKeyState(VK_F12) & 0x8000)
+    if
+    (
+        (GetAsyncKeyState(VK_CONTROL)) &&
+        (GetAsyncKeyState(VK_ALT)) &&
+        (GetAsyncKeyState(VK_F))
+    )
+    {
+        toggle_bool(warp_follow_activated);
+
+        if (warp_follow_activated == true)
+        {
+            everquest_function_chat_write_ex(APPLICATION_NAME " Follow activated.");
+        }
+        else
+        {
+            everquest_function_chat_write_ex(APPLICATION_NAME " Follow deactivated.");
+        }
+
+        Sleep(1000);
+    }
+
+    if (GetAsyncKeyState(VK_F12))
     {
         bool warp_point_ex = false;
 
-        if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+        if (GetAsyncKeyState(VK_SHIFT))
         {
             warp_point_ex = true;
         }
@@ -172,10 +193,13 @@ void timer_keys(HWND hwnd)
         boost::property_tree::ptree pt;
         boost::property_tree::ini_parser::read_ini(zone_ini.str(), pt);
 
+        std::string warp_description;
         float warp_y, warp_x, warp_z, warp_heading;
 
         if (warp_point_ex == true)
         {
+            warp_description = pt.get<std::string>("WarpPointEx.Description");
+
             warp_y = pt.get<float>("WarpPointEx.Y");
             warp_x = pt.get<float>("WarpPointEx.X");
             warp_z = pt.get<float>("WarpPointEx.Z");
@@ -184,6 +208,8 @@ void timer_keys(HWND hwnd)
         }
         else
         {
+            warp_description = pt.get<std::string>("WarpPoint.Description");
+
             warp_y = pt.get<float>("WarpPoint.Y");
             warp_x = pt.get<float>("WarpPoint.X");
             warp_z = pt.get<float>("WarpPoint.Z");
@@ -191,7 +217,10 @@ void timer_keys(HWND hwnd)
             warp_heading = pt.get<float>("WarpPoint.Heading");
         }
 
-        everquest_function_chat_write(APPLICATION_NAME " is warping.", 10, 1);
+        std::stringstream warp_text;
+        warp_text << APPLICATION_NAME << " is warping to " << warp_description << ".";
+
+        everquest_function_chat_write_ex((char*)warp_text.str().c_str());
 
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
@@ -204,11 +233,11 @@ void timer_keys(HWND hwnd)
         Sleep(1000);
     }
 
-    if (GetAsyncKeyState(VK_F8) & 0x8000)
+    if (GetAsyncKeyState(VK_F8))
     {
         bool warp_to_spawn_ex = false;
 
-        if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+        if (GetAsyncKeyState(VK_SHIFT))
         {
             warp_to_spawn_ex = true;
         }
@@ -312,7 +341,7 @@ void timer_keys(HWND hwnd)
             return;
         }
 
-        everquest_function_chat_write(APPLICATION_NAME " is warping to spawn.", 10, 1);
+        everquest_function_chat_write_ex(APPLICATION_NAME " is warping to spawn.");
 
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
@@ -335,7 +364,7 @@ void timer_keys(HWND hwnd)
         Sleep(1000);
     }
 
-    if (GetAsyncKeyState(VK_F7) & 0x8000)
+    if (GetAsyncKeyState(VK_F7))
     {
         int player_spawn_info = everquest_get_player_spawn_info(memory);
 
@@ -394,7 +423,7 @@ void timer_keys(HWND hwnd)
             return;
         }
 
-        everquest_function_chat_write(APPLICATION_NAME " is warping to target.", 10, 1);
+        everquest_function_chat_write_ex(APPLICATION_NAME " is warping to target.");
 
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
         memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
@@ -467,31 +496,110 @@ void timer_auto_gate(HWND hwnd)
         return;
     }
 
-    everquest_function_chat_write(APPLICATION_NAME " is auto gating.", 10, 1);
+    everquest_function_chat_write_ex(APPLICATION_NAME " is auto gating.");
 
     memory.write_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_TYPE, EVERQUEST_SPAWN_INFO_TYPE_CORPSE);
+
+    Sleep(1000);
+}
+
+void timer_follow(HWND hwnd)
+{
+    if (memory.get_process_id() == 0)
+    {
+        return;
+    }
+
+    if (warp_follow_activated == false)
+    {
+        return;
+    }
+
+    boost::property_tree::ptree pt;
+    boost::property_tree::ini_parser::read_ini(ini_file, pt);
+
+    std::string follow_name = pt.get<std::string>("WarpFollow.sName", "");
+
+    if (follow_name.size() == 0)
+    {
+        return;
+    }
+
+    int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+    std::string player_name = memory.read_string(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, EVERQUEST_SPAWN_INFO_NAME_SIZE);
+
+    if (follow_name == player_name)
+    {
+        return;
+    }
+
+    update_spawns();
+
+    bool found_spawn = false;
+
+    float warp_y = 0;
+    float warp_x = 0;
+    float warp_z = 0;
+
+    float warp_heading = 0;
+
+    foreach (everquest_spawn_t everquest_spawn, everquest_spawns)
+    {
+        if (everquest_spawn.name == follow_name)
+        {
+            found_spawn = true;
+
+            warp_y = everquest_spawn.y;
+            warp_x = everquest_spawn.x;
+            warp_z = everquest_spawn.z + 1.0;
+
+            warp_heading = everquest_spawn.heading;
+
+            break;
+        }
+    }
+
+    if (found_spawn == false)
+    {
+        return;
+    }
+
+    everquest_function_chat_write_ex(APPLICATION_NAME " is warp following.");
+
+    memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y, warp_y);
+    memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X, warp_x);
+    memory.write_any<float>(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z, warp_z);
+
+    memory.write_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_HEADING, warp_heading);
+
+    everquest_function_warp_to_safe_point(EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE);
+
+    Sleep(1000);
 }
 
 void on_create(HWND hwnd)
 {
-    SetTimer(hwnd, ID_TIMER_SET_PROCESS, 1, 0);
-    SetTimer(hwnd, ID_TIMER_KEYS,        1, 0);
-    SetTimer(hwnd, ID_TIMER_AUTO_GATE,   1, 0);
+    memory.set_process_by_id(GetCurrentProcessId());
 
-    everquest_function_chat_write(APPLICATION_NAME " loaded.", 10, 1);
+    SetTimer(hwnd, ID_TIMER_KEYS,      1, 0);
+    SetTimer(hwnd, ID_TIMER_AUTO_GATE, 1, 0);
+    SetTimer(hwnd, ID_TIMER_FOLLOW,    1, 0);
+
+    everquest_function_chat_write_ex(APPLICATION_NAME " loaded.");
 }
 
 void on_destroy(HWND hwnd)
 {
-    KillTimer(hwnd, ID_TIMER_SET_PROCESS);
     KillTimer(hwnd, ID_TIMER_KEYS);
     KillTimer(hwnd, ID_TIMER_AUTO_GATE);
+    KillTimer(hwnd, ID_TIMER_FOLLOW);
 
-    everquest_function_chat_write(APPLICATION_NAME " unloaded.", 10, 1);
+    everquest_function_chat_write_ex(APPLICATION_NAME " unloaded.");
 
     FreeLibraryAndExitThread((HINSTANCE)module, 0);
 
-    CloseHandle(window_thread);
+    ExitThread(0);
 
     PostQuitMessage(0);
 }
@@ -500,16 +608,16 @@ void on_timer(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     switch (wparam)
     {
-        case ID_TIMER_SET_PROCESS:
-            timer_set_process(hwnd);
-            break;
-
         case ID_TIMER_KEYS:
             timer_keys(hwnd);
             break;
 
         case ID_TIMER_AUTO_GATE:
             timer_auto_gate(hwnd);
+            break;
+
+        case ID_TIMER_FOLLOW:
+            timer_follow(hwnd);
             break;
     }
 }
@@ -597,7 +705,7 @@ extern "C" BOOL APIENTRY DllMain(HANDLE dll, DWORD reason, LPVOID reserved)
 
         memory.enable_debug_privileges();
 
-        window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, 0, 0, &window_thread_id);
+        window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, dll, 0, &window_thread_id);
     }
 
     if (reason == DLL_PROCESS_DETACH)

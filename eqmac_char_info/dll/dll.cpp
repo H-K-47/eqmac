@@ -38,8 +38,7 @@
 #define WINDOW_HEIGHT 320
 #define WINDOW_WIDTH  240
 
-#define ID_TIMER_SET_PROCESS 10001
-#define ID_TIMER_KEYS        10002
+#define ID_TIMER_KEYS 10001
 
 #define VK_0 0x30
 #define VK_1 0x31
@@ -64,21 +63,6 @@ HANDLE window_thread;
 
 DWORD window_thread_id;
 
-void timer_set_process(HWND hwnd)
-{
-    HWND foreground_hwnd = GetForegroundWindow();
-
-    DWORD foreground_process_id;
-    GetWindowThreadProcessId(foreground_hwnd, &foreground_process_id);
-
-    if (foreground_process_id != GetCurrentProcessId())
-    {
-        return;
-    }
-
-    memory.set_process_by_id(GetCurrentProcessId());
-}
-
 void timer_keys(HWND hwnd)
 {
     if (memory.get_process_id() == 0)
@@ -86,11 +70,16 @@ void timer_keys(HWND hwnd)
         return;
     }
 
+    if (memory.is_foreground_window_current_process_id() == false)
+    {
+        return;
+    }
+
     if
     (
-        (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_BACK) & 0x8000)
+        (GetAsyncKeyState(VK_CONTROL)) &&
+        (GetAsyncKeyState(VK_ALT)) &&
+        (GetAsyncKeyState(VK_BACK))
     )
     {
         DestroyWindow(hwnd);
@@ -98,11 +87,11 @@ void timer_keys(HWND hwnd)
 
     if
     (
-        (GetAsyncKeyState(VK_ALT) & 0x8000) &&
-        (GetAsyncKeyState(VK_C) & 0x8000)
+        (GetAsyncKeyState(VK_ALT)) &&
+        (GetAsyncKeyState(VK_C))
     )
     {
-        everquest_function_chat_write(APPLICATION_NAME ":", 10, 1);
+        everquest_function_chat_write_ex(APPLICATION_NAME ":");
 
         int char_spawn_info = everquest_get_char_info(memory);
 
@@ -112,9 +101,14 @@ void timer_keys(HWND hwnd)
         int bank_copper   = memory.read_any<DWORD>(char_spawn_info + EVERQUEST_OFFSET_CHAR_INFO_BANK_COPPER);
 
         std::stringstream bank_money;
-        bank_money << "You have" << " " << bank_platinum << "p" << " " << bank_gold << "g" << " " << bank_silver << "s" << " " << bank_copper << "c" << " " << "in your bank.";
+        bank_money << "You have"           << " "
+                   << bank_platinum << "p" << " "
+                   << bank_gold     << "g" << " "
+                   << bank_silver   << "s" << " "
+                   << bank_copper   << "c" << " "
+                   << "in your bank.";
 
-        everquest_function_chat_write((char*)bank_money.str().c_str(), 10, 1);
+        everquest_function_chat_write_ex((char*)bank_money.str().c_str());
 
         Sleep(1000);
     }
@@ -122,22 +116,22 @@ void timer_keys(HWND hwnd)
 
 void on_create(HWND hwnd)
 {
-    SetTimer(hwnd, ID_TIMER_SET_PROCESS, 1, 0);
-    SetTimer(hwnd, ID_TIMER_KEYS,        1, 0);
+    memory.set_process_by_id(GetCurrentProcessId());
 
-    everquest_function_chat_write(APPLICATION_NAME " loaded.", 10, 1);
+    SetTimer(hwnd, ID_TIMER_KEYS, 1, 0);
+
+    everquest_function_chat_write_ex(APPLICATION_NAME " loaded.");
 }
 
 void on_destroy(HWND hwnd)
 {
-    KillTimer(hwnd, ID_TIMER_SET_PROCESS);
     KillTimer(hwnd, ID_TIMER_KEYS);
 
-    everquest_function_chat_write(APPLICATION_NAME " unloaded.", 10, 1);
+    everquest_function_chat_write_ex(APPLICATION_NAME " unloaded.");
 
     FreeLibraryAndExitThread((HINSTANCE)module, 0);
 
-    CloseHandle(window_thread);
+    ExitThread(0);
 
     PostQuitMessage(0);
 }
@@ -146,10 +140,6 @@ void on_timer(HWND hwnd, WPARAM wparam, LPARAM lparam)
 {
     switch (wparam)
     {
-        case ID_TIMER_SET_PROCESS:
-            timer_set_process(hwnd);
-            break;
-
         case ID_TIMER_KEYS:
             timer_keys(hwnd);
             break;
@@ -239,7 +229,7 @@ extern "C" BOOL APIENTRY DllMain(HANDLE dll, DWORD reason, LPVOID reserved)
 
         memory.enable_debug_privileges();
 
-        window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, 0, 0, &window_thread_id);
+        window_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)create_window, dll, 0, &window_thread_id);
     }
 
     if (reason == DLL_PROCESS_DETACH)

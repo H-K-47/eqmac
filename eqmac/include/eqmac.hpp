@@ -36,8 +36,17 @@ const std::string everquest_title = "EQW beta 2.32";
 #define EVERQUEST_OFFSET_WORLD_INFO_MONTH  0x07 // BYTE
 #define EVERQUEST_OFFSET_WORLD_INFO_YEAR   0x08 // BYTE
 
-// 007F949C ??
-#define EVERQUEST_ITEMS_INFO_POINTER 0x007F94A0 // POINTER to STRUCT
+#define EVERQUEST_GROUND_SPAWN_INFO_POINTER                        0x007F949C // POINTER to STRUCT
+#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_PREV_SPAWN_INFO_POINTER 0x00 // POINTER to STRUCT
+#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER 0x04 // POINTER to STRUCT
+#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_ID                      0x08 // DWORD
+#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_DROP_ID                 0x0C // DWORD
+#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_Z                       0x90 // FLOAT
+#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_X                       0x94 // FLOAT
+#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_Y                       0x98 // FLOAT
+#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NAME                    0x9C // STRING [0x40]
+
+#define EVERQUEST_GROUND_SPAWN_INFO_NAME_SIZE 0x40
 
 // ??
 //#define EVERQUEST_DOORS_INFO_POINTER 0x007F94B8 // POINTER to STRUCT
@@ -138,6 +147,30 @@ const std::string everquest_title = "EQW beta 2.32";
 
 #define EVERQUEST_CASTING_SPELL_GEM_NUMBER_SINGING 255
 
+#define EVERQUEST_OLD_UI_INFO_POINTER 0x007F9574
+#define EVERQUEST_OFFSET_OLD_UI_INFO_STATE                0x00E88 // BYTE ; EVERQUEST_OLD_UI_STATE_x
+#define EVERQUEST_OFFSET_OLD_UI_INFO_IS_TRADE_WINDOW_OPEN 0x5F314 // DWORD
+
+#define EVERQUEST_MOUSE_CURSOR_INFO_POINTER 0x007F9510
+#define EVERQUEST_OFFSET_MOUSE_CURSOR_INFO_IS_HOLDING_ITEM   0x40 // BYTE
+#define EVERQUEST_OFFSET_MOUSE_CURSOR_INFO_IS_HOLDING_HOTKEY 0x42 // BYTE
+
+#define EVERQUEST_MOUSE_X 0x008092E8 // DWORD
+#define EVERQUEST_MOUSE_Y 0x008092EC // DWORD
+
+#define EVERQUEST_MOUSE_CLICK_STATE 0x00798614 // DWORD
+
+#define EVERQUEST_MOUSE_CLICK_STATE_LEFT  1       //0x01000001
+#define EVERQUEST_MOUSE_CLICK_STATE_RIGHT 1677612 //0x00010100
+#define EVERQUEST_MOUSE_CLICK_STATE_BOTH  0x01010101
+
+#define EVERQUEST_MOUSE_BUTTON_IS_HELD_DOWN 0x00798628 // DWORD
+
+#define EVERQUEST_MOUSE_LOOK_STATE 0x007985EA // DWORD
+
+#define EVERQUEST_MOUSE_LOOK_STATE_FALSE 0x00010000
+#define EVERQUEST_MOUSE_LOOK_STATE_TRUE  0x00010001
+
 #define EVERQUEST_RACE_UNKNOWN   0
 #define EVERQUEST_RACE_HUMAN     1
 #define EVERQUEST_RACE_BARBARIAN 2
@@ -219,27 +252,20 @@ BYTE EVERQUEST_ASM_PLAY_NICE_JUMP_BYTES[] = {0x74, 0x0C};
 // call eqgame.exe+15833D
 #define EVERQUEST_ASM_PLAY_NICE_SLEEP_IS_ENABLED 0x008063D0 // DWORD ; eqgame.exe+4063D0
 
-#define EVERQUEST_MOUSE_X 0x008092E8 // DWORD
-#define EVERQUEST_MOUSE_Y 0x008092EC // DWORD
-
-#define EVERQUEST_MOUSE_CLICK_STATE 0x00798614 // DWORD
-
-#define EVERQUEST_MOUSE_CLICK_STATE_LEFT  0x01000001
-#define EVERQUEST_MOUSE_CLICK_STATE_RIGHT 0x00010100
-#define EVERQUEST_MOUSE_CLICK_STATE_BOTH  0x01010101
-
-#define EVERQUEST_MOUSE_BUTTON_IS_HELD_DOWN 0x00798628 // DWORD
-
-#define EVERQUEST_MOUSE_LOOK_STATE 0x007985EA // DWORD
-
-#define EVERQUEST_MOUSE_LOOK_STATE_FALSE 0x00010000
-#define EVERQUEST_MOUSE_LOOK_STATE_TRUE  0x00010001
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT       0x004B459C
 #define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE 0x007F9510
 
 typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
 static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
+
+#define EVERQUEST_FUNCTION_DO_THE_ZONE 0x00546081
+
+typedef void __stdcall _everquest_function_do_the_zone(int destination_zone, char* aa, int destination_type, int zone_reason, float y, float x, float z, int heading);
+static _everquest_function_do_the_zone *everquest_function_do_the_zone = (_everquest_function_do_the_zone *)EVERQUEST_FUNCTION_DO_THE_ZONE;
 
 // CHotButtonWnd__DoHotButton
 #define EVERQUEST_FUNCTION_DO_HOT_BUTTON 0x004209BD
@@ -292,8 +318,12 @@ static _everquest_function_set_standing_state *everquest_function_set_standing_s
 // call eqgame.exe+E590C
 #define EVERQUEST_FUNCTION_OPEN_TRADE_WINDOW 0x004E590C
 
-typedef void __stdcall _everquest_function_open_trade_window();
+typedef void __stdcall _everquest_function_open_trade_window(int value);
 static _everquest_function_open_trade_window *everquest_function_open_trade_window = (_everquest_function_open_trade_window *)EVERQUEST_FUNCTION_OPEN_TRADE_WINDOW;
+
+#ifdef __cplusplus
+}
+#endif
 
 struct everquest_spawn_t
 {
@@ -337,6 +367,23 @@ struct everquest_spawn_t
     int is_holding_primary;
 };
 
+struct everquest_ground_spawn_t
+{
+    int address;
+
+    int id;
+    int drop_id;
+
+    std::string name;
+
+    float x;
+    float y;
+    float z;
+
+    float distance;
+    float distance_z;
+};
+
 float everquest_calculate_distance(float x1, float y1, float x2, float y2)
 {
     return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
@@ -370,6 +417,21 @@ std::string everquest_get_zone_long_name(memory &memory)
 int everquest_get_char_info(memory &memory)
 {
     return memory.read_any<DWORD>(EVERQUEST_CHAR_INFO_POINTER);
+}
+
+int everquest_get_ground_spawn_info(memory &memory)
+{
+    return memory.read_any<DWORD>(EVERQUEST_GROUND_SPAWN_INFO_POINTER);
+}
+
+int everquest_get_old_ui_info(memory &memory)
+{
+    return memory.read_any<DWORD>(EVERQUEST_OLD_UI_INFO_POINTER);
+}
+
+int everquest_get_mouse_cursor_info(memory &memory)
+{
+    return memory.read_any<DWORD>(EVERQUEST_MOUSE_CURSOR_INFO_POINTER);
 }
 
 int everquest_get_player_spawn_info(memory &memory)
@@ -574,6 +636,95 @@ std::string everquest_get_class_short_name(int _class)
     return class_short_name;
 }
 
+std::string everquest_get_standing_state_name(int standing_state)
+{
+    std::string standing_state_name;
+
+    switch (standing_state)
+    {
+        case EVERQUEST_STANDING_STATE_STANDING:
+            standing_state_name = "Standing";
+            break;
+
+        case EVERQUEST_STANDING_STATE_FROZEN:
+            standing_state_name = "Mesmerised / Feared";
+            break;
+
+        case EVERQUEST_STANDING_STATE_LOOTING:
+            standing_state_name = "Looting / Bind Wound";
+            break;
+
+        case EVERQUEST_STANDING_STATE_SITTING:
+            standing_state_name = "Sitting";
+            break;
+
+        case EVERQUEST_STANDING_STATE_DUCKING:
+            standing_state_name = "Ducking";
+            break;
+
+        case EVERQUEST_STANDING_STATE_FEIGNED:
+            standing_state_name = "Feign Death";
+            break;
+
+        case EVERQUEST_STANDING_STATE_DEAD:
+            standing_state_name = "Dead";
+            break;
+
+        default:
+            standing_state_name = "Unknown";
+            break;
+    }
+
+    return standing_state_name;
+}
+
+std::string everquest_get_ground_spawn_name(std::string spawn_actor_definition_name)
+{
+    std::string spawn_name = spawn_actor_definition_name;
+
+    if (spawn_actor_definition_name == "IT63_ACTORDEF")
+    {
+        spawn_name = "Dropped Item";
+    }
+
+    if (spawn_actor_definition_name == "IT64_ACTORDEF")
+    {
+        spawn_name = "Dropped Bag";
+    }
+
+    if (spawn_actor_definition_name == "IT66_ACTORDEF")
+    {
+        spawn_name = "Forge";
+    }
+
+    if (spawn_actor_definition_name == "IT69_ACTORDEF")
+    {
+        spawn_name = "Oven";
+    }
+
+    if (spawn_actor_definition_name == "IT70_ACTORDEF")
+    {
+        spawn_name = "Brew Barrel";
+    }
+
+    if (spawn_actor_definition_name == "IT73_ACTORDEF")
+    {
+        spawn_name = "Kiln";
+    }
+
+    if (spawn_actor_definition_name == "IT74_ACTORDEF")
+    {
+        spawn_name = "Pottery Wheel";
+    }
+
+    if (spawn_actor_definition_name == "IT128_ACTORDEF")
+    {
+        spawn_name = "Sewing Kit";
+    }
+
+    return spawn_name;
+}
+
 std::string everquest_get_guild_name(memory &memory, int guild_id)
 {
     if (guild_id == EVERQUEST_GUILD_ID_NULL)
@@ -657,7 +808,7 @@ void everquest_update_spawns(memory &memory, std::vector<everquest_spawn_t> &eve
 
         everquest_spawn.distance = everquest_calculate_distance(player_x, player_y, everquest_spawn.x, everquest_spawn.y);
 
-        everquest_spawn.distance_z = everquest_spawn.z - player_z;
+        everquest_spawn.distance_z = std::abs(everquest_spawn.z - player_z);
 
         everquest_spawn.heading = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HEADING);
 
@@ -694,6 +845,56 @@ void everquest_update_spawns(memory &memory, std::vector<everquest_spawn_t> &eve
         everquest_spawn.is_holding_primary   = memory.read_any<DWORD>(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY);
 
         everquest_spawns.push_back(everquest_spawn);
+
+        spawn_info_address = spawn_next_spawn_info;
+    }
+}
+
+void everquest_update_ground_spawns(memory &memory, std::vector<everquest_ground_spawn_t> &everquest_ground_spawns)
+{
+    everquest_ground_spawns.clear();
+
+    int player_spawn_info = everquest_get_player_spawn_info(memory);
+
+    float player_y = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
+    float player_x = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
+    float player_z = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
+
+    int spawn_info = everquest_get_ground_spawn_info(memory);
+
+    int spawn_info_address = spawn_info;
+
+    //int spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
+
+    //spawn_info_address = spawn_next_spawn_info;
+
+    for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
+    {
+        int spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
+
+        if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
+        {
+            break;
+        }
+
+        everquest_ground_spawn_t everquest_ground_spawn;
+
+        everquest_ground_spawn.address = spawn_info_address;
+
+        everquest_ground_spawn.id      = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_ID);
+        everquest_ground_spawn.drop_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_DROP_ID);
+        
+        everquest_ground_spawn.name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NAME, EVERQUEST_GROUND_SPAWN_INFO_NAME_SIZE);
+        
+        everquest_ground_spawn.y = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_Y);
+        everquest_ground_spawn.x = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_X);
+        everquest_ground_spawn.z = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_Z);
+
+        everquest_ground_spawn.distance = everquest_calculate_distance(player_x, player_y, everquest_ground_spawn.x, everquest_ground_spawn.y);
+
+        everquest_ground_spawn.distance_z = everquest_ground_spawn.z - player_z;
+
+        everquest_ground_spawns.push_back(everquest_ground_spawn);
 
         spawn_info_address = spawn_next_spawn_info;
     }

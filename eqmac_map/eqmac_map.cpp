@@ -98,6 +98,10 @@ int mouse_dragging_start_y = 0;
 
 std::string map_folder = "c:/eqmac/maps";
 
+std::string map_filename = "";
+
+bool map_file_not_found = false;
+
 float map_origin_x = window_width  / 2;
 float map_origin_y = window_height / 2;
 
@@ -139,9 +143,11 @@ unsigned int map_spawn_list_index = 0;
 
 bool map_draw_fps = false;
 
-bool map_draw_lines     = true;
-bool map_draw_points    = true;
-bool map_draw_spawns    = false;
+bool map_draw_lines  = true;
+bool map_draw_points = true;
+bool map_draw_spawns = true;
+
+bool map_draw_ground_spawns = true;
 
 bool map_draw_spawn_type_player = true;
 bool map_draw_spawn_type_npc    = true;
@@ -166,7 +172,7 @@ bool map_draw_spawn_movement_speed   = false;
 bool map_draw_spawn_standing_state   = false;
 bool map_draw_spawn_is_holding       = false;
 
-std::string map_zone = "qeynos";
+std::string map_zone = "null";
 
 /*
 GLUT_BITMAP_9_BY_15
@@ -224,6 +230,9 @@ std::vector<map_point_t>::iterator map_points_it;
 
 std::vector<everquest_spawn_t> map_spawns;
 std::vector<everquest_spawn_t>::iterator map_spawns_it;
+
+std::vector<everquest_ground_spawn_t> map_ground_spawns;
+std::vector<everquest_ground_spawn_t>::iterator map_ground_spawns_it;
 
 bool spawn_filter_enabled = false;
 
@@ -367,6 +376,8 @@ void parse_ini(std::string ini_filename)
     map_draw_lines  = pt.get<bool>("Draw.bLines",  map_draw_lines);
     map_draw_points = pt.get<bool>("Draw.bPoints", map_draw_points);
     map_draw_spawns = pt.get<bool>("Draw.bSpawns", map_draw_spawns);
+
+    map_draw_ground_spawns = pt.get<bool>("Draw.bGroundSpawns", map_draw_ground_spawns);
 
     map_draw_spawn_type_player = pt.get<bool>("Draw.bSpawnTypePlayer", map_draw_spawn_type_player);
     map_draw_spawn_type_npc    = pt.get<bool>("Draw.bSpawnTypeNPC",    map_draw_spawn_type_npc);
@@ -1244,13 +1255,18 @@ void update_zone(int value)
     std::stringstream map_filename_buffer;
     map_filename_buffer << map_folder << "/" << map_zone << ".txt";
 
+    map_filename = map_filename_buffer.str();
+
     std::fstream file;
-    file.open(map_filename_buffer.str().c_str(), std::ios::in);
+    file.open(map_filename.c_str(), std::ios::in);
 
     if (!file.is_open())
     {
+        map_file_not_found = true;
         return;
     }
+
+    map_file_not_found = false;
 
     map_lines.clear();
     map_points.clear();
@@ -1341,6 +1357,7 @@ void update_spawns(int value)
     }
 
     everquest_update_spawns(memory, map_spawns);
+    everquest_update_ground_spawns(memory, map_ground_spawns);
 
     glutTimerFunc(100, update_spawns, 0);
 }
@@ -1719,7 +1736,7 @@ void render()
     {
         draw_color_magenta();
 
-        draw_error_text("ERROR: You are not in game!");
+        draw_error_text("ERROR: You are zoning or not in game!");
 
         map_draw_spawn_list = false;
 
@@ -2183,38 +2200,7 @@ void render()
                     if (map_draw_spawn_standing_state == true)
                     {
                         std::stringstream buffer;
-                        buffer << "State: ";
-
-                        switch (map_spawn.standing_state)
-                        {
-                            case EVERQUEST_STANDING_STATE_STANDING:
-                                buffer << "Standing";
-                                break;
-
-                            case EVERQUEST_STANDING_STATE_FROZEN:
-                                buffer << "Mesmerised / Feared";
-                                break;
-
-                            case EVERQUEST_STANDING_STATE_LOOTING:
-                                buffer << "Looting / Bind Wound";
-                                break;
-
-                            case EVERQUEST_STANDING_STATE_SITTING:
-                                buffer << "Sitting";
-                                break;
-
-                            case EVERQUEST_STANDING_STATE_DUCKING:
-                                buffer << "Ducking";
-                                break;
-
-                            case EVERQUEST_STANDING_STATE_FEIGNED:
-                                buffer << "Feign Death";
-                                break;
-
-                            case EVERQUEST_STANDING_STATE_DEAD:
-                                buffer << "Dead";
-                                break;
-                        }
+                        buffer << "State: " << everquest_get_standing_state_name(map_spawn.standing_state);
 
                         spawn_extra_text.push_back(buffer.str());
                     }
@@ -2297,6 +2283,107 @@ void render()
         }
 
         num_spawns_ex = num_spawns;
+
+        if (map_draw_ground_spawns == true)
+        {
+            foreach (everquest_ground_spawn_t map_ground_spawn, map_ground_spawns)
+            {
+                if (map_max_spawn_distance > 0)
+                {
+                    if (map_ground_spawn.distance > map_max_spawn_distance)
+                    {
+                        continue;
+                    }
+                }
+
+                if (map_max_spawn_distance_z > 0)
+                {
+                    if (abs(map_ground_spawn.distance_z) > map_max_spawn_distance_z)
+                    {
+                        continue;
+                    }
+                }
+
+                float spawn_y = reverse_sign(map_ground_spawn.y);
+                float spawn_x = reverse_sign(map_ground_spawn.x);
+
+                float spawn_map_x = ((spawn_x / map_zoom) + map_origin_x) + ((map_draw_x + map_offset_x) / map_zoom);
+                float spawn_map_y = ((spawn_y / map_zoom) + map_origin_y) + ((map_draw_y + map_offset_y) / map_zoom);
+
+                float spawn_map_distance = calculate_distance(map_origin_x, map_origin_y, spawn_map_x, spawn_map_y);
+
+                if (spawn_map_distance > map_origin_x && spawn_map_distance > map_origin_y)
+                {
+                    continue;
+                }
+
+                if (map_ground_spawn.name == "IT63_ACTORDEF" || map_ground_spawn.name == "IT64_ACTORDEF")
+                {
+                    draw_color_lime();
+                    draw_circle(spawn_map_x, spawn_map_y, 3, true);
+                }
+                else
+                {
+                    draw_color_brown();
+                    draw_plus(spawn_map_x, spawn_map_y, 4);
+                }
+
+                if (map_draw_spawn_name == true)
+                {
+                    bool draw_spawn_name = true;
+
+                    if (num_spawns_ex > map_max_spawn_names_visible)
+                    {
+                        draw_spawn_name = false;
+                    }
+
+                    if (draw_spawn_name == true)
+                    {
+                        std::stringstream spawn_name_text;
+                        spawn_name_text << everquest_get_ground_spawn_name(map_ground_spawn.name);
+
+                        draw_bitmap_string(spawn_map_x, spawn_map_y + (font_size * 1.5), font_name, spawn_name_text.str());
+
+                        std::vector<std::string> spawn_extra_text;
+
+                        if (map_draw_spawn_location == true)
+                        {
+                            std::stringstream buffer;
+                            buffer << "Loc: " << map_ground_spawn.y << ", " << map_ground_spawn.x << ", " << map_ground_spawn.z;
+
+                            spawn_extra_text.push_back(buffer.str());
+                        }
+
+                        if (map_draw_spawn_distance == true)
+                        {
+                            std::stringstream buffer;
+                            buffer << "Distance: " << map_ground_spawn.distance;
+
+                            spawn_extra_text.push_back(buffer.str());
+                        }
+
+                        if (map_draw_spawn_distance_z == true)
+                        {
+                            std::stringstream buffer;
+                            buffer << "Distance Z: " << map_ground_spawn.distance_z;
+
+                            spawn_extra_text.push_back(buffer.str());
+                        }
+
+                        int spawn_extra_text_index = 1;
+                        foreach (std::string spawn_extra_text_value, spawn_extra_text)
+                        {
+                            draw_bitmap_string(spawn_map_x, spawn_map_y + (font_size * 1.5) + (font_size * spawn_extra_text_index), font_name, spawn_extra_text_value);
+                            spawn_extra_text_index++;
+                        }
+                    }
+                }
+
+                num_spawns++;
+            }
+        }
+
+        num_spawns_ex = num_spawns;
     }
 
     draw_color_magenta();
@@ -2346,6 +2433,16 @@ void render()
             map_info_text_buffer << "FPS: " << draw_fps;
             map_info_text.push_back(map_info_text_buffer.str());
             map_info_text_buffer.str("");
+        }
+
+        if (map_file_not_found == true)
+        {
+            map_info_text.push_back("Error: Map file not found!");
+            map_info_text.push_back(map_filename);
+            map_info_text.push_back("");
+            map_info_text.push_back("Please check the configuration file to make");
+            map_info_text.push_back("sure your maps folder has been set correctly.");
+            map_info_text.push_back("");
         }
 
         map_info_text_buffer << "Window: ";

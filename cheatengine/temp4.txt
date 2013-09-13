@@ -1,0 +1,11 @@
+typedef struct _ZONELIST {
+    DWORD Expansion;
+    DWORD ZoneID;
+    CHAR ShortName[0x81];
+    CHAR LongName[0xFF];
+    DWORD Unknown0x188;
+    DWORD Flags; // HAS_MIN_LEVEL 0x100000, POP_KEY 0x80000, POP_FLAG 0x60000, NO_AIR 0x4000, NO_BIND 0x20, NEWBIE 2, CITY 1
+    DWORD Unknown0x190[2];
+    DWORD MinLevel;
+    DWORD Unknown0x19c[13];
+} ZONELIST, *PZONELIST;

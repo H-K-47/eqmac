@@ -64,6 +64,8 @@ bool window_center = false;
 
 bool window_always_on_top = false;
 
+bool window_border = true;
+
 bool window_start_maximized = false;
 
 WNDPROC window_proc_freeglut;
@@ -87,6 +89,9 @@ enum window_menu_id_t
     MENU_SPAWN_FILTER_TOGGLE,
     MENU_SPAWN_LINE_TOGGLE,
     MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE,
+    MENU_WINDOW_BORDER_TOGGLE,
+    MENU_MAP_ROTATE_TOGGLE,
+    MENU_MAP_FOLLOW_PLAYER_TOGGLE,
     MENU_MAP_CENTER_ON_TARGET_TOGGLE,
     MENU_MAP_DRAW_FPS_TOGGLE,
 };
@@ -133,6 +138,10 @@ float map_max_z_negative = 0.0;
 
 float map_max_z_multiplier = 8.0;
 
+bool map_rotate = false;
+
+bool map_follow_player = true;
+
 bool map_center_on_target = false;
 
 bool map_draw_info_text = true;
@@ -159,6 +168,8 @@ bool map_draw_player_corpse_line = true;
 
 bool map_draw_target_line  = true;
 bool map_draw_target_arrow = true;
+
+bool map_draw_guildmaster_class_line = false;
 
 bool map_draw_spawn_name             = true;
 bool map_draw_spawn_last_name        = false;
@@ -293,6 +304,26 @@ void set_window_always_on_top(HWND hwnd, bool b)
     SetWindowPos(hwnd, b ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOREPOSITION | SWP_NOSIZE);
 }
 
+void set_window_border(HWND hwnd, bool b)
+{
+    LONG old_style = GetWindowLong(hwnd, GWL_STYLE);
+
+    LONG new_style = old_style;
+
+    if (b == true)
+    {
+        new_style |= (WS_CAPTION | WS_THICKFRAME);
+    }
+    else
+    {
+        new_style &= ~(WS_CAPTION | WS_THICKFRAME);
+    }
+
+    SetWindowLong(hwnd, GWL_STYLE, new_style);
+
+    SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+}
+
 void center_window()
 {
     glutPositionWindow
@@ -346,6 +377,10 @@ void parse_ini(std::string ini_filename)
 
     set_window_always_on_top(window_hwnd, window_always_on_top);
 
+    window_border = pt.get<bool>("Window.bBorder", window_border);
+
+    set_window_border(window_hwnd, window_border);
+
     window_start_maximized = pt.get<bool>("Window.bStartMaximized", window_start_maximized);
 
     map_zoom            = pt.get<float>("Map.fZoom",           map_zoom);
@@ -365,6 +400,9 @@ void parse_ini(std::string ini_filename)
     map_max_z_negative   = pt.get<float>("Map.fMaxZNegative",   map_max_z_negative);
     map_max_z_multiplier = pt.get<float>("Map.fMaxZMultiplier", map_max_z_multiplier);
 
+    map_rotate = pt.get<bool>("Map.bRotate", map_rotate);
+    
+    map_follow_player    = pt.get<bool>("Map.bFollowPlayer",   map_follow_player);
     map_center_on_target = pt.get<bool>("Map.bCenterOnTarget", map_center_on_target);
 
     map_draw_info_text = pt.get<bool>("Draw.bInfoText", map_draw_info_text);
@@ -389,6 +427,8 @@ void parse_ini(std::string ini_filename)
 
     map_draw_target_line  = pt.get<bool>("Draw.bTargetLine",  map_draw_target_line);
     map_draw_target_arrow = pt.get<bool>("Draw.bTargetArrow", map_draw_target_arrow);
+
+    map_draw_guildmaster_class_line = pt.get<bool>("Draw.bGuildmasterClassLine", map_draw_guildmaster_class_line);
 
     map_draw_spawn_name             = pt.get<bool>("Draw.bSpawnName",           map_draw_spawn_name);
     map_draw_spawn_last_name        = pt.get<bool>("Draw.bSpawnLastName",       map_draw_spawn_last_name);
@@ -829,6 +869,8 @@ void draw_spawn_list()
 
     int spawn_name_bitmap_length_max = 0;
 
+    bool spawn_count_shown = false;
+
     for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
     {
         spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
@@ -859,6 +901,8 @@ void draw_spawn_list()
             if (spawn_list_ret.second == false)
             {
                 spawn_list_ret.first->second.count++;
+
+                spawn_count_shown = true;
             }
 
             int spawn_name_bitmap_length = glutBitmapLength(font_name, (unsigned char*)spawn_name.c_str());
@@ -870,6 +914,11 @@ void draw_spawn_list()
         }
 
         spawn_info_address = spawn_next_spawn_info;
+    }
+
+    if (spawn_count_shown == true)
+    {
+        spawn_name_bitmap_length_max += 6; // += " (###)"
     }
 
     if (!spawn_list.size())
@@ -892,7 +941,7 @@ void draw_spawn_list()
 
         if (spawn_count > 1)
         {
-            spawn_list_text << " " << "(" << spawn_count << ")";
+            spawn_list_text << " " << "(" << spawn_count << ")"; 
         }
 
         BYTE spawn_type = (*spawn_list_it).second.type;
@@ -978,13 +1027,9 @@ void window_always_on_top_toggle()
 
 void window_border_toggle()
 {
-    LONG old_style = GetWindowLong(window_hwnd, GWL_STYLE);
+    toggle_bool(window_border);
 
-    LONG new_style = old_style ^ (WS_CAPTION | WS_THICKFRAME);
-
-    SetWindowLong(window_hwnd, GWL_STYLE, new_style);
-
-    SetWindowPos(window_hwnd, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+    set_window_border(window_hwnd, window_border);
 }
 
 void map_draw_info_text_toggle()
@@ -1032,6 +1077,16 @@ void map_draw_spawn_type_corpse_toggle()
 void map_draw_fps_toggle()
 {
     toggle_bool(map_draw_fps);
+}
+
+void map_rotate_toggle()
+{
+    toggle_bool(map_rotate);
+}
+
+void map_follow_player_toggle()
+{
+    toggle_bool(map_follow_player);
 }
 
 void map_center_on_target_toggle()
@@ -1351,15 +1406,20 @@ void update_zone(int value)
 
 void update_spawns(int value)
 {
+    glutTimerFunc(100, update_spawns, 0);
+
     if (memory.get_process_hwnd() == NULL)
+    {
+        return;
+    }
+
+    if (map_draw_spawn_list == true)
     {
         return;
     }
 
     everquest_update_spawns(memory, map_spawns);
     everquest_update_ground_spawns(memory, map_ground_spawns);
-
-    glutTimerFunc(100, update_spawns, 0);
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -1489,6 +1549,22 @@ void keyboard(unsigned char key, int x, int y)
 
         case 98: // b
             window_border_toggle();
+            break;
+
+        case 102: // f
+            map_draw_fps_toggle();
+            break;
+
+        case 112: // p
+            map_follow_player_toggle();
+            break;
+
+        case 114: // r
+            map_rotate_toggle();
+            break;
+
+        case 116: // t
+            map_center_on_target_toggle();
             break;
     }
 }
@@ -1712,8 +1788,6 @@ void reshape(int w, int h)
 
 void render()
 {
-    Sleep(1);
-
     glClear(GL_COLOR_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
@@ -1781,6 +1855,12 @@ void render()
     map_draw_x = player_x;
     map_draw_y = player_y;
 
+    if (map_follow_player == false)
+    {
+        map_draw_x = 0;
+        map_draw_y = 0;
+    }
+
     if (map_center_on_target == true)
     {
         if (target_spawn_info != player_spawn_info)
@@ -1798,6 +1878,19 @@ void render()
 
     float player_map_x = ((player_x / map_zoom) + map_origin_x) + ((map_draw_x + map_offset_x) / map_zoom);
     float player_map_y = ((player_y / map_zoom) + map_origin_y) + ((map_draw_y + map_offset_y) / map_zoom);
+
+    if (map_rotate == true)
+    {
+        float map_angle = (player_heading * 360) / 512;
+
+        float translate_x = window_width  / 2;
+        float translate_y = window_height / 2;
+
+        glPushMatrix();
+        glTranslatef(translate_x, translate_y, 0);
+        glRotatef(map_angle, 0, 0, 1);
+        glTranslatef(-translate_x, -translate_y, 0);
+    }
 
     if (map_draw_lines == true)
     {
@@ -2147,7 +2240,7 @@ void render()
                             {
                                 std::stringstream buffer;
 
-                                buffer << "(Guildmaster)";
+                                buffer << "(Guildmaster: " << everquest_get_class_short_name(map_spawn._class) << ")";
 
                                 spawn_extra_text.push_back(buffer.str());
                             }
@@ -2279,6 +2372,19 @@ void render()
                 }
             }
 
+            if (map_spawn._class >= EVERQUEST_CLASS_GUILDMASTER_BEGIN && map_spawn._class <= EVERQUEST_CLASS_GUILDMASTER_END)
+            {
+                if (map_draw_guildmaster_class_line == true)
+                {
+                    BYTE player_class = memory.read_any<BYTE>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
+
+                    if (player_class == (map_spawn._class - EVERQUEST_OFFSET_CLASS_GUILDMASTER))
+                    {
+                        draw_line(player_map_x, player_map_y, spawn_map_x, spawn_map_y);
+                    }
+                }
+            }
+
             num_spawns++;
         }
 
@@ -2400,6 +2506,11 @@ void render()
         draw_bitmap_string(player_map_x, player_map_y + (font_size * 1.5), font_name, "Player");
     }
 
+    if (map_rotate == true)
+    {
+        glPopMatrix();
+    }
+
     draw_time_stop = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 
     draw_time = draw_time_stop - draw_time_start;
@@ -2453,6 +2564,14 @@ void render()
         map_info_text_buffer.str("");
 
         map_info_text_buffer << "Window Always On Top: " << get_bool_string(window_always_on_top);
+        map_info_text.push_back(map_info_text_buffer.str());
+        map_info_text_buffer.str("");
+
+        map_info_text_buffer << "Rotate: " << get_bool_string(map_rotate);
+        map_info_text.push_back(map_info_text_buffer.str());
+        map_info_text_buffer.str("");
+
+        map_info_text_buffer << "Follow Player: " << get_bool_string(map_follow_player);
         map_info_text.push_back(map_info_text_buffer.str());
         map_info_text_buffer.str("");
 
@@ -2674,8 +2793,13 @@ void menu_update_checkmarks()
     menu_toggle_checkmark_by_bool(MENU_SPAWN_LINE_TOGGLE, spawn_line_enabled);
 
     menu_toggle_checkmark_by_bool(MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE, window_always_on_top);
+    menu_toggle_checkmark_by_bool(MENU_WINDOW_BORDER_TOGGLE, window_border);
 
+    menu_toggle_checkmark_by_bool(MENU_MAP_ROTATE_TOGGLE, map_rotate);
+    
+    menu_toggle_checkmark_by_bool(MENU_MAP_FOLLOW_PLAYER_TOGGLE, map_follow_player);
     menu_toggle_checkmark_by_bool(MENU_MAP_CENTER_ON_TARGET_TOGGLE, map_center_on_target);
+
     menu_toggle_checkmark_by_bool(MENU_MAP_DRAW_FPS_TOGGLE, map_draw_fps);
 }
 
@@ -2706,10 +2830,14 @@ void menu_create()
     AppendMenu(window_menu, MF_STRING, MENU_SPAWN_LINE_TOGGLE,                 "Spawn Line\tF11");
     menu_append_separator();
     AppendMenu(window_menu, MF_STRING, MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE,       "Window Always On Top\tF12");
-    //AppendMenu(window_menu, MF_STRING, MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE,       "Window Border\tB");
+    AppendMenu(window_menu, MF_STRING, MENU_WINDOW_BORDER_TOGGLE,              "Window Border\tB");
     menu_append_separator();
-    AppendMenu(window_menu, MF_STRING, MENU_MAP_CENTER_ON_TARGET_TOGGLE,       "Center On Target");
-    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_FPS_TOGGLE,               "Frames Per Second");
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_ROTATE_TOGGLE,                 "Rotate\tR");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_FOLLOW_PLAYER_TOGGLE,          "Follow Player\tP");
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_CENTER_ON_TARGET_TOGGLE,       "Center On Target\tT");
+    menu_append_separator();
+    AppendMenu(window_menu, MF_STRING, MENU_MAP_DRAW_FPS_TOGGLE,               "Frames Per Second\tF");
     menu_append_separator();
     AppendMenu(window_menu, MF_STRING, MENU_APP_EXIT,                          "Exit\tEscape");
 
@@ -2773,6 +2901,18 @@ void window_message_command(HWND hwnd, int command, int notify_code, HWND hwnd_i
 
         case MENU_WINDOW_ALWAYS_ON_TOP_TOGGLE:
             window_always_on_top_toggle();
+            break;
+
+        case MENU_WINDOW_BORDER_TOGGLE:
+            window_border_toggle();
+            break;
+
+        case MENU_MAP_ROTATE_TOGGLE:
+            map_rotate_toggle();
+            break;
+
+        case MENU_MAP_FOLLOW_PLAYER_TOGGLE:
+            map_follow_player_toggle();
             break;
 
         case MENU_MAP_CENTER_ON_TARGET_TOGGLE:

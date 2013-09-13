@@ -1,0 +1,253 @@
+typedef struct _CONTAINER {
+	struct _ITEMINFO *Contents[10];
+	BYTE Combine;
+	BYTE Slots;
+	BYTE Open;
+	BYTE SizeCapacity;
+	BYTE WeightReduction;
+    BYTE Unknown0273[3];
+} CONTAINER, *PCONTAINER;
+
+typedef struct _ITEMINFO {
+	CHAR Name[64];
+	CHAR LoreName[80];
+	CHAR IDFile[6];
+	BYTE Unknown0150[24];
+	BYTE Weight;
+	BYTE NoRent;
+	BYTE NoDrop;
+	BYTE Size;
+	BYTE IsContainer;
+	BYTE Unknown0179;
+	WORD ItemNumber;
+	WORD IconNumber;
+	DWORD EquipSlot;
+	DWORD EquipableSlots;
+	DWORD Cost;
+	BYTE  Unknown0196[32];
+	union { 
+		COMMON    Common;
+		CONTAINER Container;
+		BOOK      Book;
+	};
+} ITEMINFO, *PITEMINFO;
+
+typedef struct _CHARINFO {
+	BYTE Unknown0000; // 0
+	BYTE Unknown0001; // 3
+	CHAR Name[64];
+	CHAR Lastname[70];
+	WORD Unknown0136;
+	WORD Race;
+	WORD Class;
+	WORD Gender;
+	WORD Level;
+	//
+	WORD Unknown0146;
+	DWORD Exp;
+	WORD Face;
+	WORD Mana;
+	WORD BaseHP;
+	WORD Unknown0158;
+	WORD BaseSTR;
+	WORD BaseSTA;
+	WORD BaseCHA;
+	WORD BaseDEX;
+	WORD BaseINT;
+	WORD BaseAGI;
+	WORD BaseWIS;
+	BYTE Unknown0142[1668];
+	WORD SpellBook[250];
+	BYTE Unknown2342[524];
+	WORD MemorizedSpells[8];
+	BYTE Unknown2882[18];
+	DWORD Unknown2900;
+	DWORD Unknown2904;
+	DWORD Unknown2908;
+	DWORD Unknown2912;
+	DWORD Unknown2916;
+	DWORD Plat;
+	DWORD Gold;
+	DWORD Silver;
+	DWORD Copper;
+	DWORD BankPlat;
+	DWORD BankGold;
+	DWORD BankSilver;
+	DWORD BankCopper;
+	BYTE Unknown2952[32];
+	WORD Skill[74];
+	BYTE Unknown3132[312];
+	struct _SPAWNINFO *pSpawn;
+	PITEMINFO Inventory[30]; // at least this many
+	BYTE Unknown3568[212];
+	DWORD ZoneBoundId;
+	DWORD ZoneBirthId;
+	DWORD ZoneOtherId[3];
+	FLOAT ZoneBoundX;
+	FLOAT ZoneBirthX;
+	FLOAT ZoneOtherX[3];
+	FLOAT ZoneBoundY;
+	FLOAT ZoneBirthY;
+	FLOAT ZoneOtherY[3];
+	FLOAT ZoneBoundZ;
+	FLOAT ZoneBirthZ;
+	FLOAT ZoneOtherZ[3];
+	BYTE Unknown3652[1082];
+	WORD GuildID;
+	BYTE Unknown4736[10];
+	INT PlayedAge;
+	BYTE Unknown3680[5];
+	WORD Anon;
+	BYTE GuildStatus;
+	BYTE Unknown4756[3406];
+	PITEMINFO Bank[8];
+} CHARINFO, *PCHARINFO;
+
+typedef struct _ACTORINFO {
+	DWORD Unknown0000;
+	DWORD Unknown0004;
+	CHAR  ActorDef[20];
+	BYTE Unknown00028[952];
+	DWORD LFG;
+    DWORD Trader;
+
+} ACTORINFO, *PACTORINFO;
+
+typedef struct _SPAWNINFO {
+	BYTE Unknown0000;      // 3?
+	CHAR Name[30];
+	BYTE Unknown0031[37];
+	DWORD Zone;
+	FLOAT Y;
+	FLOAT X;
+	FLOAT Z;
+	FLOAT Heading;
+	FLOAT Unknown0068;
+	FLOAT SpeedRun;
+	FLOAT SpeedY;
+	FLOAT SpeedX;
+	FLOAT SpeedZ;
+	FLOAT SpeedHeading;
+	FLOAT Unknown0088;
+	FLOAT CameraAngle; // 128=up -128=down
+	struct _SPAWNINFO *pPrev;
+	struct _SPAWNINFO *pNext;
+	PVOID pUnknown0108;    // Unknown... pointer? always 0000000
+	PACTORINFO pActorInfo;
+	PCHARINFO pCharInfo;
+	FLOAT CameraHeightOffset;
+	FLOAT ModelHeightOffset;
+	WORD SpawnID;
+	WORD MasterID;
+	DWORD HPMax;
+	DWORD HPCurrent;
+	WORD GuildID;
+	BYTE Unknown0162[6];  // Unknown
+	BYTE Type;
+	BYTE Class;
+	WORD Race;
+	BYTE Gender;
+	BYTE Level;
+	BYTE Unknown0174[2];
+	BYTE Charmed;
+	BYTE Unknown0177[75];
+	BYTE UnkFlag0230;
+	BYTE Unknown0231[11];
+	BYTE Linkdead;
+	BYTE Guide;
+	BYTE Unknown0244;
+	BYTE GM;
+	BYTE VisType;
+	BYTE Unknown0247[7];
+	DWORD Anon;
+	BYTE Unknown0257[4];
+	BYTE AFK;
+	BYTE Unknown0285[7];
+	WORD AARank;
+	BYTE Unknown0294[6];
+	CHAR Lastname[22];
+	BYTE Unknown0298[12];
+	WORD Deity;
+} SPAWNINFO, *PSPAWNINFO;
+
+typedef struct _DOOR {
+	BYTE Unknown0000;
+	BYTE Unknown0001[3];
+	struct _DOOR *pPrev;
+	struct _DOOR *pNext;
+    BYTE ID;
+	CHAR Name[11];
+	DWORD Unknown0024;
+	DWORD Unknown0028;
+	FLOAT DefaultY;
+	FLOAT DefaultX;
+	FLOAT DefaultZ;
+	FLOAT DefaultHeading;
+	FLOAT DoorAngle;
+	FLOAT Y;
+	FLOAT X;
+	FLOAT Z;
+	FLOAT Heading;
+} DOOR, *PDOOR;
+
+typedef struct _GROUNDITEM {
+	struct _GROUNDITEM *pPrev;
+	struct _GROUNDITEM *pNext;
+	WORD ID;
+	BYTE Unknown0010[2];
+	WORD DropID;
+	BYTE Unknown0014[126];
+	FLOAT Heading;
+	FLOAT Z;
+	FLOAT Y;
+	FLOAT X;
+	CHAR Name[30];
+} GROUNDITEM, *PGROUNDITEM;
+
+typedef struct _ZONELIST {
+	DWORD Header;
+	CHAR Unknown0004[8];
+	CHAR ShortName[129];
+	CHAR LongName[129];
+} ZONELIST, *PZONELIST;
+
+typedef struct _SPELLLIST {
+	DWORD ID;
+	FLOAT Range;
+	FLOAT AERange;
+	FLOAT PushBack;
+	FLOAT PushUp;
+	DWORD CastTime;
+	DWORD RecoveryTime;
+	DWORD RecastTime;
+	DWORD DurationType;
+	DWORD DurationValue1;
+	DWORD DurationValue2;
+	WORD Mana;
+	short Base[12];
+	short Max[12];
+	WORD BookIcon;
+	WORD GemIcon;
+	short ReagentID[4];
+	short ReagentCount[4];
+	BYTE Unknown0146[8];
+	BYTE Calc[12];
+	BYTE Unknown0158[4];
+	BYTE Attrib[12];
+	BYTE TargetType;
+	BYTE FizzleAdj;
+	BYTE Skill;
+	BYTE Location;
+	BYTE Unknown0174[3];
+	BYTE Level[15];
+	BYTE Unknown0192[36];
+	PCHAR Name;//[32];
+	PCHAR Target;//[16];
+	PCHAR Extra;//[32];
+	PCHAR Unknown0204;//[40];
+	PCHAR Unknown0208;//[40];
+	PCHAR CastOnYou;//[32];
+	PCHAR CastOnOther;//[40];
+	PCHAR WearOff;//[32];
+	// other stuff
+} SPELLLIST, *PSPELLLIST;

@@ -2,32 +2,11 @@
 <CheatTable CheatEngineTableVersion="14">
   <CheatEntries>
     <CheatEntry>
-      <ID>1</ID>
-      <Description>"SHIFT is pressed"</Description>
+      <ID>425</ID>
+      <Description>"Zone ID"</Description>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
-      <Address>00799738</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>5</ID>
-      <Description>"CTRL is pressed"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>0079973C</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>6</ID>
-      <Description>"ALT is pressed"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>00799740</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>25</ID>
-      <Description>"Show FPS"</Description>
-      <Color>80000008</Color>
-      <VariableType>Byte</VariableType>
-      <Address>EQGfx_Dx8.dll+A4F770</Address>
+      <Address>007B9648</Address>
     </CheatEntry>
     <CheatEntry>
       <ID>26</ID>
@@ -155,18 +134,8 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>352</ID>
-          <Description>"0x96 Face?"</Description>
-          <Color>80000008</Color>
-          <VariableType>2 Bytes</VariableType>
-          <Address>eqgame.exe+3F94E8</Address>
-          <Offsets>
-            <Offset>96</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
           <ID>353</ID>
-          <Description>"0x98 Mana?"</Description>
+          <Description>"0x98 ??"</Description>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -175,8 +144,18 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>420</ID>
+          <Description>"0x9A Current MP Mana"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>9A</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>172</ID>
-          <Description>"0x9C Current HP"</Description>
+          <Description>"0x9C Current HP Health"</Description>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -196,14 +175,93 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>50</ID>
-          <Description>"0xAA ??"</Description>
-          <ShowAsHex>1</ShowAsHex>
+          <ID>442</ID>
+          <Description>"0xA0 STR"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>A0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>435</ID>
+          <Description>"0xA2 STA"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>A2</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>436</ID>
+          <Description>"0xA4 CHA"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>A4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>437</ID>
+          <Description>"0xA6 DEX"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>A6</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>438</ID>
+          <Description>"0xA8 INT"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>A8</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>439</ID>
+          <Description>"0xAA AGI"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>AA</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>440</ID>
+          <Description>"0xAC WIS"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>AC</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>441</ID>
+          <Description>"0xAE ??"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
           <Offsets>
-            <Offset>AA</Offset>
+            <Offset>AE</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>443</ID>
+          <Description>"0xAF ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>AF</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -309,7 +367,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>358</ID>
-          <Description>"0xB60 ??"</Description>
+          <Description>"0xB60 Heading"</Description>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -419,7 +477,27 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>424</ID>
+          <Description>"0xC7C Vision related? maybe Infravision"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>C7C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>52</ID>
+          <Description>"0xC8A Vision; 255 = Normal, 0 = Ultravision"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>C8A</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>423</ID>
           <Description>"0xD14 ??"</Description>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -481,7 +559,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>48</ID>
-          <Description>"0x135E ??"</Description>
+          <Description>"0x135E Stamina, Is Fatigued"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -491,7 +569,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>142</ID>
-          <Description>"0x1708 Air Supply when swimming underwater, 70dec = full"</Description>
+          <Description>"0x1708 Air Supply when swimming underwater"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -499,11 +577,22 @@
             <Offset>1708</Offset>
           </Offsets>
         </CheatEntry>
+        <CheatEntry>
+          <ID>382</ID>
+          <Description>"0x1710 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Array of byte</VariableType>
+          <ByteLength>2</ByteLength>
+          <Address>eqgame.exe+3F94E8</Address>
+          <Offsets>
+            <Offset>1710</Offset>
+          </Offsets>
+        </CheatEntry>
       </CheatEntries>
     </CheatEntry>
     <CheatEntry>
       <ID>55</ID>
-      <Description>"unknown Spawn Info"</Description>
+      <Description>"unknown Spawn Info (Player? or first spawn?)"</Description>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -530,6 +619,17 @@
       <CheatEntries>
         <CheatEntry>
           <ID>110</ID>
+          <Description>"0x4C ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>4C</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>369</ID>
           <Description>"0x50 ??"</Description>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -565,7 +665,62 @@
         </CheatEntry>
         <CheatEntry>
           <ID>151</ID>
-          <Description>"0x90 ??"</Description>
+          <Description>"0x80 Levitation Number (65535 = Not Levitating)"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>80</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>427</ID>
+          <Description>"0x82 Drunk Movement Number (65535 = Not Drunk Walking)"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>82</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>431</ID>
+          <Description>"0x84 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>84</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>430</ID>
+          <Description>"0x86 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>86</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>428</ID>
+          <Description>"0x8C Levitation Up/Down Movement Amount = 0.1000000015"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>8C</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>426</ID>
+          <Description>"0x90 Is Affected By Gravity ; = 0 when Levitating"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -576,7 +731,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>125</ID>
-          <Description>"0xA1 (1=stunned, 5=swimming)"</Description>
+          <Description>"0xA1 (1,2=stunned, 3,7=burning to death, 4,8=freezing to death, 5,6,9,10,11=swimming)"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -586,13 +741,68 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>355</ID>
-          <Description>"0xAA ??"</Description>
+          <ID>379</ID>
+          <Description>"0xA3 ??"</Description>
           <Color>80000008</Color>
-          <VariableType>2 Bytes</VariableType>
+          <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
-            <Offset>AA</Offset>
+            <Offset>A3</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>355</ID>
+          <Description>"0xA8 Run Speed Modifier"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>A8</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>391</ID>
+          <Description>"0xAC Run Speed Modifier"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>AC</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>392</ID>
+          <Description>"0xB0 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>B0</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>393</ID>
+          <Description>"0xB4 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>B4</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>394</ID>
+          <Description>"0xB8 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>B8</Offset>
             <Offset>84</Offset>
           </Offsets>
         </CheatEntry>
@@ -604,6 +814,17 @@
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
             <Offset>184</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>364</ID>
+          <Description>"0x188 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>188</Offset>
             <Offset>84</Offset>
           </Offsets>
         </CheatEntry>
@@ -644,7 +865,7 @@
           <ID>144</ID>
           <Description>"0x194 ??"</Description>
           <Color>80000008</Color>
-          <VariableType>Byte</VariableType>
+          <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
             <Offset>194</Offset>
@@ -663,13 +884,14 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>356</ID>
-          <Description>"0x10A ??"</Description>
+          <ID>375</ID>
+          <Description>"0x1C2 ??"</Description>
+          <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
-            <Offset>10A</Offset>
+            <Offset>1C2</Offset>
             <Offset>84</Offset>
           </Offsets>
         </CheatEntry>
@@ -751,13 +973,24 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>111</ID>
+          <ID>376</ID>
           <Description>"0x32D Is Not Moving"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
             <Offset>32D</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>111</ID>
+          <Description>"0x384 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>eqgame.exe+3F94eC</Address>
+          <Offsets>
+            <Offset>384</Offset>
             <Offset>84</Offset>
           </Offsets>
         </CheatEntry>
@@ -934,14 +1167,22 @@
         </CheatEntry>
         <CheatEntry>
           <ID>105</ID>
-          <Description>"0x8C ??"</Description>
-          <ShowAsHex>1</ShowAsHex>
+          <Description>"0x8C Avatar Height; Eye Viewing Level"</Description>
           <Color>80000008</Color>
-          <VariableType>Array of byte</VariableType>
-          <ByteLength>4</ByteLength>
+          <VariableType>Float</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
           <Offsets>
             <Offset>8C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>366</ID>
+          <Description>"0x90 Z-Axis Related; Height Above/Below Ground"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>90</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -977,7 +1218,7 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>134</ID>
+          <ID>383</ID>
           <Description>"0xA0 Guild ID"</Description>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
@@ -1048,7 +1289,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>199</ID>
-          <Description>"0xAE ??"</Description>
+          <Description>"0xAE Hide State"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -1058,7 +1299,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>200</ID>
-          <Description>"0xAF ??"</Description>
+          <Description>"0xAF Sneak State"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -1097,6 +1338,16 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
+          <ID>374</ID>
+          <Description>"0xC8 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>C8</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
           <ID>192</ID>
           <Description>"0xEC ??"</Description>
           <Color>80000008</Color>
@@ -1104,6 +1355,26 @@
           <Address>eqgame.exe+3F94EC</Address>
           <Offsets>
             <Offset>EC</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>367</ID>
+          <Description>"0xF0 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>F0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>373</ID>
+          <Description>"0xF8 ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>F8</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -1129,7 +1400,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>187</ID>
-          <Description>"0x109 Is GM or Guide"</Description>
+          <Description>"0x109 Is GM or Guide; See spells names when NPCs cast spells"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -1139,27 +1410,17 @@
         </CheatEntry>
         <CheatEntry>
           <ID>145</ID>
-          <Description>"0x10A Is Levitating?"</Description>
+          <Description>"0x10A Is Levitating (2 = Levitating, 3 = NPC) Set to 3 to Swim Faster!"</Description>
           <Color>80000008</Color>
-          <VariableType>Byte</VariableType>
+          <VariableType>2 Bytes</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
           <Offsets>
             <Offset>10A</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>354</ID>
-          <Description>"0x10B Is GM or Guide?"</Description>
-          <Color>80000008</Color>
-          <VariableType>Byte</VariableType>
-          <Address>eqgame.exe+3F94EC</Address>
-          <Offsets>
-            <Offset>10B</Offset>
-          </Offsets>
-        </CheatEntry>
-        <CheatEntry>
           <ID>93</ID>
-          <Description>"0x10C Body Type or Visibility Type (11 is untargetable)"</Description>
+          <Description>"0x10C Body Type or Visibility Type (11 is untargetable, 65 is invisible?)"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -1168,7 +1429,7 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>189</ID>
+          <ID>432</ID>
           <Description>"0x114 Is ANONYMOUS"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
@@ -1189,12 +1450,12 @@
         </CheatEntry>
         <CheatEntry>
           <ID>94</ID>
-          <Description>"0x122 Is AFK?"</Description>
+          <Description>"0x122 ??"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
           <Offsets>
-            <Offset>11C</Offset>
+            <Offset>122</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -1208,6 +1469,26 @@
           <Address>eqgame.exe+3F94EC</Address>
           <Offsets>
             <Offset>12C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>433</ID>
+          <Description>"0x14C ??"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>14C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>189</ID>
+          <Description>"0x14E Deity / God"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F94EC</Address>
+          <Offsets>
+            <Offset>14E</Offset>
           </Offsets>
         </CheatEntry>
       </CheatEntries>
@@ -1227,6 +1508,26 @@
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>eqgame.exe+3F94F8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>126</ID>
+      <Description>"Graphics DLL Base Address Pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3F9C50</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>135</ID>
+          <Description>"Show FPS = 1"</Description>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>eqgame.exe+3F9C50</Address>
+          <Offsets>
+            <Offset>A4F770</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
     </CheatEntry>
     <CheatEntry>
       <ID>2</ID>
@@ -1279,7 +1580,7 @@
         </CheatEntry>
         <CheatEntry>
           <ID>64</ID>
-          <Description>"unknown"</Description>
+          <Description>"0xCD unknown"</Description>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F9510</Address>
@@ -1368,86 +1669,11 @@
       <Address>00799668</Address>
     </CheatEntry>
     <CheatEntry>
-      <ID>78</ID>
-      <Description>"Name"</Description>
-      <Color>80000008</Color>
-      <VariableType>String</VariableType>
-      <Length>20</Length>
-      <Unicode>0</Unicode>
-      <ZeroTerminate>1</ZeroTerminate>
-      <Address>00630718</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>77</ID>
-      <Description>"Class"</Description>
-      <Color>80000008</Color>
-      <VariableType>String</VariableType>
-      <Length>20</Length>
-      <Unicode>0</Unicode>
-      <ZeroTerminate>1</ZeroTerminate>
-      <Address>0063079C</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>32</ID>
-      <Description>"STR"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>eqgame.exe+230820</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>79</ID>
-      <Description>"STA"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>eqgame.exe+230824</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>80</ID>
-      <Description>"DEX"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>eqgame.exe+230828</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>30</ID>
-      <Description>"Weight Current"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>eqgame.exe+23086C</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>33</ID>
-      <Description>"Weight Max"</Description>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>eqgame.exe+230870</Address>
-    </CheatEntry>
-    <CheatEntry>
       <ID>120</ID>
       <Description>"No Fall Damage (Value = 151) (This is the Zone ID and 151 is the Bazaar)"</Description>
       <Color>80000008</Color>
       <VariableType>Byte</VariableType>
       <Address>007B9648</Address>
-    </CheatEntry>
-    <CheatEntry>
-      <ID>126</ID>
-      <Description>"Graphics DLL Base Address Pointer"</Description>
-      <ShowAsHex>1</ShowAsHex>
-      <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
-      <Address>eqgame.exe+3F9C50</Address>
-      <CheatEntries>
-        <CheatEntry>
-          <ID>135</ID>
-          <Description>"Show FPS = 1"</Description>
-          <Color>80000008</Color>
-          <VariableType>Byte</VariableType>
-          <Address>eqgame.exe+3F9C50</Address>
-          <Offsets>
-            <Offset>A4F770</Offset>
-          </Offsets>
-        </CheatEntry>
-      </CheatEntries>
     </CheatEntry>
     <CheatEntry>
       <ID>128</ID>
@@ -1494,7 +1720,7 @@
       <ID>147</ID>
       <Description>"Jumping value"</Description>
       <Color>80000008</Color>
-      <VariableType>4 Bytes</VariableType>
+      <VariableType>Float</VariableType>
       <Address>007985FC</Address>
     </CheatEntry>
     <CheatEntry>
@@ -2027,7 +2253,7 @@
           </Offsets>
         </CheatEntry>
         <CheatEntry>
-          <ID>357</ID>
+          <ID>421</ID>
           <Description>"UI flags?"</Description>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
@@ -2231,6 +2457,17 @@
           <Address>007F9574</Address>
           <Offsets>
             <Offset>5F324</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>377</ID>
+          <Description>""</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>5F328</Offset>
           </Offsets>
         </CheatEntry>
         <CheatEntry>
@@ -2553,7 +2790,7 @@
     </CheatEntry>
     <CheatEntry>
       <ID>4</ID>
-      <Description>"chat mode is not enabled?"</Description>
+      <Description>"chat mode is not enabled? = 0 when typing to chat"</Description>
       <Color>80000008</Color>
       <VariableType>Byte</VariableType>
       <Address>0079856C</Address>
@@ -2642,7 +2879,7 @@
       <CheatEntries>
         <CheatEntry>
           <ID>327</ID>
-          <Description>"ui state? 4=zoning?,5=in-game,6=loading_screen,1=char_select"</Description>
+          <Description>"game ui state? 1=char_select,4=zoning?,5=in-game,6=loading_screen"</Description>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+409478</Address>
@@ -2775,6 +3012,316 @@
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>63D668</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>363</ID>
+      <Description>"32"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0062A950</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>372</ID>
+      <Description>"Default is 12"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E44D0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>370</ID>
+      <Description>"Default is 0.01999999955. Change this to modify speed"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E8510</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>368</ID>
+      <Description>"Default is 3. Set this to 0 to move very fast!"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E8594</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>378</ID>
+      <Description>"Default is -2.5. Swimming related?"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E8604</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>371</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>007D01DC</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>380</ID>
+      <Description>"Player Is Running; 0 = Walking"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>0079856D</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>381</ID>
+      <Description>"Default is 0.5; Moving Animation Speed"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E60EC</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>387</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798768</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>388</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0079876C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>386</ID>
+      <Description>"= 1 when Hiding"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>00798780</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>385</ID>
+      <Description>"29 = Hidden"</Description>
+      <Color>80000008</Color>
+      <VariableType>2 Bytes</VariableType>
+      <Address>007989E2</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>389</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007989F0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>390</ID>
+      <Description>"No description"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>007B9648</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>395</ID>
+      <Description>"Far Clip Plane Slider"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+398B28</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>396</ID>
+      <Description>"Default is 0.200000003 ; this can make monsters really big if set to 8"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E6208</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>397</ID>
+      <Description>"Camera Pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0063B928</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>398</ID>
+          <Description>"Field of View"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>20</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>403</ID>
+          <Description>"Aspect Ratio"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>24</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>399</ID>
+          <Description>"Draw Distance"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>30</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>407</ID>
+      <Description>"Graphics Pointer"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3F9C50</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>408</ID>
+          <Description>"Fog Draw Distance Start"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F9C50</Address>
+          <Offsets>
+            <Offset>A4F8CC</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>409</ID>
+          <Description>"Fog Draw Distance Stop"</Description>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>eqgame.exe+3F9C50</Address>
+          <Offsets>
+            <Offset>A4F8D0</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>405</ID>
+      <Description>"EQGfx_Dx8.td3SetFog"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3F9B30</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>406</ID>
+          <Description>"Set Fog Draw Distance Start"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Array of byte</VariableType>
+          <ByteLength>6</ByteLength>
+          <Address>eqgame.exe+3F9B30</Address>
+          <Offsets>
+            <Offset>2F</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>410</ID>
+          <Description>"Set Fog Draw Distance Stop"</Description>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>Array of byte</VariableType>
+          <ByteLength>6</ByteLength>
+          <Address>eqgame.exe+3F9B30</Address>
+          <Offsets>
+            <Offset>44</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>411</ID>
+      <Description>"EQGfx_Dx8.td3SetCameraLens"</Description>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+3F9AE0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>412</ID>
+      <Description>"Fog related"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>00798918</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>418</ID>
+      <Description>"Fog related"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>00798980</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>415</ID>
+      <Description>"Draw Distance for Camera AND Fog"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>00798984</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>414</ID>
+      <Description>"Draw the Sky = 1, No Sky = 0"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>0079895E</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>413</ID>
+      <Description>"Draw the Sky = 1, No Sky = 0"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798AE0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>416</ID>
+      <Description>"Fog related; Sky related, set to 5-10 for different fog types"</Description>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>0063B7C8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>417</ID>
+      <Description>"Fog related"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E76D8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>419</ID>
+      <Description>"Fog related"</Description>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>005E8568</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>422</ID>
+      <Description>"No description"</Description>
+      <Color>80000008</Color>
+      <VariableType>2 Bytes</VariableType>
+      <Address>089263D4</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>6</ID>
+      <Description>"ALT is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00799740</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>5</ID>
+      <Description>"CTRL is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0079973C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"SHIFT is pressed"</Description>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00799738</Address>
     </CheatEntry>
   </CheatEntries>
   <CheatCodes>
@@ -3664,219 +4211,673 @@
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Change of jne eqgame.exe+C3E5D</Description>
-      <Address>004C3E4C</Address>
+      <Description>Code :jle eqgame.exe+D06DA ; stamina function</Description>
+      <Address>004D06CF</Address>
       <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>C3E4C</ModuleNameOffset>
+      <ModuleNameOffset>D06CF</ModuleNameOffset>
       <Before>
-        <Byte>B1</Byte>
-        <Byte>00</Byte>
-        <Byte>00</Byte>
-        <Byte>00</Byte>
-        <Byte>6E</Byte>
+        <Byte>24</Byte>
+        <Byte>04</Byte>
+        <Byte>83</Byte>
+        <Byte>F8</Byte>
+        <Byte>64</Byte>
       </Before>
       <Actual>
-        <Byte>75</Byte>
-        <Byte>0F</Byte>
+        <Byte>7E</Byte>
+        <Byte>09</Byte>
       </Actual>
       <After>
-        <Byte>3B</Byte>
-        <Byte>CB</Byte>
-        <Byte>7E</Byte>
-        <Byte>0B</Byte>
-        <Byte>39</Byte>
+        <Byte>C6</Byte>
+        <Byte>81</Byte>
+        <Byte>5E</Byte>
+        <Byte>13</Byte>
+        <Byte>00</Byte>
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Code :je eqgame.exe+C3E86</Description>
-      <Address>004C3E79</Address>
+      <Description>Change of jna eqgame.exe+14DBAD ; NOP to make everything move fast</Description>
+      <Address>0054DBA4</Address>
       <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>C3E79</ModuleNameOffset>
+      <ModuleNameOffset>14DBA4</ModuleNameOffset>
       <Before>
-        <Byte>B1</Byte>
+        <Byte>5E</Byte>
+        <Byte>00</Byte>
+        <Byte>DF</Byte>
+        <Byte>E0</Byte>
+        <Byte>9E</Byte>
+      </Before>
+      <Actual>
+        <Byte>76</Byte>
+        <Byte>07</Byte>
+      </Actual>
+      <After>
+        <Byte>C7</Byte>
+        <Byte>45</Byte>
+        <Byte>08</Byte>
         <Byte>00</Byte>
         <Byte>00</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of je eqgame.exe+12D017 ; NOP to show names of spells being cast</Description>
+      <Address>0052CFF1</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>12CFF1</ModuleNameOffset>
+      <Before>
+        <Byte>98</Byte>
+        <Byte>09</Byte>
+        <Byte>01</Byte>
         <Byte>00</Byte>
-        <Byte>6E</Byte>
+        <Byte>00</Byte>
       </Before>
       <Actual>
         <Byte>74</Byte>
-        <Byte>0B</Byte>
+        <Byte>24</Byte>
+      </Actual>
+      <After>
+        <Byte>8B</Byte>
+        <Byte>45</Byte>
+        <Byte>08</Byte>
+        <Byte>FF</Byte>
+        <Byte>B0</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :or word ptr [eqgame.exe+3989E2],FF ; set hide state to false</Description>
+      <Address>004C2470</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>C2470</ModuleNameOffset>
+      <Before>
+        <Byte>79</Byte>
+        <Byte>00</Byte>
+        <Byte>1D</Byte>
+        <Byte>75</Byte>
+        <Byte>08</Byte>
+      </Before>
+      <Actual>
+        <Byte>66</Byte>
+        <Byte>83</Byte>
+        <Byte>0D</Byte>
+        <Byte>E2</Byte>
+        <Byte>89</Byte>
+        <Byte>79</Byte>
+        <Byte>00</Byte>
+        <Byte>FF</Byte>
+      </Actual>
+      <After>
+        <Byte>80</Byte>
+        <Byte>25</Byte>
+        <Byte>80</Byte>
+        <Byte>87</Byte>
+        <Byte>79</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of and byte ptr [eqgame.exe+398780],00 ; set hide state to false</Description>
+      <Address>004C2478</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>C2478</ModuleNameOffset>
+      <Before>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+      </Before>
+      <Actual>
+        <Byte>80</Byte>
+        <Byte>25</Byte>
+        <Byte>80</Byte>
+        <Byte>87</Byte>
+        <Byte>79</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
       </Actual>
       <After>
         <Byte>8B</Byte>
         <Byte>CE</Byte>
         <Byte>E8</Byte>
-        <Byte>1F</Byte>
+        <Byte>A5</Byte>
+        <Byte>E6</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :jne eqgame.exe+BE922 ; JNE to JMP to hide while moving</Description>
+      <Address>004BE90E</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>BE90E</ModuleNameOffset>
+      <Before>
+        <Byte>91</Byte>
+        <Byte>FF</Byte>
+        <Byte>FF</Byte>
+        <Byte>85</Byte>
+        <Byte>C0</Byte>
+      </Before>
+      <Actual>
+        <Byte>75</Byte>
+        <Byte>12</Byte>
+      </Actual>
+      <After>
+        <Byte>6A</Byte>
+        <Byte>01</Byte>
+        <Byte>68</Byte>
+        <Byte>0E</Byte>
+        <Byte>01</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :jne eqgame.exe+10A238 ; JNE to JMP to move while hiding</Description>
+      <Address>0050A230</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>10A230</ModuleNameOffset>
+      <Before>
+        <Byte>A1</Byte>
+        <Byte>E2</Byte>
+        <Byte>89</Byte>
+        <Byte>79</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>75</Byte>
+        <Byte>06</Byte>
+      </Actual>
+      <After>
+        <Byte>66</Byte>
+        <Byte>3D</Byte>
+        <Byte>1D</Byte>
+        <Byte>00</Byte>
+        <Byte>75</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :jne eqgame.exe+C24AA ; JNE to JMP to move while hiding</Description>
+      <Address>004C2464</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>C2464</ModuleNameOffset>
+      <Before>
+        <Byte>AF</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>75</Byte>
+        <Byte>44</Byte>
+      </Actual>
+      <After>
+        <Byte>66</Byte>
+        <Byte>83</Byte>
+        <Byte>3D</Byte>
+        <Byte>E2</Byte>
+        <Byte>89</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :mov eax,[ebx+000000A8] ; change A8 to AC to run faster! B0 is too fast!</Description>
+      <Address>0054DF96</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>14DF96</ModuleNameOffset>
+      <Before>
+        <Byte>7D</Byte>
+        <Byte>3F</Byte>
+        <Byte>89</Byte>
+        <Byte>45</Byte>
+        <Byte>FC</Byte>
+      </Before>
+      <Actual>
+        <Byte>8B</Byte>
+        <Byte>83</Byte>
+        <Byte>A8</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>D9</Byte>
+        <Byte>EE</Byte>
+        <Byte>89</Byte>
+        <Byte>45</Byte>
         <Byte>F8</Byte>
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Change of jne eqgame.exe+C3EEF</Description>
-      <Address>004C3EE8</Address>
-      <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>C3EE8</ModuleNameOffset>
+      <Description>Code :mov [ecx+30],eax ; Camera -&gt; Set Draw Distance</Description>
+      <Address>0355199C</Address>
+      <ModuleName>EQGfx_Dx8.DLL</ModuleName>
+      <ModuleNameOffset>4199C</ModuleNameOffset>
       <Before>
-        <Byte>64</Byte>
-        <Byte>0B</Byte>
-        <Byte>00</Byte>
-        <Byte>00</Byte>
-        <Byte>6E</Byte>
-      </Before>
-      <Actual>
-        <Byte>75</Byte>
-        <Byte>05</Byte>
-      </Actual>
-      <After>
-        <Byte>83</Byte>
-        <Byte>C7</Byte>
-        <Byte>0A</Byte>
-        <Byte>EB</Byte>
         <Byte>03</Byte>
-      </After>
-    </CodeEntry>
-    <CodeEntry>
-      <Description>Code :cmp al,3D</Description>
-      <Address>004C3F43</Address>
-      <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>C3F43</ModuleNameOffset>
-      <Before>
-        <Byte>86</Byte>
-        <Byte>90</Byte>
-        <Byte>00</Byte>
-        <Byte>00</Byte>
-        <Byte>00</Byte>
+        <Byte>D8</Byte>
+        <Byte>64</Byte>
+        <Byte>24</Byte>
+        <Byte>10</Byte>
       </Before>
       <Actual>
-        <Byte>3C</Byte>
-        <Byte>3D</Byte>
-      </Actual>
-      <After>
-        <Byte>76</Byte>
-        <Byte>01</Byte>
-        <Byte>47</Byte>
-        <Byte>3C</Byte>
-        <Byte>3F</Byte>
-      </After>
-    </CodeEntry>
-    <CodeEntry>
-      <Description>Code :cmp al,3F</Description>
-      <Address>004C3F48</Address>
-      <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>C3F48</ModuleNameOffset>
-      <Before>
-        <Byte>3C</Byte>
-        <Byte>3D</Byte>
-        <Byte>76</Byte>
-        <Byte>01</Byte>
-        <Byte>47</Byte>
-      </Before>
-      <Actual>
-        <Byte>3C</Byte>
-        <Byte>3F</Byte>
-      </Actual>
-      <After>
-        <Byte>76</Byte>
-        <Byte>01</Byte>
-        <Byte>47</Byte>
-        <Byte>53</Byte>
-        <Byte>6A</Byte>
-      </After>
-    </CodeEntry>
-    <CodeEntry>
-      <Description>Change of jle eqgame.exe+E47F3</Description>
-      <Address>004E47E5</Address>
-      <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>E47E5</ModuleNameOffset>
-      <Before>
-        <Byte>00</Byte>
-        <Byte>00</Byte>
-        <Byte>66</Byte>
-        <Byte>39</Byte>
-        <Byte>06</Byte>
-      </Before>
-      <Actual>
-        <Byte>7E</Byte>
-        <Byte>0C</Byte>
+        <Byte>89</Byte>
+        <Byte>41</Byte>
+        <Byte>30</Byte>
       </Actual>
       <After>
         <Byte>8B</Byte>
-        <Byte>0D</Byte>
-        <Byte>E8</Byte>
-        <Byte>94</Byte>
-        <Byte>7F</Byte>
+        <Byte>C2</Byte>
+        <Byte>D8</Byte>
+        <Byte>3D</Byte>
+        <Byte>34</Byte>
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Change of jle eqgame.exe+E4805</Description>
-      <Address>004E47F7</Address>
-      <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>E47F7</ModuleNameOffset>
+      <Description>Code :fstp dword ptr [ecx+20] ; Camera -&gt; Set Field of View</Description>
+      <Address>0361198F</Address>
+      <ModuleName>EQGfx_Dx8.DLL</ModuleName>
+      <ModuleNameOffset>4198F</ModuleNameOffset>
       <Before>
-        <Byte>00</Byte>
-        <Byte>66</Byte>
-        <Byte>39</Byte>
-        <Byte>46</Byte>
-        <Byte>02</Byte>
+        <Byte>28</Byte>
+        <Byte>8B</Byte>
+        <Byte>44</Byte>
+        <Byte>24</Byte>
+        <Byte>14</Byte>
       </Before>
       <Actual>
-        <Byte>7E</Byte>
-        <Byte>0C</Byte>
+        <Byte>D9</Byte>
+        <Byte>59</Byte>
+        <Byte>20</Byte>
+      </Actual>
+      <After>
+        <Byte>D9</Byte>
+        <Byte>05</Byte>
+        <Byte>34</Byte>
+        <Byte>74</Byte>
+        <Byte>7B</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :mov [EQGfx_Dx8.DLL+A4F8CC],ebx ; Graphics -&gt; Set Fog Start</Description>
+      <Address>035BBEFF</Address>
+      <ModuleName>EQGfx_Dx8.DLL</ModuleName>
+      <ModuleNameOffset>6BEFF</ModuleNameOffset>
+      <Before>
+        <Byte>C1</Byte>
+        <Byte>E1</Byte>
+        <Byte>08</Byte>
+        <Byte>0B</Byte>
+        <Byte>CA</Byte>
+      </Before>
+      <Actual>
+        <Byte>89</Byte>
+        <Byte>1D</Byte>
+        <Byte>CC</Byte>
+        <Byte>F8</Byte>
+        <Byte>01</Byte>
+        <Byte>04</Byte>
       </Actual>
       <After>
         <Byte>8B</Byte>
-        <Byte>0D</Byte>
-        <Byte>E8</Byte>
-        <Byte>94</Byte>
-        <Byte>7F</Byte>
+        <Byte>5C</Byte>
+        <Byte>24</Byte>
+        <Byte>18</Byte>
+        <Byte>89</Byte>
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Change of jnl eqgame.exe+E4817</Description>
-      <Address>004E4809</Address>
-      <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>E4809</ModuleNameOffset>
+      <Description>Code :mov [EQGfx_Dx8.DLL+A4F8D0],ebx ; Graphics -&gt; Set Fog Stop</Description>
+      <Address>0363BF14</Address>
+      <ModuleName>EQGfx_Dx8.DLL</ModuleName>
+      <ModuleNameOffset>6BF14</ModuleNameOffset>
       <Before>
-        <Byte>00</Byte>
-        <Byte>66</Byte>
-        <Byte>83</Byte>
-        <Byte>3E</Byte>
-        <Byte>00</Byte>
+        <Byte>C1</Byte>
+        <Byte>E1</Byte>
+        <Byte>08</Byte>
+        <Byte>0B</Byte>
+        <Byte>CE</Byte>
       </Before>
       <Actual>
-        <Byte>7D</Byte>
-        <Byte>0C</Byte>
+        <Byte>89</Byte>
+        <Byte>1D</Byte>
+        <Byte>D0</Byte>
+        <Byte>F8</Byte>
+        <Byte>01</Byte>
+        <Byte>04</Byte>
       </Actual>
       <After>
-        <Byte>A1</Byte>
-        <Byte>E8</Byte>
-        <Byte>94</Byte>
-        <Byte>7F</Byte>
-        <Byte>00</Byte>
+        <Byte>85</Byte>
+        <Byte>FF</Byte>
+        <Byte>89</Byte>
+        <Byte>0D</Byte>
+        <Byte>C8</Byte>
       </After>
     </CodeEntry>
     <CodeEntry>
-      <Description>Change of jnl eqgame.exe+E482B</Description>
-      <Address>004E481D</Address>
+      <Description>Code :call dword ptr [eqgame.exe+3F9B30] ; Set Fog</Description>
+      <Address>004ADEFD</Address>
       <ModuleName>eqgame.exe</ModuleName>
-      <ModuleNameOffset>E481D</ModuleNameOffset>
+      <ModuleNameOffset>ADEFD</ModuleNameOffset>
       <Before>
-        <Byte>83</Byte>
-        <Byte>7E</Byte>
-        <Byte>02</Byte>
+        <Byte>51</Byte>
+        <Byte>D9</Byte>
+        <Byte>1C</Byte>
+        <Byte>24</Byte>
+        <Byte>56</Byte>
+      </Before>
+      <Actual>
+        <Byte>FF</Byte>
+        <Byte>15</Byte>
+        <Byte>30</Byte>
+        <Byte>9B</Byte>
+        <Byte>7F</Byte>
         <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>83</Byte>
+        <Byte>C4</Byte>
+        <Byte>18</Byte>
         <Byte>5E</Byte>
+        <Byte>5F</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :mov [ebp+10],44160000 ; rain fog related</Description>
+      <Address>004ADEC7</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>ADEC7</ModuleNameOffset>
+      <Before>
+        <Byte>10</Byte>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+        <Byte>DD</Byte>
+        <Byte>D8</Byte>
       </Before>
       <Actual>
-        <Byte>7D</Byte>
-        <Byte>0C</Byte>
+        <Byte>C7</Byte>
+        <Byte>45</Byte>
+        <Byte>10</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>16</Byte>
+        <Byte>44</Byte>
+      </Actual>
+      <After>
+        <Byte>D9</Byte>
+        <Byte>41</Byte>
+        <Byte>18</Byte>
+        <Byte>D8</Byte>
+        <Byte>5D</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>NOP to see far in the rain</Description>
+      <Address>004ADEC3</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>ADEC3</ModuleNameOffset>
+      <Before>
+        <Byte>51</Byte>
+        <Byte>12</Byte>
+        <Byte>D9</Byte>
+        <Byte>5D</Byte>
+        <Byte>10</Byte>
+      </Before>
+      <Actual>
+        <Byte>90</Byte>
+      </Actual>
+      <After>
+        <Byte>90</Byte>
+        <Byte>DD</Byte>
+        <Byte>D8</Byte>
+        <Byte>C7</Byte>
+        <Byte>45</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of mov [eax+0000009A],cx</Description>
+      <Address>004E451D</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>E451D</ModuleNameOffset>
+      <Before>
+        <Byte>24</Byte>
+        <Byte>04</Byte>
+        <Byte>66</Byte>
+        <Byte>8B</Byte>
+        <Byte>0A</Byte>
+      </Before>
+      <Actual>
+        <Byte>66</Byte>
+        <Byte>89</Byte>
+        <Byte>88</Byte>
+        <Byte>9A</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
       </Actual>
       <After>
         <Byte>A1</Byte>
-        <Byte>E8</Byte>
+        <Byte>CC</Byte>
         <Byte>94</Byte>
         <Byte>7F</Byte>
         <Byte>00</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of jnl eqgame.exe+B95FD</Description>
+      <Address>004B95F7</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>B95F7</ModuleNameOffset>
+      <Before>
+        <Byte>03</Byte>
+        <Byte>F8</Byte>
+        <Byte>66</Byte>
+        <Byte>85</Byte>
+        <Byte>FF</Byte>
+      </Before>
+      <Actual>
+        <Byte>7D</Byte>
+        <Byte>04</Byte>
+      </Actual>
+      <After>
+        <Byte>33</Byte>
+        <Byte>C0</Byte>
+        <Byte>EB</Byte>
+        <Byte>02</Byte>
+        <Byte>8B</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :mov cx,[esi+0000009A] ; max mana is stored</Description>
+      <Address>004B9458</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>B9458</ModuleNameOffset>
+      <Before>
+        <Byte>E8</Byte>
+        <Byte>2B</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>66</Byte>
+        <Byte>8B</Byte>
+        <Byte>8E</Byte>
+        <Byte>9A</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>66</Byte>
+        <Byte>3B</Byte>
+        <Byte>C8</Byte>
+        <Byte>7E</Byte>
+        <Byte>09</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :cmp ax,0006 ; check if race is dark elf for ultravision</Description>
+      <Address>004C0D44</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>C0D44</ModuleNameOffset>
+      <Before>
+        <Byte>80</Byte>
+        <Byte>AA</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>66</Byte>
+        <Byte>3D</Byte>
+        <Byte>06</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>74</Byte>
+        <Byte>0F</Byte>
+        <Byte>66</Byte>
+        <Byte>3D</Byte>
+        <Byte>82</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :mov word ptr [esi+00000C8A],00FF ; if you are not dark elf, set vision to 255</Description>
+      <Address>004C0D50</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>C0D50</ModuleNameOffset>
+      <Before>
+        <Byte>3D</Byte>
+        <Byte>82</Byte>
+        <Byte>00</Byte>
+        <Byte>74</Byte>
+        <Byte>09</Byte>
+      </Before>
+      <Actual>
+        <Byte>66</Byte>
+        <Byte>C7</Byte>
+        <Byte>86</Byte>
+        <Byte>8A</Byte>
+        <Byte>0C</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>FF</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>57</Byte>
+        <Byte>6A</Byte>
+        <Byte>01</Byte>
+        <Byte>6A</Byte>
+        <Byte>41</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of jnge eqgame.exe+AFACB ; NOP to make everyone non visible</Description>
+      <Address>004AFAC5</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>AFAC5</ModuleNameOffset>
+      <Before>
+        <Byte>0C</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>41</Byte>
+      </Before>
+      <Actual>
+        <Byte>7C</Byte>
+        <Byte>04</Byte>
+      </Actual>
+      <After>
+        <Byte>8B</Byte>
+        <Byte>C3</Byte>
+        <Byte>EB</Byte>
+        <Byte>48</Byte>
+        <Byte>8B</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :cmp word ptr [esi+0000010A],02 ; check if levitating</Description>
+      <Address>0051FE60</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>11FE60</ModuleNameOffset>
+      <Before>
+        <Byte>B0</Byte>
+        <Byte>98</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>66</Byte>
+        <Byte>83</Byte>
+        <Byte>BE</Byte>
+        <Byte>0A</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>02</Byte>
+      </Actual>
+      <After>
+        <Byte>75</Byte>
+        <Byte>13</Byte>
+        <Byte>8B</Byte>
+        <Byte>86</Byte>
+        <Byte>84</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of and byte ptr [eax+ecx+000000AF],00</Description>
+      <Address>004D0C7A</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>D0C7A</ModuleNameOffset>
+      <Before>
+        <Byte>15</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>7D</Byte>
+        <Byte>08</Byte>
+      </Before>
+      <Actual>
+        <Byte>80</Byte>
+        <Byte>A4</Byte>
+        <Byte>08</Byte>
+        <Byte>AF</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>C2</Byte>
+        <Byte>08</Byte>
+        <Byte>00</Byte>
+        <Byte>53</Byte>
+        <Byte>33</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Change of and byte ptr [edx+ecx+000000AF],00</Description>
+      <Address>004D0C51</Address>
+      <ModuleName>eqgame.exe</ModuleName>
+      <ModuleNameOffset>D0C51</ModuleNameOffset>
+      <Before>
+        <Byte>83</Byte>
+        <Byte>FA</Byte>
+        <Byte>09</Byte>
+        <Byte>7D</Byte>
+        <Byte>08</Byte>
+      </Before>
+      <Actual>
+        <Byte>80</Byte>
+        <Byte>A4</Byte>
+        <Byte>0A</Byte>
+        <Byte>AF</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>5E</Byte>
+        <Byte>C2</Byte>
+        <Byte>04</Byte>
+        <Byte>00</Byte>
+        <Byte>8B</Byte>
       </After>
     </CodeEntry>
   </CheatCodes>

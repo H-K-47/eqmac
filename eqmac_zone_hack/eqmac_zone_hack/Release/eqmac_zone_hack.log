@@ -1,0 +1,15 @@
+﻿Build started 10/18/2013 9:06:18 PM.
+     1>Project "D:\Code\everquest\eqmac_zone_hack\eqmac_zone_hack\eqmac_zone_hack.vcxproj" on node 2 (Rebuild target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ID:\Code\boost_1_54_0 /ID:\Code\detours\include /ID:\Code\vk_keys\include /ID:\Code\memory\include /ID:\Code\everquest\eqmac\include /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D EQMAC_ZONE_HACK_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt dllmain.cpp
+         dllmain.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Code\everquest\eqmac_zone_hack\Release\eqmac_zone_hack.dll" /INCREMENTAL:NO /NOLOGO /LIBPATH:D:\Code\detours\lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Code\everquest\eqmac_zone_hack\Release\eqmac_zone_hack.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Code\everquest\eqmac_zone_hack\Release\eqmac_zone_hack.lib" /MACHINE:X86 /SAFESEH /DLL Release\dllmain.obj
+         Generating code
+         Finished generating code
+         eqmac_zone_hack.vcxproj -> D:\Code\everquest\eqmac_zone_hack\Release\eqmac_zone_hack.dll
+     1>Done Building Project "D:\Code\everquest\eqmac_zone_hack\eqmac_zone_hack\eqmac_zone_hack.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:05.01

@@ -1,0 +1,1 @@
+copy Release\eqmac_function_test.dll c:\eqmac\

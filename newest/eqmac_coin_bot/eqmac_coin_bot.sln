@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Express 2012 for Windows Desktop
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eqmac_coin_bot", "eqmac_coin_bot\eqmac_coin_bot.vcxproj", "{8B1A23FF-7C2B-422F-93FE-71235C456B81}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8B1A23FF-7C2B-422F-93FE-71235C456B81}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8B1A23FF-7C2B-422F-93FE-71235C456B81}.Debug|Win32.Build.0 = Debug|Win32
+		{8B1A23FF-7C2B-422F-93FE-71235C456B81}.Release|Win32.ActiveCfg = Release|Win32
+		{8B1A23FF-7C2B-422F-93FE-71235C456B81}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

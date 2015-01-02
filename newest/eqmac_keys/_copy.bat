@@ -1,0 +1,1 @@
+copy Release\eqmac_keys.dll c:\eqmac\

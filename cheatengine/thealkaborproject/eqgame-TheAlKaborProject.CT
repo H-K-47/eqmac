@@ -1,0 +1,2414 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="18">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>0</ID>
+      <Description>"The Al'Kabor Project Cheat Table (Process: eqgame.exe)"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"Player Name"</Description>
+      <LastState Activated="0" RealAddress="0CA6C572"/>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>64</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>007F94E8</Address>
+      <Offsets>
+        <Offset>2</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>14</ID>
+      <Description>"Player Mana"</Description>
+      <LastState Value="20" Activated="0" RealAddress="0CA6C60A"/>
+      <Color>80000008</Color>
+      <VariableType>2 Bytes</VariableType>
+      <Address>007F94E8</Address>
+      <Offsets>
+        <Offset>9A</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>3</ID>
+      <Description>"Player Movement Speed"</Description>
+      <LastState Value="0" Activated="0" RealAddress="0CD557FC"/>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>007F94CC</Address>
+      <Offsets>
+        <Offset>5C</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>34</ID>
+      <Description>"Player Light"</Description>
+      <LastState Value="8" Activated="0" RealAddress="0CD55852"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>007F94CC</Address>
+      <Offsets>
+        <Offset>B2</Offset>
+      </Offsets>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>13</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>30</ID>
+      <Description>"Zone Lighting"</Description>
+      <LastState Value="202" Activated="0" RealAddress="007B9648"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>007B9648</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>43</ID>
+      <Description>"Fog Draw Distance"</Description>
+      <LastState Value="1000" Activated="0" RealAddress="035EF8D0"/>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>EQGfx_Dx8.dll+A4F8D0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>45</ID>
+      <Description>"Special Fog Type"</Description>
+      <LastState Value="0" Activated="0" RealAddress="0063B7C8"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>0063B7C8</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>31</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>4</ID>
+      <Description>"--&gt; Speed Hack (run faster)"</Description>
+      <Options moHideChildren="1"/>
+      <LastState Activated="1"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>define(address,"eqgame.exe"+1200D0)
+define(bytes,D9 59 5C EB 02)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+registersymbol(speedhack_speedmodifier)
+alloc(speedhack_speedmodifier,4)
+
+label(code)
+label(return)
+
+speedhack_speedmodifier:
+dd (float)1.25
+
+newmem:
+
+code:
+  fmul dword ptr [speedhack_speedmodifier]
+  fstp dword ptr [ecx+5C]
+  jmp eqgame.exe+1200D7
+
+address:
+  jmp code
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // fstp dword ptr [ecx+5C]
+  // jmp eqgame.exe+1200D7
+
+dealloc(newmem)
+
+dealloc(speedhack_speedmodifier)
+unregistersymbol(speedhack_speedmodifier)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+1200D0
+
+"eqgame.exe"+1200B8: 9E                             -  sahf 
+"eqgame.exe"+1200B9: 76 1A                          -  jna eqgame.exe+1200D5
+"eqgame.exe"+1200BB: EB 13                          -  jmp eqgame.exe+1200D0
+"eqgame.exe"+1200BD: D8 0D 64 8D 5E 00              -  fmul dword ptr [eqgame.exe+1E8D64]
+"eqgame.exe"+1200C3: D8 69 5C                       -  fsubr dword ptr [ecx+5C]
+"eqgame.exe"+1200C6: D9 51 5C                       -  fst dword ptr [ecx+5C]
+"eqgame.exe"+1200C9: D8 D9                          -  fcomp st(0),st(1)
+"eqgame.exe"+1200CB: DF E0                          -  fnstsw ax
+"eqgame.exe"+1200CD: 9E                             -  sahf 
+"eqgame.exe"+1200CE: 73 05                          -  jae eqgame.exe+1200D5
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+1200D0: D9 59 5C                       -  fstp dword ptr [ecx+5C]
+"eqgame.exe"+1200D3: EB 02                          -  jmp eqgame.exe+1200D7
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+1200D5: DD D8                          -  fstp st(0)
+"eqgame.exe"+1200D7: C2 08 00                       -  ret 0008
+"eqgame.exe"+1200DA: 53                             -  push ebx
+"eqgame.exe"+1200DB: 56                             -  push esi
+"eqgame.exe"+1200DC: 57                             -  push edi
+"eqgame.exe"+1200DD: 6A 02                          -  push 02
+"eqgame.exe"+1200DF: 8B F1                          -  mov esi,ecx
+"eqgame.exe"+1200E1: 5B                             -  pop ebx
+"eqgame.exe"+1200E2: E8 7B 35 FD FF                 -  call eqgame.exe+F3662
+"eqgame.exe"+1200E7: 6A 2E                          -  push 2E
+}
+</AssemblerScript>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>5</ID>
+          <Description>"Speed Multiplier (Default = 1.0)"</Description>
+          <LastState Value="1.25" Activated="0" RealAddress="0FF71000"/>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>speedhack_speedmodifier</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>22</ID>
+      <Description>"--&gt; List of Hacks"</Description>
+      <Options moBindActivation="1"/>
+      <LastState Value="" Activated="1" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>228</ID>
+          <Description>"Try to fix ALT+TAB keyboard bug with EQW (modifier keys don't get stuck)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqw.dll"+253D)
+define(bytes,89 3D 00 80 00 10)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  // this value gets updated when you ALT+TAB
+  // equals 1 when the window has focus
+  mov [eqw.dll+8000],edi
+
+  // disable the game from thinking that
+  // the modifier keys are still held down
+  // after ALT+TAB or switching between
+  // game windows
+
+  // SHIFT is not pressed
+  mov [0080931C],0
+
+  // CTRL is not pressed
+  mov [00809320],0
+
+  // ALT is not pressed
+  mov [0080932C],0
+
+  jmp return
+
+address:
+  jmp code
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov [eqw.dll+8000],edi
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqw.dll"+253D
+
+"eqw.dll"+251F: 0F 87 11 01 00 00  -  ja eqw.dll+2636
+"eqw.dll"+2525: 74 78              -  je eqw.dll+259F
+"eqw.dll"+2527: 8B C6              -  mov eax,esi
+"eqw.dll"+2529: 83 E8 02           -  sub eax,02
+"eqw.dll"+252C: 74 51              -  je eqw.dll+257F
+"eqw.dll"+252E: 83 E8 0E           -  sub eax,0E
+"eqw.dll"+2531: 74 4C              -  je eqw.dll+257F
+"eqw.dll"+2533: 83 E8 0C           -  sub eax,0C
+"eqw.dll"+2536: 0F 85 0A 02 00 00  -  jne eqw.dll+2746
+"eqw.dll"+253C: 55                 -  push ebp
+// ---------- INJECTING HERE ----------
+"eqw.dll"+253D: 89 3D 00 80 00 10  -  mov [eqw.dll+8000],edi
+// ---------- DONE INJECTING  ----------
+"eqw.dll"+2543: FF 15 DC 70 00 10  -  call dword ptr [eqw.dll+70DC]
+"eqw.dll"+2549: A3 AC 97 00 10     -  mov [eqw.dll+97AC],eax
+"eqw.dll"+254E: A1 B0 97 00 10     -  mov eax,[eqw.dll+97B0]
+"eqw.dll"+2553: 85 C0              -  test eax,eax
+"eqw.dll"+2555: 75 16              -  jne eqw.dll+256D
+"eqw.dll"+2557: 8B 15 00 80 00 10  -  mov edx,[eqw.dll+8000]
+"eqw.dll"+255D: 33 C0              -  xor eax,eax
+"eqw.dll"+255F: 85 D2              -  test edx,edx
+"eqw.dll"+2561: 0F 94 C0           -  sete al
+"eqw.dll"+2564: 50                 -  push eax
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>37</ID>
+          <Description>"Infinite Air Remaining (breathe underwater forever)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+// stop oxygen value from decreasing
+eqgame.exe+D05CE:
+db 90
+// nop
+
+// reset oxygen value to max
+// just in case player is already swimming
+[eqgame.exe+3F94E8]+1708:
+db 46
+
+[DISABLE]
+
+eqgame.exe+D05CE:
+db 49
+// dec ecx
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>432</ID>
+          <Description>"Remove Detrimental Effects (click off debuffs in the Effects window)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+D03C6:
+db 90 90
+// nop
+// nop
+
+[DISABLE]
+eqgame.exe+D03C6:
+db 74 42
+// je eqgame.exe+D040A
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>436</ID>
+          <Description>"Auto-Stand Cast (stand up when casting spells while sitting down)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+C48E7)
+define(bytes,74 42 8B 0D 90 94 7F 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  je eqgame.exe+C492B // if standing up, jump to cast the spell
+
+  mov ecx,[eqgame.exe+3F94CC] // player
+  push 64 // stand up
+  call eqgame.exe+10BE3C // EQPlayer::ChangePosition
+
+  jmp eqgame.exe+C492B // jump to cast the spell
+
+address:
+  jmp code
+  nop
+  nop
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // je eqgame.exe+C492B
+  // mov ecx,[eqgame.exe+3F9490]
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+C48E7
+
+"eqgame.exe"+C48C2: 74 12                 -  je eqgame.exe+C48D6
+"eqgame.exe"+C48C4: E8 EC E7 FC FF        -  call eqgame.exe+930B5
+"eqgame.exe"+C48C9: 85 C0                 -  test eax,eax
+"eqgame.exe"+C48CB: 75 09                 -  jne eqgame.exe+C48D6
+"eqgame.exe"+C48CD: 80 BE 8C 00 00 00 08  -  cmp byte ptr [esi+0000008C],08
+"eqgame.exe"+C48D4: 75 B3                 -  jne eqgame.exe+C4889
+"eqgame.exe"+C48D6: 8B 86 74 0D 00 00     -  mov eax,[esi+00000D74]
+"eqgame.exe"+C48DC: 3B C3                 -  cmp eax,ebx
+"eqgame.exe"+C48DE: 74 4B                 -  je eqgame.exe+C492B
+"eqgame.exe"+C48E0: 80 B8 B1 00 00 00 64  -  cmp byte ptr [eax+000000B1],64
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+C48E7: 74 42                 -  je eqgame.exe+C492B
+"eqgame.exe"+C48E9: 8B 0D 90 94 7F 00     -  mov ecx,[eqgame.exe+3F9490]
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+C48EF: BF 21 01 00 00        -  mov edi,00000121
+"eqgame.exe"+C48F4: 6A 01                 -  push 01
+"eqgame.exe"+C48F6: 57                    -  push edi
+"eqgame.exe"+C48F7: 53                    -  push ebx
+"eqgame.exe"+C48F8: 68 99 30 00 00        -  push 00003099
+"eqgame.exe"+C48FD: E8 FC C5 08 00        -  call eqgame.exe+150EFE
+"eqgame.exe"+C4902: 8B 0D 78 94 80 00     -  mov ecx,[eqgame.exe+409478]
+"eqgame.exe"+C4908: 50                    -  push eax
+"eqgame.exe"+C4909: E8 8B 36 07 00        -  call eqgame.exe+137F99
+"eqgame.exe"+C490E: 8B 86 74 0D 00 00     -  mov eax,[esi+00000D74]
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>230</ID>
+          <Description>"Never Blind (no black screen)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+AB767:
+db EB 08
+// jmp eqgame.exe+AB771
+
+[DISABLE]
+
+eqgame.exe+AB767:
+db 74 08
+//je eqgame.exe+AB771
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>416</ID>
+          <Description>"Never Encumbered (walk normally while over max weight capacity)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+BBB6B:
+db 90 90
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+BBB6B:
+db 75 08
+// jne eqgame.exe+BBB75
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>418</ID>
+          <Description>"Never Stunned (move around while stunned, cannot attack)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+C0010:
+db E9 E7 00 00 00 90
+// jmp eqgame.exe+C00FC
+
+[DISABLE]
+
+eqgame.exe+C0010:
+db 0F 84 E6 00 00 00
+// je eqgame.exe+C00FC
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>428</ID>
+          <Description>"Never too fatigued to jump (jump with zero stamina)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+13FDD7:
+db 90 90
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+13FDD7:
+db 7D 13
+// jnl eqgame.exe+13FDEC
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>429</ID>
+          <Description>"No delays between jumps (quake bunnyhop)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+13FD9E:
+db 90 90
+// nop
+// nop
+
+[DISABLE]
+eqgame.exe+13FD9E:
+db 76 06
+// jna eqgame.exe+13FDA6
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>29</ID>
+          <Description>"Always Daylight (sunny, blue sky)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+B1877)
+define(bytes,8B 35 48 96 7B 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  mov esi,7B
+  jmp return
+
+address:
+  jmp code
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov esi,[eqgame.exe+3B9648]
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+B1877
+
+"eqgame.exe"+B1855: 89 02                 -  mov [edx],eax
+"eqgame.exe"+B1857: EB 1E                 -  jmp eqgame.exe+B1877
+"eqgame.exe"+B1859: 8B 0D 94 94 7F 00     -  mov ecx,[eqgame.exe+3F9494]
+"eqgame.exe"+B185F: 0F B6 51 04           -  movzx edx,byte ptr [ecx+04]
+"eqgame.exe"+B1863: 8B 4D 08              -  mov ecx,[ebp+08]
+"eqgame.exe"+B1866: 89 11                 -  mov [ecx],edx
+"eqgame.exe"+B1868: 8B 15 94 94 7F 00     -  mov edx,[eqgame.exe+3F9494]
+"eqgame.exe"+B186E: 0F B6 72 05           -  movzx esi,byte ptr [edx+05]
+"eqgame.exe"+B1872: 8B 55 0C              -  mov edx,[ebp+0C]
+"eqgame.exe"+B1875: 89 32                 -  mov [edx],esi
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+B1877: 8B 35 48 96 7B 00     -  mov esi,[eqgame.exe+3B9648]
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+B187D: 83 FE 3F              -  cmp esi,3F
+"eqgame.exe"+B1880: 74 1F                 -  je eqgame.exe+B18A1
+"eqgame.exe"+B1882: 83 FE 47              -  cmp esi,47
+"eqgame.exe"+B1885: 74 12                 -  je eqgame.exe+B1899
+"eqgame.exe"+B1887: 83 FE 4C              -  cmp esi,4C
+"eqgame.exe"+B188A: 74 15                 -  je eqgame.exe+B18A1
+"eqgame.exe"+B188C: 83 FE 7B              -  cmp esi,7B
+"eqgame.exe"+B188F: 75 1B                 -  jne eqgame.exe+B18AC
+"eqgame.exe"+B1891: C7 01 0A 00 00 00     -  mov [ecx],0000000A
+"eqgame.exe"+B1897: EB 0E                 -  jmp eqgame.exe+B18A7
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>35</ID>
+          <Description>"Always have Max Light Radius (like greater lightstone)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+F0D8B)
+define(bytes,8A 4D 0B 88 88 B2 00 00 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  mov cl,08
+  mov [eax+000000B2],cl
+  jmp return
+
+address:
+  jmp code
+  nop
+  nop
+  nop
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov cl,[ebp+0B]
+  // mov [eax+000000B2],cl
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+F0D8B
+
+"eqgame.exe"+F0D71: 8A 4D 0B              -  mov cl,[ebp+0B]
+"eqgame.exe"+F0D74: 84 C9                 -  test cl,cl
+"eqgame.exe"+F0D76: 76 13                 -  jna eqgame.exe+F0D8B
+"eqgame.exe"+F0D78: 80 F9 02              -  cmp cl,02
+"eqgame.exe"+F0D7B: 76 0A                 -  jna eqgame.exe+F0D87
+"eqgame.exe"+F0D7D: 80 F9 04              -  cmp cl,04
+"eqgame.exe"+F0D80: 74 05                 -  je eqgame.exe+F0D87
+"eqgame.exe"+F0D82: 80 F9 06              -  cmp cl,06
+"eqgame.exe"+F0D85: 75 04                 -  jne eqgame.exe+F0D8B
+"eqgame.exe"+F0D87: 80 65 0B 00           -  and byte ptr [ebp+0B],00
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+F0D8B: 8A 4D 0B              -  mov cl,[ebp+0B]
+"eqgame.exe"+F0D8E: 88 88 B2 00 00 00     -  mov [eax+000000B2],cl
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+F0D94: 8B 83 74 0D 00 00     -  mov eax,[ebx+00000D74]
+"eqgame.exe"+F0D9A: 8A 4D FE              -  mov cl,[ebp-02]
+"eqgame.exe"+F0D9D: 38 88 B2 00 00 00     -  cmp [eax+000000B2],cl
+"eqgame.exe"+F0DA3: 74 0C                 -  je eqgame.exe+F0DB1
+"eqgame.exe"+F0DA5: 8B 0D 10 95 7F 00     -  mov ecx,[eqgame.exe+3F9510]
+"eqgame.exe"+F0DAB: 50                    -  push eax
+"eqgame.exe"+F0DAC: E8 F2 E4 FB FF        -  call eqgame.exe+AF2A3
+"eqgame.exe"+F0DB1: 5B                    -  pop ebx
+"eqgame.exe"+F0DB2: C9                    -  leave 
+"eqgame.exe"+F0DB3: C3                    -  ret 
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>32</ID>
+          <Description>"Always have Ultravision [1/2] (Dark Elf vision, see in the dark)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+C0D6A)
+define(bytes,66 89 BE 7C 0C 00 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  mov word ptr [esi+00000C7C],0000
+  jmp return
+
+address:
+  jmp code
+  nop
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov [esi+00000C7C],di
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+C0D6A
+
+"eqgame.exe"+C0D4A: 66 3D 82 00                 -  cmp ax,0082
+"eqgame.exe"+C0D4E: 74 09                       -  je eqgame.exe+C0D59
+"eqgame.exe"+C0D50: 66 C7 86 8A 0C 00 00 FF 00  -  mov word ptr [esi+00000C8A],00FF
+"eqgame.exe"+C0D59: 57                          -  push edi
+"eqgame.exe"+C0D5A: 6A 01                       -  push 01
+"eqgame.exe"+C0D5C: 6A 41                       -  push 41
+"eqgame.exe"+C0D5E: 8B CE                       -  mov ecx,esi
+"eqgame.exe"+C0D60: E8 08 5E 00 00              -  call eqgame.exe+C6B6D
+"eqgame.exe"+C0D65: 66 85 C0                    -  test ax,ax
+"eqgame.exe"+C0D68: 7E 09                       -  jle eqgame.exe+C0D73
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+C0D6A: 66 89 BE 7C 0C 00 00        -  mov [esi+00000C7C],di
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+C0D71: EB 32                       -  jmp eqgame.exe+C0DA5
+"eqgame.exe"+C0D73: 8B 86 74 0D 00 00           -  mov eax,[esi+00000D74]
+"eqgame.exe"+C0D79: 3B C7                       -  cmp eax,edi
+"eqgame.exe"+C0D7B: 74 28                       -  je eqgame.exe+C0DA5
+"eqgame.exe"+C0D7D: 66 8B 80 AA 00 00 00        -  mov ax,[eax+000000AA]
+"eqgame.exe"+C0D84: 66 3D 06 00                 -  cmp ax,0006
+"eqgame.exe"+C0D88: 74 12                       -  je eqgame.exe+C0D9C
+"eqgame.exe"+C0D8A: 66 3D 01 00                 -  cmp ax,0001
+"eqgame.exe"+C0D8E: 74 0C                       -  je eqgame.exe+C0D9C
+"eqgame.exe"+C0D90: 66 3D 03 00                 -  cmp ax,0003
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>33</ID>
+          <Description>"Always have Ultravision [2/2] (Dark Elf vision, see in the dark)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+C0D50:
+mov word ptr [esi+00000C8A],0000
+
+[DISABLE]
+
+eqgame.exe+C0D50:
+mov word ptr [esi+00000C8A],00FF
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>427</ID>
+          <Description>"Always have See Invisible (see through camouflage and invisibility spells)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+AFAD5)
+define(bytes,E8 28 12 01 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  call eqgame.exe+C0D02
+  mov al,01
+  jmp return
+
+address:
+  jmp code
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // call eqgame.exe+C0D02
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+AFAD5
+
+"eqgame.exe"+AFAB5: 5B                    -  pop ebx
+"eqgame.exe"+AFAB6: 39 9E 9C 00 00 00     -  cmp [esi+0000009C],ebx
+"eqgame.exe"+AFABC: 7C 4C                 -  jnge eqgame.exe+AFB0A
+"eqgame.exe"+AFABE: 83 BE 0C 01 00 00 41  -  cmp dword ptr [esi+0000010C],41
+"eqgame.exe"+AFAC5: 7C 04                 -  jnge eqgame.exe+AFACB
+"eqgame.exe"+AFAC7: 8B C3                 -  mov eax,ebx
+"eqgame.exe"+AFAC9: EB 48                 -  jmp eqgame.exe+AFB13
+"eqgame.exe"+AFACB: 8B 8F 88 00 00 00     -  mov ecx,[edi+00000088]
+"eqgame.exe"+AFAD1: 3B C8                 -  cmp ecx,eax
+"eqgame.exe"+AFAD3: 74 08                 -  je eqgame.exe+AFADD
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+AFAD5: E8 28 12 01 00        -  call eqgame.exe+C0D02
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+AFADA: 0F B6 C0              -  movzx eax,al
+"eqgame.exe"+AFADD: 38 9E AE 00 00 00     -  cmp [esi+000000AE],bl
+"eqgame.exe"+AFAE3: 75 20                 -  jne eqgame.exe+AFB05
+"eqgame.exe"+AFAE5: 85 C0                 -  test eax,eax
+"eqgame.exe"+AFAE7: 89 5D FC              -  mov [ebp-04],ebx
+"eqgame.exe"+AFAEA: 74 19                 -  je eqgame.exe+AFB05
+"eqgame.exe"+AFAEC: 83 65 FC 00           -  and dword ptr [ebp-04],00
+"eqgame.exe"+AFAF0: 80 BE 09 01 00 00 00  -  cmp byte ptr [esi+00000109],00
+"eqgame.exe"+AFAF7: 74 0C                 -  je eqgame.exe+AFB05
+"eqgame.exe"+AFAF9: 80 BF 09 01 00 00 00  -  cmp byte ptr [edi+00000109],00
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>21</ID>
+          <Description>"Scribe Spells Instantly (Classic UI)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+7C8D4:
+mov word ptr [eax+00000E94],0001
+
+[DISABLE]
+
+eqgame.exe+7C8D4:
+mov word ptr [eax+00000E94],005C
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>6</ID>
+          <Description>"Memorize Spells Instantly (Classic UI)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+7CDC3:
+mov word ptr [eax+00000E96],0001
+
+[DISABLE]
+
+eqgame.exe+7CDC3:
+mov word ptr [eax+00000E96],005C
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>12</ID>
+          <Description>"Scribe Spells Instantly (Luclin UI)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+// classic UI
+//eqgame.exe+7CDC3:
+//mov word ptr [eax+00000E96],0001
+
+eqgame.exe+34EEF:
+mov [ecx+00000150],00000001
+
+[DISABLE]
+
+// classic UI
+//eqgame.exe+7CDC3:
+//mov word ptr [eax+00000E96],005C
+
+eqgame.exe+34EEF:
+mov [ecx+00000150],0000005C
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>15</ID>
+          <Description>"Memorize Spells Instantly (Luclin UI)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+// classic UI
+//eqgame.exe+7CDC3:
+//mov word ptr [eax+00000E96],0001
+
+eqgame.exe+34B27:
+mov [edi+00000148],00000001
+
+[DISABLE]
+
+// classic UI
+//eqgame.exe+7CDC3:
+//mov word ptr [eax+00000E96],005C
+
+eqgame.exe+34B27:
+mov [edi+00000148],0000005C
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>46</ID>
+          <Description>"No Special Fog (see underwater and some other places)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+DB65E)
+define(bytes,A2 C8 B7 63 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+eqgame.exe+23B7C8:
+db 00
+
+newmem:
+
+code:
+  and byte ptr [eqgame.exe+23B7C8],00
+  jmp return
+
+address:
+  jmp code
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov byte ptr [eqgame.exe+23B7C8],al
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+DB65E
+
+"eqgame.exe"+DB646: 51                    -  push ecx
+"eqgame.exe"+DB647: D9 1C 24              -  fstp dword ptr [esp]
+"eqgame.exe"+DB64A: D9 47 20              -  fld dword ptr [edi+20]
+"eqgame.exe"+DB64D: 51                    -  push ecx
+"eqgame.exe"+DB64E: D9 1C 24              -  fstp dword ptr [esp]
+"eqgame.exe"+DB651: D9 03                 -  fld dword ptr [ebx]
+"eqgame.exe"+DB653: 51                    -  push ecx
+"eqgame.exe"+DB654: 8B CF                 -  mov ecx,edi
+"eqgame.exe"+DB656: D9 1C 24              -  fstp dword ptr [esp]
+"eqgame.exe"+DB659: E8 8D 88 FD FF        -  call eqgame.exe+B3EEB
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+DB65E: A2 C8 B7 63 00        -  mov byte ptr [eqgame.exe+23B7C8],al
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+DB663: E9 23 03 00 00        -  jmp eqgame.exe+DB98B
+"eqgame.exe"+DB668: D9 46 50              -  fld dword ptr [esi+50]
+"eqgame.exe"+DB66B: D8 A6 90 00 00 00     -  fsub dword ptr [esi+00000090]
+"eqgame.exe"+DB671: A1 78 94 80 00        -  mov eax,[eqgame.exe+409478]
+"eqgame.exe"+DB676: 83 B8 AC 05 00 00 05  -  cmp dword ptr [eax+000005AC],05
+"eqgame.exe"+DB67D: D8 86 8C 00 00 00     -  fadd dword ptr [esi+0000008C]
+"eqgame.exe"+DB683: D9 5D FC              -  fstp dword ptr [ebp-04]
+"eqgame.exe"+DB686: 75 74                 -  jne eqgame.exe+DB6FC
+"eqgame.exe"+DB688: 8B D1                 -  mov edx,ecx
+"eqgame.exe"+DB68A: 6B D2 1C              -  imul edx,edx,1C
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>50</ID>
+          <Description>"No Falling Damage (jump from any height without taking damage)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+BFF5D:
+db 90 90
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+BFF5D:
+db 75 02
+// jne eqgame.exe+BFF61
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>419</ID>
+          <Description>"No ANONYMOUS in /who (current zone only)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+12FE9C:
+db EB 54
+// jmp eqgame.exe+12FEF2
+
+[DISABLE]
+
+eqgame.exe+12FE9C:
+db 74 54
+// je eqgame.exe+12FEF2
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>437</ID>
+          <Description>"No Environmental Damage (swim in lava)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+// just return to avoid the function doing anything
+
+eqgame.exe+C0150:
+db C2 14 00
+// ret 0014
+ 
+[DISABLE]
+
+eqgame.exe+C0150:
+db 55
+db 8B EC
+// push ebp
+// mov ebp,esp
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>51</ID>
+          <Description>"Show Spell Casting Names (see what spells other players and NPCs are casting)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+12CFF1:
+db 90 90
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+12CFF1:
+db 74 24
+// je eqgame.exe+12D017
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>438</ID>
+          <Description>"Use "/target &lt;name&gt;" from any distance"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+FD9D4)
+define(bytes,66 8B 80 94 00 00 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  mov [eqgame.exe+3F94EC],eax // move eax to target
+  leave
+  ret
+
+address:
+  jmp code
+  nop
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov ax,[eax+00000094]
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+FD9D4
+
+"eqgame.exe"+FD9BC: 85 C0                 -  test eax,eax
+"eqgame.exe"+FD9BE: 59                    -  pop ecx
+"eqgame.exe"+FD9BF: 76 3A                 -  jna eqgame.exe+FD9FB
+"eqgame.exe"+FD9C1: FF 75 0C              -  push [ebp+0C]
+"eqgame.exe"+FD9C4: E8 45 A8 00 00        -  call eqgame.exe+10820E
+"eqgame.exe"+FD9C9: 85 C0                 -  test eax,eax
+"eqgame.exe"+FD9CB: 59                    -  pop ecx
+"eqgame.exe"+FD9CC: 75 06                 -  jne eqgame.exe+FD9D4
+"eqgame.exe"+FD9CE: 66 21 45 FE           -  and [ebp-02],ax
+"eqgame.exe"+FD9D2: EB 0B                 -  jmp eqgame.exe+FD9DF
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+FD9D4: 66 8B 80 94 00 00 00  -  mov ax,[eax+00000094]
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+FD9DB: 66 89 45 FE           -  mov [ebp-02],ax
+"eqgame.exe"+FD9DF: 6A 01                 -  push 01
+"eqgame.exe"+FD9E1: 8D 45 FE              -  lea eax,[ebp-02]
+"eqgame.exe"+FD9E4: 6A 02                 -  push 02
+"eqgame.exe"+FD9E6: 50                    -  push eax
+"eqgame.exe"+FD9E7: 68 FE 41 00 00        -  push 000041FE
+"eqgame.exe"+FD9EC: 68 FC 52 79 00        -  push eqgame.exe+3952FC
+"eqgame.exe"+FD9F1: E8 24 0B 05 00        -  call eqgame.exe+14E51A
+"eqgame.exe"+FD9F6: 83 C4 14              -  add esp,14
+"eqgame.exe"+FD9F9: C9                    -  leave 
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>443</ID>
+          <Description>"--&gt; Type "/target" to change the size of your target (shrink or grow)"</Description>
+          <Options moHideChildren="1"/>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+FD9FB)
+define(bytes,8B 0D 90 94 7F 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+registersymbol(changeheight_targetsize)
+alloc(changeheight_targetsize,4)
+
+label(code)
+label(code2)
+label(return)
+
+changeheight_targetsize:
+dd (float)5.0
+
+newmem:
+
+code:
+  mov esi,[eqgame.exe+3F94EC] // target
+  test esi,esi // check if target is NULL
+  jz code2
+  fld dword ptr [changeheight_targetsize] // new target size
+  push ecx
+  mov ecx,esi
+  fstp dword ptr [esp]
+  call eqgame.exe+10C160// EQPlayer::ChangeHeight
+  jmp code2
+
+code2:
+  leave
+  ret
+
+address:
+  jmp code
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov ecx,[eqgame.exe+3F9490]
+
+dealloc(newmem)
+
+dealloc(changeheight_targetsize)
+unregistersymbol(changeheight_targetsize)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+FD9FB
+
+"eqgame.exe"+FD9DF: 6A 01                 -  push 01
+"eqgame.exe"+FD9E1: 8D 45 FE              -  lea eax,[ebp-02]
+"eqgame.exe"+FD9E4: 6A 02                 -  push 02
+"eqgame.exe"+FD9E6: 50                    -  push eax
+"eqgame.exe"+FD9E7: 68 FE 41 00 00        -  push 000041FE
+"eqgame.exe"+FD9EC: 68 FC 52 79 00        -  push eqgame.exe+3952FC
+"eqgame.exe"+FD9F1: E8 24 0B 05 00        -  call eqgame.exe+14E51A
+"eqgame.exe"+FD9F6: 83 C4 14              -  add esp,14
+"eqgame.exe"+FD9F9: C9                    -  leave 
+"eqgame.exe"+FD9FA: C3                    -  ret 
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+FD9FB: 8B 0D 90 94 7F 00     -  mov ecx,[eqgame.exe+3F9490]
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+FDA01: 6A 01                 -  push 01
+"eqgame.exe"+FDA03: 68 11 01 00 00        -  push 00000111
+"eqgame.exe"+FDA08: 6A 00                 -  push 00
+"eqgame.exe"+FDA0A: 68 D3 33 00 00        -  push 000033D3
+"eqgame.exe"+FDA0F: E8 EA 34 05 00        -  call eqgame.exe+150EFE
+"eqgame.exe"+FDA14: 8B 0D 78 94 80 00     -  mov ecx,[eqgame.exe+409478]
+"eqgame.exe"+FDA1A: 50                    -  push eax
+"eqgame.exe"+FDA1B: E8 79 A5 03 00        -  call eqgame.exe+137F99
+"eqgame.exe"+FDA20: C9                    -  leave 
+"eqgame.exe"+FDA21: C3                    -  ret 
+}
+</AssemblerScript>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>444</ID>
+              <Description>"Target New Size (Default = 5.0)"</Description>
+              <LastState Value="5" Activated="0" RealAddress="0FF31000"/>
+              <Color>80000008</Color>
+              <VariableType>Float</VariableType>
+              <Address>changeheight_targetsize</Address>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>442</ID>
+          <Description>"Type "/face" to face towards your target (rotate to direction of target)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+1431D2)
+define(bytes,57 6A 0D 53 68 59 30 00 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(code2)
+label(return)
+
+newmem:
+
+code:
+  mov eax,[eqgame.exe+3F94EC] // target
+  test eax,eax // check if target is NULL
+  jz code2
+  mov ecx,[eqgame.exe+3F94CC] // player
+  push eax // target
+  call eqgame.exe+108120 // EQPlayer::FacePlayer
+  jmp code2
+
+code2:
+  jmp 005436CA // jump to the end of the /face function
+
+address:
+  jmp code
+  nop
+  nop
+  nop
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // push edi
+  // push 0D
+  // push ebx
+  // push 00003059
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+1431D2
+
+"eqgame.exe"+1431A4: 3B C3                 -  cmp eax,ebx
+"eqgame.exe"+1431A6: 0F 84 1E 05 00 00     -  je eqgame.exe+1436CA
+"eqgame.exe"+1431AC: F6 81 3C 0D 00 00 0C  -  test byte ptr [ecx+00000D3C],0C
+"eqgame.exe"+1431B3: 75 0C                 -  jne eqgame.exe+1431C1
+"eqgame.exe"+1431B5: 38 99 62 13 00 00     -  cmp [ecx+00001362],bl
+"eqgame.exe"+1431BB: 0F 84 09 05 00 00     -  je eqgame.exe+1436CA
+"eqgame.exe"+1431C1: 38 98 B0 03 00 00     -  cmp [eax+000003B0],bl
+"eqgame.exe"+1431C7: 75 17                 -  jne eqgame.exe+1431E0
+"eqgame.exe"+1431C9: 39 5D 10              -  cmp [ebp+10],ebx
+"eqgame.exe"+1431CC: 0F 85 F8 04 00 00     -  jne eqgame.exe+1436CA
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+1431D2: 57                    -  push edi
+"eqgame.exe"+1431D3: 6A 0D                 -  push 0D
+"eqgame.exe"+1431D5: 53                    -  push ebx
+"eqgame.exe"+1431D6: 68 59 30 00 00        -  push 00003059
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+1431DB: E9 4D ED FF FF        -  jmp eqgame.exe+141F2D
+"eqgame.exe"+1431E0: 39 1D 58 F2 7C 00     -  cmp [eqgame.exe+3CF258],ebx
+"eqgame.exe"+1431E6: 0F 84 4A 01 00 00     -  je eqgame.exe+143336
+"eqgame.exe"+1431EC: 39 5D 10              -  cmp [ebp+10],ebx
+"eqgame.exe"+1431EF: 0F 85 D5 04 00 00     -  jne eqgame.exe+1436CA
+"eqgame.exe"+1431F5: 38 1D D8 92 80 00     -  cmp [eqgame.exe+4092D8],bl
+"eqgame.exe"+1431FB: 74 18                 -  je eqgame.exe+143215
+"eqgame.exe"+1431FD: 8B 0D DC D5 63 00     -  mov ecx,[eqgame.exe+23D5DC]
+"eqgame.exe"+143203: 3B CB                 -  cmp ecx,ebx
+"eqgame.exe"+143205: 0F 84 BF 04 00 00     -  je eqgame.exe+1436CA
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>424</ID>
+          <Description>"Follow Non-Group Members"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+FC2A7:
+db 90 90 90 90 90 90
+// nop
+// nop
+// nop
+// nop
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+FC2A7:
+db 0F 84 5F 01 00 00
+// je eqgame.exe+FC40C
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>423</ID>
+          <Description>"Follow NPCs or mobs"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+FC278:
+db 90 90 90 90 90 90
+// nop
+// nop
+// nop
+// nop
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+FC278:
+db 0F 85 8E 01 00 00
+// jne eqgame.exe+FC40C
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>446</ID>
+          <Description>"Follow at full movement speed (no slowdown when near target)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+107DED)
+define(bytes,88 1D 6D 85 79 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+newmem:
+
+code:
+  mov bl,01
+  mov [eqgame.exe+39856D],bl
+  jmp return
+
+address:
+  jmp code
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // mov [eqgame.exe+39856D],bl
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+107DED
+
+"eqgame.exe"+107DCD: D8 58 5C                       -  fcomp dword ptr [eax+5C]
+"eqgame.exe"+107DD0: DF E0                          -  fnstsw ax
+"eqgame.exe"+107DD2: 9E                             -  sahf 
+"eqgame.exe"+107DD3: 77 0E                          -  ja eqgame.exe+107DE3
+"eqgame.exe"+107DD5: D9 46 5C                       -  fld dword ptr [esi+5C]
+"eqgame.exe"+107DD8: D8 1D 4C 6F 5E 00              -  fcomp dword ptr [eqgame.exe+1E6F4C]
+"eqgame.exe"+107DDE: DF E0                          -  fnstsw ax
+"eqgame.exe"+107DE0: 9E                             -  sahf 
+"eqgame.exe"+107DE1: 75 12                          -  jne eqgame.exe+107DF5
+"eqgame.exe"+107DE3: C7 05 00 86 79 00 01 00 00 00  -  mov [eqgame.exe+398600],00000001
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+107DED: 88 1D 6D 85 79 00              -  mov [eqgame.exe+39856D],bl
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+107DF3: EB 11                          -  jmp eqgame.exe+107E06
+"eqgame.exe"+107DF5: C7 05 00 86 79 00 01 00 00 00  -  mov [eqgame.exe+398600],00000001
+"eqgame.exe"+107DFF: C6 05 6D 85 79 00 01           -  mov byte ptr [eqgame.exe+39856D],01
+"eqgame.exe"+107E06: 5E                             -  pop esi
+"eqgame.exe"+107E07: 5B                             -  pop ebx
+"eqgame.exe"+107E08: C9                             -  leave 
+"eqgame.exe"+107E09: C3                             -  ret 
+"eqgame.exe"+107E0A: 55                             -  push ebp
+"eqgame.exe"+107E0B: 8B EC                          -  mov ebp,esp
+"eqgame.exe"+107E0D: 81 EC 00 01 00 00              -  sub esp,00000100
+}
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>420</ID>
+          <Description>"Follow from any distance (follow targets that are very far away)"</Description>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>[ENABLE]
+
+eqgame.exe+107BAC:
+db EB 79
+// jmp eqgame.exe+107C27
+
+[DISABLE]
+
+eqgame.exe+107BAC:
+db 76 79
+// jna eqgame.exe+107C27
+</AssemblerScript>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>425</ID>
+          <Description>"--&gt; Follow your target but stay back by this much distance (distance between you and the target)"</Description>
+          <Options moHideChildren="1"/>
+          <LastState Activated="1"/>
+          <Color>80000008</Color>
+          <VariableType>Auto Assembler Script</VariableType>
+          <AssemblerScript>define(address,"eqgame.exe"+107D92)
+define(bytes,D8 05 D4 44 5E 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+registersymbol(followdistance)
+alloc(followdistance,4)
+
+label(code)
+label(return)
+
+followdistance:
+dd (float)0.0
+
+newmem:
+
+code:
+  fadd dword ptr [followdistance]
+  jmp return
+
+address:
+  jmp code
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // fadd dword ptr [eqgame.exe+1E44D4]
+
+dealloc(newmem)
+
+dealloc(followdistance)
+unregistersymbol(followdistance)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+107D92
+
+"eqgame.exe"+107D6E: D8 46 54                       -  fadd dword ptr [esi+54]
+"eqgame.exe"+107D71: D9 5E 54                       -  fstp dword ptr [esi+54]
+"eqgame.exe"+107D74: D9 46 54                       -  fld dword ptr [esi+54]
+"eqgame.exe"+107D77: 51                             -  push ecx
+"eqgame.exe"+107D78: 8B 0D 10 95 7F 00              -  mov ecx,[eqgame.exe+3F9510]
+"eqgame.exe"+107D7E: D9 1C 24                       -  fstp dword ptr [esp]
+"eqgame.exe"+107D81: E8 67 B1 F9 FF                 -  call eqgame.exe+A2EED
+"eqgame.exe"+107D86: D9 5E 54                       -  fstp dword ptr [esi+54]
+"eqgame.exe"+107D89: 8B 8E 84 00 00 00              -  mov ecx,[esi+00000084]
+"eqgame.exe"+107D8F: D9 45 FC                       -  fld dword ptr [ebp-04]
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+107D92: D8 05 D4 44 5E 00              -  fadd dword ptr [eqgame.exe+1E44D4]
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+107D98: D8 99 F0 02 00 00              -  fcomp dword ptr [ecx+000002F0]
+"eqgame.exe"+107D9E: DF E0                          -  fnstsw ax
+"eqgame.exe"+107DA0: 9E                             -  sahf 
+"eqgame.exe"+107DA1: 76 0D                          -  jna eqgame.exe+107DB0
+"eqgame.exe"+107DA3: D9 EE                          -  fldz 
+"eqgame.exe"+107DA5: 89 1D 00 86 79 00              -  mov [eqgame.exe+398600],ebx
+"eqgame.exe"+107DAB: D9 5E 5C                       -  fstp dword ptr [esi+5C]
+"eqgame.exe"+107DAE: EB 56                          -  jmp eqgame.exe+107E06
+"eqgame.exe"+107DB0: D9 45 FC                       -  fld dword ptr [ebp-04]
+"eqgame.exe"+107DB3: D8 05 D0 86 5E 00              -  fadd dword ptr [eqgame.exe+1E86D0]
+}
+</AssemblerScript>
+          <CheatEntries>
+            <CheatEntry>
+              <ID>426</ID>
+              <Description>"Follow Distance (Default = 15.0, set to 0.0 to follow as close as possible)"</Description>
+              <LastState Value="0" Activated="0" RealAddress="0FF61000"/>
+              <Color>80000008</Color>
+              <VariableType>Float</VariableType>
+              <Address>followdistance</Address>
+            </CheatEntry>
+          </CheatEntries>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>18</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>417</ID>
+      <Description>"Show FPS (frames per second, debug information)"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+
+[007F9C50]+A4F770:
+db 01
+ 
+[DISABLE]
+
+[007F9C50]+A4F770:
+db 00
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>415</ID>
+      <Description>"Attach Camera to Target (see what your target sees)"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>define(address,"eqgame.exe"+1054D2)
+define(bytes,57 8B CE E8 AA 5E FD FF)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(code2)
+label(return)
+
+newmem:
+
+code:
+  mov ecx,[eqgame.exe+3F94EC] // target
+  test ecx,ecx // check if target is NULL
+  jz code2
+  mov edi,ecx // move target to edi
+  jmp code2
+
+code2:
+  push edi // attach to edi
+  mov ecx,esi
+  call eqgame.exe+DB384 // attach camera to spawn
+  jmp return
+
+address:
+  jmp code
+  nop
+  nop
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // push edi
+  // mov ecx,esi
+  // call eqgame.exe+DB384
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+1054D2
+
+"eqgame.exe"+1054B6: 77 12                 -  ja eqgame.exe+1054CA
+"eqgame.exe"+1054B8: 0F B6 45 EC           -  movzx eax,byte ptr [ebp-14]
+"eqgame.exe"+1054BC: 50                    -  push eax
+"eqgame.exe"+1054BD: 8B CE                 -  mov ecx,esi
+"eqgame.exe"+1054BF: 0F B6 45 EF           -  movzx eax,byte ptr [ebp-11]
+"eqgame.exe"+1054C3: 50                    -  push eax
+"eqgame.exe"+1054C4: 57                    -  push edi
+"eqgame.exe"+1054C5: E8 AF 58 FD FF        -  call eqgame.exe+DAD79
+"eqgame.exe"+1054CA: 3B 1D C0 D6 63 00     -  cmp ebx,[eqgame.exe+23D6C0]
+"eqgame.exe"+1054D0: 75 08                 -  jne eqgame.exe+1054DA
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+1054D2: 57                    -  push edi
+"eqgame.exe"+1054D3: 8B CE                 -  mov ecx,esi
+"eqgame.exe"+1054D5: E8 AA 5E FD FF        -  call eqgame.exe+DB384
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+1054DA: 6A 01                 -  push 01
+"eqgame.exe"+1054DC: 58                    -  pop eax
+"eqgame.exe"+1054DD: 5F                    -  pop edi
+"eqgame.exe"+1054DE: 5E                    -  pop esi
+"eqgame.exe"+1054DF: 5B                    -  pop ebx
+"eqgame.exe"+1054E0: C9                    -  leave 
+"eqgame.exe"+1054E1: C2 04 00              -  ret 0004
+"eqgame.exe"+1054E4: 56                    -  push esi
+"eqgame.exe"+1054E5: 8B F1                 -  mov esi,ecx
+"eqgame.exe"+1054E7: 6A 64                 -  push 64
+}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>54</ID>
+      <Description>"--&gt; Camera Field of View Hack"</Description>
+      <Options moHideChildren="1"/>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>define(address,"EQGfx_Dx8.DLL"+41977)
+define(bytes,D8 0D D0 72 E2 03)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+registersymbol(camera_fieldofviewmodifier)
+alloc(camera_fieldofviewmodifier,4)
+
+label(code)
+label(return)
+
+camera_fieldofviewmodifier:
+dd (float)0.50
+
+newmem:
+
+code:
+  fmul dword ptr [camera_fieldofviewmodifier]
+  jmp return
+
+address:
+  jmp code
+  nop
+return:
+
+[DISABLE]
+
+address:
+  db bytes
+  // fmul dword ptr [EQGfx_Dx8.t3dMemoryLeakCheckOnExit+45F20]
+
+dealloc(newmem)
+
+dealloc(camera_fieldofviewmodifier)
+unregistersymbol(camera_fieldofviewmodifier)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "EQGfx_Dx8.DLL"+41977
+
+"EQGfx_Dx8.DLL"+4195A: 83 C8 FF           -  or eax,-01
+"EQGfx_Dx8.DLL"+4195D: C3                 -  ret 
+"EQGfx_Dx8.DLL"+4195E: D9 44 24 10        -  fld dword ptr [esp+10]
+"EQGfx_Dx8.DLL"+41962: D8 5C 24 14        -  fcomp dword ptr [esp+14]
+"EQGfx_Dx8.DLL"+41966: DF E0              -  fnstsw ax
+"EQGfx_Dx8.DLL"+41968: F6 C4 01           -  test ah,01
+"EQGfx_Dx8.DLL"+4196B: 75 06              -  jne EQGfx_Dx8.DLL+41973
+"EQGfx_Dx8.DLL"+4196D: B8 FE FF FF FF     -  mov eax,FFFFFFFE
+"EQGfx_Dx8.DLL"+41972: C3                 -  ret 
+"EQGfx_Dx8.DLL"+41973: D9 44 24 08        -  fld dword ptr [esp+08]
+// ---------- INJECTING HERE ----------
+"EQGfx_Dx8.DLL"+41977: D8 0D D0 72 E2 03  -  fmul dword ptr [EQGfx_Dx8.DLL+C72D0]
+// ---------- DONE INJECTING  ----------
+"EQGfx_Dx8.DLL"+4197D: 8B 44 24 0C        -  mov eax,[esp+0C]
+"EQGfx_Dx8.DLL"+41981: 89 41 24           -  mov [ecx+24],eax
+"EQGfx_Dx8.DLL"+41984: 8B 44 24 10        -  mov eax,[esp+10]
+"EQGfx_Dx8.DLL"+41988: 89 41 28           -  mov [ecx+28],eax
+"EQGfx_Dx8.DLL"+4198B: 8B 44 24 14        -  mov eax,[esp+14]
+"EQGfx_Dx8.DLL"+4198F: D9 59 20           -  fstp dword ptr [ecx+20]
+"EQGfx_Dx8.DLL"+41992: D9 05 34 74 E2 03  -  fld dword ptr [EQGfx_Dx8.DLL+C7434]
+"EQGfx_Dx8.DLL"+41998: D8 64 24 10        -  fsub dword ptr [esp+10]
+"EQGfx_Dx8.DLL"+4199C: 89 41 30           -  mov [ecx+30],eax
+"EQGfx_Dx8.DLL"+4199F: 8B C2              -  mov eax,edx
+}
+</AssemblerScript>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>55</ID>
+          <Description>"FOV Multiplier (Default = 0.50)"</Description>
+          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>camera_fieldofviewmodifier</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>421</ID>
+      <Description>"Show NPCs in /who (see both players and NPCs in the /who list)"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+
+eqgame.exe+12FE80:
+db 90 90 90 90 90 90
+// nop
+// nop
+// nop
+// nop
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+12FE80:
+db 0F 85 DA 01 00 00
+// jne eqgame.exe+130060
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>47</ID>
+      <Description>"GM Walk (walk in the sky, fly anywhere)"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>define(address,"eqgame.exe"+14DF3D)
+define(bytes,0F 85 F5 00 00 00)
+
+[ENABLE]
+
+assert(address,bytes)
+alloc(newmem,$1000)
+
+label(code)
+label(return)
+
+// disable gravity
+[[eqgame.exe+3F94CC]+84]+90:
+db 00
+
+newmem:
+
+code:
+  jmp eqgame.exe+14E038
+  jmp return
+
+address:
+  jmp code
+  nop
+return:
+
+[DISABLE]
+
+// enable gravity
+[[eqgame.exe+3F94CC]+84]+90:
+db 01
+
+address:
+  db bytes
+  // jne eqgame.exe+14E038
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "eqgame.exe"+14DF3D
+
+"eqgame.exe"+14DF10: 75 1A                          -  jne eqgame.exe+14DF2C
+"eqgame.exe"+14DF12: D9 05 44 85 5E 00              -  fld dword ptr [eqgame.exe+1E8544]
+"eqgame.exe"+14DF18: D9 55 FC                       -  fst dword ptr [ebp-04]
+"eqgame.exe"+14DF1B: D9 5D F0                       -  fstp dword ptr [ebp-10]
+"eqgame.exe"+14DF1E: D9 05 E8 8D 5E 00              -  fld dword ptr [eqgame.exe+1E8DE8]
+"eqgame.exe"+14DF24: D9 55 F8                       -  fst dword ptr [ebp-08]
+"eqgame.exe"+14DF27: E9 A4 00 00 00                 -  jmp eqgame.exe+14DFD0
+"eqgame.exe"+14DF2C: 83 7D 10 00                    -  cmp dword ptr [ebp+10],00
+"eqgame.exe"+14DF30: 0F 85 02 01 00 00              -  jne eqgame.exe+14E038
+"eqgame.exe"+14DF36: 80 BB 90 00 00 00 01           -  cmp byte ptr [ebx+00000090],01
+// ---------- INJECTING HERE ----------
+"eqgame.exe"+14DF3D: 0F 85 F5 00 00 00              -  jne eqgame.exe+14E038
+// ---------- DONE INJECTING  ----------
+"eqgame.exe"+14DF43: D9 05 28 89 79 00              -  fld dword ptr [eqgame.exe+398928]
+"eqgame.exe"+14DF49: D8 4D 08                       -  fmul dword ptr [ebp+08]
+"eqgame.exe"+14DF4C: D8 6E 20                       -  fsubr dword ptr [esi+20]
+"eqgame.exe"+14DF4F: D9 5E 20                       -  fstp dword ptr [esi+20]
+"eqgame.exe"+14DF52: 8A 83 A1 00 00 00              -  mov al,[ebx+000000A1]
+"eqgame.exe"+14DF58: 84 C0                          -  test al,al
+"eqgame.exe"+14DF5A: 75 4D                          -  jne eqgame.exe+14DFA9
+"eqgame.exe"+14DF5C: 85 FF                          -  test edi,edi
+"eqgame.exe"+14DF5E: 74 0B                          -  je eqgame.exe+14DF6B
+"eqgame.exe"+14DF60: 8B CF                          -  mov ecx,edi
+}
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>49</ID>
+      <Description>"NPC Walk (walk through doors and climb over objects)"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+
+eqgame.exe+1048BD:
+db EB 28
+// jmp eqgame.exe+1048E7
+ 
+[DISABLE]
+
+eqgame.exe+1048BD:
+db 75 28
+// jne eqgame.exe+1048E7
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>430</ID>
+      <Description>"Always have Full Stamina (placebo)"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+
+eqgame.exe+D06CF:
+db EB 0D
+// jmp eqgame.exe+D06DE
+// jump to the part of the code
+// that sets the stamina to full
+
+[DISABLE]
+eqgame.exe+D06CF:
+db 7E 09
+// jle eqgame.exe+D06DA
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>439</ID>
+      <Description>"Keep target targetted after it dies (target the corpse)"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+
+eqgame.exe+129090:
+db 90 90 90 90 90 90
+// nop
+// nop
+// nop
+// nop
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+129090:
+db 89 1D EC 94 7F 00
+// mov [eqgame.exe+3F94EC],ebx
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>440</ID>
+      <Description>"No Auto Target Attacker (do not automatically target mobs that attack you)"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+
+eqgame.exe+129AC5:
+db 90 90 90 90 90
+// nop
+// nop
+// nop
+// nop
+// nop
+
+[DISABLE]
+
+eqgame.exe+129AC5:
+db A3 EC 94 7F 00
+// mov [eqgame.exe+3F94EC],eax
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>441</ID>
+      <Description>"Modified Hunger and Thirst"</Description>
+      <LastState Activated="0"/>
+      <Color>80000008</Color>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>[ENABLE]
+
+eqgame.exe+E4809:
+db EB 0C
+// jmp eqgame.exe+E4817
+
+eqgame.exe+E481D:
+db EB 0C
+// jmp eqgame.exe+E482B
+ 
+[DISABLE]
+
+eqgame.exe+E4809:
+db 7D 0C
+// jnl eqgame.exe+E4817
+
+eqgame.exe+E481D:
+db 7D 0C
+// jnl eqgame.exe+E482B
+</AssemblerScript>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>56</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>232</ID>
+      <Description>"EverQuest Client HWND"</Description>
+      <LastState Value="017704F8" Activated="0" RealAddress="00798540"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>798540</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>10</ID>
+      <Description>"EQW Window is foreground window"</Description>
+      <LastState Value="0" Activated="0" RealAddress="10008000"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>eqw.dll+8000</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>11</ID>
+      <Description>"DINPUT Window is foreground window"</Description>
+      <LastState Value="0" Activated="0" RealAddress="744DC1D4"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>DINPUT8.dll+2C1D4</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>17</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>16</ID>
+      <Description>"Classic UI"</Description>
+      <LastState Value="00000000" Activated="0" RealAddress="007F9574"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9574</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>19</ID>
+          <Description>"0xE94 Spell Book Scribe Spell Timer"</Description>
+          <LastState Value="??" Activated="0" RealAddress="00000E94"/>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>E94</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>20</ID>
+          <Description>"0xE96 Spell Book Memorize Spell Timer"</Description>
+          <LastState Value="??" Activated="0" RealAddress="00000E96"/>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>007F9574</Address>
+          <Offsets>
+            <Offset>E96</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>40</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>23</ID>
+      <Description>"World"</Description>
+      <LastState Value="04778FF8" Activated="0" RealAddress="007F9494"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F9494</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>24</ID>
+          <Description>"0x04 Hour"</Description>
+          <LastState Value="1" Activated="0" RealAddress="04778FFC"/>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9494</Address>
+          <Offsets>
+            <Offset>4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>25</ID>
+          <Description>"0x05 Minute"</Description>
+          <LastState Value="25" Activated="0" RealAddress="04778FFD"/>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9494</Address>
+          <Offsets>
+            <Offset>5</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>26</ID>
+          <Description>"0x06 Day"</Description>
+          <LastState Value="10" Activated="0" RealAddress="04778FFE"/>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9494</Address>
+          <Offsets>
+            <Offset>6</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>27</ID>
+          <Description>"0x07 Month"</Description>
+          <LastState Value="9" Activated="0" RealAddress="04778FFF"/>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F9494</Address>
+          <Offsets>
+            <Offset>7</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>28</ID>
+          <Description>"0x08 Year"</Description>
+          <LastState Value="3120" Activated="0" RealAddress="04779000"/>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>007F9494</Address>
+          <Offsets>
+            <Offset>8</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>39</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>57</ID>
+      <Description>"Player Character"</Description>
+      <LastState Value="0CA6C570" Activated="0" RealAddress="007F94E8"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F94E8</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>58</ID>
+          <Description>"0x9A Mana"</Description>
+          <LastState Value="20" Activated="0" RealAddress="0CA6C60A"/>
+          <Color>80000008</Color>
+          <VariableType>2 Bytes</VariableType>
+          <Address>007F94E8</Address>
+          <Offsets>
+            <Offset>9A</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>59</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>60</ID>
+      <Description>"Target Spawn"</Description>
+      <LastState Value="00000000" Activated="0" RealAddress="007F94EC"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F94EC</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>61</ID>
+          <Description>"0x5C Movement Speed"</Description>
+          <LastState Value="??" Activated="0" RealAddress="0000005C"/>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>007F94EC</Address>
+          <Offsets>
+            <Offset>5C</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>62</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>38</ID>
+      <Description>"Target Actor"</Description>
+      <LastState Value="??" Activated="0" RealAddress="00000084"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>007F94EC</Address>
+      <Offsets>
+        <Offset>84</Offset>
+      </Offsets>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>42</ID>
+          <Description>"0x00 Camera Actor"</Description>
+          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F94EC</Address>
+          <Offsets>
+            <Offset>0</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>408</ID>
+          <Description>"0x04"</Description>
+          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>007F94EC</Address>
+          <Offsets>
+            <Offset>4</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>407</ID>
+          <Description>"0x90 Is Affected By Gravity"</Description>
+          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F94EC</Address>
+          <Offsets>
+            <Offset>90</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>41</ID>
+          <Description>"0xA0 Is Swimming Underwater (5 = True)"</Description>
+          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <Color>80000008</Color>
+          <VariableType>Byte</VariableType>
+          <Address>007F94EC</Address>
+          <Offsets>
+            <Offset>A0</Offset>
+            <Offset>84</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>227</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>220</ID>
+      <Description>"Keyboard"</Description>
+      <LastState Value="04D25CAC" Activated="0" RealAddress="008092E0"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>8092E0</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>226</ID>
+          <Description>"SHIFT is pressed"</Description>
+          <LastState Value="0" Activated="0" RealAddress="0080931C"/>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0080931C</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>162</ID>
+          <Description>"CTRL is pressed"</Description>
+          <LastState Value="0" Activated="0" RealAddress="00809320"/>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>00809320</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>159</ID>
+          <Description>"NUMLOCK is enabled"</Description>
+          <LastState Value="0" Activated="0" RealAddress="00809328"/>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>00809328</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>161</ID>
+          <Description>"ALT is pressed"</Description>
+          <LastState Value="0" Activated="0" RealAddress="0080932C"/>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0080932C</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>231</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>185</ID>
+      <Description>"Mouse"</Description>
+      <LastState Value="04C5238C" Activated="0" RealAddress="008092E4"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>008092E4</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>221</ID>
+          <Description>"X"</Description>
+          <LastState Value="976" Activated="0" RealAddress="008092E8"/>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>008092E8</Address>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>186</ID>
+          <Description>"Y"</Description>
+          <LastState Value="528" Activated="0" RealAddress="008092EC"/>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>008092EC</Address>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>222</ID>
+      <Description>"Mouse Look State"</Description>
+      <LastState Value="00010000" Activated="0" RealAddress="007985EA"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>7985EA</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>219</ID>
+      <Description>"Mouse Click State"</Description>
+      <LastState Value="00000000" Activated="0" RealAddress="00798614"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798614</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>223</ID>
+      <Description>"Mouse Button Is Held Down"</Description>
+      <LastState Value="0" Activated="0" RealAddress="00798628"/>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>00798628</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>229</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>397</ID>
+      <Description>"Camera"</Description>
+      <LastState Value="037C2E60" Activated="0" RealAddress="0063B928"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>0063B928</Address>
+      <CheatEntries>
+        <CheatEntry>
+          <ID>398</ID>
+          <Description>"0x00"</Description>
+          <LastState Value="57" Activated="0" RealAddress="037C2E60"/>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>0</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>405</ID>
+          <Description>"0x04"</Description>
+          <LastState Value="452" Activated="0" RealAddress="037C2E64"/>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>4</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>409</ID>
+          <Description>"0x08"</Description>
+          <LastState Value="C2CDFFFF" Activated="0" RealAddress="037C2E68"/>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>8</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>410</ID>
+          <Description>"0x0C"</Description>
+          <LastState Value="C340AE6C" Activated="0" RealAddress="037C2E6C"/>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>C</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>411</ID>
+          <Description>"0x10"</Description>
+          <LastState Value="C30E69E5" Activated="0" RealAddress="037C2E70"/>
+          <ShowAsHex>1</ShowAsHex>
+          <Color>80000008</Color>
+          <VariableType>4 Bytes</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>10</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>404</ID>
+          <Description>"0x20 Field of View"</Description>
+          <LastState Value="45" Activated="0" RealAddress="037C2E80"/>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>20</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>403</ID>
+          <Description>"0x24 Aspect Ratio"</Description>
+          <LastState Value="1.777777672" Activated="0" RealAddress="037C2E84"/>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>24</Offset>
+          </Offsets>
+        </CheatEntry>
+        <CheatEntry>
+          <ID>399</ID>
+          <Description>"0x30 Draw Distance"</Description>
+          <LastState Value="1000" Activated="0" RealAddress="037C2E90"/>
+          <Color>80000008</Color>
+          <VariableType>Float</VariableType>
+          <Address>0063B928</Address>
+          <Offsets>
+            <Offset>30</Offset>
+          </Offsets>
+        </CheatEntry>
+      </CheatEntries>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>412</ID>
+      <Description>"Camera Actor"</Description>
+      <LastState Value="1C8E8CE8" Activated="0" RealAddress="0063D6C0"/>
+      <ShowAsHex>1</ShowAsHex>
+      <Color>80000008</Color>
+      <VariableType>4 Bytes</VariableType>
+      <Address>eqgame.exe+23D6C0</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>435</ID>
+      <Description>"--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"</Description>
+      <LastState Value="" Activated="0" RealAddress="00000000"/>
+      <Color>80000008</Color>
+      <GroupHeader>1</GroupHeader>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>434</ID>
+      <Description>"Movement Friction/Sliding A"</Description>
+      <LastState Value="0.625" Activated="0" RealAddress="00798578"/>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>eqgame.exe+398578</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>433</ID>
+      <Description>"Movement Friction/Sliding B"</Description>
+      <LastState Value="0.8000000119" Activated="0" RealAddress="0079857C"/>
+      <Color>80000008</Color>
+      <VariableType>Float</VariableType>
+      <Address>eqgame.exe+39857C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>445</ID>
+      <Description>"Follow at full movement speed boolean"</Description>
+      <LastState Value="1" Activated="0" RealAddress="0079856D"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>0079856D</Address>
+    </CheatEntry>
+  </CheatEntries>
+  <UserdefinedSymbols/>
+</CheatTable>

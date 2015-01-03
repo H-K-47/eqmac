@@ -1,0 +1,8 @@
+[Registration Servers]
+{
+"loginserver.takproject.net:6000"
+}
+[Login Servers]
+{
+"loginserver.takproject.net:6000"
+}

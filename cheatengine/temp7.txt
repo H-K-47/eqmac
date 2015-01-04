@@ -235,7 +235,7 @@
 #define CEverQuest__GetClassDesc                           0x52D5F1
 #define CEverQuest__GetClassThreeLetterCode                0x42534C
 #define CEverQuest__GetDeityDesc                           0x52EA51
-#define CEverQuest__GetRaceDesc                            0x52EA51
+#define CEverQuest__GetRaceDesc                            0x52DB3A
 #define CEverQuest__GetTitleDesc                           0x52EB69
 #define CEverQuest__InterpretCmd                           0x54572F
 #define CEverQuest__LeftClickedOnPlayer                    0x53271E

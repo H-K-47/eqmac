@@ -1,0 +1,21 @@
+eqmain.dll skip straight to the main menu
+
+// Skip the license.txt with the I Accept button
+Offset: 255D2
+Replace This: 0F 84 BB 00 00 00
+With This: 90 90 90 90 90 90
+eqmain.dll+255D2 - 0F 84 BB 00 00 00 - je eqmain.dll+25693
+eqmain.dll+255D2 - 90 90 90 90 90 90 - nop
+
+// Skip the intro logos
+Offset: 2562A
+Replace This: 75 37
+With This: EB 37
+eqmain.dll+2562A - 75 37 - jne eqmain.dll+25663
+eqmain.dll+2562A - EB 37 - jmp eqmain.dll+25663
+
+Offset: 2569A
+Replace This: 75 90
+With This: EB 8E
+eqmain.dll+2569A - 75 37 - jnz eqmain.dll+2562C
+eqmain.dll+2569A - EB 8E - jmp eqmain.dll+2562A

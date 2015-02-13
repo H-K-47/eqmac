@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="18">
+  <CheatEntries>
+    <CheatEntry>
+      <ID>0</ID>
+      <Description>"Executable to Launch"</Description>
+      <LastState Activated="0" RealAddress="00404390"/>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>32</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>eqw.exe+4390</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>1</ID>
+      <Description>"Fix eqclient.ini"</Description>
+      <LastState Value="1" Activated="0" RealAddress="00404384"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>eqw.exe+4384</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>2</ID>
+      <Description>"Run Patch Program"</Description>
+      <LastState Value="0" Activated="0" RealAddress="00404388"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>eqw.exe+4388</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>3</ID>
+      <Description>"Play on Test Server"</Description>
+      <LastState Value="0" Activated="0" RealAddress="0040438C"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>eqw.exe+438C</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>5</ID>
+      <Description>""</Description>
+      <LastState Value="100" Activated="0" RealAddress="00404390"/>
+      <Color>80000008</Color>
+      <VariableType>Byte</VariableType>
+      <Address>eqw.exe+4390</Address>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>4</ID>
+      <Description>"Window Title"</Description>
+      <LastState Activated="0" RealAddress="004040E0"/>
+      <Color>80000008</Color>
+      <VariableType>String</VariableType>
+      <Length>32</Length>
+      <Unicode>0</Unicode>
+      <ZeroTerminate>1</ZeroTerminate>
+      <Address>004040E0</Address>
+    </CheatEntry>
+  </CheatEntries>
+  <CheatCodes>
+    <CodeEntry>
+      <Description>Code :je eqw.exe+1410</Description>
+      <Address>00401333</Address>
+      <ModuleName>eqw.exe</ModuleName>
+      <ModuleNameOffset>1333</ModuleNameOffset>
+      <Before>
+        <Byte>2D</Byte>
+        <Byte>00</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>0F</Byte>
+        <Byte>84</Byte>
+        <Byte>D7</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>48</Byte>
+        <Byte>0F</Byte>
+        <Byte>85</Byte>
+        <Byte>11</Byte>
+        <Byte>01</Byte>
+      </After>
+    </CodeEntry>
+  </CheatCodes>
+  <UserdefinedSymbols/>
+</CheatTable>

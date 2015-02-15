@@ -32,7 +32,7 @@
     <CheatEntry>
       <ID>2</ID>
       <Description>"Player Name"</Description>
-      <LastState Activated="0" RealAddress="0C2311EA"/>
+      <LastState Activated="0" RealAddress="0C2311B2"/>
       <Color>80000008</Color>
       <VariableType>String</VariableType>
       <Length>64</Length>
@@ -54,7 +54,7 @@
         <CheatEntry>
           <ID>14</ID>
           <Description>"Player Mana"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231282"/>
+          <LastState Value="0" Activated="0" RealAddress="0C23124A"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -65,7 +65,7 @@
         <CheatEntry>
           <ID>1125</ID>
           <Description>"Player CHA"</Description>
-          <LastState Value="75" Activated="0" RealAddress="0C23128C"/>
+          <LastState Value="75" Activated="0" RealAddress="0C231254"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -76,7 +76,7 @@
         <CheatEntry>
           <ID>478</ID>
           <Description>"Player Hunger"</Description>
-          <LastState Value="4650" Activated="0" RealAddress="0C231F3C"/>
+          <LastState Value="4050" Activated="0" RealAddress="0C231F04"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -87,7 +87,7 @@
         <CheatEntry>
           <ID>479</ID>
           <Description>"Player Thirst"</Description>
-          <LastState Value="4650" Activated="0" RealAddress="0C231F40"/>
+          <LastState Value="4050" Activated="0" RealAddress="0C231F08"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -98,7 +98,7 @@
         <CheatEntry>
           <ID>480</ID>
           <Description>"Player Hunger/Thirst related"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C232546"/>
+          <LastState Value="0" Activated="0" RealAddress="0C23250E"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94E8</Address>
@@ -123,7 +123,7 @@
         <CheatEntry>
           <ID>471</ID>
           <Description>"Player Heading (Yaw)"</Description>
-          <LastState Value="286.4968567" Activated="0" RealAddress="0C5F9E44"/>
+          <LastState Value="99.297966" Activated="0" RealAddress="0C5F9E44"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94CC</Address>
@@ -169,7 +169,7 @@
         <CheatEntry>
           <ID>775</ID>
           <Description>"Player Race"</Description>
-          <LastState Value="4" Activated="0" RealAddress="0C5F9E9A"/>
+          <LastState Value="1" Activated="0" RealAddress="0C5F9E9A"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94CC</Address>
@@ -180,7 +180,7 @@
         <CheatEntry>
           <ID>774</ID>
           <Description>"Player Light"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C5F9EA2"/>
+          <LastState Value="9" Activated="0" RealAddress="0C5F9EA2"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94CC</Address>
@@ -191,7 +191,7 @@
         <CheatEntry>
           <ID>470</ID>
           <Description>"Player Height / Size"</Description>
-          <LastState Value="5" Activated="0" RealAddress="0C5F9EE0"/>
+          <LastState Value="6" Activated="0" RealAddress="0C5F9EE0"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94CC</Address>
@@ -214,7 +214,7 @@
             <CheatEntry>
               <ID>974</ID>
               <Description>"0x00"</Description>
-              <LastState Value="14BB7DC0" Activated="0" RealAddress="0C5F1DF0"/>
+              <LastState Value="181A47E0" Activated="0" RealAddress="0C5F1DF0"/>
               <ShowAsHex>1</ShowAsHex>
               <Color>80000008</Color>
               <VariableType>4 Bytes</VariableType>
@@ -227,7 +227,7 @@
                 <CheatEntry>
                   <ID>975</ID>
                   <Description>"0x60 Actor User Data (spawn info)"</Description>
-                  <LastState Value="0C5F9DF0" Activated="0" RealAddress="14BB7E20"/>
+                  <LastState Value="0C5F9DF0" Activated="0" RealAddress="181A4840"/>
                   <ShowAsHex>1</ShowAsHex>
                   <Color>80000008</Color>
                   <VariableType>4 Bytes</VariableType>
@@ -274,7 +274,7 @@
     <CheatEntry>
       <ID>486</ID>
       <Description>"Zone ID"</Description>
-      <LastState Value="54" Activated="0" RealAddress="007B9648"/>
+      <LastState Value="202" Activated="0" RealAddress="007B9648"/>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>007B9648</Address>
@@ -304,7 +304,7 @@
     <CheatEntry>
       <ID>740</ID>
       <Description>"Zone Min Clip (draw distance)"</Description>
-      <LastState Value="300" Activated="0" RealAddress="00798918"/>
+      <LastState Value="800" Activated="0" RealAddress="00798918"/>
       <Color>80000008</Color>
       <VariableType>Float</VariableType>
       <Address>00798784+194</Address>
@@ -312,7 +312,7 @@
     <CheatEntry>
       <ID>742</ID>
       <Description>"Zone Max Clip (draw distance)"</Description>
-      <LastState Value="325" Activated="0" RealAddress="00798984"/>
+      <LastState Value="1400" Activated="0" RealAddress="00798984"/>
       <Color>80000008</Color>
       <VariableType>Float</VariableType>
       <Address>00798784+200</Address>
@@ -320,7 +320,7 @@
     <CheatEntry>
       <ID>43</ID>
       <Description>"Fog Draw Distance"</Description>
-      <LastState Value="324.9999695" Activated="0" RealAddress="035EF8D0"/>
+      <LastState Value="1400" Activated="0" RealAddress="035EF8D0"/>
       <Color>80000008</Color>
       <VariableType>Float</VariableType>
       <Address>EQGfx_Dx8.dll+A4F8D0</Address>
@@ -4991,7 +4991,8 @@ textcolor_npc:
   jne textcolor_npc_moving
 
   //push 01 // dark grey
-  push 04 // dark blue
+  //push 04 // dark blue
+  push 12 // light blue
   jmp textcolor_end
 
 textcolor_npc_moving:
@@ -5106,7 +5107,7 @@ address:
         <CheatEntry>
           <ID>840</ID>
           <Description>"Height Filter (Z-Axis) (Set to 0 to disable and see all spawns)"</Description>
-          <LastState Value="0" Activated="0" RealAddress="00A901FC"/>
+          <LastState Value="0" Activated="0" RealAddress="16ED01FC"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>maphack_height_filter</Address>
@@ -5114,7 +5115,7 @@ address:
         <CheatEntry>
           <ID>861</ID>
           <Description>"Arrow Distance (directional indicator)"</Description>
-          <LastState Value="1.552991826E-38" Activated="0" RealAddress="00A90194"/>
+          <LastState Value="40" Activated="0" RealAddress="16ED0194"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>maphack_arrow_distance</Address>
@@ -5148,13 +5149,6 @@ address:
           <GroupHeader>1</GroupHeader>
         </CheatEntry>
         <CheatEntry>
-          <ID>845</ID>
-          <Description>"LIGHT BLUE = NPC that is moving"</Description>
-          <LastState Value="" Activated="0" RealAddress="00000000"/>
-          <Color>80000008</Color>
-          <GroupHeader>1</GroupHeader>
-        </CheatEntry>
-        <CheatEntry>
           <ID>846</ID>
           <Description>"YELLOW = Corpse"</Description>
           <LastState Value="" Activated="0" RealAddress="00000000"/>
@@ -5178,7 +5172,7 @@ address:
         <CheatEntry>
           <ID>848</ID>
           <Description>"Origin X"</Description>
-          <LastState Value="11088032" Activated="0" RealAddress="00A90150"/>
+          <LastState Value="512" Activated="0" RealAddress="16ED0150"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>maphack_origin_x</Address>
@@ -5186,7 +5180,7 @@ address:
         <CheatEntry>
           <ID>849</ID>
           <Description>"Origin Y"</Description>
-          <LastState Value="128" Activated="0" RealAddress="00A90154"/>
+          <LastState Value="384" Activated="0" RealAddress="16ED0154"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>maphack_origin_y</Address>
@@ -5194,7 +5188,7 @@ address:
         <CheatEntry>
           <ID>850</ID>
           <Description>"Player X Float"</Description>
-          <LastState Value="0" Activated="0" RealAddress="00A90160"/>
+          <LastState Value="-530.5115356" Activated="0" RealAddress="16ED0160"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -5203,7 +5197,7 @@ address:
         <CheatEntry>
           <ID>851</ID>
           <Description>"Player Y Float"</Description>
-          <LastState Value="0" Activated="0" RealAddress="00A90164"/>
+          <LastState Value="-385.0635681" Activated="0" RealAddress="16ED0164"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -5212,7 +5206,7 @@ address:
         <CheatEntry>
           <ID>852</ID>
           <Description>"Player X"</Description>
-          <LastState Value="1" Activated="0" RealAddress="00A90158"/>
+          <LastState Value="-530" Activated="0" RealAddress="16ED0158"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -5221,7 +5215,7 @@ address:
         <CheatEntry>
           <ID>853</ID>
           <Description>"Player Y"</Description>
-          <LastState Value="2" Activated="0" RealAddress="00A9015C"/>
+          <LastState Value="-385" Activated="0" RealAddress="16ED015C"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -5230,7 +5224,7 @@ address:
         <CheatEntry>
           <ID>854</ID>
           <Description>"Player Z"</Description>
-          <LastState Value="11075780" Activated="0" RealAddress="00A90168"/>
+          <LastState Value="-125" Activated="0" RealAddress="16ED0168"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -5239,7 +5233,7 @@ address:
         <CheatEntry>
           <ID>855</ID>
           <Description>"Player Heading"</Description>
-          <LastState Value="1.552072013E-38" Activated="0" RealAddress="00A9016C"/>
+          <LastState Value="99.297966" Activated="0" RealAddress="16ED016C"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -5248,7 +5242,7 @@ address:
         <CheatEntry>
           <ID>857</ID>
           <Description>"Arrow Add X"</Description>
-          <LastState Value="0" Activated="0" RealAddress="00A9018C"/>
+          <LastState Value="37.54367828" Activated="0" RealAddress="16ED018C"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -5257,7 +5251,7 @@ address:
         <CheatEntry>
           <ID>858</ID>
           <Description>"Arrow Add Y"</Description>
-          <LastState Value="0" Activated="0" RealAddress="00A90190"/>
+          <LastState Value="-13.79933834" Activated="0" RealAddress="16ED0190"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -5266,7 +5260,7 @@ address:
         <CheatEntry>
           <ID>859</ID>
           <Description>"Arrow X"</Description>
-          <LastState Value="0" Activated="0" RealAddress="00A90184"/>
+          <LastState Value="474" Activated="0" RealAddress="16ED0184"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -5275,7 +5269,7 @@ address:
         <CheatEntry>
           <ID>860</ID>
           <Description>"Arrow Y"</Description>
-          <LastState Value="0" Activated="0" RealAddress="00A90188"/>
+          <LastState Value="371" Activated="0" RealAddress="16ED0188"/>
           <ShowAsSigned>1</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -5414,6 +5408,8 @@ spawn_loop:
   mov eax,[eqgame.exe+23B924] // WorldSpaceToScreenSpace camera view angles pointer
   push eax
   call EQGfx_Dx8.t3dWorldSpaceToScreenSpace // EQGfx_Dx8.dll+5F8D0
+  cmp eax,FFFF3D3E // point not on screen, not viewable, skip it
+  je spawn_next
 
   fld [esphack_text_y]
   call eqgame.exe+1C718C // _ftol
@@ -5422,31 +5418,6 @@ spawn_loop:
   fld [esphack_text_x]
   call eqgame.exe+1C718C // _ftol
   mov [esphack_text_x],eax
-
-  /////////////////////////////////////////////////
-
-  // check if text is out of bounds of camera view
-  // so we can cull it or ignore it
-
-  mov ecx,[esphack_text_y]
-  cmp ecx,0
-  jle spawn_next
-
-  mov ecx,[esphack_text_x]
-  cmp ecx,0
-  jle spawn_next
-
-  mov ecx,[eqgame.exe+23B928] // camera
-  mov ecx,[ecx+00000048] // resolution width
-  cmp [esphack_text_x],ecx
-  jge spawn_next
-
-  mov ecx,[eqgame.exe+23B928] // camera
-  mov ecx,[ecx+0000004C] // resolution height
-  cmp [esphack_text_y],ecx
-  jge spawn_next
-
-  /////////////////////////////////////////////////
 
   mov ecx,[esphack_spawn_holder]
   test ecx,ecx // check if spawn is NULL
@@ -5580,7 +5551,9 @@ textcolor_npc:
   jne textcolor_npc_moving
 
   //push 01 // dark grey
-  push 04 // dark blue
+  //push 04 // dark blue
+  //push 10 // medium blue
+  push 12 // light blue
   jmp textcolor_end
 
 textcolor_npc_moving:
@@ -5680,7 +5653,7 @@ address:
         <CheatEntry>
           <ID>1214</ID>
           <Description>"Draw Distance"</Description>
-          <LastState Value="400" Activated="0" RealAddress="051A00E0"/>
+          <LastState Value="400" Activated="0" RealAddress="16EC00E0"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>esphack_draw_distance</Address>
@@ -5709,13 +5682,6 @@ address:
         <CheatEntry>
           <ID>1218</ID>
           <Description>"BLUE = NPC"</Description>
-          <LastState Value="" Activated="0" RealAddress="00000000"/>
-          <Color>80000008</Color>
-          <GroupHeader>1</GroupHeader>
-        </CheatEntry>
-        <CheatEntry>
-          <ID>1219</ID>
-          <Description>"LIGHT BLUE = NPC that is moving"</Description>
           <LastState Value="" Activated="0" RealAddress="00000000"/>
           <Color>80000008</Color>
           <GroupHeader>1</GroupHeader>
@@ -6206,7 +6172,7 @@ dealloc(newmem)
             <CheatEntry>
               <ID>1101</ID>
               <Description>"Camera View #2 Third Person Zoom value (0 to 200)"</Description>
-              <LastState Value="3.125" Activated="0" RealAddress="007996C0"/>
+              <LastState Value="3.749999762" Activated="0" RealAddress="007996C0"/>
               <Color>80000008</Color>
               <VariableType>Float</VariableType>
               <Address>eqgame.exe+3996C0</Address>
@@ -8327,7 +8293,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>24</ID>
           <Description>"0x04 Hour"</Description>
-          <LastState Value="1" Activated="0" RealAddress="04678FFC"/>
+          <LastState Value="17" Activated="0" RealAddress="04678FFC"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F9494</Address>
@@ -8338,7 +8304,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>25</ID>
           <Description>"0x05 Minute"</Description>
-          <LastState Value="58" Activated="0" RealAddress="04678FFD"/>
+          <LastState Value="45" Activated="0" RealAddress="04678FFD"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F9494</Address>
@@ -8413,7 +8379,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>57</ID>
       <Description>"Player Character (EQ_Character)"</Description>
-      <LastState Value="0C2311E8" Activated="0" RealAddress="007F94E8"/>
+      <LastState Value="0C2311B0" Activated="0" RealAddress="007F94E8"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -8422,7 +8388,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>58</ID>
           <Description>"0x8C Class"</Description>
-          <LastState Value="4" Activated="0" RealAddress="0C231274"/>
+          <LastState Value="1" Activated="0" RealAddress="0C23123C"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8433,7 +8399,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>519</ID>
           <Description>"0x9A Mana"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231282"/>
+          <LastState Value="0" Activated="0" RealAddress="0C23124A"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8444,7 +8410,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>504</ID>
           <Description>"0x9E Is Stunned or Unconscious (1 = Stunned, 3 = Unconscious, 4 = Dead)"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231286"/>
+          <LastState Value="0" Activated="0" RealAddress="0C23124E"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8455,7 +8421,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>459</ID>
           <Description>"0x268 Buff Slot #1 Spell ID"</Description>
-          <LastState Value="FFFF" Activated="0" RealAddress="0C231450"/>
+          <LastState Value="FFFF" Activated="0" RealAddress="0C231418"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
@@ -8467,7 +8433,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>460</ID>
           <Description>"0x26A Buff Slot #1 Ticks (duration)"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231452"/>
+          <LastState Value="0" Activated="0" RealAddress="0C23141A"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8478,7 +8444,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>511</ID>
           <Description>"0xB64 Standing State"</Description>
-          <LastState Value="100" Activated="0" RealAddress="0C231D4C"/>
+          <LastState Value="100" Activated="0" RealAddress="0C231D14"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94E8</Address>
@@ -8489,7 +8455,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>501</ID>
           <Description>"0xBA8 First Skill (254 = Not Trained Yet)"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231D90"/>
+          <LastState Value="0" Activated="0" RealAddress="0C231D58"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8500,7 +8466,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>730</ID>
           <Description>"0xBA8 Skill: One Hand Blunt"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231D90"/>
+          <LastState Value="0" Activated="0" RealAddress="0C231D58"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8511,7 +8477,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>728</ID>
           <Description>"0xBC0 Skill: Brass Instruments"</Description>
-          <LastState Value="255" Activated="0" RealAddress="0C231DA8"/>
+          <LastState Value="255" Activated="0" RealAddress="0C231D70"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8522,7 +8488,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>765</ID>
           <Description>"0xBC2 Skill: Channeling"</Description>
-          <LastState Value="254" Activated="0" RealAddress="0C231DAA"/>
+          <LastState Value="255" Activated="0" RealAddress="0C231D72"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8533,7 +8499,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>729</ID>
           <Description>"0xBD4 Skill: Dual Wield"</Description>
-          <LastState Value="254" Activated="0" RealAddress="0C231DBC"/>
+          <LastState Value="254" Activated="0" RealAddress="0C231D84"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8544,7 +8510,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>763</ID>
           <Description>"0xBE6 Skill: Meditate"</Description>
-          <LastState Value="254" Activated="0" RealAddress="0C231DCE"/>
+          <LastState Value="255" Activated="0" RealAddress="0C231D96"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8555,7 +8521,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>549</ID>
           <Description>"0xBF8 Skill: Sense Heading"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231DE0"/>
+          <LastState Value="0" Activated="0" RealAddress="0C231DA8"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8566,7 +8532,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>498</ID>
           <Description>"0xC0C Skill: Swimming"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231DF4"/>
+          <LastState Value="0" Activated="0" RealAddress="0C231DBC"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8577,7 +8543,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>502</ID>
           <Description>"0xC0E Skill: "</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231DF6"/>
+          <LastState Value="0" Activated="0" RealAddress="0C231DBE"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8588,7 +8554,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>699</ID>
           <Description>"0xC12 Skill: Tracking"</Description>
-          <LastState Value="7" Activated="0" RealAddress="0C231DFA"/>
+          <LastState Value="255" Activated="0" RealAddress="0C231DC2"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8599,7 +8565,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>793</ID>
           <Description>"0xC16 Skill: Fishing"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231DFE"/>
+          <LastState Value="0" Activated="0" RealAddress="0C231DC6"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8610,7 +8576,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>780</ID>
           <Description>"0xC2C Skill: Alcohol Tolerance"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231E14"/>
+          <LastState Value="0" Activated="0" RealAddress="0C231DDC"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8621,7 +8587,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>496</ID>
           <Description>"0xD04 Is Swimming"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C231EEC"/>
+          <LastState Value="0" Activated="0" RealAddress="0C231EB4"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8632,7 +8598,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1130</ID>
           <Description>"0xD54"</Description>
-          <LastState Value="4650" Activated="0" RealAddress="0C231F3C"/>
+          <LastState Value="4050" Activated="0" RealAddress="0C231F04"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8643,7 +8609,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1131</ID>
           <Description>"0xD58"</Description>
-          <LastState Value="4650" Activated="0" RealAddress="0C231F40"/>
+          <LastState Value="4050" Activated="0" RealAddress="0C231F08"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94E8</Address>
@@ -8654,7 +8620,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>784</ID>
           <Description>"0x134C"</Description>
-          <LastState Value="215" Activated="0" RealAddress="0C232534"/>
+          <LastState Value="211" Activated="0" RealAddress="0C2324FC"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -8665,7 +8631,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1129</ID>
           <Description>"0x135E"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C232546"/>
+          <LastState Value="0" Activated="0" RealAddress="0C23250E"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -8676,7 +8642,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>142</ID>
           <Description>"0x1364 Drunk value (Alcohol Tolerance related)"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C23254C"/>
+          <LastState Value="0" Activated="0" RealAddress="0C232514"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -8687,7 +8653,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>781</ID>
           <Description>"0x1708 Air Supply when swimming underwater"</Description>
-          <LastState Value="65" Activated="0" RealAddress="0C2328F0"/>
+          <LastState Value="80" Activated="0" RealAddress="0C2328B8"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94E8</Address>
@@ -8707,7 +8673,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>60</ID>
       <Description>"Target Spawn"</Description>
-      <LastState Value="00000000" Activated="0" RealAddress="007F94EC"/>
+      <LastState Value="0B3DF1F0" Activated="0" RealAddress="007F94EC"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -8716,7 +8682,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>61</ID>
           <Description>"0x01 Name"</Description>
-          <LastState Activated="0" RealAddress="00000001"/>
+          <LastState Activated="0" RealAddress="0B3DF1F1"/>
           <Color>80000008</Color>
           <VariableType>String</VariableType>
           <Length>64</Length>
@@ -8730,7 +8696,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>508</ID>
           <Description>"0x48 Y"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000048"/>
+          <LastState Value="190" Activated="0" RealAddress="0B3DF238"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8741,7 +8707,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>814</ID>
           <Description>"0x4C X"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000004C"/>
+          <LastState Value="-227" Activated="0" RealAddress="0B3DF23C"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8752,7 +8718,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>815</ID>
           <Description>"0x50 Z"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000050"/>
+          <LastState Value="-156.6864471" Activated="0" RealAddress="0B3DF240"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8763,7 +8729,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>813</ID>
           <Description>"0x54 Heading"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000054"/>
+          <LastState Value="54" Activated="0" RealAddress="0B3DF244"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8774,7 +8740,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>893</ID>
           <Description>"0x58"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000058"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF248"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8785,7 +8751,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>748</ID>
           <Description>"0x5C Movement Speed"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000005C"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF24C"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8796,7 +8762,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1036</ID>
           <Description>"0x60 Movement Add Y"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000060"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF250"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8807,7 +8773,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1037</ID>
           <Description>"0x64 Movement Add X"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000064"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF254"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8818,7 +8784,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1038</ID>
           <Description>"0x68 Movement Add Z"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000068"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF258"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8829,7 +8795,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1039</ID>
           <Description>"0x6C Movement Add Heading"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000006C"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF25C"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8840,7 +8806,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>568</ID>
           <Description>"0x74 Pitch"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000074"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF264"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8851,7 +8817,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>807</ID>
           <Description>"0x78 Next Spawn"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000078"/>
+          <LastState Value="0B3DF358" Activated="0" RealAddress="0B3DF268"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -8863,7 +8829,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>894</ID>
           <Description>"0x7C Previous Spawn"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000007C"/>
+          <LastState Value="0B3DCF78" Activated="0" RealAddress="0B3DF26C"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -8875,7 +8841,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>806</ID>
           <Description>"0x84 Actor Info"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000084"/>
+          <LastState Value="0CBB0A28" Activated="0" RealAddress="0B3DF274"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -8887,7 +8853,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>762</ID>
           <Description>"0x8C"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000008C"/>
+          <LastState Value="6.571999073" Activated="0" RealAddress="0B3DF27C"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8898,7 +8864,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1091</ID>
           <Description>"0x90 (third person camera zoom minimum value)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000090"/>
+          <LastState Value="3.312499762" Activated="0" RealAddress="0B3DF280"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -8909,7 +8875,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1090</ID>
           <Description>"0x94 Spawn ID"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000094"/>
+          <LastState Value="178" Activated="0" RealAddress="0B3DF284"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -8920,7 +8886,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1028</ID>
           <Description>"0x98 HP Max"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000098"/>
+          <LastState Value="100" Activated="0" RealAddress="0B3DF288"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -8931,7 +8897,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1029</ID>
           <Description>"0x9C HP Current"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000009C"/>
+          <LastState Value="100" Activated="0" RealAddress="0B3DF28C"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -8942,7 +8908,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>567</ID>
           <Description>"0xA0 Guild ID"</Description>
-          <LastState Value="??" Activated="0" RealAddress="000000A0"/>
+          <LastState Value="65535" Activated="0" RealAddress="0B3DF290"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -8953,7 +8919,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>773</ID>
           <Description>"0xA8 Type (0 = Player, 1 = NPC, 2 = NPC Corpse, 3 = Player Corpse)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="000000A8"/>
+          <LastState Value="1" Activated="0" RealAddress="0B3DF298"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -8964,7 +8930,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>509</ID>
           <Description>"0xA9 Class"</Description>
-          <LastState Value="??" Activated="0" RealAddress="000000A9"/>
+          <LastState Value="24" Activated="0" RealAddress="0B3DF299"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -8975,7 +8941,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>485</ID>
           <Description>"0xAA Race"</Description>
-          <LastState Value="??" Activated="0" RealAddress="000000AA"/>
+          <LastState Value="7" Activated="0" RealAddress="0B3DF29A"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -8986,7 +8952,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>515</ID>
           <Description>"0xB1 Standing State"</Description>
-          <LastState Value="??" Activated="0" RealAddress="000000B1"/>
+          <LastState Value="100" Activated="0" RealAddress="0B3DF2A1"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -8997,7 +8963,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>468</ID>
           <Description>"0xF0 Height / Size"</Description>
-          <LastState Value="??" Activated="0" RealAddress="000000F0"/>
+          <LastState Value="5.300000191" Activated="0" RealAddress="0B3DF2E0"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -9008,7 +8974,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>187</ID>
           <Description>"0x107"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000107"/>
+          <LastState Value="63" Activated="0" RealAddress="0B3DF2F7"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -9019,7 +8985,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>795</ID>
           <Description>"0x108 Is Linkdead"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000108"/>
+          <LastState Value="1" Activated="0" RealAddress="0B3DF2F8"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -9030,7 +8996,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>794</ID>
           <Description>"0x109 Is GM (gamemaster)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000109"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF2F9"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -9041,7 +9007,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>760</ID>
           <Description>"0x10A Is Levitating (2 = TRUE, 3 = NPC)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000010A"/>
+          <LastState Value="3" Activated="0" RealAddress="0B3DF2FA"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -9052,7 +9018,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1092</ID>
           <Description>"0x114 Is ANONYMOUS or Roleplay (1 = /anon, 2 = /role)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000114"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF304"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -9063,7 +9029,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1139</ID>
           <Description>"0x11C Is AFK"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000011C"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF30C"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94EC</Address>
@@ -9074,7 +9040,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>764</ID>
           <Description>"0x12C Last Name / Title"</Description>
-          <LastState Activated="0" RealAddress="0000012C"/>
+          <LastState Activated="0" RealAddress="0B3DF31C"/>
           <Color>80000008</Color>
           <VariableType>String</VariableType>
           <Length>32</Length>
@@ -9088,7 +9054,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>495</ID>
           <Description>"0x14E Deity / God"</Description>
-          <LastState Value="??" Activated="0" RealAddress="0000014E"/>
+          <LastState Value="0" Activated="0" RealAddress="0B3DF33E"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9108,7 +9074,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>38</ID>
       <Description>"Target Actor"</Description>
-      <LastState Value="??" Activated="0" RealAddress="00000084"/>
+      <LastState Value="0CBB0A28" Activated="0" RealAddress="0B3DF274"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -9120,7 +9086,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>42</ID>
           <Description>"0x00 Camera Actor"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="15022A78" Activated="0" RealAddress="0CBB0A28"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -9133,7 +9099,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>408</ID>
           <Description>"0x04"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="00000000" Activated="0" RealAddress="0CBB0A2C"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -9146,7 +9112,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>757</ID>
           <Description>"0x80 Levitation counter (Default = 65535)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="65535" Activated="0" RealAddress="0CBB0AA8"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9158,7 +9124,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>758</ID>
           <Description>"0x82 Drunk movement left/right modifier (Default = 65535)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="65535" Activated="0" RealAddress="0CBB0AAA"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9170,7 +9136,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>751</ID>
           <Description>"0x84"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="16" Activated="0" RealAddress="0CBB0AAC"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9182,7 +9148,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>754</ID>
           <Description>"0x86"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="32" Activated="0" RealAddress="0CBB0AAE"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9194,7 +9160,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>752</ID>
           <Description>"0x88"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0.349999994" Activated="0" RealAddress="0CBB0AB0"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -9206,7 +9172,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>753</ID>
           <Description>"0x8C Levitation movement up/down (Default = 0.1000000015)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0.1000000015" Activated="0" RealAddress="0CBB0AB4"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94EC</Address>
@@ -9218,7 +9184,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>749</ID>
           <Description>"0x90 Is Affected By Gravity"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="1" Activated="0" RealAddress="0CBB0AB8"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -9230,7 +9196,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1133</ID>
           <Description>"0x91"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0AB9"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -9242,7 +9208,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1135</ID>
           <Description>"0x94"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0ABC"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9254,7 +9220,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1136</ID>
           <Description>"0x98"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="350966768" Activated="0" RealAddress="0CBB0AC0"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9266,7 +9232,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1137</ID>
           <Description>"0x9C"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="350966824" Activated="0" RealAddress="0CBB0AC4"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9278,7 +9244,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>41</ID>
           <Description>"0xA0 Is Swimming Underwater (5 = True)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0AC8"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -9290,7 +9256,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>499</ID>
           <Description>"0xA1 Is Swimming (5,6,9,10 = True, 7 = Burn to Death, 8 = Freeze to Death)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0AC9"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -9302,7 +9268,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1132</ID>
           <Description>"0xA2"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0ACA"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -9314,7 +9280,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>355</ID>
           <Description>"0xA8 Movement Friction A (sliding on ice or slippery surfaces)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0.625" Activated="0" RealAddress="0CBB0AD0"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -9326,7 +9292,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>391</ID>
           <Description>"0xAC Movement Friction B (sliding on ice or slippery surfaces)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0.8000000119" Activated="0" RealAddress="0CBB0AD4"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -9338,7 +9304,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>474</ID>
           <Description>"0xBC Movement Speed Modifier"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0AE4"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -9350,7 +9316,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>755</ID>
           <Description>"0xC8"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="1423996061" Activated="0" RealAddress="0CBB0AF0"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -9362,7 +9328,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1134</ID>
           <Description>"0x184 Animation"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="32" Activated="0" RealAddress="0CBB0BAC"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -9374,7 +9340,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>756</ID>
           <Description>"0x188 Animation related"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0BB0"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -9386,7 +9352,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>759</ID>
           <Description>"0x189"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0BB1"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+3F94eC</Address>
@@ -9398,7 +9364,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>505</ID>
           <Description>"0x288 Text Above Head (name)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="1803401C" Activated="0" RealAddress="0CBB0CB0"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -9411,7 +9377,7 @@ dealloc(newmem)
             <CheatEntry>
               <ID>675</ID>
               <Description>"0x00"</Description>
-              <LastState Value="??" Activated="0" RealAddress="00000000"/>
+              <LastState Value="59" Activated="0" RealAddress="1803401C"/>
               <Color>80000008</Color>
               <VariableType>4 Bytes</VariableType>
               <Address>007F94EC</Address>
@@ -9424,7 +9390,7 @@ dealloc(newmem)
             <CheatEntry>
               <ID>682</ID>
               <Description>"0x04"</Description>
-              <LastState Value="??" Activated="0" RealAddress="00000000"/>
+              <LastState Value="0EF8AC98" Activated="0" RealAddress="18034020"/>
               <ShowAsHex>1</ShowAsHex>
               <Color>80000008</Color>
               <VariableType>4 Bytes</VariableType>
@@ -9438,7 +9404,7 @@ dealloc(newmem)
             <CheatEntry>
               <ID>681</ID>
               <Description>"0x08 DagSprite"</Description>
-              <LastState Value="??" Activated="0" RealAddress="00000000"/>
+              <LastState Value="0F148250" Activated="0" RealAddress="18034024"/>
               <ShowAsHex>1</ShowAsHex>
               <Color>80000008</Color>
               <VariableType>4 Bytes</VariableType>
@@ -9452,7 +9418,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>686</ID>
                   <Description>"0x00"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="81" Activated="0" RealAddress="0F148250"/>
                   <Color>80000008</Color>
                   <VariableType>4 Bytes</VariableType>
                   <Address>007F94EC</Address>
@@ -9466,7 +9432,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>770</ID>
                   <Description>"0x14"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="14A83AA8" Activated="0" RealAddress="0F148264"/>
                   <ShowAsHex>1</ShowAsHex>
                   <Color>80000008</Color>
                   <VariableType>4 Bytes</VariableType>
@@ -9481,7 +9447,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>771</ID>
                   <Description>"0x18"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="0F1F07D0" Activated="0" RealAddress="0F148268"/>
                   <ShowAsHex>1</ShowAsHex>
                   <Color>80000008</Color>
                   <VariableType>4 Bytes</VariableType>
@@ -9496,7 +9462,7 @@ dealloc(newmem)
                     <CheatEntry>
                       <ID>772</ID>
                       <Description>"0x00 Name Text"</Description>
-                      <LastState Activated="0" RealAddress="00000000"/>
+                      <LastState Activated="0" RealAddress="0F1F07D0"/>
                       <ShowAsHex>1</ShowAsHex>
                       <Color>80000008</Color>
                       <VariableType>String</VariableType>
@@ -9517,7 +9483,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>690</ID>
                   <Description>"0x24 SetStringSpriteMaxScaleFactor = 1"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="1" Activated="0" RealAddress="0F148274"/>
                   <Color>80000008</Color>
                   <VariableType>4 Bytes</VariableType>
                   <Address>007F94EC</Address>
@@ -9531,7 +9497,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>691</ID>
                   <Description>"0x28 SetStringSpriteMaxScaleFactor = 0.05000000075"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="0.05000000075" Activated="0" RealAddress="0F148278"/>
                   <Color>80000008</Color>
                   <VariableType>Float</VariableType>
                   <Address>007F94EC</Address>
@@ -9545,7 +9511,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>692</ID>
                   <Description>"0x2C SetStringSpriteMaxScaleFactor = 19.99999809"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="19.99999809" Activated="0" RealAddress="0F14827C"/>
                   <Color>80000008</Color>
                   <VariableType>Float</VariableType>
                   <Address>007F94EC</Address>
@@ -9559,7 +9525,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>688</ID>
                   <Description>"0x30 YonClip enabled boolean"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="1" Activated="0" RealAddress="0F148280"/>
                   <Color>80000008</Color>
                   <VariableType>4 Bytes</VariableType>
                   <Address>007F94EC</Address>
@@ -9573,7 +9539,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>689</ID>
                   <Description>"0x34 YonClip distance"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="70" Activated="0" RealAddress="0F148284"/>
                   <Color>80000008</Color>
                   <VariableType>Float</VariableType>
                   <Address>007F94EC</Address>
@@ -9587,7 +9553,7 @@ dealloc(newmem)
                 <CheatEntry>
                   <ID>687</ID>
                   <Description>"0x48 StringSpriteTint (text color)"</Description>
-                  <LastState Value="??" Activated="0" RealAddress="00000000"/>
+                  <LastState Value="DF E3 A3" Activated="0" RealAddress="0F148298"/>
                   <ShowAsHex>1</ShowAsHex>
                   <Color>80000008</Color>
                   <VariableType>Array of byte</VariableType>
@@ -9607,7 +9573,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>678</ID>
           <Description>"0x28C"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="18033D94" Activated="0" RealAddress="0CBB0CB4"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -9620,7 +9586,7 @@ dealloc(newmem)
             <CheatEntry>
               <ID>679</ID>
               <Description>"0x00"</Description>
-              <LastState Value="??" Activated="0" RealAddress="00000000"/>
+              <LastState Value="59" Activated="0" RealAddress="18033D94"/>
               <Color>80000008</Color>
               <VariableType>4 Bytes</VariableType>
               <Address>007F94EC</Address>
@@ -9633,7 +9599,7 @@ dealloc(newmem)
             <CheatEntry>
               <ID>684</ID>
               <Description>"0x04"</Description>
-              <LastState Value="??" Activated="0" RealAddress="00000000"/>
+              <LastState Value="0EF71EF0" Activated="0" RealAddress="18033D98"/>
               <ShowAsHex>1</ShowAsHex>
               <Color>80000008</Color>
               <VariableType>4 Bytes</VariableType>
@@ -9647,7 +9613,7 @@ dealloc(newmem)
             <CheatEntry>
               <ID>683</ID>
               <Description>"0x08"</Description>
-              <LastState Value="??" Activated="0" RealAddress="00000000"/>
+              <LastState Value="035E7ED0" Activated="0" RealAddress="18033D9C"/>
               <ShowAsHex>1</ShowAsHex>
               <Color>80000008</Color>
               <VariableType>4 Bytes</VariableType>
@@ -9663,7 +9629,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1093</ID>
           <Description>"0x320 Is Moving (4 = Walking, 6 = Running)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0D48"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -9675,7 +9641,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>507</ID>
           <Description>"0x32D Is Moving (1-6 or 200 = True)"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0D55"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94EC</Address>
@@ -9687,7 +9653,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>674</ID>
           <Description>"0x438 Is LFG"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0E60"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9699,7 +9665,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1094</ID>
           <Description>"0x43C Is Trader"</Description>
-          <LastState Value="??" Activated="0" RealAddress="00000000"/>
+          <LastState Value="0" Activated="0" RealAddress="0CBB0E64"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94EC</Address>
@@ -9792,7 +9758,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>981</ID>
           <Description>"0x12"</Description>
-          <LastState Value="0" Activated="0" RealAddress="022BA00A"/>
+          <LastState Value="2" Activated="0" RealAddress="022BA00A"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>7F9510</Address>
@@ -9803,7 +9769,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1142</ID>
           <Description>"0x28 Camera Heading (Yaw)"</Description>
-          <LastState Value="449.5604858" Activated="0" RealAddress="022BA020"/>
+          <LastState Value="99.297966" Activated="0" RealAddress="022BA020"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>7F9510</Address>
@@ -9814,7 +9780,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1141</ID>
           <Description>"0x2C Camera Pitch"</Description>
-          <LastState Value="478" Activated="0" RealAddress="022BA024"/>
+          <LastState Value="0" Activated="0" RealAddress="022BA024"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>7F9510</Address>
@@ -9836,7 +9802,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>639</ID>
           <Description>"0x4C"</Description>
-          <LastState Value="63" Activated="0" RealAddress="022BA044"/>
+          <LastState Value="246" Activated="0" RealAddress="022BA044"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>7F9510</Address>
@@ -9847,7 +9813,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>640</ID>
           <Description>"0x50"</Description>
-          <LastState Value="1496A9E8" Activated="0" RealAddress="022BA048"/>
+          <LastState Value="14E054A8" Activated="0" RealAddress="022BA048"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -9859,7 +9825,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>638</ID>
           <Description>"0xAC "</Description>
-          <LastState Value="248" Activated="0" RealAddress="022BA0A4"/>
+          <LastState Value="0" Activated="0" RealAddress="022BA0A4"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>7F9510</Address>
@@ -9870,7 +9836,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>541</ID>
           <Description>"0xB0 Fog Distance"</Description>
-          <LastState Value="324.9999695" Activated="0" RealAddress="022BA0A8"/>
+          <LastState Value="1400" Activated="0" RealAddress="022BA0A8"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>7F9510</Address>
@@ -9881,7 +9847,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>544</ID>
           <Description>"0xB4 Fog Color Red"</Description>
-          <LastState Value="12" Activated="0" RealAddress="022BA0AC"/>
+          <LastState Value="14" Activated="0" RealAddress="022BA0AC"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>7F9510</Address>
@@ -9892,7 +9858,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>545</ID>
           <Description>"0xB5 Fog Color Green"</Description>
-          <LastState Value="8" Activated="0" RealAddress="022BA0AD"/>
+          <LastState Value="10" Activated="0" RealAddress="022BA0AD"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>7F9510</Address>
@@ -9903,7 +9869,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>546</ID>
           <Description>"0xB6 Fog Color Blue"</Description>
-          <LastState Value="11" Activated="0" RealAddress="022BA0AE"/>
+          <LastState Value="31" Activated="0" RealAddress="022BA0AE"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>7F9510</Address>
@@ -9914,7 +9880,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>542</ID>
           <Description>"0xC8 Timer"</Description>
-          <LastState Value="1401097" Activated="0" RealAddress="022BA0C0"/>
+          <LastState Value="4228589" Activated="0" RealAddress="022BA0C0"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>7F9510</Address>
@@ -9925,7 +9891,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>540</ID>
           <Description>"0xC4 Weather related"</Description>
-          <LastState Value="44" Activated="0" RealAddress="022BA0BC"/>
+          <LastState Value="27" Activated="0" RealAddress="022BA0BC"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>7F9510</Address>
@@ -10070,7 +10036,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>672</ID>
           <Description>"0x130 Slow Timer"</Description>
-          <LastState Value="1400920" Activated="0" RealAddress="022BA128"/>
+          <LastState Value="4228552" Activated="0" RealAddress="022BA128"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>7F9510</Address>
@@ -10103,7 +10069,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>680</ID>
           <Description>"0x2E08"</Description>
-          <LastState Value="14BE44D0" Activated="0" RealAddress="022BCE00"/>
+          <LastState Value="14A83AA8" Activated="0" RealAddress="022BCE00"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -10124,7 +10090,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>582</ID>
       <Description>"CLootWnd"</Description>
-      <LastState Value="06341240" Activated="0" RealAddress="0063D65C"/>
+      <LastState Value="0786B700" Activated="0" RealAddress="0063D65C"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -10133,7 +10099,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>584</ID>
           <Description>"0x134 Is Open boolean"</Description>
-          <LastState Value="0" Activated="0" RealAddress="06341374"/>
+          <LastState Value="0" Activated="0" RealAddress="0786B834"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+23D65C</Address>
@@ -10144,7 +10110,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>701</ID>
           <Description>"0x1B8 First Item (30 items max)"</Description>
-          <LastState Value="00000000" Activated="0" RealAddress="063413F8"/>
+          <LastState Value="00000000" Activated="0" RealAddress="0786B8B8"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -10353,7 +10319,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>716</ID>
           <Description>"0x1BC Second Item"</Description>
-          <LastState Value="00000000" Activated="0" RealAddress="063413FC"/>
+          <LastState Value="00000000" Activated="0" RealAddress="0786B8BC"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -10474,7 +10440,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>161</ID>
           <Description>"ALT is pressed"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0080932C"/>
+          <LastState Value="1" Activated="0" RealAddress="0080932C"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>0080932C</Address>
@@ -10599,7 +10565,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>776</ID>
           <Description>"X"</Description>
-          <LastState Value="497" Activated="0" RealAddress="008092E8"/>
+          <LastState Value="449" Activated="0" RealAddress="008092E8"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>008092E8</Address>
@@ -10607,7 +10573,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>186</ID>
           <Description>"Y"</Description>
-          <LastState Value="373" Activated="0" RealAddress="008092EC"/>
+          <LastState Value="386" Activated="0" RealAddress="008092EC"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>008092EC</Address>
@@ -10653,7 +10619,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>222</ID>
       <Description>"X"</Description>
-      <LastState Value="497" Activated="0" RealAddress="00798580"/>
+      <LastState Value="449" Activated="0" RealAddress="00798580"/>
       <Color>80000008</Color>
       <VariableType>2 Bytes</VariableType>
       <Address>00798580</Address>
@@ -10661,7 +10627,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>643</ID>
       <Description>"Y"</Description>
-      <LastState Value="373" Activated="0" RealAddress="00798582"/>
+      <LastState Value="386" Activated="0" RealAddress="00798582"/>
       <Color>80000008</Color>
       <VariableType>2 Bytes</VariableType>
       <Address>00798582</Address>
@@ -10713,7 +10679,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>641</ID>
       <Description>"Mouse Look State"</Description>
-      <LastState Value="00000000" Activated="0" RealAddress="007985EA"/>
+      <LastState Value="00010000" Activated="0" RealAddress="007985EA"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -10722,7 +10688,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>632</ID>
       <Description>"Mouse Look State"</Description>
-      <LastState Value="00 00 00 00 00 00 00 00" Activated="0" RealAddress="007985EA"/>
+      <LastState Value="00 00 01 00 00 00 00 00" Activated="0" RealAddress="007985EA"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>Array of byte</VariableType>
@@ -10802,7 +10768,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>223</ID>
       <Description>"Timer"</Description>
-      <LastState Value="1401096" Activated="0" RealAddress="007989D4"/>
+      <LastState Value="4228586" Activated="0" RealAddress="007989D4"/>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>007989D4</Address>
@@ -10818,7 +10784,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>656</ID>
       <Description>""</Description>
-      <LastState Value="23" Activated="0" RealAddress="00786FC8"/>
+      <LastState Value="30" Activated="0" RealAddress="00786FC8"/>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>00786FC8</Address>
@@ -10826,7 +10792,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>655</ID>
       <Description>""</Description>
-      <LastState Value="54" Activated="0" RealAddress="00786FCC"/>
+      <LastState Value="6" Activated="0" RealAddress="00786FCC"/>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>00786FCC</Address>
@@ -10834,7 +10800,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>657</ID>
       <Description>""</Description>
-      <LastState Value="1005308400" Activated="0" RealAddress="00786FD0"/>
+      <LastState Value="374044352" Activated="0" RealAddress="00786FD0"/>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
       <Address>00786FD0</Address>
@@ -10869,7 +10835,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>405</ID>
           <Description>"0x04 Region Number"</Description>
-          <LastState Value="1774" Activated="0" RealAddress="036D2EE4"/>
+          <LastState Value="1280" Activated="0" RealAddress="036D2EE4"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>0063B928</Address>
@@ -10880,7 +10846,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>409</ID>
           <Description>"0x08 Y"</Description>
-          <LastState Value="8.04970932" Activated="0" RealAddress="036D2EE8"/>
+          <LastState Value="385.0635681" Activated="0" RealAddress="036D2EE8"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -10891,7 +10857,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>410</ID>
           <Description>"0x0C X"</Description>
-          <LastState Value="-84.12275696" Activated="0" RealAddress="036D2EEC"/>
+          <LastState Value="530.5115356" Activated="0" RealAddress="036D2EEC"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -10902,7 +10868,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>411</ID>
           <Description>"0x10 Z"</Description>
-          <LastState Value="17.8644371" Activated="0" RealAddress="036D2EF0"/>
+          <LastState Value="-121.5589447" Activated="0" RealAddress="036D2EF0"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -10913,7 +10879,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>866</ID>
           <Description>"0x14 Heading / Yaw (left / right)"</Description>
-          <LastState Value="449.5604858" Activated="0" RealAddress="036D2EF4"/>
+          <LastState Value="99.297966" Activated="0" RealAddress="036D2EF4"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -10924,7 +10890,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>867</ID>
           <Description>"0x18 Pitch (up / down)"</Description>
-          <LastState Value="478" Activated="0" RealAddress="036D2EF8"/>
+          <LastState Value="0" Activated="0" RealAddress="036D2EF8"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -10946,7 +10912,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>404</ID>
           <Description>"0x20 Field of View (Default = 55, Third Person = 45) (90 / 2 = 45)"</Description>
-          <LastState Value="45" Activated="0" RealAddress="036D2F00"/>
+          <LastState Value="55" Activated="0" RealAddress="036D2F00"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -10990,7 +10956,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>399</ID>
           <Description>"0x30 Draw Distance"</Description>
-          <LastState Value="324.9999695" Activated="0" RealAddress="036D2F10"/>
+          <LastState Value="1400" Activated="0" RealAddress="036D2F10"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11023,7 +10989,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1150</ID>
           <Description>"0x5C"</Description>
-          <LastState Value="1.622897387" Activated="0" RealAddress="036D2F3C"/>
+          <LastState Value="1.249460459" Activated="0" RealAddress="036D2F3C"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11034,7 +11000,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1151</ID>
           <Description>"0x60"</Description>
-          <LastState Value="2.163862944" Activated="0" RealAddress="036D2F40"/>
+          <LastState Value="1.66594708" Activated="0" RealAddress="036D2F40"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11067,7 +11033,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1152</ID>
           <Description>"0x6C"</Description>
-          <LastState Value="-0.6934238672" Activated="0" RealAddress="036D2F4C"/>
+          <LastState Value="0.9385919571" Activated="0" RealAddress="036D2F4C"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11078,7 +11044,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1154</ID>
           <Description>"0x70"</Description>
-          <LastState Value="0.2919780016" Activated="0" RealAddress="036D2F50"/>
+          <LastState Value="-7.995299561E-11" Activated="0" RealAddress="036D2F50"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11089,7 +11055,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1158</ID>
           <Description>"0x74"</Description>
-          <LastState Value="0.6586918235" Activated="0" RealAddress="036D2F54"/>
+          <LastState Value="0.3449834585" Activated="0" RealAddress="036D2F54"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11100,7 +11066,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1153</ID>
           <Description>"0x78"</Description>
-          <LastState Value="-0.7205040455" Activated="0" RealAddress="036D2F58"/>
+          <LastState Value="-0.3449834287" Activated="0" RealAddress="036D2F58"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11111,7 +11077,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1173</ID>
           <Description>"0x7C"</Description>
-          <LastState Value="-0.2810039818" Activated="0" RealAddress="036D2F5C"/>
+          <LastState Value="1.728844706E-10" Activated="0" RealAddress="036D2F5C"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11122,7 +11088,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1155</ID>
           <Description>"0x80"</Description>
-          <LastState Value="-0.6339349151" Activated="0" RealAddress="036D2F60"/>
+          <LastState Value="0.9385919571" Activated="0" RealAddress="036D2F60"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11133,7 +11099,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1156</ID>
           <Description>"0x84"</Description>
-          <LastState Value="1.231346969E-10" Activated="0" RealAddress="036D2F64"/>
+          <LastState Value="1.346897732E-10" Activated="0" RealAddress="036D2F64"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>0063B928</Address>
@@ -11144,7 +11110,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1157</ID>
           <Description>"0x88"</Description>
-          <LastState Value="0.9142097831" Activated="0" RealAddress="036D2F68"/>
+          <LastState Value="1" Activated="0" RealAddress="036D2F68"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11156,7 +11122,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1174</ID>
           <Description>"0x8C"</Description>
-          <LastState Value="-0.4052413106" Activated="0" RealAddress="036D2F6C"/>
+          <LastState Value="-1.346897732E-10" Activated="0" RealAddress="036D2F6C"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11168,7 +11134,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1162</ID>
           <Description>"0x90"</Description>
-          <LastState Value="-1.125355721" Activated="0" RealAddress="036D2F70"/>
+          <LastState Value="1.172733426" Activated="0" RealAddress="036D2F70"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11180,7 +11146,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1172</ID>
           <Description>"0x94"</Description>
-          <LastState Value="-1.169304013" Activated="0" RealAddress="036D2F74"/>
+          <LastState Value="-0.431043148" Activated="0" RealAddress="036D2F74"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11192,7 +11158,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1163</ID>
           <Description>"0x98"</Description>
-          <LastState Value="1.99834968E-10" Activated="0" RealAddress="036D2F78"/>
+          <LastState Value="1.682895351E-10" Activated="0" RealAddress="036D2F78"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11204,7 +11170,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1164</ID>
           <Description>"0x9C"</Description>
-          <LastState Value="0.6318003535" Activated="0" RealAddress="036D2F7C"/>
+          <LastState Value="-1.331974531E-10" Activated="0" RealAddress="036D2F7C"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11216,7 +11182,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1175</ID>
           <Description>"0xA0"</Description>
-          <LastState Value="-0.6080541015" Activated="0" RealAddress="036D2F80"/>
+          <LastState Value="2.880163608E-10" Activated="0" RealAddress="036D2F80"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11228,7 +11194,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1159</ID>
           <Description>"0xA4"</Description>
-          <LastState Value="1.978224635" Activated="0" RealAddress="036D2F84"/>
+          <LastState Value="1.66594708" Activated="0" RealAddress="036D2F84"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11240,7 +11206,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1171</ID>
           <Description>"0xA8"</Description>
-          <LastState Value="-576.1821289" Activated="0" RealAddress="036D2F88"/>
+          <LastState Value="600.4395142" Activated="0" RealAddress="036D2F88"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11252,7 +11218,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1160</ID>
           <Description>"0xAC"</Description>
-          <LastState Value="-598.6836548" Activated="0" RealAddress="036D2F8C"/>
+          <LastState Value="-220.6940918" Activated="0" RealAddress="036D2F8C"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11264,7 +11230,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1161</ID>
           <Description>"0xB0"</Description>
-          <LastState Value="1.023155036E-7" Activated="0" RealAddress="036D2F90"/>
+          <LastState Value="8.616424196E-8" Activated="0" RealAddress="036D2F90"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11276,7 +11242,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1165</ID>
           <Description>"0xB4"</Description>
-          <LastState Value="242.6113281" Activated="0" RealAddress="036D2F94"/>
+          <LastState Value="-5.114782198E-8" Activated="0" RealAddress="036D2F94"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11288,7 +11254,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1166</ID>
           <Description>"0xB8"</Description>
-          <LastState Value="-233.4927673" Activated="0" RealAddress="036D2F98"/>
+          <LastState Value="1.10598279E-7" Activated="0" RealAddress="036D2F98"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11300,7 +11266,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1167</ID>
           <Description>"0xBC"</Description>
-          <LastState Value="759.6382446" Activated="0" RealAddress="036D2F9C"/>
+          <LastState Value="639.7236328" Activated="0" RealAddress="036D2F9C"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11312,7 +11278,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1176</ID>
           <Description>"0xC0"</Description>
-          <LastState Value="2.163862944" Activated="0" RealAddress="036D2FA0"/>
+          <LastState Value="1.66594708" Activated="0" RealAddress="036D2FA0"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11324,7 +11290,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1177</ID>
           <Description>"0xC4"</Description>
-          <LastState Value="1.622897387" Activated="0" RealAddress="036D2FA4"/>
+          <LastState Value="1.249460459" Activated="0" RealAddress="036D2FA4"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11336,7 +11302,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1168</ID>
           <Description>"0xC8"</Description>
-          <LastState Value="3.511727333" Activated="0" RealAddress="036D2FA8"/>
+          <LastState Value="2.081534863" Activated="0" RealAddress="036D2FA8"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11348,7 +11314,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1169</ID>
           <Description>"0xCC"</Description>
-          <LastState Value="0.3796801567" Activated="0" RealAddress="036D2FAC"/>
+          <LastState Value="0.6405528188" Activated="0" RealAddress="036D2FAC"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11360,7 +11326,7 @@ dealloc(newmem)
         <CheatEntry>
           <ID>1170</ID>
           <Description>"0xD0"</Description>
-          <LastState Value="0.2135701329" Activated="0" RealAddress="036D2FB0"/>
+          <LastState Value="0.3603110611" Activated="0" RealAddress="036D2FB0"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
@@ -11398,7 +11364,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>412</ID>
       <Description>"Camera Actor"</Description>
-      <LastState Value="14BB7DC0" Activated="0" RealAddress="0063D6C0"/>
+      <LastState Value="181A47E0" Activated="0" RealAddress="0063D6C0"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -11449,7 +11415,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>787</ID>
       <Description>"Camera View value (F9) (0 = First Person)"</Description>
-      <LastState Value="3" Activated="0" RealAddress="0063BE68"/>
+      <LastState Value="0" Activated="0" RealAddress="0063BE68"/>
       <Color>80000008</Color>
       <VariableType>Byte</VariableType>
       <Address>eqgame.exe+23BE68</Address>
@@ -11466,7 +11432,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>1089</ID>
       <Description>"Camera View #2 Third Person Zoom value (5.624999523 to 200)"</Description>
-      <LastState Value="3.125" Activated="0" RealAddress="007996C0"/>
+      <LastState Value="3.749999762" Activated="0" RealAddress="007996C0"/>
       <Color>80000008</Color>
       <VariableType>Float</VariableType>
       <Address>eqgame.exe+3996C0</Address>
@@ -11564,7 +11530,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>553</ID>
       <Description>"Net Status boolean (F11)"</Description>
-      <LastState Value="0" Activated="0" RealAddress="007985EC"/>
+      <LastState Value="1" Activated="0" RealAddress="007985EC"/>
       <Color>80000008</Color>
       <VariableType>Byte</VariableType>
       <Address>7985EC</Address>
@@ -11639,7 +11605,7 @@ dealloc(newmem)
     <CheatEntry>
       <ID>565</ID>
       <Description>"Target Spawn Number?"</Description>
-      <LastState Value="0" Activated="0" RealAddress="0063D6E0"/>
+      <LastState Value="178" Activated="0" RealAddress="0063D6E0"/>
       <Color>80000008</Color>
       <VariableType>Byte</VariableType>
       <Address>0063D6E0</Address>
@@ -12263,7 +12229,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>885</ID>
           <Description>"0x4C Mouse X"</Description>
-          <LastState Value="497" Activated="0" RealAddress="022B6C74"/>
+          <LastState Value="449" Activated="0" RealAddress="022B6C74"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>809DB4</Address>
@@ -12274,7 +12240,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>886</ID>
           <Description>"0x50 Mouse Y"</Description>
-          <LastState Value="373" Activated="0" RealAddress="022B6C78"/>
+          <LastState Value="386" Activated="0" RealAddress="022B6C78"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>809DB4</Address>
@@ -12305,7 +12271,7 @@ unregistersymbol(playsound_id)
     <CheatEntry>
       <ID>660</ID>
       <Description>"CBuffWindow"</Description>
-      <LastState Value="0C51FFE8" Activated="0" RealAddress="0063D638"/>
+      <LastState Value="074D1218" Activated="0" RealAddress="0063D638"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -12314,7 +12280,7 @@ unregistersymbol(playsound_id)
     <CheatEntry>
       <ID>667</ID>
       <Description>"CCastSpellWnd"</Description>
-      <LastState Value="0C5FB5D8" Activated="0" RealAddress="0063D648"/>
+      <LastState Value="0B3E1628" Activated="0" RealAddress="0063D648"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -12323,7 +12289,7 @@ unregistersymbol(playsound_id)
     <CheatEntry>
       <ID>1050</ID>
       <Description>"CSpellBookWnd"</Description>
-      <LastState Value="0B474088" Activated="0" RealAddress="0063D64C"/>
+      <LastState Value="0C0D4C90" Activated="0" RealAddress="0063D64C"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -12332,7 +12298,7 @@ unregistersymbol(playsound_id)
     <CheatEntry>
       <ID>695</ID>
       <Description>"CTrackingWnd"</Description>
-      <LastState Value="0CBCDE30" Activated="0" RealAddress="0063D67C"/>
+      <LastState Value="0BFFA3E0" Activated="0" RealAddress="0063D67C"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -12341,7 +12307,7 @@ unregistersymbol(playsound_id)
     <CheatEntry>
       <ID>722</ID>
       <Description>"CHotButtonWnd"</Description>
-      <LastState Value="0C230D10" Activated="0" RealAddress="0063D628"/>
+      <LastState Value="0227A018" Activated="0" RealAddress="0063D628"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -12357,7 +12323,7 @@ unregistersymbol(playsound_id)
     <CheatEntry>
       <ID>994</ID>
       <Description>"CPlayerWnd"</Description>
-      <LastState Value="0C3556C8" Activated="0" RealAddress="0063D630"/>
+      <LastState Value="077885C0" Activated="0" RealAddress="0063D630"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -12366,7 +12332,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>995</ID>
           <Description>"0x30 Rect X"</Description>
-          <LastState Value="900" Activated="0" RealAddress="0C3556F8"/>
+          <LastState Value="900" Activated="0" RealAddress="077885F0"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>0063D630</Address>
@@ -12377,7 +12343,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>996</ID>
           <Description>"0x34 Rect Y"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C3556FC"/>
+          <LastState Value="0" Activated="0" RealAddress="077885F4"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>0063D630</Address>
@@ -12388,7 +12354,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>997</ID>
           <Description>"0x38 Rect Width X"</Description>
-          <LastState Value="1024" Activated="0" RealAddress="0C355700"/>
+          <LastState Value="1024" Activated="0" RealAddress="077885F8"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>0063D630</Address>
@@ -12399,7 +12365,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>998</ID>
           <Description>"0x3C Rect Height Y"</Description>
-          <LastState Value="78" Activated="0" RealAddress="0C355704"/>
+          <LastState Value="78" Activated="0" RealAddress="077885FC"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>0063D630</Address>
@@ -12419,7 +12385,7 @@ unregistersymbol(playsound_id)
     <CheatEntry>
       <ID>1004</ID>
       <Description>"Item Window"</Description>
-      <LastState Value="0C230600" Activated="0" RealAddress="0063D5E0"/>
+      <LastState Value="155E4D08" Activated="0" RealAddress="0063D5E0"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -12439,7 +12405,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1008</ID>
           <Description>"0x3C Screen Y"</Description>
-          <LastState Value="414" Activated="0" RealAddress="0C23063C"/>
+          <LastState Value="414" Activated="0" RealAddress="155E4D44"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12450,7 +12416,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1007</ID>
           <Description>"0x38 Screen X"</Description>
-          <LastState Value="400" Activated="0" RealAddress="0C230638"/>
+          <LastState Value="400" Activated="0" RealAddress="155E4D40"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12461,7 +12427,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1006</ID>
           <Description>"0x34 Window Y"</Description>
-          <LastState Value="224" Activated="0" RealAddress="0C230634"/>
+          <LastState Value="224" Activated="0" RealAddress="155E4D3C"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12472,7 +12438,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1005</ID>
           <Description>"0x30 Window X"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0C230630"/>
+          <LastState Value="0" Activated="0" RealAddress="155E4D38"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12483,7 +12449,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1009</ID>
           <Description>"0x14C Item Name"</Description>
-          <LastState Activated="0" RealAddress="0C23074C"/>
+          <LastState Activated="0" RealAddress="155E4E54"/>
           <Color>80000008</Color>
           <VariableType>String</VariableType>
           <Length>64</Length>
@@ -12497,7 +12463,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1010</ID>
           <Description>"0x18C Item Lore Name"</Description>
-          <LastState Activated="0" RealAddress="0C23078C"/>
+          <LastState Activated="0" RealAddress="155E4E94"/>
           <Color>80000008</Color>
           <VariableType>String</VariableType>
           <Length>80</Length>
@@ -12511,7 +12477,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1011</ID>
           <Description>"0x1DC Item ID File"</Description>
-          <LastState Activated="0" RealAddress="0C2307DC"/>
+          <LastState Activated="0" RealAddress="155E4EE4"/>
           <Color>80000008</Color>
           <VariableType>String</VariableType>
           <Length>6</Length>
@@ -12525,7 +12491,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1012</ID>
           <Description>"0x1FA Item Weight (multiply by 0.1 for actual decimal weight)"</Description>
-          <LastState Value="76" Activated="0" RealAddress="0C2307FA"/>
+          <LastState Value="105" Activated="0" RealAddress="155E4F02"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12536,7 +12502,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1013</ID>
           <Description>"0x1FB Item Is No Rent"</Description>
-          <LastState Value="7" Activated="0" RealAddress="0C2307FB"/>
+          <LastState Value="7" Activated="0" RealAddress="155E4F03"/>
           <ShowAsSigned>0</ShowAsSigned>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
@@ -12548,7 +12514,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1014</ID>
           <Description>"0x1FC Item Is No Drop"</Description>
-          <LastState Value="48" Activated="0" RealAddress="0C2307FC"/>
+          <LastState Value="40" Activated="0" RealAddress="155E4F04"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12559,7 +12525,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1015</ID>
           <Description>"0x1FD Item Size"</Description>
-          <LastState Value="225" Activated="0" RealAddress="0C2307FD"/>
+          <LastState Value="39" Activated="0" RealAddress="155E4F05"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12570,7 +12536,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1016</ID>
           <Description>"0x1FE Item Is Container"</Description>
-          <LastState Value="76" Activated="0" RealAddress="0C2307FE"/>
+          <LastState Value="105" Activated="0" RealAddress="155E4F06"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12581,7 +12547,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1017</ID>
           <Description>"0x200 Item ID"</Description>
-          <LastState Value="E1F8" Activated="0" RealAddress="0C230800"/>
+          <LastState Value="2838" Activated="0" RealAddress="155E4F08"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
@@ -12593,7 +12559,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1018</ID>
           <Description>"0x202 Item Icon"</Description>
-          <LastState Value="074C" Activated="0" RealAddress="0C230802"/>
+          <LastState Value="0769" Activated="0" RealAddress="155E4F0A"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
@@ -12605,7 +12571,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1019</ID>
           <Description>"0x204 Equip Slot"</Description>
-          <LastState Value="122479296" Activated="0" RealAddress="0C230804"/>
+          <LastState Value="124332360" Activated="0" RealAddress="155E4F0C"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12616,7 +12582,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1020</ID>
           <Description>"0x208 Equippable Slots"</Description>
-          <LastState Value="074CE388" Activated="0" RealAddress="0C230808"/>
+          <LastState Value="07692A58" Activated="0" RealAddress="155E4F10"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -12628,7 +12594,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>1021</ID>
           <Description>"0x20C Cost (price in copper)"</Description>
-          <LastState Value="122479696" Activated="0" RealAddress="0C23080C"/>
+          <LastState Value="124333040" Activated="0" RealAddress="155E4F14"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+23D5E0</Address>
@@ -12648,7 +12614,7 @@ unregistersymbol(playsound_id)
     <CheatEntry>
       <ID>746</ID>
       <Description>"Door List"</Description>
-      <LastState Value="0BB123F8" Activated="0" RealAddress="007F94B8"/>
+      <LastState Value="0CC904C8" Activated="0" RealAddress="007F94B8"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -12657,7 +12623,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>902</ID>
           <Description>"0x00"</Description>
-          <LastState Value="05 23 00 00" Activated="0" RealAddress="0BB123F8"/>
+          <LastState Value="05 25 00 00" Activated="0" RealAddress="0CC904C8"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>Array of byte</VariableType>
@@ -12670,7 +12636,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>903</ID>
           <Description>"0x04 Previous Door"</Description>
-          <LastState Value="00000000" Activated="0" RealAddress="0BB123FC"/>
+          <LastState Value="00000000" Activated="0" RealAddress="0CC904CC"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -12682,7 +12648,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>904</ID>
           <Description>"0x08 Next Door"</Description>
-          <LastState Value="0BB12360" Activated="0" RealAddress="0BB12400"/>
+          <LastState Value="0CC90430" Activated="0" RealAddress="0CC904D0"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -12694,7 +12660,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>932</ID>
           <Description>"0x09 ID"</Description>
-          <LastState Value="35" Activated="0" RealAddress="0BB12401"/>
+          <LastState Value="4" Activated="0" RealAddress="0CC904D1"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94B8</Address>
@@ -12705,7 +12671,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>933</ID>
           <Description>"0x09 ID"</Description>
-          <LastState Value="23 B1 0B 67" Activated="0" RealAddress="0BB12401"/>
+          <LastState Value="04 C9 0C 61" Activated="0" RealAddress="0CC904D1"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>Array of byte</VariableType>
@@ -12718,7 +12684,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>905</ID>
           <Description>"0x0C ID"</Description>
-          <LastState Value="103" Activated="0" RealAddress="0BB12404"/>
+          <LastState Value="97" Activated="0" RealAddress="0CC904D4"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94B8</Address>
@@ -12729,7 +12695,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>906</ID>
           <Description>"0x0D Name"</Description>
-          <LastState Activated="0" RealAddress="0BB12405"/>
+          <LastState Activated="0" RealAddress="0CC904D5"/>
           <Color>80000008</Color>
           <VariableType>String</VariableType>
           <Length>11</Length>
@@ -12743,7 +12709,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>908</ID>
           <Description>"0x18"</Description>
-          <LastState Value="5" Activated="0" RealAddress="0BB12410"/>
+          <LastState Value="0" Activated="0" RealAddress="0CC904E0"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94B8</Address>
@@ -12754,7 +12720,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>916</ID>
           <Description>"0x1C"</Description>
-          <LastState Value="54" Activated="0" RealAddress="0BB12414"/>
+          <LastState Value="5" Activated="0" RealAddress="0CC904E4"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94B8</Address>
@@ -12765,7 +12731,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>918</ID>
           <Description>"0x1D"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0BB12415"/>
+          <LastState Value="0" Activated="0" RealAddress="0CC904E5"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94B8</Address>
@@ -12776,7 +12742,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>912</ID>
           <Description>"0x20 Default Y"</Description>
-          <LastState Value="-2096.379883" Activated="0" RealAddress="0BB12418"/>
+          <LastState Value="-173.9140015" Activated="0" RealAddress="0CC904E8"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12787,7 +12753,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>910</ID>
           <Description>"0x24 Default X"</Description>
-          <LastState Value="-314.9079895" Activated="0" RealAddress="0BB1241C"/>
+          <LastState Value="1486" Activated="0" RealAddress="0CC904EC"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12798,7 +12764,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>917</ID>
           <Description>"0x28 Default Z"</Description>
-          <LastState Value="3.231290102" Activated="0" RealAddress="0BB12420"/>
+          <LastState Value="-127.9980011" Activated="0" RealAddress="0CC904F0"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12809,7 +12775,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>919</ID>
           <Description>"0x2C Default Heading"</Description>
-          <LastState Value="480.9190063" Activated="0" RealAddress="0BB12424"/>
+          <LastState Value="0" Activated="0" RealAddress="0CC904F4"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12820,7 +12786,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>920</ID>
           <Description>"0x30 Door Angle"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0BB12428"/>
+          <LastState Value="0" Activated="0" RealAddress="0CC904F8"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12831,7 +12797,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>921</ID>
           <Description>"0x34 Y"</Description>
-          <LastState Value="-2096.379883" Activated="0" RealAddress="0BB1242C"/>
+          <LastState Value="-173.9140015" Activated="0" RealAddress="0CC904FC"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12842,7 +12808,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>922</ID>
           <Description>"0x38 X"</Description>
-          <LastState Value="-314.9079895" Activated="0" RealAddress="0BB12430"/>
+          <LastState Value="1486" Activated="0" RealAddress="0CC90500"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12853,7 +12819,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>923</ID>
           <Description>"0x3C Z"</Description>
-          <LastState Value="3.231290102" Activated="0" RealAddress="0BB12434"/>
+          <LastState Value="-127.9980011" Activated="0" RealAddress="0CC90504"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12864,7 +12830,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>924</ID>
           <Description>"0x40 Heading"</Description>
-          <LastState Value="480.9190063" Activated="0" RealAddress="0BB12438"/>
+          <LastState Value="0" Activated="0" RealAddress="0CC90508"/>
           <Color>80000008</Color>
           <VariableType>Float</VariableType>
           <Address>007F94B8</Address>
@@ -12875,7 +12841,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>925</ID>
           <Description>"0x4B"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0BB12443"/>
+          <LastState Value="0" Activated="0" RealAddress="0CC90513"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94B8</Address>
@@ -12886,7 +12852,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>930</ID>
           <Description>"0x5E"</Description>
-          <LastState Value="255" Activated="0" RealAddress="0BB12456"/>
+          <LastState Value="255" Activated="0" RealAddress="0CC90526"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94B8</Address>
@@ -12897,7 +12863,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>928</ID>
           <Description>"0x60"</Description>
-          <LastState Value="100" Activated="0" RealAddress="0BB12458"/>
+          <LastState Value="100" Activated="0" RealAddress="0CC90528"/>
           <Color>80000008</Color>
           <VariableType>Byte</VariableType>
           <Address>007F94B8</Address>
@@ -12908,7 +12874,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>926</ID>
           <Description>"0x62"</Description>
-          <LastState Value="0" Activated="0" RealAddress="0BB1245A"/>
+          <LastState Value="0" Activated="0" RealAddress="0CC9052A"/>
           <Color>80000008</Color>
           <VariableType>2 Bytes</VariableType>
           <Address>007F94B8</Address>
@@ -12919,7 +12885,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>927</ID>
           <Description>"0x69"</Description>
-          <LastState Activated="0" RealAddress="0BB12461"/>
+          <LastState Activated="0" RealAddress="0CC90531"/>
           <Color>80000008</Color>
           <VariableType>String</VariableType>
           <Length>32</Length>
@@ -12933,7 +12899,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>929</ID>
           <Description>"0x80"</Description>
-          <LastState Value="14FB2EC0" Activated="0" RealAddress="0BB12478"/>
+          <LastState Value="181AE2D0" Activated="0" RealAddress="0CC90548"/>
           <ShowAsHex>1</ShowAsHex>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
@@ -12945,7 +12911,7 @@ unregistersymbol(playsound_id)
         <CheatEntry>
           <ID>931</ID>
           <Description>"0x84"</Description>
-          <LastState Value="1327358" Activated="0" RealAddress="0BB1247C"/>
+          <LastState Value="2683261" Activated="0" RealAddress="0CC9054C"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>007F94B8</Address>
@@ -13556,7 +13522,7 @@ address:
     <CheatEntry>
       <ID>1045</ID>
       <Description>"CMerchantWnd"</Description>
-      <LastState Value="0C39E598" Activated="0" RealAddress="0063D664"/>
+      <LastState Value="0C59E168" Activated="0" RealAddress="0063D664"/>
       <ShowAsHex>1</ShowAsHex>
       <Color>80000008</Color>
       <VariableType>4 Bytes</VariableType>
@@ -13842,7 +13808,7 @@ code2:
             <CheatEntry>
               <ID>959</ID>
               <Description>"Camera View #2 Third Person Zoom value (0 to 200)"</Description>
-              <LastState Value="3.125" Activated="0" RealAddress="007996C0"/>
+              <LastState Value="3.749999762" Activated="0" RealAddress="007996C0"/>
               <Color>80000008</Color>
               <VariableType>Float</VariableType>
               <Address>eqgame.exe+3996C0</Address>
@@ -14046,7 +14012,7 @@ code2:
         <CheatEntry>
           <ID>1111</ID>
           <Description>"0xFD0"</Description>
-          <LastState Value="28" Activated="0" RealAddress="0469AF90"/>
+          <LastState Value="40" Activated="0" RealAddress="0469AF90"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+23DEA8</Address>
@@ -14148,7 +14114,7 @@ code2:
         <CheatEntry>
           <ID>1114</ID>
           <Description>"0xFF8"</Description>
-          <LastState Value="2" Activated="0" RealAddress="0469AFB8"/>
+          <LastState Value="1" Activated="0" RealAddress="0469AFB8"/>
           <Color>80000008</Color>
           <VariableType>4 Bytes</VariableType>
           <Address>eqgame.exe+23DEA8</Address>

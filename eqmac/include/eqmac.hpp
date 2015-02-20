@@ -1,903 +1,750 @@
 #ifndef EQMAC_HPP
 #define EQMAC_HPP
 
+#include <cstdint>
+#include <cmath>
 #include <string>
 #include <vector>
-#include <cmath>
+#include <algorithm>
 
 #include <windows.h>
 
-#include "memory.hpp"
+#include "cmemory.hpp"
 
-const std::string everquest_title = "EQW beta 2.32";
+const std::string EQ_TITLE = "EverQuest";
+const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 
-#define EVERQUEST_GRAPHICS_DLL_POINTER 0x007F9C50 // EQGfx_Dx8.DLL
+#define EQ_IS_IN_GAME             0x00798550 // BYTE
+#define EQ_IS_AUTO_ATTACK_ENABLED 0x007F6FFE // BYTE
 
-#define EVERQUEST_IS_IN_GAME 0x00798550 // BYTE
+#define EQ_POINTER_GRAPHICS_DLL 0x007F9C50 // EQGfx_Dx8.DLL base address
 
-#define EVERQUEST_IS_AUTO_ATTACK_ENABLED 0x007F6FFE // BYTE
+#define EQ_POINTER_StringTable 0x007F9490 // eqstr_xx.txt
 
-#define EVERQUEST_ZONE_INFO_STRUCTURE           0x00798784 // STRUCT
-#define EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME  0x0000 // STRING [0x40]
-#define EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME   0x0040 // STRING [0x20]
-#define EVERQUEST_OFFSET_ZONE_INFO_LONG_NAME    0x0060 // STRING [0x80]
-#define EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Y 0x01E8 // FLOAT
-#define EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_X 0x01EC // FLOAT
-#define EVERQUEST_OFFSET_ZONE_INFO_SAFE_POINT_Z 0x01F0 // FLOAT
+#define EQ_POINTER_FONT_ARIAL14 0x0063D3B0
 
-#define EVERQUEST_ZONE_INFO_PLAYER_NAME_SIZE 0x40
-#define EVERQUEST_ZONE_INFO_SHORT_NAME_SIZE  0x20
-#define EVERQUEST_ZONE_INFO_LONG_NAME_SIZE   0x80
+#define EQ_POINTER_CEverQuest 0x00809478
+#define EQ_OFFSET_CEverQuest_GAME_STATE 0x5AC // DWORD
 
-#define EVERQUEST_WORLD_INFO_POINTER       0x007F9494 // POINTER to STRUCT
-#define EVERQUEST_OFFSET_WORLD_INFO_HOUR   0x04 // BYTE
-#define EVERQUEST_OFFSET_WORLD_INFO_MINUTE 0x05 // BYTE
-#define EVERQUEST_OFFSET_WORLD_INFO_DAY    0x06 // BYTE
-#define EVERQUEST_OFFSET_WORLD_INFO_MONTH  0x07 // BYTE
-#define EVERQUEST_OFFSET_WORLD_INFO_YEAR   0x08 // BYTE
+#define EQ_GAME_STATE_CHARACTER_SELECT 1
+#define EQ_GAME_STATE_INGAME           5
 
-#define EVERQUEST_GROUND_SPAWN_INFO_POINTER                        0x007F949C // POINTER to STRUCT
-#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_PREV_SPAWN_INFO_POINTER 0x00 // POINTER to STRUCT
-#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER 0x04 // POINTER to STRUCT
-#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_ID                      0x08 // DWORD
-#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_DROP_ID                 0x0C // DWORD
-#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_Z                       0x90 // FLOAT
-#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_X                       0x94 // FLOAT
-#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_Y                       0x98 // FLOAT
-#define EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NAME                    0x9C // STRING [0x40]
+#define EQ_POINTER_CDisplay 0x007F9510
+#define EQ_OFFSET_CDisplay_IS_CURSOR_ITEM   0x040 // BYTE ; when you pick up and hold an item on your mouse cursor
+#define EQ_OFFSET_CDisplay_IS_CURSOR_HOTKEY 0x042 // BYTE ; when you pick up and hold a hotkey button on your mouse cursor
+#define EQ_OFFSET_CDisplay_TIMER            0x0C8 // DWORD ; global timer in milliseconds, 1000 milliseconds = 1 second
 
-#define EVERQUEST_GROUND_SPAWN_INFO_NAME_SIZE 0x40
+#define EQ_POINTER_CHotButtonWnd 0x0063D628
+
+#define EQ_POINTER_CLootWnd 0x0063D65C
+#define EQ_OFFSET_CLootWnd_IS_OPEN       0x134 // BYTE
+#define EQ_OFFSET_CLootWnd_POINTER_ITEM1 0x1B8 // pointer to first item
+
+#define EQ_CLootWnd_POINTER_ITEM_OFFSET 0x04 // offset between each item pointer
+
+#define EQ_CLootWnd_ITEMS_MAX 30
+
+#define EQ_POINTER_CTradeWnd 0x0063D668
+
+#define EQ_POINTER_CGiveWnd 0x0063D678
+
+#define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
+#define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
+#define EQ_OFFSET_ITEM_INFO_ID_FILE          0x090 // STRING [0x06]
+#define EQ_OFFSET_ITEM_INFO_WEIGHT           0x0AE // BYTE ; multiply by 0.1 for actual decimal weight
+#define EQ_OFFSET_ITEM_INFO_IS_NO_RENT       0x0AF // BYTE ; 255 = False
+#define EQ_OFFSET_ITEM_INFO_IS_NO_DROP       0x0B0 // BYTE ; 255 = False
+#define EQ_OFFSET_ITEM_INFO_SIZE             0x0B1 // BYTE ; EQ_ITEM_SIZE_x
+#define EQ_OFFSET_ITEM_INFO_IS_CONTAINER     0x0B2 // BYTE ; 1 = True
+#define EQ_OFFSET_ITEM_INFO_ID               0x0B4 // WORD
+#define EQ_OFFSET_ITEM_INFO_ICON             0x0B6 // WORD
+#define EQ_OFFSET_ITEM_INFO_EQUIP_SLOT       0x0B8 // DWORD
+#define EQ_OFFSET_ITEM_INFO_EQUIPPABLE_SLOTS 0x0BC // DWORD
+#define EQ_OFFSET_ITEM_INFO_COST             0x0C0 // DWORD
+#define EQ_OFFSET_ITEM_INFO_IS_STACKABLE     0x0F6 // BYTE ; can have quantity more than 1
+#define EQ_OFFSET_ITEM_INFO_QUANTITY         0x116 // BYTE ; count, amount
+
+#define EQ_ITEM_INFO_NAME_SIZE      0x40
+#define EQ_ITEM_INFO_LORE_NAME_SIZE 0x50
+#define EQ_ITEM_INFO_ID_FILE_SIZE   0x06
+
+#define EQ_ITEM_INFO_NULL 0x00000000
+
+#define EQ_ITEM_SIZE_TINY   0
+#define EQ_ITEM_SIZE_SMALL  1
+#define EQ_ITEM_SIZE_MEDIUM 2
+#define EQ_ITEM_SIZE_LARGE  3
+#define EQ_ITEM_SIZE_GIANT  4
+
+#define EQ_ZONE_ID 0x007B9648 // DWORD
+
+#define EQ_ZONE_ID_FREPORTW       9   // West Freeport
+#define EQ_ZONE_ID_COMMONS        21  // West Commonlands
+#define EQ_ZONE_ID_ECOMMONS       22  // East Commonlands
+#define EQ_ZONE_ID_CSHOME         26  // Sunset Home
+#define EQ_ZONE_ID_FIELDOFBONE    78  // The Field of Bone
+#define EQ_ZONE_ID_SLEEPER        128 // Sleeper's Tomb
+#define EQ_ZONE_ID_BAZAAR         151 // The Bazaar
+#define EQ_ZONE_ID_NEXUS          152 // The Nexus
+#define EQ_ZONE_ID_SSERU          159 // Sanctus Seru
+#define EQ_ZONE_ID_TUTORIAL       183 // Tutorial Zone
+#define EQ_ZONE_ID_LOAD           184 // Loading
+#define EQ_ZONE_ID_LOAD2          185 // Loading
+#define EQ_ZONE_ID_POKNOWLEDGE    202 // The Plane of Knowledge
+#define EQ_ZONE_ID_POTRANQUILITY  203 // Plane of Tranquility
+#define EQ_ZONE_ID_POTIMEA        219 // Plane of Time
+#define EQ_ZONE_ID_POTIMEB        223 // Plane of Time
+
+#define EQ_STRUCTURE_ZONE_INFO 0x00798784 // STRUCT
+#define EQ_OFFSET_ZONE_INFO_PLAYER_NAME  0x0000 // STRING [0x40]
+#define EQ_OFFSET_ZONE_INFO_SHORT_NAME   0x0040 // STRING [0x20]
+#define EQ_OFFSET_ZONE_INFO_LONG_NAME    0x0060 // STRING [0x80]
+#define EQ_OFFSET_ZONE_INFO_SAFE_POINT_Y 0x01E8 // FLOAT
+#define EQ_OFFSET_ZONE_INFO_SAFE_POINT_X 0x01EC // FLOAT
+#define EQ_OFFSET_ZONE_INFO_SAFE_POINT_Z 0x01F0 // FLOAT
+
+#define EQ_ZONE_INFO_PLAYER_NAME_SIZE 0x40
+#define EQ_ZONE_INFO_SHORT_NAME_SIZE  0x20
+#define EQ_ZONE_INFO_LONG_NAME_SIZE   0x80
+
+#define EQ_POINTER_WORLD_INFO 0x007F9494
+#define EQ_OFFSET_WORLD_INFO_HOUR   0x04 // BYTE
+#define EQ_OFFSET_WORLD_INFO_MINUTE 0x05 // BYTE
+#define EQ_OFFSET_WORLD_INFO_DAY    0x06 // BYTE
+#define EQ_OFFSET_WORLD_INFO_MONTH  0x07 // BYTE
+#define EQ_OFFSET_WORLD_INFO_YEAR   0x08 // BYTE
+
+#define EQ_POINTER_GROUND_SPAWN_INFO 0x007F949C
+#define EQ_OFFSET_GROUND_SPAWN_INFO_PREV_SPAWN_INFO_POINTER 0x00
+#define EQ_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER 0x04
+#define EQ_OFFSET_GROUND_SPAWN_INFO_ID                      0x08 // WORD
+#define EQ_OFFSET_GROUND_SPAWN_INFO_DROP_ID                 0x0C // WORD
+#define EQ_OFFSET_GROUND_SPAWN_INFO_Z                       0x90 // FLOAT
+#define EQ_OFFSET_GROUND_SPAWN_INFO_X                       0x94 // FLOAT
+#define EQ_OFFSET_GROUND_SPAWN_INFO_Y                       0x98 // FLOAT
+#define EQ_OFFSET_GROUND_SPAWN_INFO_NAME                    0x9C // STRING [0x40]
+
+#define EQ_GROUND_SPAWN_INFO_NAME_SIZE 0x40
 
 // ??
-//#define EVERQUEST_DOORS_INFO_POINTER 0x007F94B8 // POINTER to STRUCT
+//#define EQ_DOORS_INFO_POINTER 0x007F94B8
 
-#define EVERQUEST_CHAR_INFO_POINTER                   0x007F94E8 // POINTER to STRUCT
-#define EVERQUEST_OFFSET_CHAR_INFO_NAME               0x0002 // STRING [0x40]
-#define EVERQUEST_OFFSET_CHAR_INFO_IS_STUNNED         0x0098 // BYTE
-#define EVERQUEST_OFFSET_CHAR_INFO_BUFFS_STRUCTURE    0x0264 // STRUCT [0x0F] ; 15 buffs max
-#define EVERQUEST_OFFSET_CHAR_INFO_STANDING_STATE     0x0B64 // BYTE ; EVERQUEST_STANDING_STATE_x
-#define EVERQUEST_OFFSET_CHAR_INFO_PLATINUM           0x0B68 // DWORD
-#define EVERQUEST_OFFSET_CHAR_INFO_GOLD               0x0B6C // DWORD
-#define EVERQUEST_OFFSET_CHAR_INFO_SILVER             0x0B70 // DWORD
-#define EVERQUEST_OFFSET_CHAR_INFO_COPPER             0x0B74 // DWORD
-#define EVERQUEST_OFFSET_CHAR_INFO_BANK_PLATINUM      0x0B78 // DWORD
-#define EVERQUEST_OFFSET_CHAR_INFO_BANK_GOLD          0x0B7C // DWORD
-#define EVERQUEST_OFFSET_CHAR_INFO_BANK_SILVER        0x0B80 // DWORD
-#define EVERQUEST_OFFSET_CHAR_INFO_BANK_COPPER        0x0B84 // DWORD
-#define EVERQUEST_OFFSET_CHAR_INFO_SPAWN_INFO_POINTER 0x0D74 // POINTER to STRUCT
+// class EQ_Character
+#define EQ_POINTER_CHAR_INFO 0x007F94E8
+#define EQ_POINTER_EQ_Character EQ_POINTER_CHAR_INFO
+#define EQ_OFFSET_CHAR_INFO_NAME               0x0002 // STRING [0x40]
+#define EQ_OFFSET_CHAR_INFO_MANA               0x009A // WORD
+#define EQ_OFFSET_CHAR_INFO_STUNNED_STATE      0x009E // BYTE ; EQ_STUNNED_STATE_x
+#define EQ_OFFSET_CHAR_INFO_BUFF1              0x0264 // STRUCT ; first buff ; 15 buffs max
+#define EQ_OFFSET_CHAR_INFO_STANDING_STATE     0x0B64 // BYTE ; EQ_STANDING_STATE_x
+#define EQ_OFFSET_CHAR_INFO_PLATINUM           0x0B68 // DWORD
+#define EQ_OFFSET_CHAR_INFO_GOLD               0x0B6C // DWORD
+#define EQ_OFFSET_CHAR_INFO_SILVER             0x0B70 // DWORD
+#define EQ_OFFSET_CHAR_INFO_COPPER             0x0B74 // DWORD
+#define EQ_OFFSET_CHAR_INFO_BANK_PLATINUM      0x0B78 // DWORD
+#define EQ_OFFSET_CHAR_INFO_BANK_GOLD          0x0B7C // DWORD
+#define EQ_OFFSET_CHAR_INFO_BANK_SILVER        0x0B80 // DWORD
+#define EQ_OFFSET_CHAR_INFO_BANK_COPPER        0x0B84 // DWORD
+#define EQ_OFFSET_CHAR_INFO_SPAWN_INFO_POINTER 0x0D74
 
-#define EVERQUEST_CHAR_INFO_NAME_SIZE 0x40
+#define EQ_CHAR_INFO_NAME_SIZE 0x40
 
-#define EVERQUEST_BUFFS_STRUCTURE_BUFF_SIZE 0x0A // 0x10
-#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_UNKNOWN_0x00     0x00
-#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_CASTER_LEVEL     0x01 // BYTE ; level of player who casted the buff
-#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_MODIFIER         0x02 // BYTE ; divide by 10 to get Bard song modifier
-#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_IS_DAMAGE_SHIELD 0x03 // BYTE ; damage shield = -1
-#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_SPELL_ID         0x04 // WORD
-#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_DURATION         0x06 // DWORD ; seconds = duration * 6
-//#define EVERQUEST_OFFSET_BUFFS_STRUCTURE_DAMAGE_ABSORB    0x0C // DWORD
+#define EQ_BUFF_SIZE 0x0A // size of buff struct
+#define EQ_OFFSET_BUFF_UNKNOWN0000       0x00 // BYTE
+#define EQ_OFFSET_BUFF_CASTER_LEVEL      0x01 // BYTE ; level of player who casted the buff
+#define EQ_OFFSET_BUFF_MODIFIER          0x02 // BYTE ; divide by 10 to get Bard song modifier
+#define EQ_OFFSET_BUFF_UNKNOWN0003       0x03 // BYTE ; damage shield = -1
+#define EQ_OFFSET_BUFF_SPELL_ID          0x04 // WORD
+#define EQ_OFFSET_BUFF_TICKS             0x06 // DWORD ; duration in ticks ; seconds = ticks * 3
 
-#define EVERQUEST_BUFFS_MAX 15
+#define EQ_BUFFS_MAX 15
 
-#define EVERQUEST_BUFF_SPELL_ID_NULL 0xFFFF
+#define EQ_BUFF_SPELL_ID_NULL 0xFFFF // -1
 
-#define EVERQUEST_BUFF_TYPE_DETRIMENTAL           0
-#define EVERQUEST_BUFF_TYPE_BENEFICIAL            1
-#define EVERQUEST_BUFF_TYPE_BENEFICIAL_GROUP_ONLY 2
+#define EQ_BUFF_TYPE_DETRIMENTAL           0
+#define EQ_BUFF_TYPE_BENEFICIAL            1
+#define EQ_BUFF_TYPE_BENEFICIAL_GROUP_ONLY 2
 
-#define EVERQUEST_SPAWN_INFO_BEGIN_POINTER 0x007F94E0 // POINTER to STRUCT
+// class EQPlayer
+#define EQ_POINTER_PLAYER_SPAWN_INFO     0x007F94CC
+#define EQ_POINTER_TARGET_SPAWN_INFO     0x007F94EC
+#define EQ_POINTER_CONTROLLED_SPAWN_INFO 0x007F94E0
 
-#define EVERQUEST_PLAYER_SPAWN_INFO_POINTER   0x007F94CC // POINTER to STRUCT
-#define EVERQUEST_TARGET_SPAWN_INFO_POINTER   0x007F94EC // POINTER to STRUCT
-#define EVERQUEST_MERCHANT_SPAWN_INFO_POINTER 0x007F94F8 // POINTER to STRUCT
+// targetted spawns
+#define EQ_POINTER_TRADE_SPAWN_INFO      0x007F94C8
+#define EQ_POINTER_MERCHANT_SPAWN_INFO   0x007F94F8
+#define EQ_POINTER_BANKER_SPAWN_INFO     0x007F94FC
+#define EQ_POINTER_CORPSE_SPAWN_INFO     0x007F9500
+#define EQ_POINTER_GAMEMASTER_SPAWN_INFO 0x007F9504
 
-#define EVERQUEST_SPAWN_INFO_NULL 0x00000000
+#define EQ_SPAWN_INFO_NULL 0x00000000
 
-#define EVERQUEST_OFFSET_SPAWN_INFO_NAME                    0x0001 // STRING [0x40]
-#define EVERQUEST_OFFSET_SPAWN_INFO_Y                       0x0048 // FLOAT
-#define EVERQUEST_OFFSET_SPAWN_INFO_X                       0x004C // FLOAT
-#define EVERQUEST_OFFSET_SPAWN_INFO_Z                       0x0050 // FLOAT
-#define EVERQUEST_OFFSET_SPAWN_INFO_HEADING                 0x0054 // FLOAT ; facing direction, rotation
-#define EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED          0x005C // FLOAT
-#define EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER 0x0078 // POINTER to STRUCT
-#define EVERQUEST_OFFSET_SPAWN_INFO_PREV_SPAWN_INFO_POINTER 0x007C // POINTER to STRUCT
-#define EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER      0x0084 // POINTER to STRUCT
-#define EVERQUEST_OFFSET_SPAWN_INFO_CHAR_INFO_POINTER       0x0088 // POINTER to STRUCT
-#define EVERQUEST_OFFSET_SPAWN_INFO_AVATAR_HEIGHT           0x008C // FLOAT
-#define EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID                0x0094 // WORD
-#define EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID                0x0096 // WORD
-#define EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX                  0x0098 // DWORD
-#define EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT              0x009C // DWORD
-#define EVERQUEST_OFFSET_SPAWN_INFO_GUILD_ID                0x00A0 // WORD
-#define EVERQUEST_OFFSET_SPAWN_INFO_TYPE                    0x00A8 // BYTE ; EVERQUEST_SPAWN_INFO_TYPE_x
-#define EVERQUEST_OFFSET_SPAWN_INFO_CLASS                   0x00A9 // BYTE ; EVERQUEST_CLASS_x
-#define EVERQUEST_OFFSET_SPAWN_INFO_RACE                    0x00AA // BYTE ; EVERQUEST_RACE_x
-#define EVERQUEST_OFFSET_SPAWN_INFO_LEVEL                   0x00AD // BYTE
-#define EVERQUEST_OFFSET_SPAWN_INFO_HIDE_STATE              0x00AE // BYTE
-#define EVERQUEST_OFFSET_SPAWN_INFO_STANDING_STATE          0x00B1 // BYTE ; EVERQUEST_STANDING_STATE_x
-#define EVERQUEST_OFFSET_SPAWN_INFO_PRIMARY                 0x00C2 // WORD
-#define EVERQUEST_OFFSET_SPAWN_INFO_SECONDARY               0x00C4 // WORD ; offhand
-#define EVERQUEST_OFFSET_SPAWN_INFO_IS_LINKDEAD             0x0108 // BYTE
-#define EVERQUEST_OFFSET_SPAWN_INFO_IS_AFK                  0x0122 // BYTE
-#define EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME               0x012C // STRING [0x20]
+#define EQ_OFFSET_SPAWN_INFO_NAME                    0x0001 // STRING [0x40]
+#define EQ_OFFSET_SPAWN_INFO_ZONE_ID                 0x0044 // DWORD
+#define EQ_OFFSET_SPAWN_INFO_Y                       0x0048 // FLOAT
+#define EQ_OFFSET_SPAWN_INFO_X                       0x004C // FLOAT
+#define EQ_OFFSET_SPAWN_INFO_Z                       0x0050 // FLOAT
+#define EQ_OFFSET_SPAWN_INFO_HEADING                 0x0054 // FLOAT ; facing direction, rotation
+#define EQ_OFFSET_SPAWN_INFO_MOVEMENT_SPEED          0x005C // FLOAT
+#define EQ_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER 0x0078
+#define EQ_OFFSET_SPAWN_INFO_PREV_SPAWN_INFO_POINTER 0x007C
+#define EQ_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER      0x0084
+#define EQ_OFFSET_SPAWN_INFO_CHAR_INFO_POINTER       0x0088
+#define EQ_OFFSET_SPAWN_INFO_CAMERA_HEIGHT           0x008C // FLOAT ; height from where your character's eyes see
+#define EQ_OFFSET_SPAWN_INFO_MODEL_HEIGHT_OFFSET     0x0090 // FLOAT ; height above/below the ground
+#define EQ_OFFSET_SPAWN_INFO_SPAWN_ID                0x0094 // WORD
+#define EQ_OFFSET_SPAWN_INFO_OWNER_ID                0x0096 // WORD
+#define EQ_OFFSET_SPAWN_INFO_HP_MAX                  0x0098 // DWORD
+#define EQ_OFFSET_SPAWN_INFO_HP_CURRENT              0x009C // DWORD
+#define EQ_OFFSET_SPAWN_INFO_GUILD_ID                0x00A0 // WORD
+#define EQ_OFFSET_SPAWN_INFO_TYPE                    0x00A8 // BYTE ; EQ_SPAWN_INFO_TYPE_x
+#define EQ_OFFSET_SPAWN_INFO_CLASS                   0x00A9 // BYTE ; EQ_CLASS_x
+#define EQ_OFFSET_SPAWN_INFO_RACE                    0x00AA // WORD ; EQ_RACE_x
+#define EQ_OFFSET_SPAWN_INFO_LEVEL                   0x00AD // BYTE
+#define EQ_OFFSET_SPAWN_INFO_HIDE_STATE              0x00AE // BYTE
+#define EQ_OFFSET_SPAWN_INFO_STANDING_STATE          0x00B1 // BYTE ; EQ_STANDING_STATE_x
+#define EQ_OFFSET_SPAWN_INFO_PRIMARY                 0x00C2 // WORD
+#define EQ_OFFSET_SPAWN_INFO_SECONDARY               0x00C4 // WORD ; offhand
+#define EQ_OFFSET_SPAWN_INFO_MODEL_HEIGHT            0x00F0 // FLOAT ; height / size / actor scale factor
+#define EQ_OFFSET_SPAWN_INFO_IS_LINKDEAD             0x0108 // BYTE
+#define EQ_OFFSET_SPAWN_INFO_IS_AFK                  0x011C // BYTE
+#define EQ_OFFSET_SPAWN_INFO_LAST_NAME               0x012C // STRING [0x20]
 
-#define EVERQUEST_SPAWNS_MAX 4096
+#define EQ_SPAWNS_MAX 8192
 
-#define EVERQUEST_SPAWN_INFO_NAME_SIZE      0x40
-#define EVERQUEST_SPAWN_INFO_LAST_NAME_SIZE 0x20
+#define EQ_SPAWN_INFO_NAME_SIZE      0x40
+#define EQ_SPAWN_INFO_LAST_NAME_SIZE 0x20
 
-#define EVERQUEST_SPAWN_INFO_TYPE_PLAYER 0
-#define EVERQUEST_SPAWN_INFO_TYPE_NPC    1
-#define EVERQUEST_SPAWN_INFO_TYPE_CORPSE 2
+#define EQ_SPAWN_INFO_TYPE_PLAYER        0
+#define EQ_SPAWN_INFO_TYPE_NPC           1
+#define EQ_SPAWN_INFO_TYPE_NPC_CORPSE    2
+#define EQ_SPAWN_INFO_TYPE_PLAYER_CORPSE 3
 
-#define EVERQUEST_OFFSET_ACTOR_TIME_STAMP                    0x0058 // DWORD
-#define EVERQUEST_OFFSET_ACTOR_TIME_STAMP_LAST_TICK          0x005C // DWORD
-#define EVERQUEST_OFFSET_ACTOR_CASTING_SPELL_TIME_STAMP      0x00CC // DWORD
-#define EVERQUEST_OFFSET_ACTOR_CASTING_SPELL_TIME_STAMP_EX   0x00E0 // DWORD
-#define EVERQUEST_OFFSET_ACTOR_INFO_ANIMATION                0x0184 // BYTE
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH          0x0260 // DWORD
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY     0x0264 // DWORD
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY       0x0268 // DWORD
-#define EVERQUEST_OFFSET_ACTOR_INFO_CASTING_SPELL_ID         0x027C // WORD
-#define EVERQUEST_OFFSET_ACTOR_INFO_CASTING_SPELL_GEM_NUMBER 0x027E // BYTE
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_NOT_MOVING            0x032D // BYTE
-#define EVERQUEST_OFFSET_ACTOR_INFO_IS_LFG                   0x0438 // BYTE
+#define EQ_OFFSET_ACTOR_INFO_TIME_STAMP                  0x0058 // DWORD
+#define EQ_OFFSET_ACTOR_INFO_TIME_STAMP_LAST_TICK        0x005C // DWORD
+#define EQ_OFFSET_ACTOR_INFO_HEIGHT                      0x00B8 // FLOAT
+#define EQ_OFFSET_ACTOR_INFO_CASTING_SPELL_TIME_STAMP    0x00CC // DWORD
+#define EQ_OFFSET_ACTOR_INFO_CASTING_SPELL_TIME_STAMP_EX 0x00E0 // DWORD
+#define EQ_OFFSET_ACTOR_INFO_ANIMATION                   0x0184 // BYTE
+#define EQ_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH             0x0260 // DWORD
+#define EQ_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY        0x0264 // DWORD
+#define EQ_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY          0x0268 // DWORD
+#define EQ_OFFSET_ACTOR_INFO_CASTING_SPELL_ID            0x027C // WORD
+#define EQ_OFFSET_ACTOR_INFO_CASTING_SPELL_GEM_NUMBER    0x027E // BYTE
+#define EQ_OFFSET_ACTOR_INFO_IS_NOT_MOVING               0x032D // BYTE
+#define EQ_OFFSET_ACTOR_INFO_IS_LFG                      0x0438 // BYTE
 
-#define EVERQUEST_CASTING_SPELL_ID_NULL 0xFFFF
+#define EQ_CASTING_SPELL_ID_NULL 0xFFFF
 
-#define EVERQUEST_CASTING_SPELL_GEM_NUMBER_SINGING 255
+#define EQ_CASTING_SPELL_GEM_NUMBER_SINGING 255
 
-#define EVERQUEST_OLD_UI_INFO_POINTER 0x007F9574
-#define EVERQUEST_OFFSET_OLD_UI_INFO_STATE                0x00E88 // BYTE ; EVERQUEST_OLD_UI_STATE_x
-#define EVERQUEST_OFFSET_OLD_UI_INFO_IS_TRADE_WINDOW_OPEN 0x5F314 // DWORD
+// class EQ_Main
+#define EQ_POINTER_OLD_UI_INFO 0x007F9574
+#define EQ_POINTER_EQ_Main EQ_POINTER_OLD_UI_INFO
+#define EQ_OFFSET_OLD_UI_INFO_STATE               0x00E88 // BYTE ; EQ_OLD_UI_STATE_x
+#define EQ_OFFSET_OLD_UI_INFO_IS_SIDE_WINDOW_OPEN 0x5F314 // DWORD ; trade window, loot window, bank window, merchant window
 
-#define EVERQUEST_MOUSE_CURSOR_INFO_POINTER 0x007F9510
-#define EVERQUEST_OFFSET_MOUSE_CURSOR_INFO_IS_HOLDING_ITEM   0x40 // BYTE
-#define EVERQUEST_OFFSET_MOUSE_CURSOR_INFO_IS_HOLDING_HOTKEY 0x42 // BYTE
+#define EQ_MOUSE_X_EX 0x008092E8 // DWORD
+#define EQ_MOUSE_Y_EX 0x008092EC // DWORD
 
-#define EVERQUEST_MOUSE_X 0x008092E8 // DWORD
-#define EVERQUEST_MOUSE_Y 0x008092EC // DWORD
+#define EQ_MOUSE_X 0x00798580 // WORD
+#define EQ_MOUSE_Y 0x00798582 // WORD
 
-#define EVERQUEST_MOUSE_CLICK_STATE 0x00798614 // DWORD
+#define EQ_MOUSE_CLICK_STATE 0x00798614 // DWORD
 
-#define EVERQUEST_MOUSE_CLICK_STATE_LEFT  1       //0x01000001
-#define EVERQUEST_MOUSE_CLICK_STATE_RIGHT 1677612 //0x00010100
-#define EVERQUEST_MOUSE_CLICK_STATE_BOTH  0x01010101
+#define EQ_MOUSE_CLICK_STATE_LEFT  1       //0x01000001
+#define EQ_MOUSE_CLICK_STATE_RIGHT 1677612 //0x00010100
+#define EQ_MOUSE_CLICK_STATE_BOTH  0x01010101
 
-#define EVERQUEST_MOUSE_BUTTON_IS_HELD_DOWN 0x00798628 // DWORD
+#define EQ_MOUSE_BUTTON_IS_HELD_DOWN 0x00798628 // DWORD
 
-#define EVERQUEST_MOUSE_LOOK_STATE 0x007985EA // DWORD
+#define EQ_MOUSE_LOOK_STATE 0x007985EA // DWORD
 
-#define EVERQUEST_MOUSE_LOOK_STATE_FALSE 0x00010000
-#define EVERQUEST_MOUSE_LOOK_STATE_TRUE  0x00010001
+#define EQ_MOUSE_LOOK_STATE_FALSE 0x00010000
+#define EQ_MOUSE_LOOK_STATE_TRUE  0x00010001
 
-#define EVERQUEST_RACE_UNKNOWN   0
-#define EVERQUEST_RACE_HUMAN     1
-#define EVERQUEST_RACE_BARBARIAN 2
-#define EVERQUEST_RACE_ERUDITE   3
-#define EVERQUEST_RACE_WOOD_ELF  4
-#define EVERQUEST_RACE_HIGH_ELF  5
-#define EVERQUEST_RACE_DARK_ELF  6
-#define EVERQUEST_RACE_HALF_ELF  7
-#define EVERQUEST_RACE_DWARF     8
-#define EVERQUEST_RACE_TROLL     9
-#define EVERQUEST_RACE_OGRE      10
-#define EVERQUEST_RACE_HALFLING  11
-#define EVERQUEST_RACE_GNOME     12
-#define EVERQUEST_RACE_IKSAR     128
-#define EVERQUEST_RACE_VAH_SHIR  130
-#define EVERQUEST_RACE_FROGLOK   330
-#define EVERQUEST_RACE_DRAKKIN   -1
+#define EQ_RACE_UNKNOWN   0
+#define EQ_RACE_HUMAN     1
+#define EQ_RACE_BARBARIAN 2
+#define EQ_RACE_ERUDITE   3
+#define EQ_RACE_WOOD_ELF  4
+#define EQ_RACE_HIGH_ELF  5
+#define EQ_RACE_DARK_ELF  6
+#define EQ_RACE_HALF_ELF  7
+#define EQ_RACE_DWARF     8
+#define EQ_RACE_TROLL     9
+#define EQ_RACE_OGRE      10
+#define EQ_RACE_HALFLING  11
+#define EQ_RACE_GNOME     12
+#define EQ_RACE_IKSAR     128
+#define EQ_RACE_VAH_SHIR  130
+#define EQ_RACE_FROGLOK   330
 
-#define EVERQUEST_CLASS_UNKNOWN      0
-#define EVERQUEST_CLASS_WARRIOR      1
-#define EVERQUEST_CLASS_CLERIC       2
-#define EVERQUEST_CLASS_PALADIN      3
-#define EVERQUEST_CLASS_RANGER       4
-#define EVERQUEST_CLASS_SHADOWKNIGHT 5
-#define EVERQUEST_CLASS_DRUID        6
-#define EVERQUEST_CLASS_MONK         7
-#define EVERQUEST_CLASS_BARD         8
-#define EVERQUEST_CLASS_ROGUE        9
-#define EVERQUEST_CLASS_SHAMAN       10
-#define EVERQUEST_CLASS_NECROMANCER  11
-#define EVERQUEST_CLASS_WIZARD       12
-#define EVERQUEST_CLASS_MAGICIAN     13
-#define EVERQUEST_CLASS_ENCHANTER    14
-#define EVERQUEST_CLASS_BEASTLORD    15
-#define EVERQUEST_CLASS_BANKER       16
-#define EVERQUEST_CLASS_WARRIOR_GUILDMASTER      17 // EVERQUEST_CLASS_WARRIOR + 16
-#define EVERQUEST_CLASS_CLERIC_GUILDMASTER       18
-#define EVERQUEST_CLASS_PALADIN_GUILDMASTER      19
-#define EVERQUEST_CLASS_RANGER_GUILDMASTER       20
-#define EVERQUEST_CLASS_SHADOWKNIGHT_GUILDMASTER 21
-#define EVERQUEST_CLASS_DRUID_GUILDMASTER        22
-#define EVERQUEST_CLASS_MONK_GUILDMASTER         23
-#define EVERQUEST_CLASS_BARD_GUILDMASTER         24
-#define EVERQUEST_CLASS_ROGUE_GUILDMASTER        25
-#define EVERQUEST_CLASS_SHAMAN_GUILDMASTER       26
-#define EVERQUEST_CLASS_NECROMANCER_GUILDMASTER  27
-#define EVERQUEST_CLASS_WIZARD_GUILDMASTER       28
-#define EVERQUEST_CLASS_MAGICIAN_GUILDMASTER     29
-#define EVERQUEST_CLASS_ENCHANTER_GUILDMASTER    30
-#define EVERQUEST_CLASS_BEASTLORD_GUILDMASTER    31 // EVERQUEST_CLASS_BEASTLORD + 16
-#define EVERQUEST_CLASS_GUILDMASTER_BEGIN        EVERQUEST_CLASS_WARRIOR_GUILDMASTER
-#define EVERQUEST_CLASS_GUILDMASTER_END          EVERQUEST_CLASS_BEASTLORD_GUILDMASTER
-#define EVERQUEST_CLASS_MERCHANT     32
-#define EVERQUEST_CLASS_BERSERKER    -1
+#define EQ_CLASS_UNKNOWN                  0
+#define EQ_CLASS_WARRIOR                  1
+#define EQ_CLASS_CLERIC                   2
+#define EQ_CLASS_PALADIN                  3
+#define EQ_CLASS_RANGER                   4
+#define EQ_CLASS_SHADOWKNIGHT             5
+#define EQ_CLASS_DRUID                    6
+#define EQ_CLASS_MONK                     7
+#define EQ_CLASS_BARD                     8
+#define EQ_CLASS_ROGUE                    9
+#define EQ_CLASS_SHAMAN                   10
+#define EQ_CLASS_NECROMANCER              11
+#define EQ_CLASS_WIZARD                   12
+#define EQ_CLASS_MAGICIAN                 13
+#define EQ_CLASS_ENCHANTER                14
+#define EQ_CLASS_BEASTLORD                15
+#define EQ_CLASS_BANKER                   16
+#define EQ_CLASS_WARRIOR_GUILDMASTER      17 // EQ_CLASS_WARRIOR + 16
+#define EQ_CLASS_CLERIC_GUILDMASTER       18
+#define EQ_CLASS_PALADIN_GUILDMASTER      19
+#define EQ_CLASS_RANGER_GUILDMASTER       20
+#define EQ_CLASS_SHADOWKNIGHT_GUILDMASTER 21
+#define EQ_CLASS_DRUID_GUILDMASTER        22
+#define EQ_CLASS_MONK_GUILDMASTER         23
+#define EQ_CLASS_BARD_GUILDMASTER         24
+#define EQ_CLASS_ROGUE_GUILDMASTER        25
+#define EQ_CLASS_SHAMAN_GUILDMASTER       26
+#define EQ_CLASS_NECROMANCER_GUILDMASTER  27
+#define EQ_CLASS_WIZARD_GUILDMASTER       28
+#define EQ_CLASS_MAGICIAN_GUILDMASTER     29
+#define EQ_CLASS_ENCHANTER_GUILDMASTER    30
+#define EQ_CLASS_BEASTLORD_GUILDMASTER    31 // EQ_CLASS_BEASTLORD + 16
+#define EQ_CLASS_MERCHANT                 32
+#define EQ_CLASS_GUILDMASTER_BEGIN        17
+#define EQ_CLASS_GUILDMASTER_END          31
 
-#define EVERQUEST_GUILD_NAMES_BEGIN 0x007F9C94
-#define EVERQUEST_GUILD_NAME_SIZE 0x60
+#define EQ_OFFSET_CLASS_GUILDMASTER 16 // EQ_CLASS_x + 16 = EQ_CLASS_x_GUILDMASTER
 
-#define EVERQUEST_GUILD_NAMES_MAX 512
+#define EQ_STRUCTURE_GUILD_LIST 0x007F9C94
+#define EQ_GUILDS_MAX 512
 
-#define EVERQUEST_GUILD_ID_NULL 0xFFFF // WORD ; = 65535
+#define EQ_GUILD_ID_NULL 0xFFFF // WORD
 
-#define EVERQUEST_STANDING_STATE_STANDING 0x64
-#define EVERQUEST_STANDING_STATE_FROZEN   0x66 // mesmerised / feared ; You lose control of yourself!
-#define EVERQUEST_STANDING_STATE_LOOTING  0x69 // looting or bind wound
-#define EVERQUEST_STANDING_STATE_SITTING  0x6E
-#define EVERQUEST_STANDING_STATE_DUCKING  0x6F // crouching
-#define EVERQUEST_STANDING_STATE_FEIGNED  0x73 // feign death
-#define EVERQUEST_STANDING_STATE_DEAD     0x78
+// EQPlayer::ChangePosition(BYTE standingState)
+#define EQ_STANDING_STATE_STANDING 0x64
+#define EQ_STANDING_STATE_FROZEN   0x66 // stunned / mesmerized / feared ; You lose control of yourself!
+#define EQ_STANDING_STATE_LOOTING  0x69 // looting or binding wounds
+#define EQ_STANDING_STATE_SITTING  0x6E
+#define EQ_STANDING_STATE_DUCKING  0x6F // crouching
+#define EQ_STANDING_STATE_FEIGNED  0x73 // feign death
+#define EQ_STANDING_STATE_DEAD     0x78
 
-// eqgame.exe+AAAD1 - 74 0C - je eqgame.exe+AAADF
-#define EVERQUEST_ASM_PLAY_NICE_JUMP 0x004AAAD1
-BYTE EVERQUEST_ASM_PLAY_NICE_JUMP_BYTES[] = {0x74, 0x0C};
+#define EQ_STUNNED_STATE_FALSE       0x00
+#define EQ_STUNNED_STATE_TRUE        0x01
+#define EQ_STUNNED_STATE_UNCONSCIOUS 0x03
+#define EQ_STUNNED_STATE_DEAD        0x04
 
-// eqgame.exe+AAAD3 - FF 35 68967900 - push [eqgame.exe+399668]
-// eqgame.exe+AAAD9 - FF 15 5C315E00 - call dword ptr [eqgame.exe+1E315C] -> kernel32.Sleep
-#define EVERQUEST_ASM_PLAY_NICE_SLEEP_TIME 0x00799668 // DWORD ; eqgame.exe+399668
+#define EQ_HEADING_MAX 512 // yaw
 
-// call eqgame.exe+15833D
-#define EVERQUEST_ASM_PLAY_NICE_SLEEP_IS_ENABLED 0x008063D0 // DWORD ; eqgame.exe+4063D0
+#define EQ_SKILL_ONEHANDBLUNT 0
+#define EQ_SKILL_TRACKING     53
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define EQ_TEXT_COLOR_PINK 0x05
 
-#define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT       0x004B459C
-#define EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT_VALUE 0x007F9510
+#define EQ_WORLD_SPACE_TO_SCREEN_SPACE_FUNCTION_NAME "t3dWorldSpaceToScreenSpace" // EQGfx_Dx8.t3dWorldSpaceToScreenSpace
 
-typedef void __stdcall _everquest_function_warp_to_safe_point(int value);
-static _everquest_function_warp_to_safe_point *everquest_function_warp_to_safe_point = (_everquest_function_warp_to_safe_point *)EVERQUEST_FUNCTION_WARP_TO_SAFE_POINT;
+#define EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA 0x0063B924
 
-#define EVERQUEST_FUNCTION_DO_THE_ZONE 0x00546081
+#define EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE 0xFFFF3D3E // world space to screen space failed because the location is not on screen
 
-typedef void __stdcall _everquest_function_do_the_zone(int destination_zone, char* aa, int destination_type, int zone_reason, float y, float x, float z, int heading);
-static _everquest_function_do_the_zone *everquest_function_do_the_zone = (_everquest_function_do_the_zone *)EVERQUEST_FUNCTION_DO_THE_ZONE;
-
-// CHotButtonWnd__DoHotButton
-#define EVERQUEST_FUNCTION_DO_HOT_BUTTON 0x004209BD
-
-typedef void __stdcall _everquest_function_do_hot_button(int button_index);
-static _everquest_function_do_hot_button *everquest_function_do_hot_button = (_everquest_function_do_hot_button *)EVERQUEST_FUNCTION_DO_HOT_BUTTON;
-
-// EQ_Character__CastSpell
-#define EVERQUEST_FUNCTION_CAST_SPELL 0x004C483B
-
-typedef void __stdcall _everquest_function_cast_spell(int gem_index, int spell_id);
-static _everquest_function_cast_spell *everquest_function_cast_spell = (_everquest_function_cast_spell *)EVERQUEST_FUNCTION_CAST_SPELL;
-
-// CEverQuest__dsp_chat
-#define EVERQUEST_FUNCTION_CHAT_WRITE 0x00537F99
-
-typedef void __stdcall _everquest_function_chat_write(char* text, int color = 10, BYTE value = 1);
-static _everquest_function_chat_write *everquest_function_chat_write = (_everquest_function_chat_write *)EVERQUEST_FUNCTION_CHAT_WRITE;
-
-// CEverQuest__dsp_chat2
-#define EVERQUEST_FUNCTION_CHAT_WRITE_EX 0x005380FD
-
-typedef void __stdcall _everquest_function_chat_write_ex(char* text);
-static _everquest_function_chat_write_ex *everquest_function_chat_write_ex = (_everquest_function_chat_write_ex *)EVERQUEST_FUNCTION_CHAT_WRITE_EX;
-
-// chat write eqstr strings
-// call 00550EFE
-
-// CTextureFont__DrawWrappedText
-#define EVERQUEST_FUNCTION_DRAW_WRAPPED_TEXT 0x005A4970
-
-// EQ_LoadingS__WriteTextHD
-#define EVERQUEST_FUNCTION_WRITE_TEXT_HD       0x00452DE9
-#define EVERQUEST_FUNCTION_WRITE_TEXT_HD_VALUE 0x0063D3B0
-
-typedef void __stdcall _everquest_function_write_text_hd(char* text, int x, int y, int color = 15, int value);
-static _everquest_function_write_text_hd *everquest_function_write_text_hd = (_everquest_function_write_text_hd *)EVERQUEST_FUNCTION_WRITE_TEXT_HD;
-
-// CDisplay__WriteTextHD2
-#define EVERQUEST_FUNCTION_WRITE_TEXT_HD_2 0x004AA5AA
-
-typedef void __stdcall _everquest_function_write_text_hd_2(char* text, int x, int y, int color = 15);
-static _everquest_function_write_text_hd_2 *everquest_function_write_text_hd_2 = (_everquest_function_write_text_hd_2 *)EVERQUEST_FUNCTION_WRITE_TEXT_HD_2;
-
-#define EVERQUEST_FUNCTION_SET_STANDING_STATE 0x0050BE3C
-
-typedef void __stdcall _everquest_function_set_standing_state(BYTE standing_state);
-static _everquest_function_set_standing_state *everquest_function_set_standing_state = (_everquest_function_set_standing_state *)EVERQUEST_FUNCTION_SET_STANDING_STATE;
-
-// call eqgame.exe+E590C
-#define EVERQUEST_FUNCTION_OPEN_TRADE_WINDOW 0x004E590C
-
-typedef void __stdcall _everquest_function_open_trade_window(int value);
-static _everquest_function_open_trade_window *everquest_function_open_trade_window = (_everquest_function_open_trade_window *)EVERQUEST_FUNCTION_OPEN_TRADE_WINDOW;
-
-#ifdef __cplusplus
-}
-#endif
-
-struct everquest_spawn_t
+typedef struct _EQLOCATION
 {
-    int address;
-
-    int count;
-
-    int spawn_id;
-    int owner_id;
-    int guild_id;
-
-    std::string name;
-    std::string last_name;
-
-    float x;
     float y;
-    float z;
-
-    float distance;
-    float distance_z;
-
-    float heading;
-
-    float movement_speed;
-
-    int standing_state;
-
-    int type;
-    int level;
-    int race;
-    int _class; // class is a keyword
-
-    int hp;
-    int hp_max;
-
-    bool is_target;
-    bool is_player_corpse;
-
-    int is_holding_both;
-    int is_holding_secondary;
-    int is_holding_primary;
-};
-
-struct everquest_ground_spawn_t
-{
-    int address;
-
-    int id;
-    int drop_id;
-
-    std::string name;
-
     float x;
-    float y;
     float z;
+} EQLOCATION, *PEQLOCATION;
 
-    float distance;
-    float distance_z;
-};
-
-float everquest_calculate_distance(float x1, float y1, float x2, float y2)
+typedef struct _EQZONEINFO
 {
-    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+/* 0x0000 */ CHAR PlayerName[40];
+/* 0x0040 */ CHAR ShortName[20];
+/* 0x0060 */ CHAR LongName[80];
+} EQZONEINFO, *PEQZONEINFO;
+
+// class EQ_Character
+typedef struct _EQCHARINFO
+{
+/* 0x0000 */ BYTE Unknown0000;
+/* 0x0001 */ BYTE Unknown0001;
+/* 0x0002 */ CHAR Name[64]; // [0x40]
+/* 0x0042 */ CHAR LastName[70]; // [0x46] ; last name or title
+/* 0x0088 */ WORD Gender; // 0 = Male, 1 = Female
+/* 0x008A */ WORD Race;
+/* 0x008C */ WORD Class;
+/* 0x008E */ WORD Unknown008E;
+/* 0x0090 */ WORD Level;
+/* 0x0092 */ WORD Unknown0092;
+/* 0x0094 */ DWORD Experience; // EXP
+/* 0x0098 */ WORD Face;
+/* 0x009A */ WORD Mana;
+/* 0x009C */ WORD BaseHP;
+/* 0x009E */ WORD StunnedState; // 1 = Stunned, 3 = Unconscious, 4 = Dead
+/* 0x00A0 */ WORD BaseSTR;
+/* 0x00A2 */ WORD BaseSTA;
+/* 0x00A4 */ WORD BaseCHA;
+/* 0x00A6 */ WORD BaseDEX;
+/* 0x00A8 */ WORD BaseINT;
+/* 0x00AA */ WORD BaseAGI;
+/* 0x00AC */ WORD BaseWIS;
+/* 0x00AE */ BYTE Unknown00AE[###]
+/* 0x0732 */ WORD SpellBook[250]; // [0xFA]
+/* 0x0A36 */ BYTE Unknown082A[524]; // [0x20C]
+/* 0x0A3E */ WORD MemorizedSpells[8]; // [0x08]
+/* 0x0A50 */ BYTE Unknown0A3E[18];
+/* 0x0A54 */ DWORD Unknown0A50;
+/* 0x0A58 */ DWORD Unknown2904;
+/* 0x0A5C */ DWORD Unknown2908;
+/* 0x0A60 */ DWORD Unknown2912;
+	DWORD Unknown2916;
+////////////////////////////////////////////////
+/* 0x0B68 */ DWORD Platinum;
+/* 0x0B6C */ DWORD Gold;
+/* 0x0B70 */ DWORD Silver;
+/* 0x0B74 */ DWORD Copper;
+/* 0x0B78 */ DWORD BankPlatinum;
+/* 0x0B7C */ DWORD BankGold;
+/* 0x0B80 */ DWORD BankSilver;
+/* 0x0B84 */ DWORD BankCopper;
+} EQCHARINFO, *PEQCHARINFO;
+
+typedef struct _EQGUILD
+{
+/* 0x0000 */ CHAR Name[32];
+/* 0x0032 */ BYTE Unknown0032[64];
+} EQGUILD, *PEQGUILD;
+
+typedef struct _EQGUILDLIST
+{
+    EQGUILD Guild[512];
+} EQGUILDLIST, *PEQGUILDLIST;
+
+void EQ_ToggleBool(bool &b)
+{
+    b = !b;
 }
 
-bool everquest_is_in_game(memory &memory)
+float EQ_CalculateDistance(float x1, float y1, float x2, float y2)
 {
-    return memory.read_any<BYTE>(EVERQUEST_IS_IN_GAME);
+    return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2));
 }
 
-bool everquest_is_auto_attack_enabled(memory &memory)
+bool EQ_IsInGame(CMemory* mem)
 {
-    return memory.read_any<BYTE>(EVERQUEST_IS_AUTO_ATTACK_ENABLED);
+    BYTE result = mem->ReadAny<BYTE>(EQ_IS_IN_GAME);
+
+    return (result != 0);
 }
 
-std::string everquest_get_zone_player_name(memory &memory)
+bool EQ_IsAutoAttackEnabled(CMemory* mem)
 {
-    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_PLAYER_NAME, EVERQUEST_ZONE_INFO_PLAYER_NAME_SIZE);
+    BYTE result = mem->ReadAny<BYTE>(EQ_IS_AUTO_ATTACK_ENABLED);
+
+    return (result != 0);
 }
 
-std::string everquest_get_zone_short_name(memory &memory)
+DWORD EQ_GetZoneId(CMemory* mem)
 {
-    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_SHORT_NAME, EVERQUEST_ZONE_INFO_SHORT_NAME_SIZE);
+    return mem->ReadAny<DWORD>(EQ_ZONE_ID);
 }
 
-std::string everquest_get_zone_long_name(memory &memory)
+EQCHARINFO EQ_GetCharInfo(CMemory* mem)
 {
-    return memory.read_string(EVERQUEST_ZONE_INFO_STRUCTURE + EVERQUEST_OFFSET_ZONE_INFO_LONG_NAME, EVERQUEST_ZONE_INFO_LONG_NAME_SIZE);
+    return mem->ReadStructFromPointer<EQCHARINFO>(EQ_POINTER_CHAR_INFO);
 }
 
-int everquest_get_char_info(memory &memory)
+//EQCEVERQUEST EQ_GetCEverQuest(CMemory* mem)
+//{
+    //return mem->ReadStructFromPointer<DWORD>(EQ_CEverQuest_POINTER);
+//}
+
+//DWORD EQ_GetGameState(CMemory* mem)
+//{
+    //DWORD CEverQuest = EQ_GetCEverQuest(mem);
+
+    //return mem->ReadAny<DWORD>(CEverQuest + EQ_OFFSET_CEverQuest_GAME_STATE);
+//}
+
+std::string EQ_GetRaceShortName(WORD race)
 {
-    return memory.read_any<DWORD>(EVERQUEST_CHAR_INFO_POINTER);
-}
-
-int everquest_get_ground_spawn_info(memory &memory)
-{
-    return memory.read_any<DWORD>(EVERQUEST_GROUND_SPAWN_INFO_POINTER);
-}
-
-int everquest_get_old_ui_info(memory &memory)
-{
-    return memory.read_any<DWORD>(EVERQUEST_OLD_UI_INFO_POINTER);
-}
-
-int everquest_get_mouse_cursor_info(memory &memory)
-{
-    return memory.read_any<DWORD>(EVERQUEST_MOUSE_CURSOR_INFO_POINTER);
-}
-
-int everquest_get_player_spawn_info(memory &memory)
-{
-    return memory.read_any<DWORD>(EVERQUEST_PLAYER_SPAWN_INFO_POINTER);
-}
-
-int everquest_get_player_actor_info(memory &memory)
-{
-    int player_spawn_info = everquest_get_player_spawn_info(memory);
-
-    return memory.read_any<DWORD>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
-}
-
-int everquest_get_target_spawn_info(memory &memory)
-{
-    return memory.read_any<DWORD>(EVERQUEST_TARGET_SPAWN_INFO_POINTER);
-}
-
-int everquest_get_target_actor_info(memory &memory)
-{
-    int target_spawn_info = everquest_get_target_spawn_info(memory);
-
-    return memory.read_any<DWORD>(target_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
-}
-
-
-int everquest_get_merchant_spawn_info(memory &memory)
-{
-    return memory.read_any<DWORD>(EVERQUEST_MERCHANT_SPAWN_INFO_POINTER);
-}
-
-std::string everquest_get_race_short_name(int race)
-{
-    std::string race_short_name;
+    std::string raceShortName;
 
     switch (race)
     {
-        case EVERQUEST_RACE_UNKNOWN:
-            race_short_name = "UNK";
+        case EQ_RACE_UNKNOWN:
+            raceShortName = "UNK";
             break;
 
-        case EVERQUEST_RACE_HUMAN:
-            race_short_name = "HUM";
+        case EQ_RACE_HUMAN:
+            raceShortName = "HUM";
             break;
 
-        case EVERQUEST_RACE_BARBARIAN:
-            race_short_name = "BAR";
+        case EQ_RACE_BARBARIAN:
+            raceShortName = "BAR";
             break;
 
-        case EVERQUEST_RACE_ERUDITE:
-            race_short_name = "ERU";
+        case EQ_RACE_ERUDITE:
+            raceShortName = "ERU";
             break;
 
-        case EVERQUEST_RACE_WOOD_ELF:
-            race_short_name = "ELF";
+        case EQ_RACE_WOOD_ELF:
+            raceShortName = "ELF";
             break;
 
-        case EVERQUEST_RACE_HIGH_ELF:
-            race_short_name = "HIE";
+        case EQ_RACE_HIGH_ELF:
+            raceShortName = "HIE";
             break;
 
-        case EVERQUEST_RACE_DARK_ELF:
-            race_short_name = "DEF";
+        case EQ_RACE_DARK_ELF:
+            raceShortName = "DEF";
             break;
 
-        case EVERQUEST_RACE_HALF_ELF:
-            race_short_name = "HEF";
+        case EQ_RACE_HALF_ELF:
+            raceShortName = "HEF";
             break;
 
-        case EVERQUEST_RACE_DWARF:
-            race_short_name = "DWF";
+        case EQ_RACE_DWARF:
+            raceShortName = "DWF";
             break;
 
-        case EVERQUEST_RACE_TROLL:
-            race_short_name = "TRL";
+        case EQ_RACE_TROLL:
+            raceShortName = "TRL";
             break;
 
-        case EVERQUEST_RACE_OGRE:
-            race_short_name = "OGR";
+        case EQ_RACE_OGRE:
+            raceShortName = "OGR";
             break;
 
-        case EVERQUEST_RACE_HALFLING:
-            race_short_name = "HFL";
+        case EQ_RACE_HALFLING:
+            raceShortName = "HFL";
             break;
 
-        case EVERQUEST_RACE_GNOME:
-            race_short_name = "GNM";
+        case EQ_RACE_GNOME:
+            raceShortName = "GNM";
             break;
 
-        case EVERQUEST_RACE_IKSAR:
-            race_short_name = "IKS";
+        case EQ_RACE_IKSAR:
+            raceShortName = "IKS";
             break;
 
-        case EVERQUEST_RACE_VAH_SHIR:
-            race_short_name = "VAH";
+        case EQ_RACE_VAH_SHIR:
+            raceShortName = "VAH";
             break;
 
-        case EVERQUEST_RACE_FROGLOK:
-            race_short_name = "FRG";
-            break;
-
-        case EVERQUEST_RACE_DRAKKIN:
-            race_short_name = "DRK";
+        case EQ_RACE_FROGLOK:
+            raceShortName = "FRG";
             break;
 
         default:
-            race_short_name = "UNK";
+            raceShortName = "UNK";
             break;
     }
 
-    return race_short_name;
+    return raceShortName;
 }
 
-std::string everquest_get_class_short_name(int _class)
+std::string EQ_GetClassShortName(BYTE _class)
 {
-    std::string class_short_name;
+    std::string classShortName;
 
     switch (_class)
     {
-        case EVERQUEST_CLASS_UNKNOWN:
-            class_short_name = "UNK";
+        case EQ_CLASS_UNKNOWN:
+            classShortName = "UNK";
             break;
 
-        case EVERQUEST_CLASS_WARRIOR:
-            class_short_name = "WAR";
+        case EQ_CLASS_WARRIOR:
+        case EQ_CLASS_WARRIOR_GUILDMASTER:
+            classShortName = "WAR";
             break;
 
-        case EVERQUEST_CLASS_CLERIC:
-            class_short_name = "CLR";
+        case EQ_CLASS_CLERIC:
+        case EQ_CLASS_CLERIC_GUILDMASTER:
+            classShortName = "CLR";
             break;
 
-        case EVERQUEST_CLASS_PALADIN:
-            class_short_name = "PAL";
+        case EQ_CLASS_PALADIN:
+        case EQ_CLASS_PALADIN_GUILDMASTER:
+            classShortName = "PAL";
             break;
 
-        case EVERQUEST_CLASS_RANGER:
-            class_short_name = "RNG";
+        case EQ_CLASS_RANGER:
+        case EQ_CLASS_RANGER_GUILDMASTER:
+            classShortName = "RNG";
             break;
 
-        case EVERQUEST_CLASS_SHADOWKNIGHT:
-            class_short_name = "SHD";
+        case EQ_CLASS_SHADOWKNIGHT:
+        case EQ_CLASS_SHADOWKNIGHT_GUILDMASTER:
+            classShortName = "SHD";
             break;
 
-        case EVERQUEST_CLASS_DRUID:
-            class_short_name = "DRU";
+        case EQ_CLASS_DRUID:
+        case EQ_CLASS_DRUID_GUILDMASTER:
+            classShortName = "DRU";
             break;
 
-        case EVERQUEST_CLASS_MONK:
-            class_short_name = "MNK";
+        case EQ_CLASS_MONK:
+        case EQ_CLASS_MONK_GUILDMASTER:
+            classShortName = "MNK";
             break;
 
-        case EVERQUEST_CLASS_BARD:
-            class_short_name = "BRD";
+        case EQ_CLASS_BARD:
+        case EQ_CLASS_BARD_GUILDMASTER:
+            classShortName = "BRD";
             break;
 
-        case EVERQUEST_CLASS_ROGUE:
-            class_short_name = "ROG";
+        case EQ_CLASS_ROGUE:
+        case EQ_CLASS_ROGUE_GUILDMASTER:
+            classShortName = "ROG";
             break;
 
-        case EVERQUEST_CLASS_SHAMAN:
-            class_short_name = "SHM";
+        case EQ_CLASS_SHAMAN:
+        case EQ_CLASS_SHAMAN_GUILDMASTER:
+            classShortName = "SHM";
             break;
 
-        case EVERQUEST_CLASS_NECROMANCER:
-            class_short_name = "NEC";
+        case EQ_CLASS_NECROMANCER:
+        case EQ_CLASS_NECROMANCER_GUILDMASTER:
+            classShortName = "NEC";
             break;
 
-        case EVERQUEST_CLASS_WIZARD:
-            class_short_name = "WIZ";
+        case EQ_CLASS_WIZARD:
+        case EQ_CLASS_WIZARD_GUILDMASTER:
+            classShortName = "WIZ";
             break;
 
-        case EVERQUEST_CLASS_MAGICIAN:
-            class_short_name = "MAG";
+        case EQ_CLASS_MAGICIAN:
+        case EQ_CLASS_MAGICIAN_GUILDMASTER:
+            classShortName = "MAG";
             break;
 
-            case EVERQUEST_CLASS_ENCHANTER:
-            class_short_name = "ENC";
+        case EQ_CLASS_ENCHANTER:
+        case EQ_CLASS_ENCHANTER_GUILDMASTER:
+            classShortName = "ENC";
             break;
 
-        case EVERQUEST_CLASS_BEASTLORD:
-            class_short_name = "BST";
+        case EQ_CLASS_BEASTLORD:
+        case EQ_CLASS_BEASTLORD_GUILDMASTER:
+            classShortName = "BST";
             break;
 
-        case EVERQUEST_CLASS_BERSERKER:
-            class_short_name = "BER";
+        case EQ_CLASS_BANKER:
+            classShortName = "BANKER";
             break;
 
-        case EVERQUEST_CLASS_BANKER:
-            class_short_name = "BANKER";
-            break;
-
-        case EVERQUEST_CLASS_MERCHANT:
-            class_short_name = "MERCHANT";
-            break;
-
-        default:
-            class_short_name = "UNK";
-            break;
-    }
-
-    return class_short_name;
-}
-
-std::string everquest_get_standing_state_name(int standing_state)
-{
-    std::string standing_state_name;
-
-    switch (standing_state)
-    {
-        case EVERQUEST_STANDING_STATE_STANDING:
-            standing_state_name = "Standing";
-            break;
-
-        case EVERQUEST_STANDING_STATE_FROZEN:
-            standing_state_name = "Mesmerised / Feared";
-            break;
-
-        case EVERQUEST_STANDING_STATE_LOOTING:
-            standing_state_name = "Looting / Bind Wound";
-            break;
-
-        case EVERQUEST_STANDING_STATE_SITTING:
-            standing_state_name = "Sitting";
-            break;
-
-        case EVERQUEST_STANDING_STATE_DUCKING:
-            standing_state_name = "Ducking";
-            break;
-
-        case EVERQUEST_STANDING_STATE_FEIGNED:
-            standing_state_name = "Feign Death";
-            break;
-
-        case EVERQUEST_STANDING_STATE_DEAD:
-            standing_state_name = "Dead";
+        case EQ_CLASS_MERCHANT:
+            classShortName = "MERCHANT";
             break;
 
         default:
-            standing_state_name = "Unknown";
+            classShortName = "UNK";
             break;
     }
 
-    return standing_state_name;
+    return classShortName;
 }
 
-std::string everquest_get_ground_spawn_name(std::string spawn_actor_definition_name)
+std::string EQ_GetStandingStateString(BYTE standingState)
 {
-    std::string spawn_name = spawn_actor_definition_name;
+    std::string standingStateString;
 
-    if (spawn_actor_definition_name == "IT63_ACTORDEF")
+    switch (standingState)
     {
-        spawn_name = "Dropped Item";
-    }
-
-    if (spawn_actor_definition_name == "IT64_ACTORDEF")
-    {
-        spawn_name = "Dropped Bag";
-    }
-
-    if (spawn_actor_definition_name == "IT66_ACTORDEF")
-    {
-        spawn_name = "Forge";
-    }
-
-    if (spawn_actor_definition_name == "IT69_ACTORDEF")
-    {
-        spawn_name = "Oven";
-    }
-
-    if (spawn_actor_definition_name == "IT70_ACTORDEF")
-    {
-        spawn_name = "Brew Barrel";
-    }
-
-    if (spawn_actor_definition_name == "IT73_ACTORDEF")
-    {
-        spawn_name = "Kiln";
-    }
-
-    if (spawn_actor_definition_name == "IT74_ACTORDEF")
-    {
-        spawn_name = "Pottery Wheel";
-    }
-
-    if (spawn_actor_definition_name == "IT128_ACTORDEF")
-    {
-        spawn_name = "Sewing Kit";
-    }
-
-    return spawn_name;
-}
-
-std::string everquest_get_guild_name(memory &memory, int guild_id)
-{
-    if (guild_id == EVERQUEST_GUILD_ID_NULL)
-    {
-        return "No Guild";
-    }
-
-    int guild_name_address = EVERQUEST_GUILD_NAMES_BEGIN;
-
-    for (int i = 0; i < EVERQUEST_GUILD_NAMES_MAX; i++)
-    {
-        if (i == guild_id)
-        {
-            std::string guild_name = memory.read_string(guild_name_address, EVERQUEST_GUILD_NAME_SIZE);
-
-            return guild_name;
-        }
-
-        guild_name_address = guild_name_address + EVERQUEST_GUILD_NAME_SIZE;
-    }
-
-    return "Unknown Guild";
-}
-
-WORD everquest_get_player_casting_spell_id(memory &memory)
-{
-    int player_actor_info = everquest_get_player_actor_info(memory);
-
-    return memory.read_any<WORD>(player_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_CASTING_SPELL_ID);
-}
-
-BYTE everquest_get_player_casting_spell_gem_number(memory &memory)
-{
-    int player_actor_info = everquest_get_player_actor_info(memory);
-
-    return memory.read_any<BYTE>(player_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_CASTING_SPELL_GEM_NUMBER);
-}
-
-void everquest_update_spawns(memory &memory, std::vector<everquest_spawn_t> &everquest_spawns)
-{
-    everquest_spawns.clear();
-
-    int player_spawn_info = everquest_get_player_spawn_info(memory);
-    int target_spawn_info = everquest_get_target_spawn_info(memory);
-
-    float player_y = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
-    float player_x = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
-    float player_z = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
-
-    int spawn_info_address = player_spawn_info;
-
-    int spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
-
-    spawn_info_address = spawn_next_spawn_info;
-
-    for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
-    {
-        spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
-
-        if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
-        {
+        case EQ_STANDING_STATE_STANDING:
+            standingStateString = "Standing";
             break;
-        }
 
-        int spawn_actor_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
+        case EQ_STANDING_STATE_FROZEN:
+            standingStateString = "Mesmerized / Feared";
+            break;
 
-        everquest_spawn_t everquest_spawn;
+        case EQ_STANDING_STATE_LOOTING:
+            standingStateString = "Looting / Binding Wounds";
+            break;
 
-        everquest_spawn.address = spawn_info_address;
+        case EQ_STANDING_STATE_SITTING:
+            standingStateString = "Sitting";
+            break;
 
-        everquest_spawn.spawn_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_SPAWN_ID);
-        everquest_spawn.owner_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_OWNER_ID);
-        everquest_spawn.guild_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_GUILD_ID);
+        case EQ_STANDING_STATE_DUCKING:
+            standingStateString = "Ducking";
+            break;
 
-        everquest_spawn.name      = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_NAME,      EVERQUEST_SPAWN_INFO_NAME_SIZE);
-        everquest_spawn.last_name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LAST_NAME, EVERQUEST_SPAWN_INFO_LAST_NAME_SIZE);
+        case EQ_STANDING_STATE_FEIGNED:
+            standingStateString = "Feigning Death";
+            break;
 
-        everquest_spawn.y = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Y);
-        everquest_spawn.x = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_X);
-        everquest_spawn.z = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_Z);
+        case EQ_STANDING_STATE_DEAD:
+            standingStateString = "Dead";
+            break;
 
-        everquest_spawn.distance = everquest_calculate_distance(player_x, player_y, everquest_spawn.x, everquest_spawn.y);
-
-        everquest_spawn.distance_z = std::abs(everquest_spawn.z - player_z);
-
-        everquest_spawn.heading = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HEADING);
-
-        everquest_spawn.movement_speed = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_MOVEMENT_SPEED);
-
-        everquest_spawn.standing_state = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_STANDING_STATE);
-
-        everquest_spawn.type   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_TYPE);
-        everquest_spawn.level  = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_LEVEL);
-        everquest_spawn.race   = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_RACE);
-        everquest_spawn._class = memory.read_any<BYTE>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_CLASS);
-
-        everquest_spawn.hp     = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_CURRENT);
-        everquest_spawn.hp_max = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_SPAWN_INFO_HP_MAX);
-
-        everquest_spawn.is_target = (spawn_info_address == target_spawn_info ? true : false);
-
-        everquest_spawn.is_player_corpse = false;
-
-        if (everquest_spawn.type == EVERQUEST_SPAWN_INFO_TYPE_CORPSE)
-        {
-            std::string player_name = memory.read_string(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_NAME, EVERQUEST_SPAWN_INFO_NAME_SIZE);
-
-            std::size_t found = everquest_spawn.name.find(player_name);
-
-            if (found != std::string::npos)
-            {
-                everquest_spawn.is_player_corpse = true;
-            }
-        }
-
-        everquest_spawn.is_holding_both      = memory.read_any<DWORD>(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH);
-        everquest_spawn.is_holding_secondary = memory.read_any<DWORD>(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY);
-        everquest_spawn.is_holding_primary   = memory.read_any<DWORD>(spawn_actor_info + EVERQUEST_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY);
-
-        everquest_spawns.push_back(everquest_spawn);
-
-        spawn_info_address = spawn_next_spawn_info;
+        default:
+            standingStateString = "Unknown";
+            break;
     }
+
+    return standingStateString;
 }
 
-void everquest_update_ground_spawns(memory &memory, std::vector<everquest_ground_spawn_t> &everquest_ground_spawns)
+std::string EQ_GetGroundSpawnName(std::string spawnActorDefinitionName)
 {
-    everquest_ground_spawns.clear();
+    std::string spawnName = spawnActorDefinitionName;
 
-    int player_spawn_info = everquest_get_player_spawn_info(memory);
-
-    float player_y = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Y);
-    float player_x = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_X);
-    float player_z = memory.read_any<float>(player_spawn_info + EVERQUEST_OFFSET_SPAWN_INFO_Z);
-
-    int spawn_info = everquest_get_ground_spawn_info(memory);
-
-    int spawn_info_address = spawn_info;
-
-    //int spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
-
-    //spawn_info_address = spawn_next_spawn_info;
-
-    for (int i = 0; i < EVERQUEST_SPAWNS_MAX; i++)
+    if (spawnActorDefinitionName == "IT63_ACTORDEF")
     {
-        int spawn_next_spawn_info = memory.read_any<DWORD>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
-
-        if (spawn_next_spawn_info == EVERQUEST_SPAWN_INFO_NULL)
-        {
-            break;
-        }
-
-        everquest_ground_spawn_t everquest_ground_spawn;
-
-        everquest_ground_spawn.address = spawn_info_address;
-
-        everquest_ground_spawn.id      = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_ID);
-        everquest_ground_spawn.drop_id = memory.read_any<WORD>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_DROP_ID);
-        
-        everquest_ground_spawn.name = memory.read_string(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_NAME, EVERQUEST_GROUND_SPAWN_INFO_NAME_SIZE);
-        
-        everquest_ground_spawn.y = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_Y);
-        everquest_ground_spawn.x = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_X);
-        everquest_ground_spawn.z = memory.read_any<float>(spawn_info_address + EVERQUEST_OFFSET_GROUND_SPAWN_INFO_Z);
-
-        everquest_ground_spawn.distance = everquest_calculate_distance(player_x, player_y, everquest_ground_spawn.x, everquest_ground_spawn.y);
-
-        everquest_ground_spawn.distance_z = everquest_ground_spawn.z - player_z;
-
-        everquest_ground_spawns.push_back(everquest_ground_spawn);
-
-        spawn_info_address = spawn_next_spawn_info;
+        spawnName = "Dropped Item";
     }
+
+    if (spawnActorDefinitionName == "IT64_ACTORDEF")
+    {
+        spawnName = "Dropped Bag";
+    }
+
+    if (spawnActorDefinitionName == "IT66_ACTORDEF")
+    {
+        spawnName = "Forge";
+    }
+
+    if (spawnActorDefinitionName == "IT69_ACTORDEF")
+    {
+        spawnName = "Oven";
+    }
+
+    if (spawnActorDefinitionName == "IT70_ACTORDEF")
+    {
+        spawnName = "Brew Barrel";
+    }
+
+    if (spawnActorDefinitionName == "IT73_ACTORDEF")
+    {
+        spawnName = "Kiln";
+    }
+
+    if (spawnActorDefinitionName == "IT74_ACTORDEF")
+    {
+        spawnName = "Pottery Wheel";
+    }
+
+    if (spawnActorDefinitionName == "IT128_ACTORDEF")
+    {
+        spawnName = "Sewing Kit";
+    }
+
+    return spawnName;
+}
+
+std::string EQ_GetGuildNameById(CMemory* mem, WORD guildId)
+{
+    if (guildId == EQ_GUILD_ID_NULL)
+    {
+        return "Unknown Guild";
+    }
+
+    EQGUILDLIST guildList = mem->ReadAny<EQGUILDLIST>(EQ_STRUCTURE_GUILD_LIST);
+
+    return guildList.Guild[guildId].Name;
 }
 
 #endif // EQMAC_HPP

@@ -115,8 +115,8 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 #define EQ_OFFSET_WORLD_INFO_YEAR   0x08 // BYTE
 
 #define EQ_POINTER_GROUND_SPAWN_INFO 0x007F949C
-#define EQ_OFFSET_GROUND_SPAWN_INFO_PREV_SPAWN_INFO_POINTER 0x00
-#define EQ_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER 0x04
+#define EQ_OFFSET_GROUND_SPAWN_INFO_PREV_SPAWN_INFO_POINTER 0x00 // DWORD
+#define EQ_OFFSET_GROUND_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER 0x04 // DWORD
 #define EQ_OFFSET_GROUND_SPAWN_INFO_ID                      0x08 // WORD
 #define EQ_OFFSET_GROUND_SPAWN_INFO_DROP_ID                 0x0C // WORD
 #define EQ_OFFSET_GROUND_SPAWN_INFO_Z                       0x90 // FLOAT
@@ -145,7 +145,7 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 #define EQ_OFFSET_CHAR_INFO_BANK_GOLD          0x0B7C // DWORD
 #define EQ_OFFSET_CHAR_INFO_BANK_SILVER        0x0B80 // DWORD
 #define EQ_OFFSET_CHAR_INFO_BANK_COPPER        0x0B84 // DWORD
-#define EQ_OFFSET_CHAR_INFO_SPAWN_INFO_POINTER 0x0D74
+#define EQ_OFFSET_CHAR_INFO_SPAWN_INFO_POINTER 0x0D74 // DWORD
 
 #define EQ_CHAR_INFO_NAME_SIZE 0x40
 
@@ -159,7 +159,7 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 
 #define EQ_BUFFS_MAX 15
 
-#define EQ_BUFF_SPELL_ID_NULL 0xFFFF // -1
+#define EQ_BUFF_SPELL_ID_NULL 0xFFFF // WORD
 
 #define EQ_BUFF_TYPE_DETRIMENTAL           0
 #define EQ_BUFF_TYPE_BENEFICIAL            1
@@ -193,7 +193,7 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 #define EQ_OFFSET_SPAWN_INFO_CAMERA_HEIGHT           0x008C // FLOAT ; height from where your character's eyes see
 #define EQ_OFFSET_SPAWN_INFO_MODEL_HEIGHT_OFFSET     0x0090 // FLOAT ; height above/below the ground
 #define EQ_OFFSET_SPAWN_INFO_SPAWN_ID                0x0094 // WORD
-#define EQ_OFFSET_SPAWN_INFO_OWNER_ID                0x0096 // WORD
+#define EQ_OFFSET_SPAWN_INFO_PET_OWNER_SPAWN_ID      0x0096 // WORD
 #define EQ_OFFSET_SPAWN_INFO_HP_MAX                  0x0098 // DWORD
 #define EQ_OFFSET_SPAWN_INFO_HP_CURRENT              0x009C // DWORD
 #define EQ_OFFSET_SPAWN_INFO_GUILD_ID                0x00A0 // WORD
@@ -339,23 +339,33 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 
 #define EQ_HEADING_MAX 512 // yaw
 
-#define EQ_SKILL_ONEHANDBLUNT 0
+#define EQ_SKILL_ONE_HAND_BLUNT 0
 #define EQ_SKILL_TRACKING     53
 
 #define EQ_TEXT_COLOR_PINK 0x05
 
 #define EQ_WORLD_SPACE_TO_SCREEN_SPACE_FUNCTION_NAME "t3dWorldSpaceToScreenSpace" // EQGfx_Dx8.t3dWorldSpaceToScreenSpace
 
-#define EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA 0x0063B924
+#define EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA 0x0063B924 // pass this to function as argument1
 
 #define EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE 0xFFFF3D3E // world space to screen space failed because the location is not on screen
 
 typedef struct _EQLOCATION
 {
-    float y;
-    float x;
-    float z;
+    float Y;
+    float X;
+    float Z;
 } EQLOCATION, *PEQLOCATION;
+
+typedef struct _EQLINE
+{
+    float X1;
+    float Y1;
+    float Z1 = 1.0;
+    float X2;
+    float Y2;
+    float Z2 = 1.0;
+} EQLINE, *PEQLINE;
 
 typedef struct _EQZONEINFO
 {
@@ -400,6 +410,7 @@ typedef struct _EQCHARINFO
 /* 0x0A60 */ DWORD Unknown2912;
 	DWORD Unknown2916;
 ////////////////////////////////////////////////
+/* 0x0B64 */ BYTE StandingState;
 /* 0x0B68 */ DWORD Platinum;
 /* 0x0B6C */ DWORD Gold;
 /* 0x0B70 */ DWORD Silver;
@@ -410,6 +421,15 @@ typedef struct _EQCHARINFO
 /* 0x0B84 */ DWORD BankCopper;
 } EQCHARINFO, *PEQCHARINFO;
 
+typedef struct _EQSPAWNINFO
+{
+} EQSPAWNINFO, *PEQSPAWNINFO;
+
+typedef struct _EQACTORINFO
+{
+} EQACTORINFO, *PEQACTORINFO;
+
+// sizeof EQGUILD 0x96
 typedef struct _EQGUILD
 {
 /* 0x0000 */ CHAR Name[32];
@@ -467,7 +487,7 @@ EQCHARINFO EQ_GetCharInfo(CMemory* mem)
     //return mem->ReadAny<DWORD>(CEverQuest + EQ_OFFSET_CEverQuest_GAME_STATE);
 //}
 
-std::string EQ_GetRaceShortName(WORD race)
+std::string EQ_GetRaceShortName(int race)
 {
     std::string raceShortName;
 
@@ -545,7 +565,7 @@ std::string EQ_GetRaceShortName(WORD race)
     return raceShortName;
 }
 
-std::string EQ_GetClassShortName(BYTE _class)
+std::string EQ_GetClassShortName(int _class)
 {
     std::string classShortName;
 
@@ -646,7 +666,7 @@ std::string EQ_GetClassShortName(BYTE _class)
     return classShortName;
 }
 
-std::string EQ_GetStandingStateString(BYTE standingState)
+std::string EQ_GetStandingStateString(int standingState)
 {
     std::string standingStateString;
 
@@ -735,7 +755,7 @@ std::string EQ_GetGroundSpawnName(std::string spawnActorDefinitionName)
     return spawnName;
 }
 
-std::string EQ_GetGuildNameById(CMemory* mem, WORD guildId)
+std::string EQ_GetGuildNameById(CMemory* mem, int guildId)
 {
     if (guildId == EQ_GUILD_ID_NULL)
     {

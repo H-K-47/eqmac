@@ -1,19 +1,12 @@
-#include <string>
-#include <sstream>
+#include <cstring>
 
 #include <windows.h>
 
 #include "detours.h"
 #pragma comment(lib, "detours.lib")
 
-#include "vk_keys.h"
-
-#include "cmemory.hpp"
-
 #include "eqmac.hpp"
 #include "eqmac_functions.hpp"
-
-CMemory g_memory;
 
 HMODULE g_module;
 
@@ -21,47 +14,124 @@ EQ_FUNCTION_TYPE_DrawNetStatus DrawNetStatus_REAL = NULL;
 
 int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, unsigned short a4, unsigned short a5, int a6, unsigned short a7, unsigned long a8, long a9, unsigned long a10)
 {
-    DWORD fontArial14 = g_memory.ReadAny<DWORD>(EQ_POINTER_FONT_ARIAL14);
+    BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
 
-    DWORD worldSpaceToScreenSpaceCameraData = g_memory.ReadAny<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
-
-    DWORD playerSpawn = g_memory.ReadAny<DWORD>(EQ_POINTER_PLAYER_SPAWN_INFO);
-
-    float playerY = g_memory.ReadAny<float>(playerSpawn + EQ_OFFSET_SPAWN_INFO_Y);
-    float playerX = g_memory.ReadAny<float>(playerSpawn + EQ_OFFSET_SPAWN_INFO_X);
-    float playerZ = g_memory.ReadAny<float>(playerSpawn + EQ_OFFSET_SPAWN_INFO_Z);
-
-    EQLOCATION playerLocation = {playerY, playerX, playerZ};
-
-    float resultX = 100.0f;
-    float resultY = 100.0f;
-    int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &playerLocation, &resultX, &resultY);
-
-    int screenX = (int)resultX;
-    int screenY = (int)resultY;
-
-    if (result == EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+    if (isInGame == 0)
     {
-        EQ_CLASS_CDisplay->WriteTextHD2("Fail", screenX, screenY, EQ_TEXT_COLOR_PINK, fontArial14);
-
         return DrawNetStatus_REAL(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    char playerText[128] = "Player";
+    DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
-    EQ_CLASS_CDisplay->WriteTextHD2(playerText, screenX, screenY, EQ_TEXT_COLOR_PINK, fontArial14);
+    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    while (spawn)
+    {
+        if (spawn == playerSpawn)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+
+        EQLOCATION playerLocation = {EQ_OBJECT_PlayerSpawn->Y, EQ_OBJECT_PlayerSpawn->X, EQ_OBJECT_PlayerSpawn->Z}; 
+
+        EQLOCATION spawnLocation = {spawn->Y, spawn->X, spawn->Z};
+
+        DWORD spawnType = spawn->Type;
+
+        float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
+
+        if (spawnDistance > 400.0f && spawnType == EQ_SPAWN_TYPE_NPC)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+
+        float resultX = 0.0f;
+        float resultY = 0.0f;
+        int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &spawnLocation, &resultX, &resultY);
+
+        if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+        {
+            int screenX = (int)resultX;
+            int screenY = (int)resultY;
+
+            const char* spawnName = EQ_CLASS_CEverQuest->trimName(spawn->Name);
+
+            char spawnText[128];
+            sprintf_s(spawnText, "+ %s", spawnName);
+
+            DWORD textColor = EQ_TEXT_COLOR_WHITE;
+
+            switch (spawnType)
+            {
+                case EQ_SPAWN_TYPE_PLAYER:
+                    textColor = EQ_TEXT_COLOR_RED;
+                    break;
+
+                case EQ_SPAWN_TYPE_NPC:
+                    textColor = EQ_TEXT_COLOR_CYAN;
+                    break;
+
+                case EQ_SPAWN_TYPE_NPC_CORPSE:
+                case EQ_SPAWN_TYPE_PLAYER_CORPSE:
+                    textColor = EQ_TEXT_COLOR_YELLOW;
+                    break;
+            }
+
+            if (spawn == targetSpawn)
+            {
+                textColor = EQ_TEXT_COLOR_PINK;
+            }
+
+            if (spawn->IsGameMaster == 1)
+            {
+                textColor = EQ_TEXT_COLOR_PINK;
+
+                strcat_s(spawnText, " GM");
+            }
+
+            if (spawn->IsPlayerKill == 1)
+            {
+                strcat_s(spawnText, " PVP");
+            }
+
+            if (spawn->IsAwayFromKeyboard == 1)
+            {
+                strcat_s(spawnText, " AFK");
+            }
+
+            if (spawn->IsLinkDead == 1 && spawnType == EQ_SPAWN_TYPE_PLAYER)
+            {
+                strcat_s(spawnText, " LD");
+            }
+
+            char distanceText[32];
+            sprintf_s(distanceText, " (%d)", (int)spawnDistance);
+
+            strcat_s(spawnText, distanceText);
+
+            EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, textColor, fontArial14);
+        }
+
+        spawn = spawn->Next;
+    }
 
     return DrawNetStatus_REAL(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 }
 
+/*
 DWORD WINAPI threadLoop(LPVOID param)
 {
     while (1)
     {
-        if (EQ_IsInGame(&g_memory) == false)
-        {
-            continue;
-        }
+        //
 
         Sleep(1);
     }
@@ -69,12 +139,10 @@ DWORD WINAPI threadLoop(LPVOID param)
     FreeLibraryAndExitThread(g_module, 0);
     return 0;
 }
+*/
 
 DWORD WINAPI threadLoad(LPVOID param)
 {
-    g_memory.EnableDebugPrivileges();
-    g_memory.SetProcessById(GetCurrentProcessId());
-
     HINSTANCE graphicsDll = LoadLibraryA("EQGfx_Dx8.dll");
     if (!graphicsDll)
     {
@@ -95,7 +163,7 @@ DWORD WINAPI threadLoad(LPVOID param)
 
     DrawNetStatus_REAL = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)DrawNetStatus_DETOUR);
 
-    CreateThread(NULL, 0, &threadLoop, NULL, 0, NULL);
+    //CreateThread(NULL, 0, &threadLoop, NULL, 0, NULL);
 
     return 0;
 }

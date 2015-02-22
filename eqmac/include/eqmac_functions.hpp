@@ -25,6 +25,29 @@
     __asm{jmp eax};\
 }
 
+template <class T>
+T EQ_READ_MEMORY(DWORD address)
+{
+    T* buffer = (T*)address;
+    return (*buffer);
+}
+
+template <class T>
+void EQ_WRITE_MEMORY(DWORD address, T value)
+{
+    T* buffer = (T*)address;
+    *buffer = value;
+}
+
+EQSPAWNINFO** ppSpawnsBegin = (EQSPAWNINFO**)EQ_POINTER_SPAWNS_BEGIN;
+#define EQ_OBJECT_FirstSpawn (*ppSpawnsBegin)
+
+EQSPAWNINFO** ppPlayerSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_PLAYER_SPAWN_INFO;
+#define EQ_OBJECT_PlayerSpawn (*ppPlayerSpawnInfo)
+
+EQSPAWNINFO** ppTargetSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_TARGET_SPAWN_INFO;
+#define EQ_OBJECT_TargetSpawn (*ppTargetSpawnInfo)
+
 //class CXWnd;
 class CSidlScreenWnd;
 
@@ -48,27 +71,28 @@ class CDisplay
 {
 public:
     CDisplay::~CDisplay(void);
-    CDisplay::CDisplay(struct HWND__ *);
+    CDisplay::CDisplay(struct HWND__*);
     void CDisplay::MoveLocalPlayerToSafeCoords(void);
-    int CDisplay::WriteTextHD2(const char* text, int x, int y, int color, int font);
+    static int __cdecl CDisplay::WriteTextHD2(const char* text, int x, int y, int color, int font);
 };
 
-CDisplay **ppCDisplay = (CDisplay**)EQ_POINTER_CDisplay;
+CDisplay** ppCDisplay = (CDisplay**)EQ_POINTER_CDisplay;
 #define EQ_CLASS_CDisplay (*ppCDisplay)
 
 class CEverQuest
 {
 public:
     CEverQuest::~CEverQuest(void);
-    CEverQuest::CEverQuest(struct HWND__ *);
+    CEverQuest::CEverQuest(struct HWND__*);
     void CEverQuest::dsp_chat(const char* text, uint16_t color, bool filtered);
     void CEverQuest::dsp_chat(const char* text);
+    char* CEverQuest::trimName(char*);
     int CEverQuest::MoveToZone(char* zoneShortName, char* text, int destinationType, int zoneRequestReason);
     int CEverQuest::MoveToZone(int zoneId, char* text, int destinationType, int zoneRequestReason);
-    int CEverQuest::LootCorpse(class EQPlayer *, int unknown);
+    int CEverQuest::LootCorpse(class EQPlayer*, int unknown);
 };
 
-CEverQuest **ppCEverQuest = (CEverQuest**)EQ_POINTER_CEverQuest;
+CEverQuest** ppCEverQuest = (CEverQuest**)EQ_POINTER_CEverQuest;
 #define EQ_CLASS_CEverQuest (*ppCEverQuest)
 
 class EQ_Character
@@ -76,10 +100,10 @@ class EQ_Character
 public:
     EQ_Character::~EQ_Character(void);
     EQ_Character::EQ_Character(void);
-    unsigned short EQ_Character::Max_Mana(void);
+    uint16_t EQ_Character::Max_Mana(void);
 };
 
-EQ_Character **ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character;
+EQ_Character** ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character;
 #define EQ_CLASS_EQ_Character (*ppEQ_Character)
 
 class CHotButtonWnd : public CSidlScreenWnd
@@ -88,7 +112,7 @@ public:
     void CHotButtonWnd::DoHotButton(uint16_t buttonIndex, int allowAutoRightClick);
 };
 
-CHotButtonWnd **ppCHotButtonWnd = (CHotButtonWnd**)EQ_POINTER_CHotButtonWnd;
+CHotButtonWnd** ppCHotButtonWnd = (CHotButtonWnd**)EQ_POINTER_CHotButtonWnd;
 #define EQ_CLASS_CHotButtonWnd (*ppCHotButtonWnd)
 
 class CLootWnd : public CSidlScreenWnd
@@ -98,26 +122,26 @@ public:
     void CLootWnd::RequestLootSlot(int slotIndex, bool autoLoot);
 };
 
-CLootWnd **ppCLootWnd = (CLootWnd**)EQ_POINTER_CLootWnd;
+CLootWnd** ppCLootWnd = (CLootWnd**)EQ_POINTER_CLootWnd;
 #define EQ_CLASS_CLootWnd (*ppCLootWnd)
 
 class CTradeWnd : public CSidlScreenWnd
 {
 public:
-    void CTradeWnd::Activate(class EQPlayer *, bool isTargetNpc); // if isTargetNpc == true, show Give Window
+    void CTradeWnd::Activate(class EQPlayer*, bool isTargetNpc); // if isTargetNpc == true, show Give Window
 };
 
-CTradeWnd **ppCTradeWnd = (CTradeWnd**)EQ_POINTER_CTradeWnd;
+CTradeWnd** ppCTradeWnd = (CTradeWnd**)EQ_POINTER_CTradeWnd;
 #define EQ_CLASS_CTradeWnd (*ppCTradeWnd)
 
 class EQPlayer
 {
 public:
     EQPlayer::~EQPlayer(void);
-    EQPlayer::EQPlayer(class EQPlayer *, unsigned char, unsigned int, unsigned char, char *);
+    EQPlayer::EQPlayer(class EQPlayer*, unsigned char, unsigned int, unsigned char, char*);
     void EQPlayer::ChangeHeight(float height);
     void EQPlayer::ChangePosition(uint8_t);
-    void EQPlayer::FacePlayer(class EQPlayer *);
+    void EQPlayer::FacePlayer(class EQPlayer*);
 };
 
 /* CDisplay */
@@ -129,7 +153,7 @@ EQ_FUNCTION_AT_ADDRESS(void CDisplay::MoveLocalPlayerToSafeCoords(void), EQ_FUNC
 
 #define EQ_FUNCTION_CDisplay__WriteTextHD2 0x004AA5AA
 #ifdef EQ_FUNCTION_CDisplay__WriteTextHD2
-typedef int (__cdecl *EQ_FUNCTION_TYPE_CDisplay__WriteTextHD2)(const char* text, int x, int y, int color, int font);
+typedef int (__cdecl* EQ_FUNCTION_TYPE_CDisplay__WriteTextHD2)(const char* text, int x, int y, int color, int font);
 EQ_FUNCTION_AT_ADDRESS(int CDisplay::WriteTextHD2(const char*, int, int, int, int), EQ_FUNCTION_CDisplay__WriteTextHD2);
 #endif
 
@@ -145,21 +169,26 @@ EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*,uint16_t,bool), EQ_
 EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*), EQ_FUNCTION_CEverQuest__dsp_chat2);
 #endif
 
+#define EQ_FUNCTION_CEverQuest__trimName 0x00537D39
+#ifdef EQ_FUNCTION_CEverQuest__trimName
+EQ_FUNCTION_AT_ADDRESS(char* CEverQuest::trimName(char*), EQ_FUNCTION_CEverQuest__trimName);
+#endif
+
 #define EQ_FUNCTION_CEverQuest__MoveToZone 0x005460B5
 #ifdef EQ_FUNCTION_CEverQuest__MoveToZone
-typedef int (__cdecl *EQ_FUNCTION_TYPE_CEverQuest__MoveToZone)(char*, char*, int, int);
+typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__MoveToZone)(char*, char*, int, int);
 EQ_FUNCTION_AT_ADDRESS(int CEverQuest::MoveToZone(char*, char*, int, int), EQ_FUNCTION_CEverQuest__MoveToZone);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__MoveToZone2 0x00546081
 #ifdef EQ_FUNCTION_CEverQuest__MoveToZone2
-typedef int (__cdecl *EQ_FUNCTION_TYPE_CEverQuest__MoveToZone2)(int, char*, int, int);
+typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__MoveToZone2)(int, char*, int, int);
 EQ_FUNCTION_AT_ADDRESS(int CEverQuest::MoveToZone(int, char*, int, int), EQ_FUNCTION_CEverQuest__MoveToZone2);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__LootCorpse 0x00547808
 #ifdef EQ_FUNCTION_CEverQuest__LootCorpse
-typedef signed int (__cdecl *EQ_FUNCTION_TYPE_CEverQuest__LootCorpse)(class EQPlayer *, int);
+typedef signed int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__LootCorpse)(class EQPlayer*, int);
 EQ_FUNCTION_AT_ADDRESS(int CEverQuest::LootCorpse(class EQPlayer *, int), EQ_FUNCTION_CEverQuest__LootCorpse);
 #endif
 
@@ -186,7 +215,7 @@ EQ_FUNCTION_AT_ADDRESS(void CLootWnd::RequestLootSlot(int, bool), EQ_FUNCTION_CL
 
 #define EQ_FUNCTION_CTradeWnd__Activate 0x004392C9
 #ifdef EQ_FUNCTION_CTradeWnd__Activate
-EQ_FUNCTION_AT_ADDRESS(void CTradeWnd::Activate(class EQPlayer *, bool), EQ_FUNCTION_CTradeWnd__Activate);
+EQ_FUNCTION_AT_ADDRESS(void CTradeWnd::Activate(class EQPlayer*, bool), EQ_FUNCTION_CTradeWnd__Activate);
 #endif
 
 /* EQPlayer */
@@ -203,7 +232,7 @@ EQ_FUNCTION_AT_ADDRESS(void EQPlayer::ChangePosition(uint8_t), EQ_FUNCTION_EQPla
 
 #define EQ_FUNCTION_EQPlayer__FacePlayer 0x00508120
 #ifdef EQ_FUNCTION_EQPlayer__FacePlayer
-EQ_FUNCTION_AT_ADDRESS(void EQPlayer::FacePlayer(class EQPlayer *), EQ_FUNCTION_EQPlayer__FacePlayer);
+EQ_FUNCTION_AT_ADDRESS(void EQPlayer::FacePlayer(class EQPlayer*), EQ_FUNCTION_EQPlayer__FacePlayer);
 #endif
 
 /* EQ_Character */
@@ -217,11 +246,11 @@ EQ_FUNCTION_AT_ADDRESS(unsigned short EQ_Character::Max_Mana(void), EQ_FUNCTION_
 
 #define EQ_FUNCTION_DrawNetStatus 0x0054D3AE
 #ifdef EQ_FUNCTION_DrawNetStatus
-typedef int (__cdecl *EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsigned short, unsigned short, unsigned short, int, unsigned short, unsigned long, long, unsigned long);
+typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsigned short, unsigned short, unsigned short, int, unsigned short, unsigned long, long, unsigned long);
 #endif
 
 // World to Screen function
-typedef int (__cdecl *EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)(int, EQLOCATION*, float*, float*);
+typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)(int, EQLOCATION*, float*, float*);
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace EQGfx_Dx8__t3dWorldSpaceToScreenSpace;
 
 // EQWorldData::GetFullZoneName

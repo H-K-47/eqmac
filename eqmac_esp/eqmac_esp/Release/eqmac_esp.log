@@ -1,4 +1,4 @@
-﻿Build started 2/19/2015 2:24:02 PM.
+﻿Build started 2/22/2015 8:47:03 AM.
      1>Project "D:\Code\everquest\eqmac_esp\eqmac_esp\eqmac_esp.vcxproj" on node 2 (Rebuild target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ID:\Code\_libraries\detours\include /ID:\Code\vk_keys\include /ID:\Code\cmemory\include /ID:\Code\everquest\eqmac\include /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D EQMAC_ESP_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt dllmain.cpp

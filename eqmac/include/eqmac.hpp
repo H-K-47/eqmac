@@ -165,6 +165,10 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 #define EQ_BUFF_TYPE_BENEFICIAL            1
 #define EQ_BUFF_TYPE_BENEFICIAL_GROUP_ONLY 2
 
+#define EQ_POINTER_SPAWNS_BEGIN 0x007F9498
+
+#define EQ_POINTER_GROUND_SPAWNS_BEGIN 0x007F949C
+
 // class EQPlayer
 #define EQ_POINTER_PLAYER_SPAWN_INFO     0x007F94CC
 #define EQ_POINTER_TARGET_SPAWN_INFO     0x007F94EC
@@ -179,7 +183,7 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 
 #define EQ_SPAWN_INFO_NULL 0x00000000
 
-#define EQ_OFFSET_SPAWN_INFO_NAME                    0x0001 // STRING [0x40]
+#define EQ_OFFSET_SPAWN_INFO_NAME                    0x0001 // STRING [0x1E]
 #define EQ_OFFSET_SPAWN_INFO_ZONE_ID                 0x0044 // DWORD
 #define EQ_OFFSET_SPAWN_INFO_Y                       0x0048 // FLOAT
 #define EQ_OFFSET_SPAWN_INFO_X                       0x004C // FLOAT
@@ -197,7 +201,7 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 #define EQ_OFFSET_SPAWN_INFO_HP_MAX                  0x0098 // DWORD
 #define EQ_OFFSET_SPAWN_INFO_HP_CURRENT              0x009C // DWORD
 #define EQ_OFFSET_SPAWN_INFO_GUILD_ID                0x00A0 // WORD
-#define EQ_OFFSET_SPAWN_INFO_TYPE                    0x00A8 // BYTE ; EQ_SPAWN_INFO_TYPE_x
+#define EQ_OFFSET_SPAWN_INFO_TYPE                    0x00A8 // BYTE ; EQ_SPAWN_TYPE_x
 #define EQ_OFFSET_SPAWN_INFO_CLASS                   0x00A9 // BYTE ; EQ_CLASS_x
 #define EQ_OFFSET_SPAWN_INFO_RACE                    0x00AA // WORD ; EQ_RACE_x
 #define EQ_OFFSET_SPAWN_INFO_LEVEL                   0x00AD // BYTE
@@ -212,13 +216,17 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 
 #define EQ_SPAWNS_MAX 8192
 
-#define EQ_SPAWN_INFO_NAME_SIZE      0x40
+#define EQ_SPAWN_INFO_NAME_SIZE      0x1E
 #define EQ_SPAWN_INFO_LAST_NAME_SIZE 0x20
 
-#define EQ_SPAWN_INFO_TYPE_PLAYER        0
-#define EQ_SPAWN_INFO_TYPE_NPC           1
-#define EQ_SPAWN_INFO_TYPE_NPC_CORPSE    2
-#define EQ_SPAWN_INFO_TYPE_PLAYER_CORPSE 3
+#define EQ_SPAWN_TYPE_PLAYER        0
+#define EQ_SPAWN_TYPE_NPC           1
+#define EQ_SPAWN_TYPE_NPC_CORPSE    2
+#define EQ_SPAWN_TYPE_PLAYER_CORPSE 3
+
+#define EQ_SPAWN_TARGET_TYPE_CAN_TARGET    0x00
+#define EQ_SPAWN_TARGET_TYPE_CAN_TARGET2   0x01
+#define EQ_SPAWN_TARGET_TYPE_CANNOT_TARGET 0x41
 
 #define EQ_OFFSET_ACTOR_INFO_TIME_STAMP                  0x0058 // DWORD
 #define EQ_OFFSET_ACTOR_INFO_TIME_STAMP_LAST_TICK        0x005C // DWORD
@@ -323,6 +331,20 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 
 #define EQ_GUILD_ID_NULL 0xFFFF // WORD
 
+#define EQ_GENDER_MALE   0x00
+#define EQ_GENDER_FEMALE 0x01
+
+#define EQ_DEITY_BERTOXXULOUS  0x00C9
+#define EQ_DEITY_BRELL_SERILIS 0x00CA
+#define EQ_DEITY_CAZIC_THULE   0x00CB
+#define EQ_DEITY_INNORUK       0x00CE
+#define EQ_DEITY_KARANA        0x00CF
+#define EQ_DEITY_QUELLIOUS     0x00D2
+#define EQ_DEITY_RALLOS_ZEK    0x00D3
+#define EQ_DEITY_THE_TRIBUNAL  0x00D6
+#define EQ_DEITY_TUNARE        0x00D7
+#define EQ_DEITY_AGNOSTIC      0x018C
+
 // EQPlayer::ChangePosition(BYTE standingState)
 #define EQ_STANDING_STATE_STANDING 0x64
 #define EQ_STANDING_STATE_FROZEN   0x66 // stunned / mesmerized / feared ; You lose control of yourself!
@@ -337,18 +359,48 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 #define EQ_STUNNED_STATE_UNCONSCIOUS 0x03
 #define EQ_STUNNED_STATE_DEAD        0x04
 
+#define EQ_LEVITATION_STATE_FALSE 0x00
+#define EQ_LEVITATION_STATE_TRUE  0x02
+#define EQ_LEVITATION_STATE_NPC   0x03
+
+#define EQ_ANONYMOUS_STATE_FALSE    0x00
+#define EQ_ANONYMOUS_STATE_TRUE     0x01
+#define EQ_ANONYMOUS_STATE_ROLEPLAY 0x02
+
 #define EQ_HEADING_MAX 512 // yaw
 
 #define EQ_SKILL_ONE_HAND_BLUNT 0
-#define EQ_SKILL_TRACKING     53
+#define EQ_SKILL_TRACKING       53
 
-#define EQ_TEXT_COLOR_PINK 0x05
+#define EQ_TEXT_COLOR_BLACK       0x00
+#define EQ_TEXT_COLOR_GRAY        0x01
+#define EQ_TEXT_COLOR_GREEN       0x02
+#define EQ_TEXT_COLOR_GRAY2       0x03
+#define EQ_TEXT_COLOR_BLUE        0x04
+#define EQ_TEXT_COLOR_PINK        0x05
+#define EQ_TEXT_COLOR_GRAY3       0x06
+#define EQ_TEXT_COLOR_WHITE       0x07
+#define EQ_TEXT_COLOR_GRAY4       0x08
+#define EQ_TEXT_COLOR_GRAY5       0x09
+#define EQ_TEXT_COLOR_WHITE2      0x0A
+#define EQ_TEXT_COLOR_GRAY6       0x0B
+#define EQ_TEXT_COLOR_LIGHT_GRAY  0x0C
+#define EQ_TEXT_COLOR_RED         0x0D
+#define EQ_TEXT_COLOR_LIGHT_GREEN 0x0E
+#define EQ_TEXT_COLOR_YELLOW      0x0F
+#define EQ_TEXT_COLOR_LIGHT_BLUE  0x10
+#define EQ_TEXT_COLOR_GRAY7       0x11
+#define EQ_TEXT_COLOR_CYAN        0x12
+#define EQ_TEXT_COLOR_GRAY8       0x13
+#define EQ_TEXT_COLOR_BLACK2      0x14
 
 #define EQ_WORLD_SPACE_TO_SCREEN_SPACE_FUNCTION_NAME "t3dWorldSpaceToScreenSpace" // EQGfx_Dx8.t3dWorldSpaceToScreenSpace
 
 #define EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA 0x0063B924 // pass this to function as argument1
 
 #define EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE 0xFFFF3D3E // world space to screen space failed because the location is not on screen
+
+/****************************************************************************************************/
 
 typedef struct _EQLOCATION
 {
@@ -367,6 +419,21 @@ typedef struct _EQLINE
     float Z2 = 1.0;
 } EQLINE, *PEQLINE;
 
+typedef struct _EQARGBCOLOR
+{
+    union
+    {
+        struct
+        {
+            BYTE B;
+            BYTE G;
+            BYTE R;
+            BYTE A;
+        };
+        DWORD ARGB;
+    };
+} EQARGBCOLOR, *PEQARGBCOLOR;
+
 typedef struct _EQZONEINFO
 {
 /* 0x0000 */ CHAR PlayerName[40];
@@ -380,10 +447,10 @@ typedef struct _EQCHARINFO
 /* 0x0000 */ BYTE Unknown0000;
 /* 0x0001 */ BYTE Unknown0001;
 /* 0x0002 */ CHAR Name[64]; // [0x40]
-/* 0x0042 */ CHAR LastName[70]; // [0x46] ; last name or title
-/* 0x0088 */ WORD Gender; // 0 = Male, 1 = Female
-/* 0x008A */ WORD Race;
-/* 0x008C */ WORD Class;
+/* 0x0042 */ CHAR LastName[70]; // [0x46] ; surname or title
+/* 0x0088 */ WORD Gender; // EQ_GENDER_x
+/* 0x008A */ WORD Race; // EQ_RACE_x
+/* 0x008C */ WORD Class; // EQ_CLASS_x
 /* 0x008E */ WORD Unknown008E;
 /* 0x0090 */ WORD Level;
 /* 0x0092 */ WORD Unknown0092;
@@ -391,7 +458,7 @@ typedef struct _EQCHARINFO
 /* 0x0098 */ WORD Face;
 /* 0x009A */ WORD Mana;
 /* 0x009C */ WORD BaseHP;
-/* 0x009E */ WORD StunnedState; // 1 = Stunned, 3 = Unconscious, 4 = Dead
+/* 0x009E */ WORD StunnedState; // EQ_STUNNED_STATE_x
 /* 0x00A0 */ WORD BaseSTR;
 /* 0x00A2 */ WORD BaseSTA;
 /* 0x00A4 */ WORD BaseCHA;
@@ -399,7 +466,7 @@ typedef struct _EQCHARINFO
 /* 0x00A8 */ WORD BaseINT;
 /* 0x00AA */ WORD BaseAGI;
 /* 0x00AC */ WORD BaseWIS;
-/* 0x00AE */ BYTE Unknown00AE[###]
+/* 0x00AE */ BYTE Unknown00AE[1];
 /* 0x0732 */ WORD SpellBook[250]; // [0xFA]
 /* 0x0A36 */ BYTE Unknown082A[524]; // [0x20C]
 /* 0x0A3E */ WORD MemorizedSpells[8]; // [0x08]
@@ -410,7 +477,7 @@ typedef struct _EQCHARINFO
 /* 0x0A60 */ DWORD Unknown2912;
 	DWORD Unknown2916;
 ////////////////////////////////////////////////
-/* 0x0B64 */ BYTE StandingState;
+/* 0x0B64 */ BYTE StandingState; // EQ_STANDING_STATE_x
 /* 0x0B68 */ DWORD Platinum;
 /* 0x0B6C */ DWORD Gold;
 /* 0x0B70 */ DWORD Silver;
@@ -421,25 +488,118 @@ typedef struct _EQCHARINFO
 /* 0x0B84 */ DWORD BankCopper;
 } EQCHARINFO, *PEQCHARINFO;
 
-typedef struct _EQSPAWNINFO
-{
-} EQSPAWNINFO, *PEQSPAWNINFO;
-
 typedef struct _EQACTORINFO
 {
 } EQACTORINFO, *PEQACTORINFO;
 
-// sizeof EQGUILD 0x96
-typedef struct _EQGUILD
+// sizeof EQSPAWNINFO 0x168
+typedef struct _EQSPAWNINFO
+{
+/* 0x0000 */ BYTE Unknown0000; // always equals 0x03
+/* 0x0001 */ CHAR Name[30]; // [0x1E]
+/* 0x001F */ BYTE Unknown001F[37];
+/* 0x0044 */ DWORD ZoneId; // EQ_ZONE_ID_x
+/* 0x0048 */ FLOAT Y;
+/* 0x004C */ FLOAT X;
+/* 0x0050 */ FLOAT Z;
+/* 0x0054 */ FLOAT Heading; // camera view left/right, yaw
+/* 0x0058 */ FLOAT Unknown0058;
+/* 0x005C */ FLOAT MovementSpeed;
+/* 0x0060 */ FLOAT MovementSpeedY;
+/* 0x0064 */ FLOAT MovementSpeedX;
+/* 0x0068 */ FLOAT MovementSpeedZ;
+/* 0x006C */ FLOAT MovementSpeedHeading;
+/* 0x0070 */ FLOAT Unknown0070;
+/* 0x0074 */ FLOAT Pitch; // camera view up/down
+/* 0x0078 */ struct _EQSPAWNINFO* Prev;
+/* 0x007C */ struct _EQSPAWNINFO* Next;
+/* 0x0080 */ PVOID Unknown0080;
+/* 0x0084 */ PEQACTORINFO ActorInfo; // EQACTORINFO
+/* 0x0088 */ PEQCHARINFO CharInfo; // EQCHARINFO
+/* 0x008C */ FLOAT CameraHeightOffset;
+/* 0x0090 */ FLOAT ModelHeightOffset;
+/* 0x0094 */ WORD SpawnId;
+/* 0x0096 */ WORD PetOwnerSpawnId; // spawn id of the owner of this pet spawn
+/* 0x0098 */ DWORD HpMax;
+/* 0x009C */ DWORD HpCurrent;
+/* 0x00A0 */ WORD GuildId;
+/* 0x00A2 */ BYTE Unknown00A2[6];
+/* 0x00A8 */ BYTE Type; // EQ_SPAWN_TYPE_x
+/* 0x00A9 */ BYTE Class; // EQ_CLASS_x
+/* 0x00AA */ WORD Race;  // EQ_RACE_x
+/* 0x00AC */ BYTE Gender; // EQ_GENDER_x
+/* 0x00AD */ BYTE Level;
+/* 0x00AE */ BYTE IsHidden; // 0 = Visible, 1 = Invisible
+/* 0x00AF */ BYTE IsSnared; // 0 = Normal Movement Speed, 1 = Slow Movement Speed
+/* 0x00B0 */ BYTE IsPlayerKill; // PVP flagged with red name by Priest of Discord
+/* 0x00B1 */ BYTE StandingState; // EQ_STANDING_STATE_x
+/* 0x00B2 */ BYTE LightType; // EQ_LIGHT_TYPE_x
+/* 0x00B3 */ BYTE Unknown00B3;
+/* 0x00B4 */ WORD EquipmentMaterialType[7]; // EQ_EQUIPMENT_MATERIAL_TYPE_x ; Head,Chest,Arms,Wrist,Hands,Legs,Feet
+/* 0x00C2 */ WORD EquipmentPrimaryItemType; // EQ_EQUIPMENT_ITEM_TYPE_x ; Primary
+/* 0x00C4 */ WORD EquipmentSecondaryItemType; // EQ_EQUIPMENT_ITEM_TYPE_x ; Secondary
+/* 0x00C6 */ WORD Unknown00C6;
+/* 0x00C8 */ BYTE Unknown00C8[36];
+/* 0x00EC */ BYTE Unknown00EC;
+/* 0x00F0 */ FLOAT Height; // model height or size/scale (shrink, grow, etc)
+/* 0x00F4 */ FLOAT Unknown00F4;
+/* 0x00F8 */ FLOAT Unknown00F8;
+/* 0x00FC */ FLOAT Unknown00FC;
+/* 0x0100 */ FLOAT MovementBackwardSpeedMultiplier; // modifies how fast you move backwards (Default = 0.4600000083)
+/* 0x0104 */ FLOAT MovementForwardSpeedMultiplier; // modifies how fast you move forwards (Default = 0.6999999881)
+/* 0x0108 */ BYTE IsLinkDead; // LD
+/* 0x0109 */ BYTE IsGameMaster; // GM
+/* 0x010A */ WORD LevitationState; // EQ_LEVITATION_STATE_x
+/* 0x010C */ DWORD TargetType; // EQ_SPAWN_TARGET_TYPE_x
+/* 0x0110 */ DWORD Unknown0110;
+/* 0x0114 */ DWORD AnonymousState; // EQ_ANONYMOUS_STATE_x, /anonymous and /roleplay
+/* 0x0118 */ DWORD Unknown0118;
+/* 0x011C */ DWORD IsAwayFromKeyboard; // AFK
+/* 0x0120 */ BYTE Unknown0120[12];
+/* 0x012C */ CHAR LastName[22]; // surname or title
+/* 0x0142 */ BYTE Unknown0142[10];
+/* 0x014C */ WORD GuildRank;
+/* 0x014E */ WORD Deity; // EQ_DEITY_x
+/* 0x0150 */ BYTE Unknown0150;
+/* 0x0151 */ BYTE Unknown0151[6];
+/* 0x0157 */ BYTE Unknown0157[5];
+/* 0x015C */ DWORD Unknown015C;
+/* 0x0160 */ DWORD Unknown0160;
+/* 0x0164 */ DWORD Unknown0164;
+} EQSPAWNINFO, *PEQSPAWNINFO;
+
+typedef struct _EQGROUNDSPAWNINFO
+{
+/* 0x0000 */ struct _EQGROUNDSPAWNINFO* Prev;
+/* 0x0004 */ struct _EQGROUNDSPAWNINFO* Next;
+/* 0x0008 */ WORD Id;
+/* 0x000A */ BYTE Unknown000A[2];
+/* 0x000C */ WORD DropId;
+/* 0x000E */ BYTE Unknown000E[2];
+/* 0x0010 */ WORD Unknown0010;
+/* 0x0012 */ BYTE Unknown0012[2];
+/* 0x0014 */ DWORD Unknown0014; // pointer
+/* 0x0018 */ BYTE Unknown0018[116];
+/* 0x008C */ FLOAT Heading;
+/* 0x0090 */ FLOAT Z;
+/* 0x0094 */ FLOAT Y;
+/* 0x0098 */ FLOAT X;
+/* 0x009C */ CHAR Name[30];
+} EQGROUNDSPAWNINFO, *PEQGROUNDSPAWNINFO;
+
+// sizeof EQGUILDINFO 0x96
+typedef struct _EQGUILDINFO
 {
 /* 0x0000 */ CHAR Name[32];
 /* 0x0032 */ BYTE Unknown0032[64];
-} EQGUILD, *PEQGUILD;
+} EQGUILDINFO, *PEQGUILDINFO;
 
 typedef struct _EQGUILDLIST
 {
-    EQGUILD Guild[512];
+    EQGUILDINFO Guild[512];
 } EQGUILDLIST, *PEQGUILDLIST;
+
+/****************************************************************************************************/
 
 void EQ_ToggleBool(bool &b)
 {
@@ -487,9 +647,9 @@ EQCHARINFO EQ_GetCharInfo(CMemory* mem)
     //return mem->ReadAny<DWORD>(CEverQuest + EQ_OFFSET_CEverQuest_GAME_STATE);
 //}
 
-std::string EQ_GetRaceShortName(int race)
+char* EQ_GetRaceShortName(int race)
 {
-    std::string raceShortName;
+    char* raceShortName;
 
     switch (race)
     {
@@ -565,9 +725,9 @@ std::string EQ_GetRaceShortName(int race)
     return raceShortName;
 }
 
-std::string EQ_GetClassShortName(int _class)
+char* EQ_GetClassShortName(int _class)
 {
-    std::string classShortName;
+    char* classShortName;
 
     switch (_class)
     {
@@ -666,9 +826,9 @@ std::string EQ_GetClassShortName(int _class)
     return classShortName;
 }
 
-std::string EQ_GetStandingStateString(int standingState)
+char* EQ_GetStandingStateString(int standingState)
 {
-    std::string standingStateString;
+    char* standingStateString;
 
     switch (standingState)
     {
@@ -708,9 +868,9 @@ std::string EQ_GetStandingStateString(int standingState)
     return standingStateString;
 }
 
-std::string EQ_GetGroundSpawnName(std::string spawnActorDefinitionName)
+char* EQ_GetGroundSpawnName(char* spawnActorDefinitionName)
 {
-    std::string spawnName = spawnActorDefinitionName;
+    char* spawnName = spawnActorDefinitionName;
 
     if (spawnActorDefinitionName == "IT63_ACTORDEF")
     {
@@ -755,7 +915,7 @@ std::string EQ_GetGroundSpawnName(std::string spawnActorDefinitionName)
     return spawnName;
 }
 
-std::string EQ_GetGuildNameById(CMemory* mem, int guildId)
+char* EQ_GetGuildNameById(CMemory* mem, int guildId)
 {
     if (guildId == EQ_GUILD_ID_NULL)
     {

@@ -2,17 +2,19 @@
 #define EQMAC_HPP
 
 #include <cstdint>
+#include <cstring>
 #include <cmath>
+
 #include <string>
-#include <vector>
-#include <algorithm>
 
 #include <windows.h>
 
 #include "cmemory.hpp"
 
-const std::string EQ_TITLE = "EverQuest";
-const std::string EQ_TITLE_EQW = "EQW beta 2.32";
+const char* EQ_TITLE = "EverQuest";
+const char* EQ_TITLE_EQW = "EQW beta 2.32";
+
+const char* EQ_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_IS_IN_GAME             0x00798550 // BYTE
 #define EQ_IS_AUTO_ATTACK_ENABLED 0x007F6FFE // BYTE
@@ -165,9 +167,9 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 #define EQ_BUFF_TYPE_BENEFICIAL            1
 #define EQ_BUFF_TYPE_BENEFICIAL_GROUP_ONLY 2
 
-#define EQ_POINTER_SPAWNS_BEGIN 0x007F9498
+#define EQ_POINTER_SPAWNS_BEGIN 0x007F9498 // spawn list
 
-#define EQ_POINTER_GROUND_SPAWNS_BEGIN 0x007F949C
+#define EQ_POINTER_GROUND_SPAWNS_BEGIN 0x007F949C // ground spawn list
 
 // class EQPlayer
 #define EQ_POINTER_PLAYER_SPAWN_INFO     0x007F94CC
@@ -326,8 +328,11 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 
 #define EQ_OFFSET_CLASS_GUILDMASTER 16 // EQ_CLASS_x + 16 = EQ_CLASS_x_GUILDMASTER
 
-#define EQ_STRUCTURE_GUILD_LIST 0x007F9C94
+#define EQ_STRUCTURE_GUILD_LIST 0x007F9C94 /// EQGUILDINFO
 #define EQ_GUILDS_MAX 512
+
+#define EQ_STRUCTURE_GROUP_LIST 0x007913F8 // EQSPAWNINFO
+#define EQ_GROUP_MEMBERS_MAX 5
 
 #define EQ_GUILD_ID_NULL 0xFFFF // WORD
 
@@ -394,30 +399,73 @@ const std::string EQ_TITLE_EQW = "EQW beta 2.32";
 #define EQ_TEXT_COLOR_GRAY8       0x13
 #define EQ_TEXT_COLOR_BLACK2      0x14
 
-#define EQ_WORLD_SPACE_TO_SCREEN_SPACE_FUNCTION_NAME "t3dWorldSpaceToScreenSpace" // EQGfx_Dx8.t3dWorldSpaceToScreenSpace
+#define EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_FUNCTION_NAME "t3dWorldSpaceToScreenSpace" // EQGfx_Dx8.t3dWorldSpaceToScreenSpace
 
-#define EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA 0x0063B924 // pass this to function as argument1
+#define EQ_POINTER_T3D_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA 0x0063B924 // pass this to function as first argument
 
-#define EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE 0xFFFF3D3E // world space to screen space failed because the location is not on screen
+#define EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE 0xFFFF3D3E // world space to screen space failed because the location is not on screen
+
+#define EQ_T3D_DEFER_LINE_FUNCTION_NAME "t3dDeferLine" // EQGfx_Dx8.t3dDeferLine
 
 /****************************************************************************************************/
 
 typedef struct _EQLOCATION
 {
-    float Y;
-    float X;
-    float Z;
+    FLOAT Y;
+    FLOAT X;
+    FLOAT Z;
 } EQLOCATION, *PEQLOCATION;
 
 typedef struct _EQLINE
 {
-    float X1;
-    float Y1;
-    float Z1 = 1.0;
-    float X2;
-    float Y2;
-    float Z2 = 1.0;
+    FLOAT X1;
+    FLOAT Y1;
+    FLOAT Z1 = 1.0f;
+    FLOAT X2;
+    FLOAT Y2;
+    FLOAT Z2 = 1.0f;
 } EQLINE, *PEQLINE;
+
+typedef struct _EQMAPLINE
+{
+    FLOAT X1;
+    FLOAT Y1;
+    FLOAT Z1;
+    FLOAT X2;
+    FLOAT Y2;
+    FLOAT Z2;
+    union
+    {
+        struct
+        {
+            BYTE B;
+            BYTE G;
+            BYTE R;
+            BYTE RESERVED;
+        };
+        DWORD RGB;
+    };
+} EQMAPLINE, *PEQMAPLINE;
+
+typedef struct _EQMAPPOINT
+{
+    FLOAT X;
+    FLOAT Y;
+    FLOAT Z;
+    union
+    {
+        struct
+        {
+            BYTE B;
+            BYTE G;
+            BYTE R;
+            BYTE RESERVED;
+        };
+        DWORD RGB;
+    };
+    DWORD Size;
+    CHAR Text[128];
+} EQMAPPOINT, *PEQMAPPOINT;
 
 typedef struct _EQARGBCOLOR
 {
@@ -436,9 +484,9 @@ typedef struct _EQARGBCOLOR
 
 typedef struct _EQZONEINFO
 {
-/* 0x0000 */ CHAR PlayerName[40];
-/* 0x0040 */ CHAR ShortName[20];
-/* 0x0060 */ CHAR LongName[80];
+/* 0x0000 */ CHAR PlayerName[64]; // [0x40]
+/* 0x0040 */ CHAR ShortName[32]; // [0x20]
+/* 0x0060 */ CHAR LongName[128]; // [0x80]
 } EQZONEINFO, *PEQZONEINFO;
 
 // class EQ_Character
@@ -486,6 +534,7 @@ typedef struct _EQCHARINFO
 /* 0x0B7C */ DWORD BankGold;
 /* 0x0B80 */ DWORD BankSilver;
 /* 0x0B84 */ DWORD BankCopper;
+/* 0..... */ 
 } EQCHARINFO, *PEQCHARINFO;
 
 typedef struct _EQACTORINFO
@@ -582,10 +631,16 @@ typedef struct _EQGROUNDSPAWNINFO
 /* 0x0018 */ BYTE Unknown0018[116];
 /* 0x008C */ FLOAT Heading;
 /* 0x0090 */ FLOAT Z;
-/* 0x0094 */ FLOAT Y;
-/* 0x0098 */ FLOAT X;
+/* 0x0094 */ FLOAT X;
+/* 0x0098 */ FLOAT Y;
 /* 0x009C */ CHAR Name[30];
+/* ...... */ 
 } EQGROUNDSPAWNINFO, *PEQGROUNDSPAWNINFO;
+
+typedef struct _EQGROUPLIST
+{
+    struct _EQSPAWNINFO* GroupMember[5];
+} EQGROUPLIST, *PEQGROUPLIST;
 
 // sizeof EQGUILDINFO 0x96
 typedef struct _EQGUILDINFO
@@ -872,44 +927,63 @@ char* EQ_GetGroundSpawnName(char* spawnActorDefinitionName)
 {
     char* spawnName = spawnActorDefinitionName;
 
-    if (spawnActorDefinitionName == "IT63_ACTORDEF")
+    if
+    (
+        std::strcmp(spawnActorDefinitionName, "IT27_ACTORDEF") == 0 ||
+        std::strcmp(spawnActorDefinitionName, "IT28_ACTORDEF") == 0 ||
+        std::strcmp(spawnActorDefinitionName, "IT10645_ACTORDEF") == 0
+    )
+    {
+        spawnName = "Book";
+        return spawnName;
+    }
+
+    if (std::strcmp(spawnActorDefinitionName, "IT63_ACTORDEF") == 0)
     {
         spawnName = "Dropped Item";
+        return spawnName;
     }
 
-    if (spawnActorDefinitionName == "IT64_ACTORDEF")
+    if (std::strcmp(spawnActorDefinitionName, "IT64_ACTORDEF") == 0)
     {
         spawnName = "Dropped Bag";
+        return spawnName;
     }
 
-    if (spawnActorDefinitionName == "IT66_ACTORDEF")
+    if (std::strcmp(spawnActorDefinitionName, "IT66_ACTORDEF") == 0)
     {
         spawnName = "Forge";
+        return spawnName;
     }
 
-    if (spawnActorDefinitionName == "IT69_ACTORDEF")
+    if (std::strcmp(spawnActorDefinitionName, "IT69_ACTORDEF") == 0)
     {
         spawnName = "Oven";
+        return spawnName;
     }
 
-    if (spawnActorDefinitionName == "IT70_ACTORDEF")
+    if (std::strcmp(spawnActorDefinitionName, "IT70_ACTORDEF") == 0)
     {
         spawnName = "Brew Barrel";
+        return spawnName;
     }
 
-    if (spawnActorDefinitionName == "IT73_ACTORDEF")
+    if (std::strcmp(spawnActorDefinitionName, "IT73_ACTORDEF") == 0)
     {
         spawnName = "Kiln";
+        return spawnName;
     }
 
-    if (spawnActorDefinitionName == "IT74_ACTORDEF")
+    if (std::strcmp(spawnActorDefinitionName, "IT74_ACTORDEF") == 0)
     {
         spawnName = "Pottery Wheel";
+        return spawnName;
     }
 
-    if (spawnActorDefinitionName == "IT128_ACTORDEF")
+    if (std::strcmp(spawnActorDefinitionName, "IT128_ACTORDEF") == 0)
     {
         spawnName = "Sewing Kit";
+        return spawnName;
     }
 
     return spawnName;

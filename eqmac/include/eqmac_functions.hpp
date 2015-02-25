@@ -2,6 +2,8 @@
 #define EQMAC_FUNCTIONS_HPP
 
 #include <cstdint>
+#include <cstring>
+#include <cmath>
 
 #include "eqmac.hpp"
 
@@ -41,6 +43,9 @@ void EQ_WRITE_MEMORY(DWORD address, T value)
 
 EQSPAWNINFO** ppSpawnsBegin = (EQSPAWNINFO**)EQ_POINTER_SPAWNS_BEGIN;
 #define EQ_OBJECT_FirstSpawn (*ppSpawnsBegin)
+
+EQGROUNDSPAWNINFO** ppGroundSpawnsBegin = (EQGROUNDSPAWNINFO**)EQ_POINTER_GROUND_SPAWNS_BEGIN;
+#define EQ_OBJECT_FirstGroundSpawn (*ppGroundSpawnsBegin)
 
 EQSPAWNINFO** ppPlayerSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_PLAYER_SPAWN_INFO;
 #define EQ_OBJECT_PlayerSpawn (*ppPlayerSpawnInfo)
@@ -249,9 +254,13 @@ EQ_FUNCTION_AT_ADDRESS(unsigned short EQ_Character::Max_Mana(void), EQ_FUNCTION_
 typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsigned short, unsigned short, unsigned short, int, unsigned short, unsigned long, long, unsigned long);
 #endif
 
-// World to Screen function
+// world to screen function
 typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)(int, EQLOCATION*, float*, float*);
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace EQGfx_Dx8__t3dWorldSpaceToScreenSpace;
+
+// draw line function
+typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine)(EQLINE*, int); // int color ; 0xAARRGGBB
+EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine EQGfx_Dx8__t3dDeferLine;
 
 // EQWorldData::GetFullZoneName
 // call 00523E49
@@ -273,6 +282,18 @@ typedef void (__stdcall *_everquest_function_EQ_Character__CastSpell)(unsigned c
 _everquest_function_EQ_Character__CastSpell everquest_function_EQ_Character__CastSpell = (_everquest_function_EQ_Character__CastSpell)EQ_FUNCTION_EQ_Character__CastSpell;
 #endif
 */
+
+char* EQ_GetGuildNameById(int guildId)
+{
+    if (guildId == EQ_GUILD_ID_NULL)
+    {
+        return "Unknown Guild";
+    }
+
+    EQGUILDLIST* guildList = (EQGUILDLIST*)EQ_STRUCTURE_GUILD_LIST;
+
+    return guildList->Guild[guildId].Name;
+}
 
 /*
 template <class T>

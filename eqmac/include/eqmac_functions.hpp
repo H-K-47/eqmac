@@ -295,6 +295,46 @@ char* EQ_GetGuildNameById(int guildId)
     return guildList->Guild[guildId].Name;
 }
 
+void EQ_DrawRectangle(float x, float y, float width, float height, int color)
+{
+    EQLINE lineTop;
+    lineTop.X1 = x;
+    lineTop.Y1 = y;
+    lineTop.Z1 = 1.0f;
+    lineTop.X2 = x + width;
+    lineTop.Y2 = y;
+    lineTop.Z2 = 1.0f;
+
+    EQLINE lineLeft;
+    lineLeft.X1 = x;
+    lineLeft.Y1 = y;
+    lineLeft.Z1 = 1.0f;
+    lineLeft.X2 = x;
+    lineLeft.Y2 = y + height;
+    lineLeft.Z2 = 1.0f;
+
+    EQLINE lineRight;
+    lineRight.X1 = x + width;
+    lineRight.Y1 = y;
+    lineRight.Z1 = 1.0f;
+    lineRight.X2 = x + width;
+    lineRight.Y2 = y + height;
+    lineRight.Z2 = 1.0f;
+
+    EQLINE lineBottom;
+    lineBottom.X1 = x;
+    lineBottom.Y1 = y + height;
+    lineBottom.Z1 = 1.0f;
+    lineBottom.X2 = x + width;
+    lineBottom.Y2 = y + height;
+    lineBottom.Z2 = 1.0f;
+
+    EQGfx_Dx8__t3dDeferLine(&lineTop,    color);
+    EQGfx_Dx8__t3dDeferLine(&lineLeft,   color);
+    EQGfx_Dx8__t3dDeferLine(&lineRight,  color);
+    EQGfx_Dx8__t3dDeferLine(&lineBottom, color);
+}
+
 /*
 template <class T>
 T everquest_function_read_memory(DWORD address);

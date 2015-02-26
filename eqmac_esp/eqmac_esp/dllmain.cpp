@@ -19,7 +19,7 @@
 
 HMODULE g_module;
 
-EQ_FUNCTION_TYPE_DrawNetStatus DrawNetStatus_REAL = NULL;
+EQ_FUNCTION_TYPE_DrawNetStatus EQMACESP_DrawNetStatus_REAL = NULL;
 
 int g_fontHeight = 10;
 
@@ -36,24 +36,47 @@ float g_mapHeight = 200.0f;
 float g_mapOriginX = g_mapX + (g_mapWidth  * 0.5f);
 float g_mapOriginY = g_mapY + (g_mapHeight * 0.5f);
 
-float g_mapZoom = 0.5f;
+float g_mapZoom           = 0.5f;
+float g_mapZoomMultiplier = 0.1f;
+float g_mapZoomDefault    = 1.0f;
+float g_mapZoomMinimum    = 10.0f;
+float g_mapZoomMaximum    = 0.01f;
 
 float g_mapArrowRadius = 25.0f;
 
-float g_mapCenterLineSize = 4.0f;
+float g_mapCenterLineSize = 5.0f;
+
+DWORD g_mapBorderColor = 0xFF00FF00;
+DWORD g_mapArrowColor  = 0xFF00FF00;
+DWORD g_mapLineColor   = 0xFFFFFFFF;
+
+float g_mapButtonWidth  = 10.0f;
+float g_mapButtonHeight = 10.0f;
+
+float g_mapButtonZoomInX = g_mapX + g_mapWidth + 5.0f;
+float g_mapButtonZoomInY = g_mapY;
+
+float g_mapButtonZoomOutX = g_mapX + g_mapWidth + 5.0f;
+float g_mapButtonZoomOutY = g_mapY + g_mapButtonHeight + 5.0f;
+
+float g_mapButtonZoom1X = g_mapX + g_mapWidth + 5.0f;
+float g_mapButtonZoom1Y = g_mapY + g_mapButtonHeight + 5.0f + g_mapButtonHeight + 5.0f;
 
 std::vector<EQMAPLINE>  g_mapLineList;
 std::vector<EQMAPPOINT> g_mapPointList;
 
+int g_mapNumLines = 0;
+
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
+// need this to clip lines within the map window rectangle
 #define LINECLIP_INSIDE 0 // 0000
 #define LINECLIP_LEFT   1 // 0001
 #define LINECLIP_RIGHT  2 // 0010
 #define LINECLIP_BOTTOM 4 // 0100
 #define LINECLIP_TOP    8 // 1000
 
-int getLineClipValue(float x, float y, float minX, float minY, float maxX, float maxY)
+int EQMACESP_GetLineClipValue(float x, float y, float minX, float minY, float maxX, float maxY)
 {
     int value = LINECLIP_INSIDE;
  
@@ -78,7 +101,17 @@ int getLineClipValue(float x, float y, float minX, float minY, float maxX, float
     return value;
 }
 
-void stringReplaceAll(std::string& subject, const std::string& search, const std::string& replace)
+bool EQMACESP_IsPointInsideRectangle(int pointX, int pointY, int rectX, int rectY, int rectWidth, int rectHeight)
+{
+    if (pointX < rectX) return false;
+    if (pointY < rectY) return false;
+    if (pointX > (rectX + rectWidth)) return false;
+    if (pointY > (rectY + rectHeight)) return false;
+
+    return true;
+}
+
+void EQMACESP_StringReplaceAll(std::string& subject, const std::string& search, const std::string& replace)
 {
     std::size_t position = 0;
     while ((position = subject.find(search, position)) != std::string::npos)
@@ -88,7 +121,7 @@ void stringReplaceAll(std::string& subject, const std::string& search, const std
     }
 }
 
-bool parseMap(const std::string& filename)
+bool EQMACESP_ParseMap(const std::string& filename)
 {
     std::ifstream file(filename.c_str());
     if (!file.is_open())
@@ -169,7 +202,7 @@ bool parseMap(const std::string& filename)
             mapPoint.Size = std::stoi(lineTokens.at(6));
 
             std::string mapPointText = lineTokens.at(7);
-            stringReplaceAll(mapPointText, "_", " ");
+            EQMACESP_StringReplaceAll(mapPointText, "_", " ");
             strcpy_s(mapPoint.Text, mapPointText.c_str());
 
             g_mapPointList.push_back(mapPoint);
@@ -179,8 +212,35 @@ bool parseMap(const std::string& filename)
     return true;
 }
 
-int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, unsigned short a4, unsigned short a5, int a6, unsigned short a7, unsigned long a8, long a9, unsigned long a10)
+void EQMACESP_MapZoomOut()
 {
+    g_mapZoom -= g_mapZoom * g_mapZoomMultiplier;
+
+    if (g_mapZoom <= g_mapZoomMaximum)
+    {
+        g_mapZoom = g_mapZoomMaximum;
+    }
+}
+
+void EQMACESP_MapZoomIn()
+{
+    g_mapZoom += g_mapZoom * g_mapZoomMultiplier;
+
+    if (g_mapZoom >= g_mapZoomMinimum)
+    {
+        g_mapZoom = g_mapZoomMinimum;
+    }
+}
+
+void EQMACESP_MapZoom1()
+{
+    g_mapZoom = 1.0f;
+}
+
+int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, unsigned short a4, unsigned short a5, int a6, unsigned short a7, unsigned long a8, long a9, unsigned long a10)
+{
+    g_mapNumLines = 0;
+
     DWORD zoneId = EQ_READ_MEMORY<DWORD>(EQ_ZONE_ID);
 
     EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
@@ -190,7 +250,7 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
         std::stringstream mapFilename;
         mapFilename << "maps/" << zoneInfo->ShortName << ".txt";
 
-        if (parseMap(mapFilename.str()) == true)
+        if (EQMACESP_ParseMap(mapFilename.str()) == true)
         {
             g_mapZoneId = zoneId;
         }
@@ -198,6 +258,56 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
         {
             g_mapLineList.clear();
             g_mapPointList.clear();
+        }
+    }
+
+    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+
+    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+
+    if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+    {
+        if
+        (
+            EQMACESP_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapButtonZoomInX, (int)g_mapButtonZoomInY,
+                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+            )
+            == true
+        )
+        {
+            EQMACESP_MapZoomIn();
+        }
+
+        if
+        (
+            EQMACESP_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapButtonZoomOutX, (int)g_mapButtonZoomOutY,
+                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+            )
+            == true
+        )
+        {
+            EQMACESP_MapZoomOut();
+        }
+
+        if
+        (
+            EQMACESP_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapButtonZoom1X, (int)g_mapButtonZoom1Y,
+                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+            )
+            == true
+        )
+        {
+            EQMACESP_MapZoom1();
         }
     }
 
@@ -405,44 +515,24 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
         spawn = spawn->Next;
     }
 
-    DWORD mapLineColor = 0xFF00FF00;
+    EQ_DrawRectangle(g_mapX, g_mapY, g_mapWidth, g_mapHeight, g_mapBorderColor);
 
-    EQLINE mapBoxLineTop;
-    mapBoxLineTop.X1 = g_mapX;
-    mapBoxLineTop.Y1 = g_mapY;
-    mapBoxLineTop.Z1 = 1.0f;
-    mapBoxLineTop.X2 = g_mapX + g_mapWidth;
-    mapBoxLineTop.Y2 = g_mapY;
-    mapBoxLineTop.Z2 = 1.0f;
+    g_mapNumLines += 4;
 
-    EQLINE mapBoxLineLeft;
-    mapBoxLineLeft.X1 = g_mapX;
-    mapBoxLineLeft.Y1 = g_mapY;
-    mapBoxLineLeft.Z1 = 1.0f;
-    mapBoxLineLeft.X2 = g_mapX;
-    mapBoxLineLeft.Y2 = g_mapY + g_mapHeight;
-    mapBoxLineLeft.Z2 = 1.0f;
+    EQ_DrawRectangle(g_mapButtonZoomInX, g_mapButtonZoomInY, g_mapButtonWidth, g_mapButtonHeight, g_mapBorderColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonZoomInX + 3.0f), (int)(g_mapButtonZoomInY - 2.0f), EQ_TEXT_COLOR_LIGHT_GREEN, fontArial14);
 
-    EQLINE mapBoxLineRight;
-    mapBoxLineRight.X1 = g_mapX + g_mapWidth;
-    mapBoxLineRight.Y1 = g_mapY;
-    mapBoxLineRight.Z1 = 1.0f;
-    mapBoxLineRight.X2 = g_mapX + g_mapWidth;
-    mapBoxLineRight.Y2 = g_mapY + g_mapHeight;
-    mapBoxLineRight.Z2 = 1.0f;
+    g_mapNumLines += 4;
 
-    EQLINE mapBoxLineBottom;
-    mapBoxLineBottom.X1 = g_mapX;
-    mapBoxLineBottom.Y1 = g_mapY + g_mapHeight;
-    mapBoxLineBottom.Z1 = 1.0f;
-    mapBoxLineBottom.X2 = g_mapX + g_mapWidth;
-    mapBoxLineBottom.Y2 = g_mapY + g_mapHeight;
-    mapBoxLineBottom.Z2 = 1.0f;
+    EQ_DrawRectangle(g_mapButtonZoomOutX, g_mapButtonZoomOutY, g_mapButtonWidth, g_mapButtonHeight, g_mapBorderColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonZoomOutX + 4.0f), (int)(g_mapButtonZoomOutY - 3.0f), EQ_TEXT_COLOR_LIGHT_GREEN, fontArial14);
 
-    EQGfx_Dx8__t3dDeferLine(&mapBoxLineTop,    mapLineColor);
-    EQGfx_Dx8__t3dDeferLine(&mapBoxLineLeft,   mapLineColor);
-    EQGfx_Dx8__t3dDeferLine(&mapBoxLineRight,  mapLineColor);
-    EQGfx_Dx8__t3dDeferLine(&mapBoxLineBottom, mapLineColor);
+    g_mapNumLines += 4;
+
+    EQ_DrawRectangle(g_mapButtonZoom1X, g_mapButtonZoom1Y, g_mapButtonWidth, g_mapButtonHeight, g_mapBorderColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonZoom1X + 4.0f), (int)(g_mapButtonZoom1Y - 2.0f), EQ_TEXT_COLOR_LIGHT_GREEN, fontArial14);
+
+    g_mapNumLines += 4;
 
     for (const EQMAPLINE &mapLine : g_mapLineList)
     {
@@ -487,8 +577,8 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
 
         bool bDrawLine = false;
 
-        int lineClipValue1 = getLineClipValue(line.X1, line.Y1, minX, minY, maxX, maxY);
-        int lineClipValue2 = getLineClipValue(line.X2, line.Y2, minX, minY, maxX, maxY);
+        int lineClipValue1 = EQMACESP_GetLineClipValue(line.X1, line.Y1, minX, minY, maxX, maxY);
+        int lineClipValue2 = EQMACESP_GetLineClipValue(line.X2, line.Y2, minX, minY, maxX, maxY);
 
         while (true)
         {
@@ -533,20 +623,30 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
                 {
                     line.X1 = x;
                     line.Y1 = y;
-                    lineClipValue1 = getLineClipValue(line.X1, line.Y1, minX, minY, maxX, maxY);
+                    lineClipValue1 = EQMACESP_GetLineClipValue(line.X1, line.Y1, minX, minY, maxX, maxY);
                 }
                 else
                 {
                     line.X2 = x;
                     line.Y2 = y;
-                    lineClipValue2 = getLineClipValue(line.X2, line.Y2, minX, minY, maxX, maxY);
+                    lineClipValue2 = EQMACESP_GetLineClipValue(line.X2, line.Y2, minX, minY, maxX, maxY);
                 }
             }
         }
 
+        // only use 75% of the maximum allowed number of deferred objects
+        // the game needs to reserve some to draw stuff
+        // this also leaves some extra to draw the player arrow
+        if (g_mapNumLines > (int)(EQ_GRAPHICS_DLL_DEFERRED_OBJECTS_MAX * 0.75f))
+        {
+            bDrawLine = false;
+        }
+
         if (bDrawLine == true)
         {
-            EQGfx_Dx8__t3dDeferLine(&line, 0xFFFFFFFF);
+            EQGfx_Dx8__t3dDeferLine(&line, g_mapLineColor);
+
+            g_mapNumLines += 1;
         }
     }
 
@@ -585,7 +685,7 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
 
         float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
 
-        if (spawnDistance > 400.0f && spawn->Type == EQ_SPAWN_TYPE_NPC)
+        if (spawnDistance > g_espDistance && spawn->Type == EQ_SPAWN_TYPE_NPC)
         {
             spawn = spawn->Next;
             continue;
@@ -644,23 +744,23 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
     }
 
     EQLINE mapCenterLineHorizontal;
-    mapCenterLineHorizontal.X1 = g_mapOriginX - (g_mapCenterLineSize * g_mapZoom);
+    mapCenterLineHorizontal.X1 = g_mapOriginX - g_mapCenterLineSize;
     mapCenterLineHorizontal.Y1 = g_mapOriginY;
     mapCenterLineHorizontal.Z1 = 1.0f;
-    mapCenterLineHorizontal.X2 = g_mapOriginX + (g_mapCenterLineSize * g_mapZoom);
+    mapCenterLineHorizontal.X2 = g_mapOriginX + g_mapCenterLineSize;
     mapCenterLineHorizontal.Y2 = g_mapOriginY;
     mapCenterLineHorizontal.Z2 = 1.0f;
 
     EQLINE mapCenterLineVertical;
     mapCenterLineVertical.X1 = g_mapOriginX;
-    mapCenterLineVertical.Y1 = g_mapOriginY  - (g_mapCenterLineSize * g_mapZoom);
+    mapCenterLineVertical.Y1 = g_mapOriginY  - g_mapCenterLineSize;
     mapCenterLineVertical.Z1 = 1.0f;
     mapCenterLineVertical.X2 = g_mapOriginX;
-    mapCenterLineVertical.Y2 = g_mapOriginY  + (g_mapCenterLineSize * g_mapZoom);
+    mapCenterLineVertical.Y2 = g_mapOriginY  + g_mapCenterLineSize;
     mapCenterLineVertical.Z2 = 1.0f;
 
-    EQGfx_Dx8__t3dDeferLine(&mapCenterLineHorizontal, mapLineColor);
-    EQGfx_Dx8__t3dDeferLine(&mapCenterLineVertical,   mapLineColor);
+    EQGfx_Dx8__t3dDeferLine(&mapCenterLineHorizontal, g_mapArrowColor);
+    EQGfx_Dx8__t3dDeferLine(&mapCenterLineVertical,   g_mapArrowColor);
 
     float playerHeadingC = playerSpawn->Heading;
 
@@ -722,14 +822,14 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
     float arrowAX = arrowCX + arrowAddAX;
     float arrowAY = arrowCY - arrowAddAY;
 
-    float mapArrowCX = ((arrowCX * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-    float mapArrowCY = ((arrowCY * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+    float mapArrowCX = (arrowCX + g_mapOriginX) + playerSpawn->X;
+    float mapArrowCY = (arrowCY + g_mapOriginY) + playerSpawn->Y;
 
-    float mapArrowBX = ((arrowBX * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-    float mapArrowBY = ((arrowBY * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+    float mapArrowBX = (arrowBX + g_mapOriginX) + playerSpawn->X;
+    float mapArrowBY = (arrowBY + g_mapOriginY) + playerSpawn->Y;
 
-    float mapArrowAX = ((arrowAX * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-    float mapArrowAY = ((arrowAY * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+    float mapArrowAX = (arrowAX + g_mapOriginX) + playerSpawn->X;
+    float mapArrowAY = (arrowAY + g_mapOriginY) + playerSpawn->Y;
 
     EQLINE mapArrowLineA;
     mapArrowLineA.X1 = mapArrowCX;
@@ -755,19 +855,19 @@ int __cdecl DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, u
     mapArrowLineC.Y2 = mapArrowCY;
     mapArrowLineC.Z2 = 1.0f;
 
-    EQGfx_Dx8__t3dDeferLine(&mapArrowLineA, mapLineColor);
-    EQGfx_Dx8__t3dDeferLine(&mapArrowLineB, mapLineColor);
-    EQGfx_Dx8__t3dDeferLine(&mapArrowLineC, mapLineColor);
+    EQGfx_Dx8__t3dDeferLine(&mapArrowLineA, g_mapArrowColor);
+    EQGfx_Dx8__t3dDeferLine(&mapArrowLineB, g_mapArrowColor);
+    EQGfx_Dx8__t3dDeferLine(&mapArrowLineC, g_mapArrowColor);
 
     char zoneText[128];
     sprintf_s(zoneText, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
     EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)(g_mapY + g_mapHeight + 5.0f), EQ_TEXT_COLOR_LIGHT_GREEN, fontArial14);
 
-    return DrawNetStatus_REAL(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    return EQMACESP_DrawNetStatus_REAL(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 }
 
 /*
-DWORD WINAPI threadLoop(LPVOID param)
+DWORD WINAPI EQMACESP_ThreadLoop(LPVOID param)
 {
     while (1)
     {
@@ -781,7 +881,7 @@ DWORD WINAPI threadLoop(LPVOID param)
 }
 */
 
-DWORD WINAPI threadLoad(LPVOID param)
+DWORD WINAPI EQMACESP_ThreadLoad(LPVOID param)
 {
     HINSTANCE graphicsDll = LoadLibraryA(EQ_GRAPHICS_DLL_NAME);
     if (!graphicsDll)
@@ -810,9 +910,9 @@ DWORD WINAPI threadLoad(LPVOID param)
         return 0;
     }
 
-    DrawNetStatus_REAL = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)DrawNetStatus_DETOUR);
+    EQMACESP_DrawNetStatus_REAL = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)EQMACESP_DrawNetStatus_DETOUR);
 
-    //CreateThread(NULL, 0, &threadLoop, NULL, 0, NULL);
+    //CreateThread(NULL, 0, &EQMACESP_ThreadLoop, NULL, 0, NULL);
 
     return 0;
 }
@@ -825,11 +925,11 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID reserved)
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(module);
-            CreateThread(NULL, 0, &threadLoad, NULL, 0, NULL);
+            CreateThread(NULL, 0, &EQMACESP_ThreadLoad, NULL, 0, NULL);
             break;
 
         case DLL_PROCESS_DETACH:
-            DetourRemove((PBYTE)DrawNetStatus_REAL, (PBYTE)DrawNetStatus_DETOUR);
+            DetourRemove((PBYTE)EQMACESP_DrawNetStatus_REAL, (PBYTE)EQMACESP_DrawNetStatus_DETOUR);
             break;
     }
 

@@ -16,6 +16,8 @@ const char* EQ_TITLE_EQW = "EQW beta 2.32";
 
 const char* EQ_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
+#define EQ_TIMER 0x007989D4 // DWORD ; time elapsed in milliseconds
+
 #define EQ_IS_IN_GAME 0x00798550 // BYTE
 
 #define EQ_IS_AUTO_ATTACK_ENABLED 0x007F6FFE // BYTE
@@ -280,6 +282,9 @@ const char* EQ_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_MOUSE_LOOK_STATE_FALSE 0x00010000
 #define EQ_MOUSE_LOOK_STATE_TRUE  0x00010001
+
+#define EQ_MOUSE_TIMER_RIGHT_CLICK 0x0079862C
+#define EQ_MOUSE_TIMER_LEFT_CLICK  0x00798630
 
 #define EQ_RACE_UNKNOWN   0
 #define EQ_RACE_HUMAN     1

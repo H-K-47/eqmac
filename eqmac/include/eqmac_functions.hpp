@@ -47,6 +47,9 @@ EQSPAWNINFO** ppSpawnsBegin = (EQSPAWNINFO**)EQ_POINTER_SPAWNS_BEGIN;
 EQGROUNDSPAWNINFO** ppGroundSpawnsBegin = (EQGROUNDSPAWNINFO**)EQ_POINTER_GROUND_SPAWNS_BEGIN;
 #define EQ_OBJECT_FirstGroundSpawn (*ppGroundSpawnsBegin)
 
+EQDOORSPAWNINFO** ppDoorSpawnsBegin = (EQDOORSPAWNINFO**)EQ_POINTER_DOOR_SPAWNS_BEGIN;
+#define EQ_OBJECT_FirstDoorSpawn (*ppDoorSpawnsBegin)
+
 EQSPAWNINFO** ppPlayerSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_PLAYER_SPAWN_INFO;
 #define EQ_OBJECT_PlayerSpawn (*ppPlayerSpawnInfo)
 

@@ -29,8 +29,11 @@ EQ_FUNCTION_TYPE_DrawNetStatus EQMACESP_DrawNetStatus_REAL = NULL;
 int g_fontHeight = 10;
 
 bool g_espIsEnabled = true;
+bool g_espDoorsIsEnabled = false;
 
 float g_espDistance = 400.0f;
+
+bool g_buffsIsEnabled = true;
 
 int g_mapZoneId = 0;
 
@@ -39,6 +42,12 @@ float g_mapY = 30.0f;
 
 float g_mapWidth  = 200.0f;
 float g_mapHeight = 200.0f;
+
+float g_mapMinX = g_mapX;
+float g_mapMaxX = g_mapX + g_mapWidth;
+
+float g_mapMinY = g_mapY;
+float g_mapMaxY = g_mapY + g_mapHeight;
 
 float g_mapX_default = 5.0f;
 float g_mapY_default = 30.0f;
@@ -62,6 +71,9 @@ bool g_mapHeightFilterIsEnabled = false;
 bool g_mapSpawnsIsEnabled = true;
 bool g_mapPointsIsEnabled = true;
 bool g_mapLinesIsEnabled = true;
+bool g_mapTargetLineIsEnabled = true;
+bool g_mapPlayerCorpseLineIsEnabled = true;
+bool g_mapReplaceBlackLinesWithWhiteLinesIsEnabled = false;
 
 float g_mapHeightFilterLow  = 10.0; // z axis
 float g_mapHeightFilterHigh = 10.0; // z axis
@@ -72,13 +84,15 @@ float g_mapZoomDefault    = 1.0f;
 float g_mapZoomMinimum    = 10.0f;
 float g_mapZoomMaximum    = 0.01f;
 
-float g_mapArrowRadius = 25.0f;
+float g_mapArrowRadius = 20.0f;
 
 float g_mapCenterLineSize = 5.0f;
 
-DWORD g_mapBorderColor = 0xFF00FF00;
-DWORD g_mapArrowColor  = 0xFF00FF00;
-DWORD g_mapLineColor   = 0xFFFFFFFF;
+DWORD g_mapBorderColor     = 0xFF00FF00;
+DWORD g_mapArrowColor      = 0xFF00FF00;
+DWORD g_mapLineColor       = 0xDEADBEEF; // DEADBEEF uses the map txt file line colors
+DWORD g_mapTargetLineColor = 0xFFFF00FF;
+DWORD g_mapCorpseLineColor = 0xFFFFFF00;
 
 DWORD g_mapButtonColorEnabled  = 0xFF00FF00;
 DWORD g_mapButtonColorDisabled = 0xFFFF0000;
@@ -110,27 +124,35 @@ float g_mapButtonToggleHeightFilterY = g_mapY + ((g_mapButtonHeight + g_mapEleme
 float g_mapButtonToggleZoneInfoX = g_mapX + g_mapWidth + g_mapElementOffset;
 float g_mapButtonToggleZoneInfoY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 6.0f);
 
-float g_mapButtonToggleEspX = g_mapX + g_mapWidth + g_mapElementOffset;
-float g_mapButtonToggleEspY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 7.0f);
-
 float g_mapButtonToggleSpawnsX = g_mapX + g_mapWidth + g_mapElementOffset;
-float g_mapButtonToggleSpawnsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 8.0f);
+float g_mapButtonToggleSpawnsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 7.0f);
 
 float g_mapButtonTogglePointsX = g_mapX + g_mapWidth + g_mapElementOffset;
-float g_mapButtonTogglePointsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 9.0f);
+float g_mapButtonTogglePointsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 8.0f);
 
 float g_mapButtonToggleLinesX = g_mapX + g_mapWidth + g_mapElementOffset;
-float g_mapButtonToggleLinesY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 10.0f);
+float g_mapButtonToggleLinesY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 9.0f);
+
+float g_mapButtonToggleEspX = g_mapX + g_mapWidth + g_mapElementOffset;
+float g_mapButtonToggleEspY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 10.0f);
+
+float g_mapButtonToggleDoorsX = g_mapX + g_mapWidth + g_mapElementOffset;
+float g_mapButtonToggleDoorsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 11.0f);
+
+float g_mapButtonToggleBuffsX = g_mapX + g_mapWidth + g_mapElementOffset;
+float g_mapButtonToggleBuffsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 12.0f);
 
 float g_mapButtonExitX = g_mapX + g_mapWidth + g_mapElementOffset;
-float g_mapButtonExitY = g_mapY + g_mapHeight - g_mapButtonHeight;
+float g_mapButtonExitY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 14.0f);
 
 std::vector<EQMAPLINE>  g_mapLineList;
 std::vector<EQMAPPOINT> g_mapPointList;
 
 int g_mapNumLines = 0;
 
-int g_mapTimerLeftClick;
+unsigned int g_mapTimerLeftClick;
+
+unsigned int g_mapClickDelay = 250; // delay in milliseconds
 
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
@@ -164,6 +186,76 @@ int EQMACESP_GetLineClipValue(float x, float y, float minX, float minY, float ma
     }
  
     return value;
+}
+
+bool EQMACESP_DoClipLine(EQLINE* line, float minX, float minY, float maxX, float maxY)
+{
+    bool bDrawLine = false;
+
+    // don't clip lines into the rectangle, offset by 1 pixel
+    minX = minX + 1.0f;
+    minY = minY + 1.0f;
+    maxX = maxX - 1.0f;
+    maxY = maxY - 1.0f;
+
+    int lineClipValue1 = EQMACESP_GetLineClipValue(line->X1, line->Y1, minX, minY, maxX, maxY);
+    int lineClipValue2 = EQMACESP_GetLineClipValue(line->X2, line->Y2, minX, minY, maxX, maxY);
+
+    while (true)
+    {
+        if (!(lineClipValue1 | lineClipValue2))
+        {
+            bDrawLine = true;
+            break;
+        }
+        else if (lineClipValue1 & lineClipValue2)
+        {
+            break;
+        }
+        else
+        {
+            float x;
+            float y;
+ 
+            int lineClipValueOut = lineClipValue1 ? lineClipValue1 : lineClipValue2;
+ 
+            if (lineClipValueOut & LINECLIP_TOP)
+            {
+                x = line->X1 + (line->X2 - line->X1) * (maxY - line->Y1) / (line->Y2 - line->Y1);
+                y = maxY;
+            }
+            else if (lineClipValueOut & LINECLIP_BOTTOM)
+            {
+                x = line->X1 + (line->X2 - line->X1) * (minY - line->Y1) / (line->Y2 - line->Y1);
+                y = minY;
+            }
+            else if (lineClipValueOut & LINECLIP_RIGHT)
+            {
+                y = line->Y1 + (line->Y2 - line->Y1) * (maxX - line->X1) / (line->X2 - line->X1);
+                x = maxX;
+            }
+            else if (lineClipValueOut & LINECLIP_LEFT)
+            {
+                y = line->Y1 + (line->Y2 - line->Y1) * (minX - line->X1) / (line->X2 - line->X1);
+                x = minX;
+            }
+ 
+            if (lineClipValueOut == lineClipValue1)
+            {
+                line->X1 = x;
+                line->Y1 = y;
+                lineClipValue1 = EQMACESP_GetLineClipValue(line->X1, line->Y1, minX, minY, maxX, maxY);
+            }
+            else
+            {
+                line->X2 = x;
+                line->Y2 = y;
+                lineClipValue2 = EQMACESP_GetLineClipValue(line->X2, line->Y2, minX, minY, maxX, maxY);
+            }
+        }
+    }
+
+    return bDrawLine;
 }
 
 bool EQMACESP_IsPointInsideRectangle(int pointX, int pointY, int rectX, int rectY, int rectWidth, int rectHeight)
@@ -279,44 +371,82 @@ bool EQMACESP_ParseMap(const std::string& filename)
 
 void EQMACESP_MapRecalculateCoordinates()
 {
+    g_mapMinX = g_mapX;
+    g_mapMaxX = g_mapX + g_mapWidth;
+
+    g_mapMinY = g_mapY;
+    g_mapMaxY = g_mapY + g_mapHeight;
+
     g_mapOriginX = g_mapX + (g_mapWidth  * 0.5f);
     g_mapOriginY = g_mapY + (g_mapHeight * 0.5f);
 
-    g_mapButtonZoomInX = g_mapX + g_mapWidth + g_mapElementOffset;
+    g_mapButtonZoomInX = g_mapMaxX + g_mapElementOffset;
     g_mapButtonZoomInY = g_mapY;
 
-    g_mapButtonZoomOutX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonZoomOutY = g_mapY + g_mapButtonHeight + g_mapElementOffset;
+    float buttonIndex = 1.0f;
 
-    g_mapButtonZoom1X = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonZoom1Y = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 2.0f);
+    g_mapButtonZoomOutX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonZoomOutY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
 
-    g_mapButtonToggleMapSizeX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleMapSizeY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 3.0f);
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleLineColorX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleLineColorY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 4.0f);
+    g_mapButtonZoom1X = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonZoom1Y = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
 
-    g_mapButtonToggleHeightFilterX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleHeightFilterY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 5.0f);
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleZoneInfoX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleZoneInfoY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 6.0f);
+    g_mapButtonToggleMapSizeX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonToggleMapSizeY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
 
-    g_mapButtonToggleEspX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleEspY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 7.0f);
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleSpawnsX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleSpawnsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 8.0f);
+    g_mapButtonToggleLineColorX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonToggleLineColorY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
 
-    g_mapButtonTogglePointsX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonTogglePointsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 9.0f);
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleLinesX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleLinesY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * 10.0f);
+    g_mapButtonToggleHeightFilterX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonToggleHeightFilterY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
 
-    g_mapButtonExitX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonExitY = g_mapY + g_mapHeight - g_mapButtonHeight;
+    buttonIndex += 1.0f;
+
+    g_mapButtonToggleZoneInfoX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonToggleZoneInfoY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
+
+    buttonIndex += 1.0f;
+
+    g_mapButtonToggleSpawnsX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonToggleSpawnsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
+
+    buttonIndex += 1.0f;
+
+    g_mapButtonTogglePointsX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonTogglePointsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
+
+    buttonIndex += 1.0f;
+
+    g_mapButtonToggleLinesX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonToggleLinesY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
+
+    buttonIndex += 1.0f;
+
+    g_mapButtonToggleEspX = g_mapMaxX + g_mapElementOffset;
+    g_mapButtonToggleEspY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
+
+    buttonIndex += 1.0f;
+
+    g_mapButtonToggleDoorsX = g_mapX + g_mapWidth + g_mapElementOffset;
+    g_mapButtonToggleDoorsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
+
+    buttonIndex += 1.0f;
+
+    g_mapButtonToggleBuffsX = g_mapX + g_mapWidth + g_mapElementOffset;
+    g_mapButtonToggleBuffsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * buttonIndex);
+
+    buttonIndex += 2.0f;
+
+    g_mapButtonExitX = g_mapMaxX - g_mapButtonWidth;
+    g_mapButtonExitY = g_mapY - g_mapButtonHeight - g_mapElementOffset;
 }
 
 void EQMACESP_MapZoomOut()
@@ -374,11 +504,6 @@ void EQMACESP_MapToggleHeightFilter()
     EQ_ToggleBool(g_mapHeightFilterIsEnabled);
 }
 
-void EQMACESP_MapToggleEsp()
-{
-    EQ_ToggleBool(g_espIsEnabled);
-}
-
 void EQMACESP_MapToggleZoneInfo()
 {
     EQ_ToggleBool(g_mapZoneInfoIsEnabled);
@@ -399,9 +524,28 @@ void EQMACESP_MapToggleLines()
     EQ_ToggleBool(g_mapLinesIsEnabled);
 }
 
+void EQMACESP_MapToggleEsp()
+{
+    EQ_ToggleBool(g_espIsEnabled);
+}
+
+void EQMACESP_MapToggleDoors()
+{
+    EQ_ToggleBool(g_espDoorsIsEnabled);
+}
+
+void EQMACESP_MapToggleBuffs()
+{
+    EQ_ToggleBool(g_buffsIsEnabled);
+}
+
 void EQMACESP_MapToggleLineColor()
 {
-    if (g_mapLineColor == 0xFFFFFFFF)
+    if (g_mapLineColor == 0xDEADBEEF)
+    {
+        g_mapLineColor = 0xFFFFFFFF;
+    }
+    else if (g_mapLineColor == 0xFFFFFFFF)
     {
         g_mapLineColor = 0xFF000000;
     }
@@ -427,7 +571,7 @@ void EQMACESP_MapToggleLineColor()
     }
     else if (g_mapLineColor == 0xFFFF0000)
     {
-        g_mapLineColor = 0xFFFFFFFF;
+        g_mapLineColor = 0xDEADBEEF;
     }
 }
 
@@ -442,6 +586,8 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
     PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
 
     PEQGROUNDSPAWNINFO groundSpawn = (PEQGROUNDSPAWNINFO)EQ_OBJECT_FirstGroundSpawn;
+
+    PEQDOORSPAWNINFO doorSpawn = (PEQDOORSPAWNINFO)EQ_OBJECT_FirstDoorSpawn;
 
     PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
 
@@ -469,6 +615,10 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             g_mapLineList.clear();
             g_mapPointList.clear();
         }
+
+        // TODO: parse zone specific config file
+
+        EQMACESP_MapRecalculateCoordinates();
     }
 
     WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
@@ -578,8 +728,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            // half a second between mouse clicks to prevent spam
-            if ((currentTime - g_mapTimerLeftClick) > 500)
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
             {
                 g_mapTimerLeftClick = currentTime;
 
@@ -612,8 +761,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            // half a second between mouse clicks to prevent spam
-            if ((currentTime - g_mapTimerLeftClick) > 500)
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
             {
                 g_mapTimerLeftClick = currentTime;
 
@@ -655,8 +803,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            // half a second between mouse clicks to prevent spam
-            if ((currentTime - g_mapTimerLeftClick) > 500)
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
             {
                 g_mapTimerLeftClick = currentTime;
 
@@ -689,8 +836,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            // half a second between mouse clicks to prevent spam
-            if ((currentTime - g_mapTimerLeftClick) > 500)
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
             {
                 g_mapTimerLeftClick = currentTime;
 
@@ -703,49 +849,6 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 else
                 {
                     EQ_CLASS_CEverQuest->dsp_chat("-> Map Zone Info disabled.");
-                }
-            }
-        }
-    }
-
-    if
-    (
-        EQMACESP_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_mapButtonToggleEspX, (int)g_mapButtonToggleEspY,
-            (int)g_mapButtonWidth, (int)g_mapButtonHeight
-        )
-        == true
-    )
-    {
-        EQ_CLASS_CDisplay->WriteTextHD2
-        (
-            "ESP",
-            (int)(g_mapButtonToggleEspX + g_mapButtonWidth + g_mapElementOffset),
-            (int)(g_mapButtonToggleEspY - 2.0f),
-            EQ_TEXT_COLOR_LIGHT_GREEN,
-            fontArial14
-        );
-
-        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-        {
-            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-            // half a second between mouse clicks to prevent spam
-            if ((currentTime - g_mapTimerLeftClick) > 500)
-            {
-                g_mapTimerLeftClick = currentTime;
-
-                EQMACESP_MapToggleEsp();
-
-                if (g_espIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP disabled.");
                 }
             }
         }
@@ -775,8 +878,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            // half a second between mouse clicks to prevent spam
-            if ((currentTime - g_mapTimerLeftClick) > 500)
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
             {
                 g_mapTimerLeftClick = currentTime;
 
@@ -818,8 +920,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            // half a second between mouse clicks to prevent spam
-            if ((currentTime - g_mapTimerLeftClick) > 500)
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
             {
                 g_mapTimerLeftClick = currentTime;
 
@@ -861,8 +962,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            // half a second between mouse clicks to prevent spam
-            if ((currentTime - g_mapTimerLeftClick) > 500)
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
             {
                 g_mapTimerLeftClick = currentTime;
 
@@ -875,6 +975,132 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 else
                 {
                     EQ_CLASS_CEverQuest->dsp_chat("-> Map Lines disabled.");
+                }
+            }
+        }
+    }
+
+if
+    (
+        EQMACESP_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleEspX, (int)g_mapButtonToggleEspY,
+            (int)g_mapButtonWidth, (int)g_mapButtonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "ESP",
+            (int)(g_mapButtonToggleEspX + g_mapButtonWidth + g_mapElementOffset),
+            (int)(g_mapButtonToggleEspY - 2.0f),
+            EQ_TEXT_COLOR_LIGHT_GREEN,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+            {
+                g_mapTimerLeftClick = currentTime;
+
+                EQMACESP_MapToggleEsp();
+
+                if (g_espIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACESP_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleDoorsX, (int)g_mapButtonToggleDoorsY,
+            (int)g_mapButtonWidth, (int)g_mapButtonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Doors",
+            (int)(g_mapButtonToggleDoorsX + g_mapButtonWidth + g_mapElementOffset),
+            (int)(g_mapButtonToggleDoorsY - 2.0f),
+            EQ_TEXT_COLOR_LIGHT_GREEN,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+            {
+                g_mapTimerLeftClick = currentTime;
+
+                EQMACESP_MapToggleDoors();
+
+                if (g_espDoorsIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Doors enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Doors disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACESP_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleBuffsX, (int)g_mapButtonToggleBuffsY,
+            (int)g_mapButtonWidth, (int)g_mapButtonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Buffs",
+            (int)(g_mapButtonToggleBuffsX + g_mapButtonWidth + g_mapElementOffset),
+            (int)(g_mapButtonToggleBuffsY - 2.0f),
+            EQ_TEXT_COLOR_LIGHT_GREEN,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+            {
+                g_mapTimerLeftClick = currentTime;
+
+                EQMACESP_MapToggleBuffs();
+
+                if (g_buffsIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Buffs enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Buffs disabled.");
                 }
             }
         }
@@ -909,6 +1135,66 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
     if (g_espIsEnabled == true && g_mapSizeIsDefault == true)
     {
 
+    while (doorSpawn)
+    {
+        EQLOCATION spawnLocation = {doorSpawn->Y, doorSpawn->X, doorSpawn->Z};
+
+        float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
+
+        if (spawnDistance > g_espDistance)
+        {
+            doorSpawn = doorSpawn->Next;
+            continue;
+        }
+
+        float resultX = 0.0f;
+        float resultY = 0.0f;
+        int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &spawnLocation, &resultX, &resultY);
+
+        if (result != EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+        {
+            int screenX = (int)resultX;
+            int screenY = (int)resultY;
+
+            const char* spawnName = doorSpawn->Name;
+
+            char spawnText[128];
+
+            const char* doorDescription =
+                EQ_KEYVALUESTRINGLIST_GetValueByKey
+                (
+                    EQ_KEYVALUESTRINGLIST_DOOR_SPAWN_NAME_DESCRIPTION,
+                    EQ_KEYVALUESTRINGLISTSIZE_DOOR_SPAWN_NAME_DESCRIPTION,
+                    doorSpawn->Name
+                );
+
+            if (std::strlen(doorDescription) > 0)
+            {
+                sprintf_s(spawnText, "+ %s", doorDescription);
+            }
+            else
+            {
+                if (g_espDoorsIsEnabled == true)
+                {
+                    sprintf_s(spawnText, "+ Door: %s", spawnName);
+                }
+                else
+                {
+                    doorSpawn = doorSpawn->Next;
+                    continue;
+                }
+            }
+
+            char distanceText[32];
+            sprintf_s(distanceText, " (%d)", (int)spawnDistance);
+            strcat_s(spawnText, distanceText);
+
+            EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, EQ_TEXT_COLOR_WHITE, fontArial14);
+        }
+
+        doorSpawn = doorSpawn->Next;
+    }
+
     while (groundSpawn)
     {
         EQLOCATION spawnLocation = {groundSpawn->Y, groundSpawn->X, groundSpawn->Z};
@@ -930,7 +1216,18 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             int screenX = (int)resultX;
             int screenY = (int)resultY;
 
-            const char* spawnName = EQ_GetGroundSpawnName(groundSpawn->Name);
+            const char* spawnName =
+                EQ_KEYVALUESTRINGLIST_GetValueByKey
+                (
+                    EQ_KEYVALUESTRINGLIST_GROUND_SPAWN_NAME_DESCRIPTION,
+                    EQ_KEYVALUESTRINGLISTSIZE_GROUND_SPAWN_NAME_DESCRIPTION,
+                    groundSpawn->Name
+                );
+
+            if (std::strlen(spawnName) == 0)
+            {
+                spawnName = groundSpawn->Name;
+            }
 
             char spawnText[128];
             sprintf_s(spawnText, "+ %s", spawnName);
@@ -1082,6 +1379,24 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             }
             else if (spawn->Type == EQ_SPAWN_TYPE_NPC)
             {
+                if
+                (
+                    spawn->Class == EQ_CLASS_BANKER   ||
+                    spawn->Class == EQ_CLASS_MERCHANT ||
+                    (
+                        spawn->Class >= EQ_CLASS_GUILDMASTER_BEGIN &&
+                        spawn->Class <= EQ_CLASS_GUILDMASTER_END
+                    )
+                )
+                {
+                    screenY = screenY + g_fontHeight + 1;
+
+                    char classText[128];
+                    sprintf_s(classText, "(%s)", EQ_STRING_CLASS_NAME[spawn->Class]);
+
+                    EQ_CLASS_CDisplay->WriteTextHD2(classText, screenX, screenY, textColor, fontArial14);
+                }
+
                 if (spawn->HpCurrent < 100)
                 {
                     screenY = screenY + g_fontHeight + 1;
@@ -1162,20 +1477,6 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
     mapButtonColor = g_mapButtonColorEnabled;
     mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
 
-    if (g_espIsEnabled == false)
-    {
-        mapButtonColor = g_mapButtonColorDisabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_RED;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleEspX, g_mapButtonToggleEspY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("e", (int)(g_mapButtonToggleEspX + 3.0f), (int)(g_mapButtonToggleEspY - 2.0f), mapButtonTextColor, fontArial14);
-
-    g_mapNumLines += 4;
-
-    mapButtonColor = g_mapButtonColorEnabled;
-    mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
-
     if (g_mapSpawnsIsEnabled == false)
     {
         mapButtonColor = g_mapButtonColorDisabled;
@@ -1212,6 +1513,48 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
     EQ_DrawRectangle(g_mapButtonToggleLinesX, g_mapButtonToggleLinesY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("l", (int)(g_mapButtonToggleLinesX + 5.0f), (int)(g_mapButtonToggleLinesY - 2.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    mapButtonColor = g_mapButtonColorEnabled;
+    mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+
+    if (g_espIsEnabled == false)
+    {
+        mapButtonColor = g_mapButtonColorDisabled;
+        mapButtonTextColor = EQ_TEXT_COLOR_RED;
+    }
+
+    EQ_DrawRectangle(g_mapButtonToggleEspX, g_mapButtonToggleEspY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("e", (int)(g_mapButtonToggleEspX + 3.0f), (int)(g_mapButtonToggleEspY - 2.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    mapButtonColor = g_mapButtonColorEnabled;
+    mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+
+    if (g_espDoorsIsEnabled == false)
+    {
+        mapButtonColor = g_mapButtonColorDisabled;
+        mapButtonTextColor = EQ_TEXT_COLOR_RED;
+    }
+
+    EQ_DrawRectangle(g_mapButtonToggleDoorsX, g_mapButtonToggleDoorsY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_mapButtonToggleDoorsX + 3.0f), (int)(g_mapButtonToggleDoorsY - 2.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    mapButtonColor = g_mapButtonColorEnabled;
+    mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+
+    if (g_buffsIsEnabled == false)
+    {
+        mapButtonColor = g_mapButtonColorDisabled;
+        mapButtonTextColor = EQ_TEXT_COLOR_RED;
+    }
+
+    EQ_DrawRectangle(g_mapButtonToggleBuffsX, g_mapButtonToggleBuffsY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_mapButtonToggleBuffsX + 3.0f), (int)(g_mapButtonToggleBuffsY - 2.0f), mapButtonTextColor, fontArial14);
 
     g_mapNumLines += 4;
 
@@ -1263,18 +1606,12 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         line.Y2 = ((mapLine.Y2 * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
         line.Z2 = 1.0f;
 
-        float minX = g_mapX;
-        float maxX = g_mapX + g_mapWidth;
-
-        float minY = g_mapY;
-        float maxY = g_mapY + g_mapHeight;
-
         if
         (
-            line.X1 > maxX &&
-            line.X2 > maxX &&
-            line.X1 < minX &&
-            line.X2 < minX
+            line.X1 > g_mapMaxX &&
+            line.X2 > g_mapMaxX &&
+            line.X1 < g_mapMinX &&
+            line.X2 < g_mapMinX
         )
         {
             continue;
@@ -1282,86 +1619,22 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         if
         (
-            line.Y1 > maxY &&
-            line.Y2 > maxY &&
-            line.Y1 < minY &&
-            line.Y2 < minY
+            line.Y1 > g_mapMaxY &&
+            line.Y2 > g_mapMaxY &&
+            line.Y1 < g_mapMinY &&
+            line.Y2 < g_mapMinY
         )
         {
             continue;
         }
-
-        // don't clip lines into the rectangle, offset by 1 pixel
-        minX = minX + 1.0f;
-        minY = minY + 1.0f;
-        maxX = maxX - 1.0f;
-        maxY = maxY - 1.0f;
 
         // Cohen-Sutherland algorithm
         // clip the map lines to the rectangle
-
-        bool bDrawLine = false;
-
-        int lineClipValue1 = EQMACESP_GetLineClipValue(line.X1, line.Y1, minX, minY, maxX, maxY);
-        int lineClipValue2 = EQMACESP_GetLineClipValue(line.X2, line.Y2, minX, minY, maxX, maxY);
-
-        while (true)
-        {
-            if (!(lineClipValue1 | lineClipValue2))
-            {
-                bDrawLine = true;
-                break;
-            }
-            else if (lineClipValue1 & lineClipValue2)
-            {
-                break;
-            }
-            else
-            {
-                float x;
-                float y;
- 
-                int lineClipValueOut = lineClipValue1 ? lineClipValue1 : lineClipValue2;
- 
-                if (lineClipValueOut & LINECLIP_TOP)
-                {
-                    x = line.X1 + (line.X2 - line.X1) * (maxY - line.Y1) / (line.Y2 - line.Y1);
-                    y = maxY;
-                }
-                else if (lineClipValueOut & LINECLIP_BOTTOM)
-                {
-                    x = line.X1 + (line.X2 - line.X1) * (minY - line.Y1) / (line.Y2 - line.Y1);
-                    y = minY;
-                }
-                else if (lineClipValueOut & LINECLIP_RIGHT)
-                {
-                    y = line.Y1 + (line.Y2 - line.Y1) * (maxX - line.X1) / (line.X2 - line.X1);
-                    x = maxX;
-                }
-                else if (lineClipValueOut & LINECLIP_LEFT)
-                {
-                    y = line.Y1 + (line.Y2 - line.Y1) * (minX - line.X1) / (line.X2 - line.X1);
-                    x = minX;
-                }
- 
-                if (lineClipValueOut == lineClipValue1)
-                {
-                    line.X1 = x;
-                    line.Y1 = y;
-                    lineClipValue1 = EQMACESP_GetLineClipValue(line.X1, line.Y1, minX, minY, maxX, maxY);
-                }
-                else
-                {
-                    line.X2 = x;
-                    line.Y2 = y;
-                    lineClipValue2 = EQMACESP_GetLineClipValue(line.X2, line.Y2, minX, minY, maxX, maxY);
-                }
-            }
-        }
+        bool bDrawLine = EQMACESP_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
 
         // only use 75% of the maximum allowed number of deferred objects
         // the game needs to reserve some to draw stuff
-        // this also leaves some extra to draw the player arrow
+        // this also leaves some extra to draw the player arrow, target line, etc
         if (g_mapNumLines > (int)(EQ_GRAPHICS_DLL_DEFERRED_OBJECTS_MAX * 0.75f))
         {
             bDrawLine = false;
@@ -1369,13 +1642,80 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         if (bDrawLine == true)
         {
-            EQGfx_Dx8__t3dDeferLine(&line, g_mapLineColor);
+            int mapLineColor = g_mapLineColor;
+
+            if (mapLineColor == 0xDEADBEEF)
+            {
+                EQARGBCOLOR argbColor;
+                argbColor.A = 0xFF;
+                argbColor.R = mapLine.R;
+                argbColor.G = mapLine.G;
+                argbColor.B = mapLine.B;
+
+                mapLineColor = argbColor.ARGB;
+
+                // replace black lines with white lines for visibility
+                if (g_mapReplaceBlackLinesWithWhiteLinesIsEnabled == true)
+                {
+                    if (mapLineColor == 0xFF000000)
+                    {
+                        mapLineColor = 0xFFFFFFFF;
+                    }
+                }
+            }
+
+            EQGfx_Dx8__t3dDeferLine(&line, mapLineColor);
 
             g_mapNumLines += 1;
         }
     }
 
     } // if (g_mapLinesIsEnabled == true)
+
+    if (g_mapTargetLineIsEnabled == true)
+    {
+        if (targetSpawn && targetSpawn != playerSpawn)
+        {
+            EQLINE line;
+            line.X1 = g_mapOriginX;
+            line.Y1 = g_mapOriginY;
+            line.Z1 = 1.0f;
+            line.X2 = ((-targetSpawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
+            line.Y2 = ((-targetSpawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+            line.Z2 = 1.0f;
+
+            bool bDrawLine = EQMACESP_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+
+            if
+            (
+                line.X1 > g_mapMaxX &&
+                line.X2 > g_mapMaxX &&
+                line.X1 < g_mapMinX &&
+                line.X2 < g_mapMinX
+            )
+            {
+                bDrawLine = false;
+            }
+
+            if
+            (
+                line.Y1 > g_mapMaxY &&
+                line.Y2 > g_mapMaxY &&
+                line.Y1 < g_mapMinY &&
+                line.Y2 < g_mapMinY
+            )
+            {
+                bDrawLine = false;
+            }
+
+            if (bDrawLine == true)
+            {
+                EQGfx_Dx8__t3dDeferLine(&line, g_mapTargetLineColor);
+
+                g_mapNumLines += 1;
+            }
+        }
+    }
 
     if (g_mapPointsIsEnabled == true && g_mapSizeIsDefault == false)
     {
@@ -1386,10 +1726,10 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
             if
             (
-                pointX >= (g_mapX + g_mapWidth)  ||
-                pointY >= (g_mapY + g_mapHeight) ||
-                pointX <= g_mapX                 ||
-                pointY <= g_mapY
+                pointX >= g_mapMaxX ||
+                pointY >= g_mapMaxY ||
+                pointX <= g_mapMinX ||
+                pointY <= g_mapMinY
             )
             {
                 continue;
@@ -1462,10 +1802,10 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         if
         (
-            mapSpawnX >= (g_mapX + g_mapWidth)  ||
-            mapSpawnY >= (g_mapY + g_mapHeight) ||
-            mapSpawnX <= g_mapX                 ||
-            mapSpawnY <= g_mapY
+            mapSpawnX >= g_mapMaxX ||
+            mapSpawnY >= g_mapMaxY ||
+            mapSpawnX <= g_mapMinX ||
+            mapSpawnY <= g_mapMinY
         )
         {
             spawn = spawn->Next;
@@ -1487,6 +1827,70 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         }
 
         spawn = spawn->Next;
+    }
+
+    if (g_mapPlayerCorpseLineIsEnabled == true)
+    {
+        spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+        while (spawn)
+        {
+            if (spawn == playerSpawn)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+
+            if (spawn->Type != EQ_SPAWN_TYPE_PLAYER_CORPSE)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+
+            if (std::strstr(spawn->Name, playerSpawn->Name) != NULL)
+            {
+                EQLINE line;
+                line.X1 = g_mapOriginX;
+                line.Y1 = g_mapOriginY;
+                line.Z1 = 1.0f;
+                line.X2 = ((-spawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
+                line.Y2 = ((-spawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+                line.Z2 = 1.0f;
+
+                bool bDrawLine = EQMACESP_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+
+                if
+                (
+                    line.X1 > g_mapMaxX &&
+                    line.X2 > g_mapMaxX &&
+                    line.X1 < g_mapMinX &&
+                    line.X2 < g_mapMinX
+                )
+                {
+                    bDrawLine = false;
+                }
+
+                if
+                (
+                    line.Y1 > g_mapMaxY &&
+                    line.Y2 > g_mapMaxY &&
+                    line.Y1 < g_mapMinY &&
+                    line.Y2 < g_mapMinY
+                )
+                {
+                    bDrawLine = false;
+                }
+
+                if (bDrawLine == true)
+                {
+                    EQGfx_Dx8__t3dDeferLine(&line, g_mapCorpseLineColor);
+
+                    g_mapNumLines += 1;
+                }
+            }
+
+            spawn = spawn->Next;
+        }
     }
 
     } // if (g_mapSpawnsIsEnabled == true)
@@ -1616,7 +2020,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
     {
         char zoneText[128];
         sprintf_s(zoneText, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
-        EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)(g_mapY + g_mapHeight + g_mapElementOffset), EQ_TEXT_COLOR_LIGHT_GREEN, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)(g_mapMaxY + g_mapElementOffset), EQ_TEXT_COLOR_LIGHT_GREEN, fontArial14);
     }
 
     return EQMACESP_DrawNetStatus_REAL(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
@@ -1626,7 +2030,7 @@ DWORD WINAPI EQMACESP_ThreadLoop(LPVOID param)
 {
     while (g_bExit == 0)
     {
-        //
+        Sleep(1000);
     }
 
     DetourRemove((PBYTE)EQMACESP_DrawNetStatus_REAL, (PBYTE)EQMACESP_DrawNetStatus_DETOUR);
@@ -1637,7 +2041,7 @@ DWORD WINAPI EQMACESP_ThreadLoop(LPVOID param)
 
 DWORD WINAPI EQMACESP_ThreadLoad(LPVOID param)
 {
-    HINSTANCE graphicsDll = LoadLibraryA(EQ_GRAPHICS_DLL_NAME);
+    HINSTANCE graphicsDll = LoadLibraryA(EQ_STRING_GRAPHICS_DLL_NAME);
     if (!graphicsDll)
     {
         MessageBoxA(NULL, "Error: Failed to LoadLibrary EQGfx_Dx8.dll!", "EQMac ESP", MB_ICONERROR);
@@ -1664,6 +2068,8 @@ DWORD WINAPI EQMACESP_ThreadLoad(LPVOID param)
         return 0;
     }
 
+    // TODO: parse config file
+
     EQMACESP_DrawNetStatus_REAL = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)EQMACESP_DrawNetStatus_DETOUR);
 
     g_handleThreadLoop = CreateThread(NULL, 0, &EQMACESP_ThreadLoop, NULL, 0, NULL);
@@ -1683,10 +2089,10 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID reserved)
             break;
 
         case DLL_PROCESS_DETACH:
-            WaitForSingleObject(EQMACESP_ThreadLoad, INFINITE);
+            //WaitForSingleObject(g_handleThreadLoad, INFINITE);
             CloseHandle(g_handleThreadLoad);
 
-            WaitForSingleObject(EQMACESP_ThreadLoop, INFINITE);
+            //WaitForSingleObject(g_handleThreadLoop, INFINITE);
             CloseHandle(g_handleThreadLoop);
             break;
     }

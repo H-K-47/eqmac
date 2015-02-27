@@ -11,10 +11,10 @@
 
 #include "cmemory.hpp"
 
-const char* EQ_TITLE = "EverQuest";
-const char* EQ_TITLE_EQW = "EQW beta 2.32";
+const char* EQ_STRING_WINDOW_TITLE = "EverQuest";
+const char* EQ_STRING_WINDOW_TITLE_EQW = "EQW beta 2.32";
 
-const char* EQ_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
+const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_TIMER 0x007989D4 // DWORD ; time elapsed in milliseconds
 
@@ -182,6 +182,8 @@ const char* EQ_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_POINTER_SPAWNS_BEGIN 0x007F9498 // spawn list
 
 #define EQ_POINTER_GROUND_SPAWNS_BEGIN 0x007F949C // ground spawn list
+
+#define EQ_POINTER_DOOR_SPAWNS_BEGIN 0x007F94B8 // door list
 
 // class EQPlayer
 #define EQ_POINTER_PLAYER_SPAWN_INFO     0x007F94CC
@@ -420,6 +422,175 @@ const char* EQ_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_T3D_DEFER_LINE_FUNCTION_NAME "t3dDeferLine" // EQGfx_Dx8.t3dDeferLine
 
+std::size_t EQ_STRINGSIZE_RACE_NAME = 13;
+
+const char* EQ_STRING_RACE_NAME[13] =
+{
+    "Unknown",
+    "Human",
+    "Barbarian",
+    "Erudite",
+    "Wood Elf",
+    "High Elf",
+    "Dark Elf",
+    "Half Elf",
+    "Dwarf",
+    "Troll",
+    "Ogre",
+    "Halfling",
+    "Gnome",
+    // Iksar
+    // Vah Shir
+    // Froglok
+};
+
+std::size_t EQ_STRINGSIZE_RACE_SHORT_NAME = 13;
+
+const char* EQ_STRING_RACE_SHORT_NAME[13] =
+{
+    "UNK",
+    "HUM",
+    "BAR",
+    "ERU",
+    "ELF",
+    "HIE",
+    "DEF",
+    "HEF",
+    "DWF",
+    "TRL",
+    "OGR",
+    "HFL",
+    "GNM",
+    // IKS
+    // VAH
+    // FRG
+};
+
+std::size_t EQ_STRINGSIZE_CLASS_NAME = 33;
+
+const char* EQ_STRING_CLASS_NAME[33] =
+{
+    "Unknown",
+    "Warrior",
+    "Cleric",
+    "Paladin",
+    "Ranger",
+    "Shadow Knight",
+    "Druid",
+    "Monk",
+    "Bard",
+    "Rogue",
+    "Shaman",
+    "Necromancer",
+    "Wizard",
+    "Magician",
+    "Enchanter",
+    "Beastlord",
+    "Banker",
+    "Warrior GM",
+    "Cleric GM",
+    "Paladin GM",
+    "Ranger GM",
+    "Shadow Knight GM",
+    "Druid GM",
+    "Monk GM",
+    "Bard GM",
+    "Rogue GM",
+    "Shaman GM",
+    "Necromancer GM",
+    "Wizard GM",
+    "Magician GM",
+    "Enchanter GM",
+    "Beastlord GM",
+    "Merchant",
+};
+
+std::size_t EQ_STRINGSIZE_CLASS_SHORT_NAME = 33;
+
+const char* EQ_STRING_CLASS_SHORT_NAME[33] =
+{
+    "UNK",
+    "WAR",
+    "CLR",
+    "PAL",
+    "RNG",
+    "SHD",
+    "DRU",
+    "MNK",
+    "BRD",
+    "ROG",
+    "SHM",
+    "NEC",
+    "WIZ",
+    "MAG",
+    "ENC",
+    "BST",
+    "BANKER",
+    "WAR",
+    "CLR",
+    "PAL",
+    "RNG",
+    "SHD",
+    "DRU",
+    "MNK",
+    "BRD",
+    "ROG",
+    "SHM",
+    "NEC",
+    "WIZ",
+    "MAG",
+    "ENC",
+    "BST",
+    "MERCHANT",
+};
+
+std::size_t EQ_KEYVALUESTRINGLISTSIZE_DOOR_SPAWN_NAME_DESCRIPTION = 22;
+
+const char* EQ_KEYVALUESTRINGLIST_DOOR_SPAWN_NAME_DESCRIPTION[][2] =
+{
+    {"POKTELE500",    "Plane of Knowledge Portal"}, // POK Book
+
+    {"POKAAPORT500",  "Ak'Anon Portal"},
+    {"POKCABPORT500", "Cabilis Portal"},
+    {"POKERPORT500",  "Erudin Portal"},
+    {"POKFELPORT500", "Felwithe Portal"},
+    {"POKFVPORT500",  "Firiona Vie Portal"},
+    {"POKFPTPORT500", "Freeport Portal"},
+    {"POKGROPORT500", "Grobb Portal"},
+    {"POKHALPORT500", "Halas Portal"},
+    {"POKKALPORT500", "Kaladim Portal"},
+    {"POKKELPORT500", "Kelethin Portal"},
+    {"POKNRKPORT500", "Neriak Portal"},
+    {"POKOGPORT500",  "Oggok Portal"},
+    {"POKOVPORT500",  "Overthere Portal"},
+    {"POKPPORT500",   "Paineel Portal"},
+    {"POKPTPORT500",  "Plane of Tranquility Portal"},
+    {"POKQNSPORT500", "Qeynos Portal"},
+    {"POKRVPORT500",  "Rivervale Portal"},
+    {"POKSHPORT500",  "Shar Vahl Portal"},
+    {"POKTGDPORT500", "The Great Divide Portal"},
+    {"POKTNPORT500",  "The Nexus Portal"},
+
+    {"FAYLEVATOR",    "Faydark Elevator"},
+};
+
+std::size_t EQ_KEYVALUESTRINGLISTSIZE_GROUND_SPAWN_NAME_DESCRIPTION = 11;
+
+const char* EQ_KEYVALUESTRINGLIST_GROUND_SPAWN_NAME_DESCRIPTION[][2] =
+{
+    {"IT27_ACTORDEF",    "Book"},
+    {"IT28_ACTORDEF",    "Book"},
+    {"IT63_ACTORDEF",    "Small Bag"},
+    {"IT64_ACTORDEF",    "Large Bag"},
+    {"IT66_ACTORDEF",    "Forge"},
+    {"IT69_ACTORDEF",    "Oven"},
+    {"IT70_ACTORDEF",    "Brew Barrel"},
+    {"IT73_ACTORDEF",    "Kiln"},
+    {"IT74_ACTORDEF",    "Pottery Wheel"},
+    {"IT128_ACTORDEF",   "Sewing Kit"},
+    {"IT10645_ACTORDEF", "Book"},
+};
+
 /****************************************************************************************************/
 
 typedef struct _EQLOCATION
@@ -500,6 +671,7 @@ typedef struct _EQZONEINFO
 /* 0x0000 */ CHAR PlayerName[64]; // [0x40]
 /* 0x0040 */ CHAR ShortName[32]; // [0x20]
 /* 0x0060 */ CHAR LongName[128]; // [0x80]
+/* ...... */ 
 } EQZONEINFO, *PEQZONEINFO;
 
 // class EQ_Character
@@ -537,6 +709,8 @@ typedef struct _EQCHARINFO
 /* 0x0A5C */ DWORD Unknown2908;
 /* 0x0A60 */ DWORD Unknown2912;
 	DWORD Unknown2916;
+////////////////////////////////////////////////
+// TODO: FINISH EQCHARINFO!
 ////////////////////////////////////////////////
 /* 0x0B64 */ BYTE StandingState; // EQ_STANDING_STATE_x
 /* 0x0B68 */ DWORD Platinum;
@@ -650,6 +824,27 @@ typedef struct _EQGROUNDSPAWNINFO
 /* ...... */ 
 } EQGROUNDSPAWNINFO, *PEQGROUNDSPAWNINFO;
 
+typedef struct _EQDOORSPAWNINFO
+{
+/* 0x0000 */ BYTE Unknown0000[4];
+/* 0x0004 */ struct _EQDOORSPAWNINFO* Prev;
+/* 0x0008 */ struct _EQDOORSPAWNINFO* Next;
+/* 0x000C */ BYTE Unknown000C;
+/* 0x000D */ CHAR Name[11];
+/* 0x0018 */ DWORD Unknown0018;
+/* 0x001C */ BYTE Unknown001C[4];
+/* 0x0020 */ FLOAT DefaultY;
+/* 0x0024 */ FLOAT DefaultX;
+/* 0x0028 */ FLOAT DefaultZ;
+/* 0x002C */ FLOAT DefaultHeading;
+/* 0x0030 */ FLOAT Angle;
+/* 0x0034 */ FLOAT Y;
+/* 0x0038 */ FLOAT X;
+/* 0x003C */ FLOAT Z;
+/* 0x0040 */ FLOAT Heading;
+/* ...... */ 
+} EQDOORSPAWNINFO, *PEQDOORSPAWNINFO;
+
 typedef struct _EQGROUPLIST
 {
     struct _EQSPAWNINFO* GroupMember[5];
@@ -679,6 +874,19 @@ float EQ_CalculateDistance(float x1, float y1, float x2, float y2)
     return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2));
 }
 
+const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], std::size_t listSize, char key[])
+{
+    for (std::size_t i = 0; i < listSize; i++)
+    {
+        if (std::strcmp(list[i][0], key) == 0)
+        {
+            return list[i][1]; // return Value if Key is found
+        }
+    }
+
+    return "";
+}
+
 bool EQ_IsInGame(CMemory* mem)
 {
     BYTE result = mem->ReadAny<BYTE>(EQ_IS_IN_GAME);
@@ -703,200 +911,73 @@ EQCHARINFO EQ_GetCharInfo(CMemory* mem)
     return mem->ReadStructFromPointer<EQCHARINFO>(EQ_POINTER_CHAR_INFO);
 }
 
-//EQCEVERQUEST EQ_GetCEverQuest(CMemory* mem)
-//{
-    //return mem->ReadStructFromPointer<DWORD>(EQ_CEverQuest_POINTER);
-//}
-
-//DWORD EQ_GetGameState(CMemory* mem)
-//{
-    //DWORD CEverQuest = EQ_GetCEverQuest(mem);
-
-    //return mem->ReadAny<DWORD>(CEverQuest + EQ_OFFSET_CEverQuest_GAME_STATE);
-//}
-
-char* EQ_GetRaceShortName(int race)
+const char* EQ_GetRaceName(int race)
 {
-    char* raceShortName;
+    const char* name;
 
     switch (race)
     {
-        case EQ_RACE_UNKNOWN:
-            raceShortName = "UNK";
-            break;
-
-        case EQ_RACE_HUMAN:
-            raceShortName = "HUM";
-            break;
-
-        case EQ_RACE_BARBARIAN:
-            raceShortName = "BAR";
-            break;
-
-        case EQ_RACE_ERUDITE:
-            raceShortName = "ERU";
-            break;
-
-        case EQ_RACE_WOOD_ELF:
-            raceShortName = "ELF";
-            break;
-
-        case EQ_RACE_HIGH_ELF:
-            raceShortName = "HIE";
-            break;
-
-        case EQ_RACE_DARK_ELF:
-            raceShortName = "DEF";
-            break;
-
-        case EQ_RACE_HALF_ELF:
-            raceShortName = "HEF";
-            break;
-
-        case EQ_RACE_DWARF:
-            raceShortName = "DWF";
-            break;
-
-        case EQ_RACE_TROLL:
-            raceShortName = "TRL";
-            break;
-
-        case EQ_RACE_OGRE:
-            raceShortName = "OGR";
-            break;
-
-        case EQ_RACE_HALFLING:
-            raceShortName = "HFL";
-            break;
-
-        case EQ_RACE_GNOME:
-            raceShortName = "GNM";
-            break;
-
         case EQ_RACE_IKSAR:
-            raceShortName = "IKS";
+            name = "IKS";
             break;
 
         case EQ_RACE_VAH_SHIR:
-            raceShortName = "VAH";
+            name = "VAH";
             break;
 
         case EQ_RACE_FROGLOK:
-            raceShortName = "FRG";
-            break;
-
-        default:
-            raceShortName = "UNK";
+            name = "FRG";
             break;
     }
 
-    return raceShortName;
-}
-
-char* EQ_GetClassShortName(int _class)
-{
-    char* classShortName;
-
-    switch (_class)
+    if (race < (int)EQ_STRINGSIZE_RACE_NAME)
     {
-        case EQ_CLASS_UNKNOWN:
-            classShortName = "UNK";
+        name = EQ_STRING_RACE_NAME[race];
+    }
+
+    return name;
+}
+
+const char* EQ_GetRaceShortName(int race)
+{
+    const char* name;
+
+    switch (race)
+    {
+        case EQ_RACE_IKSAR:
+            name = "IKS";
             break;
 
-        case EQ_CLASS_WARRIOR:
-        case EQ_CLASS_WARRIOR_GUILDMASTER:
-            classShortName = "WAR";
+        case EQ_RACE_VAH_SHIR:
+            name = "VAH";
             break;
 
-        case EQ_CLASS_CLERIC:
-        case EQ_CLASS_CLERIC_GUILDMASTER:
-            classShortName = "CLR";
-            break;
-
-        case EQ_CLASS_PALADIN:
-        case EQ_CLASS_PALADIN_GUILDMASTER:
-            classShortName = "PAL";
-            break;
-
-        case EQ_CLASS_RANGER:
-        case EQ_CLASS_RANGER_GUILDMASTER:
-            classShortName = "RNG";
-            break;
-
-        case EQ_CLASS_SHADOWKNIGHT:
-        case EQ_CLASS_SHADOWKNIGHT_GUILDMASTER:
-            classShortName = "SHD";
-            break;
-
-        case EQ_CLASS_DRUID:
-        case EQ_CLASS_DRUID_GUILDMASTER:
-            classShortName = "DRU";
-            break;
-
-        case EQ_CLASS_MONK:
-        case EQ_CLASS_MONK_GUILDMASTER:
-            classShortName = "MNK";
-            break;
-
-        case EQ_CLASS_BARD:
-        case EQ_CLASS_BARD_GUILDMASTER:
-            classShortName = "BRD";
-            break;
-
-        case EQ_CLASS_ROGUE:
-        case EQ_CLASS_ROGUE_GUILDMASTER:
-            classShortName = "ROG";
-            break;
-
-        case EQ_CLASS_SHAMAN:
-        case EQ_CLASS_SHAMAN_GUILDMASTER:
-            classShortName = "SHM";
-            break;
-
-        case EQ_CLASS_NECROMANCER:
-        case EQ_CLASS_NECROMANCER_GUILDMASTER:
-            classShortName = "NEC";
-            break;
-
-        case EQ_CLASS_WIZARD:
-        case EQ_CLASS_WIZARD_GUILDMASTER:
-            classShortName = "WIZ";
-            break;
-
-        case EQ_CLASS_MAGICIAN:
-        case EQ_CLASS_MAGICIAN_GUILDMASTER:
-            classShortName = "MAG";
-            break;
-
-        case EQ_CLASS_ENCHANTER:
-        case EQ_CLASS_ENCHANTER_GUILDMASTER:
-            classShortName = "ENC";
-            break;
-
-        case EQ_CLASS_BEASTLORD:
-        case EQ_CLASS_BEASTLORD_GUILDMASTER:
-            classShortName = "BST";
-            break;
-
-        case EQ_CLASS_BANKER:
-            classShortName = "BANKER";
-            break;
-
-        case EQ_CLASS_MERCHANT:
-            classShortName = "MERCHANT";
-            break;
-
-        default:
-            classShortName = "UNK";
+        case EQ_RACE_FROGLOK:
+            name = "FRG";
             break;
     }
 
-    return classShortName;
+    if (race < (int)EQ_STRINGSIZE_RACE_SHORT_NAME)
+    {
+        name = EQ_STRING_RACE_SHORT_NAME[race];
+    }
+
+    return name;
 }
 
-char* EQ_GetStandingStateString(int standingState)
+const char* EQ_GetClassName(int _class)
 {
-    char* standingStateString;
+    return EQ_STRING_CLASS_NAME[_class];
+}
+
+const char* EQ_GetClassShortName(int _class)
+{
+    return EQ_STRING_CLASS_SHORT_NAME[_class];
+}
+
+const char* EQ_GetStandingStateString(int standingState)
+{
+    const char* standingStateString;
 
     switch (standingState)
     {
@@ -934,72 +1015,6 @@ char* EQ_GetStandingStateString(int standingState)
     }
 
     return standingStateString;
-}
-
-char* EQ_GetGroundSpawnName(char* spawnActorDefinitionName)
-{
-    char* spawnName = spawnActorDefinitionName;
-
-    if
-    (
-        std::strcmp(spawnActorDefinitionName, "IT27_ACTORDEF") == 0 ||
-        std::strcmp(spawnActorDefinitionName, "IT28_ACTORDEF") == 0 ||
-        std::strcmp(spawnActorDefinitionName, "IT10645_ACTORDEF") == 0
-    )
-    {
-        spawnName = "Book";
-        return spawnName;
-    }
-
-    if (std::strcmp(spawnActorDefinitionName, "IT63_ACTORDEF") == 0)
-    {
-        spawnName = "Dropped Item";
-        return spawnName;
-    }
-
-    if (std::strcmp(spawnActorDefinitionName, "IT64_ACTORDEF") == 0)
-    {
-        spawnName = "Dropped Bag";
-        return spawnName;
-    }
-
-    if (std::strcmp(spawnActorDefinitionName, "IT66_ACTORDEF") == 0)
-    {
-        spawnName = "Forge";
-        return spawnName;
-    }
-
-    if (std::strcmp(spawnActorDefinitionName, "IT69_ACTORDEF") == 0)
-    {
-        spawnName = "Oven";
-        return spawnName;
-    }
-
-    if (std::strcmp(spawnActorDefinitionName, "IT70_ACTORDEF") == 0)
-    {
-        spawnName = "Brew Barrel";
-        return spawnName;
-    }
-
-    if (std::strcmp(spawnActorDefinitionName, "IT73_ACTORDEF") == 0)
-    {
-        spawnName = "Kiln";
-        return spawnName;
-    }
-
-    if (std::strcmp(spawnActorDefinitionName, "IT74_ACTORDEF") == 0)
-    {
-        spawnName = "Pottery Wheel";
-        return spawnName;
-    }
-
-    if (std::strcmp(spawnActorDefinitionName, "IT128_ACTORDEF") == 0)
-    {
-        spawnName = "Sewing Kit";
-        return spawnName;
-    }
-
-    return spawnName;
 }
 
 char* EQ_GetGuildNameById(CMemory* mem, int guildId)

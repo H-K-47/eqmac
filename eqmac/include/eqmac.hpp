@@ -35,6 +35,8 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_POINTER_StringTable 0x007F9490 // eqstr_xx.txt
 
+#define EQ_POINTER_SPELL_MANAGER 0x805CB0
+
 #define EQ_POINTER_FONT_ARIAL14 0x0063D3B0
 
 #define EQ_POINTER_CEverQuest 0x00809478
@@ -173,7 +175,7 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_BUFFS_MAX 15
 
-#define EQ_BUFF_SPELL_ID_NULL 0xFFFF // WORD
+#define EQ_SPELL_ID_NULL 0xFFFF // WORD
 
 #define EQ_BUFF_TYPE_DETRIMENTAL           0
 #define EQ_BUFF_TYPE_BENEFICIAL            1
@@ -671,14 +673,73 @@ typedef struct _EQZONEINFO
 /* 0x0000 */ CHAR PlayerName[64]; // [0x40]
 /* 0x0040 */ CHAR ShortName[32]; // [0x20]
 /* 0x0060 */ CHAR LongName[128]; // [0x80]
-/* ...... */ 
+/* ...... */ // TODO
 } EQZONEINFO, *PEQZONEINFO;
+
+// sizeof EQBUFFINFO 0x0A
+typedef struct _EQBUFFINFO
+{
+/* 0x0000 */ BYTE Unknown0000;
+/* 0x0001 */ BYTE CasterLevel; // level of player who casted the buff
+/* 0x0002 */ BYTE Modifier; // divide by 10 to get Bard song modifier
+/* 0x0003 */ BYTE Unknown0003;
+/* 0x0004 */ WORD SpellId;
+/* 0x0006 */ WORD Ticks; //  duration in ticks ; seconds = ticks * 3
+/* 0x0008 */ WORD Unknown0008;
+} EQBUFFINFO, *PEQBUFFINFO;
+
+typedef struct _EQSPELLINFO
+{
+    DWORD Id;
+    FLOAT Range;
+    FLOAT AeRange;
+    FLOAT PushBack;
+    FLOAT PushUp;
+    DWORD CastTime;
+    DWORD RecoveryTime;
+    DWORD RecastTime;
+    DWORD DurationType;
+    DWORD DurationValue1;
+    DWORD DurationValue2;
+    WORD Mana;
+    short Base[12];
+    short Max[12];
+    WORD BookIcon;
+    WORD GemIcon;
+    short ReagentID[4];
+    short ReagentCount[4];
+    BYTE Unknown0146[8];
+    BYTE Calc[12];
+    BYTE Unknown0158[4];
+    BYTE Attribute[12];
+    BYTE TargetType;
+    BYTE FizzleAdjust;
+    BYTE Skill;
+    BYTE Location;
+    BYTE Unknown0174[3];
+    BYTE Level[15];
+    BYTE Unknown0192[36];
+    PCHAR Name; // [32];
+    PCHAR Target; //[16];
+    PCHAR Extra; //[32];
+    PCHAR Unknown0204; //[40];
+    PCHAR Unknown0208; //[40];
+    PCHAR CastOnYou; //[32];
+    PCHAR CastOnOther; //[40];
+    PCHAR WearOff; //[32];
+/* ...... */ // TODO
+} EQSPELLINFO, *PEQSPELLINFO;
+
+typedef struct _EQSPELLLIST
+{
+    //BYTE Unknown0000[4];
+    struct _EQSPELLINFO* Spell[4096];
+} EQSPELLLIST, *PEQSPELLLIST;
 
 // class EQ_Character
 typedef struct _EQCHARINFO
 {
-/* 0x0000 */ BYTE Unknown0000;
-/* 0x0001 */ BYTE Unknown0001;
+/* 0x0000 */ BYTE Unknown0000[2];
 /* 0x0002 */ CHAR Name[64]; // [0x40]
 /* 0x0042 */ CHAR LastName[70]; // [0x46] ; surname or title
 /* 0x0088 */ WORD Gender; // EQ_GENDER_x
@@ -699,20 +760,15 @@ typedef struct _EQCHARINFO
 /* 0x00A8 */ WORD BaseINT;
 /* 0x00AA */ WORD BaseAGI;
 /* 0x00AC */ WORD BaseWIS;
-/* 0x00AE */ BYTE Unknown00AE[1];
-/* 0x0732 */ WORD SpellBook[250]; // [0xFA]
-/* 0x0A36 */ BYTE Unknown082A[524]; // [0x20C]
-/* 0x0A3E */ WORD MemorizedSpells[8]; // [0x08]
-/* 0x0A50 */ BYTE Unknown0A3E[18];
-/* 0x0A54 */ DWORD Unknown0A50;
-/* 0x0A58 */ DWORD Unknown2904;
-/* 0x0A5C */ DWORD Unknown2908;
-/* 0x0A60 */ DWORD Unknown2912;
-	DWORD Unknown2916;
-////////////////////////////////////////////////
-// TODO: FINISH EQCHARINFO!
-////////////////////////////////////////////////
+/* 0x00AE */ BYTE Unknown00AE[438];
+/* 0x0264 */ EQBUFFINFO Buffs[15];
+/* 0x02FA */ BYTE Unknown02FA[1080];
+/* 0x0732 */ WORD SpellBook[250];
+/* 0x0926 */ BYTE Unknown0926[524];
+/* 0x0B32 */ WORD MemorizedSpells[8];
+/* 0x0B42 */ BYTE Unknown0B42[34];
 /* 0x0B64 */ BYTE StandingState; // EQ_STANDING_STATE_x
+/* 0x0B65 */ BYTE Unknown0B65[3];
 /* 0x0B68 */ DWORD Platinum;
 /* 0x0B6C */ DWORD Gold;
 /* 0x0B70 */ DWORD Silver;
@@ -721,11 +777,14 @@ typedef struct _EQCHARINFO
 /* 0x0B7C */ DWORD BankGold;
 /* 0x0B80 */ DWORD BankSilver;
 /* 0x0B84 */ DWORD BankCopper;
-/* 0..... */ 
+/* 0x0B88 */ BYTE Unknown0B88[32];
+/* 0x0BA8 */ WORD Skills[74];
+/* ...... */ // TODO
 } EQCHARINFO, *PEQCHARINFO;
 
 typedef struct _EQACTORINFO
 {
+/* ...... */ // TODO
 } EQACTORINFO, *PEQACTORINFO;
 
 // sizeof EQSPAWNINFO 0x168
@@ -821,7 +880,7 @@ typedef struct _EQGROUNDSPAWNINFO
 /* 0x0094 */ FLOAT X;
 /* 0x0098 */ FLOAT Y;
 /* 0x009C */ CHAR Name[30];
-/* ...... */ 
+/* ...... */ // TODO
 } EQGROUNDSPAWNINFO, *PEQGROUNDSPAWNINFO;
 
 typedef struct _EQDOORSPAWNINFO
@@ -842,7 +901,7 @@ typedef struct _EQDOORSPAWNINFO
 /* 0x0038 */ FLOAT X;
 /* 0x003C */ FLOAT Z;
 /* 0x0040 */ FLOAT Heading;
-/* ...... */ 
+/* ...... */ // TODO
 } EQDOORSPAWNINFO, *PEQDOORSPAWNINFO;
 
 typedef struct _EQGROUPLIST
@@ -913,20 +972,20 @@ EQCHARINFO EQ_GetCharInfo(CMemory* mem)
 
 const char* EQ_GetRaceName(int race)
 {
-    const char* name;
+    const char* name = "";
 
     switch (race)
     {
         case EQ_RACE_IKSAR:
-            name = "IKS";
+            name = "Iksar";
             break;
 
         case EQ_RACE_VAH_SHIR:
-            name = "VAH";
+            name = "Vah Shir";
             break;
 
         case EQ_RACE_FROGLOK:
-            name = "FRG";
+            name = "Froglok";
             break;
     }
 
@@ -935,12 +994,17 @@ const char* EQ_GetRaceName(int race)
         name = EQ_STRING_RACE_NAME[race];
     }
 
+    if (std::strlen(name) == 0)
+    {
+        return "Unknown";
+    }
+
     return name;
 }
 
 const char* EQ_GetRaceShortName(int race)
 {
-    const char* name;
+    const char* name = "";
 
     switch (race)
     {
@@ -960,6 +1024,11 @@ const char* EQ_GetRaceShortName(int race)
     if (race < (int)EQ_STRINGSIZE_RACE_SHORT_NAME)
     {
         name = EQ_STRING_RACE_SHORT_NAME[race];
+    }
+
+    if (std::strlen(name) == 0)
+    {
+        return "UNK";
     }
 
     return name;

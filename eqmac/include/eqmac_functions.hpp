@@ -41,6 +41,12 @@ void EQ_WRITE_MEMORY(DWORD address, T value)
     *buffer = value;
 }
 
+EQSPELLLIST** ppSpellList = (EQSPELLLIST**)EQ_POINTER_SPELL_MANAGER;
+#define EQ_OBJECT_SpellList (*ppSpellList)
+
+EQCHARINFO** ppCharInfo = (EQCHARINFO**)EQ_POINTER_CHAR_INFO;
+#define EQ_OBJECT_CharInfo (*ppCharInfo)
+
 EQSPAWNINFO** ppSpawnsBegin = (EQSPAWNINFO**)EQ_POINTER_SPAWNS_BEGIN;
 #define EQ_OBJECT_FirstSpawn (*ppSpawnsBegin)
 

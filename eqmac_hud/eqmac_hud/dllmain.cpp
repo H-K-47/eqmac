@@ -17,6 +17,10 @@
 #include "eqmac.hpp"
 #include "eqmac_functions.hpp"
 
+const char* g_applicationName = "EQMac HUD";
+
+const char* g_applicationConfigFilename = "eqmac_hud.ini";
+
 volatile int g_bExit = 0;
 
 HMODULE g_module;
@@ -24,34 +28,82 @@ HMODULE g_module;
 HANDLE g_handleThreadLoad;
 HANDLE g_handleThreadLoop;
 
-EQ_FUNCTION_TYPE_DrawNetStatus EQMACESP_DrawNetStatus_REAL = NULL;
+EQ_FUNCTION_TYPE_DrawNetStatus EQMACHUD_DrawNetStatus_REAL = NULL;
+
+float g_mathPi = 3.14159265358979f;
 
 int g_fontHeight = 10;
 
-bool g_espIsEnabled = true;
-bool g_espDoorsIsEnabled = false;
+float g_elementOffset = 5.0f;
 
-float g_espDistance = 400.0f;
+float g_buttonWidth  = 10.0f;
+float g_buttonHeight = 10.0f;
+
+float g_buttonExitX = 138.0;
+float g_buttonExitY = 7.0f;
+
+float g_buttonToggleEspX;
+float g_buttonToggleEspY;
+
+float g_buttonToggleDoorsX;
+float g_buttonToggleDoorsY;
+
+float g_buttonToggleBuffsX;
+float g_buttonToggleBuffsY;
+
+float g_buttonTogglePlayerInfoX;
+float g_buttonTogglePlayerInfoY;
+
+float g_buttonToggleTargetInfoX;
+float g_buttonToggleTargetInfoY;
+
+unsigned int g_mouseLeftClickTimer;
+unsigned int g_mouseLeftClickDelay = 250; // delay in milliseconds
+
+bool g_mapIsMinimized = false;
+bool g_mapIsMaximized = false;
+bool g_mapArrowIsEnabled = true;
+bool g_mapZoneInfoIsEnabled = true;
+bool g_mapHeightFilterIsEnabled = false;
+bool g_mapSpawnsIsEnabled = true;
+bool g_mapPointsIsEnabled = true;
+bool g_mapLinesIsEnabled = true;
+bool g_mapTargetLineIsEnabled = true;
+bool g_mapPlayerCorpseLineIsEnabled = true;
+bool g_mapReplaceBlackLinesWithWhiteLinesIsEnabled = false;
+
+bool g_mapShowPlayerIsEnabled       = true;
+bool g_mapShowPlayerCorpseIsEnabled = true;
+bool g_mapShowNpcIsEnabled          = true;
+bool g_mapShowNpcCorpseIsEnabled    = true;
+
+bool g_mapSpawnDistanceIsEnabled = true;
+float g_mapSpawnDistance = 400.0f;
+
+bool g_mapSpawnDistancePlayerIsEnabled       = false;
+bool g_mapSpawnDistancePlayerCorpseIsEnabled = false;
+bool g_mapSpawnDistanceNpcIsEnabled          = true;
+bool g_mapSpawnDistanceNpcCorpseIsEnabled    = false;
 
 int g_mapZoneId = 0;
 
-float g_mapX = 5.0f;
-float g_mapY = 45.0f;
+float g_mapDefaultX = 5.0f;
+float g_mapDefaultY = 55.0f;
 
-float g_mapWidth  = 200.0f;
-float g_mapHeight = 200.0f;
+float g_mapDefaultWidth  = 200.0f;
+float g_mapDefaultHeight = 200.0f;
 
-float g_mapX_default = 5.0f;
-float g_mapY_default = 45.0f;
+float g_mapX = g_mapDefaultX;
+float g_mapY = g_mapDefaultY;
 
-float g_mapWidth_default  = 200.0f;
-float g_mapHeight_default = 200.0f;
+float g_mapWidth = g_mapDefaultWidth;
+float g_mapHeight = g_mapDefaultHeight;
 
-float g_mapX_alternate = 5.0f;
-float g_mapY_alternate = 45.0f;
+float g_mapMaximizedX = 5.0f;
+float g_mapMaximizedY = 55.0f;
 
-float g_mapWidth_alternate  = 640.0f;
-float g_mapHeight_alternate = 480.0f;
+float g_mapMaximizedWidth  = 640.0f;
+float g_mapMaximizedHeight = 480.0f;
 
 float g_mapMinX;
 float g_mapMaxX;
@@ -62,24 +114,11 @@ float g_mapMaxY;
 float g_mapOriginX;
 float g_mapOriginY;
 
-bool g_mapIsMinimized = false;
+float g_mapHeightFilterLow  = 10.0f; // z axis
+float g_mapHeightFilterHigh = 10.0f; // z axis
 
-bool g_mapArrowIsEnabled = true;
-bool g_mapSizeIsDefault = true;
-bool g_mapZoneInfoIsEnabled = true;
-bool g_mapHeightFilterIsEnabled = false;
-bool g_mapSpawnsIsEnabled = true;
-bool g_mapPointsIsEnabled = true;
-bool g_mapLinesIsEnabled = true;
-bool g_mapTargetLineIsEnabled = true;
-bool g_mapPlayerCorpseLineIsEnabled = true;
-bool g_mapReplaceBlackLinesWithWhiteLinesIsEnabled = false;
-
-float g_mapHeightFilterLow  = 10.0; // z axis
-float g_mapHeightFilterHigh = 10.0; // z axis
-
-float g_mapZoom           = 0.5f;
-float g_mapZoomMultiplier = 0.1f;
+float g_mapZoom           = 1.0f;
+float g_mapZoomMultiplier = 0.05f; // zoom speed
 float g_mapZoomDefault    = 1.0f;
 float g_mapZoomMinimum    = 10.0f;
 float g_mapZoomMaximum    = 0.01f;
@@ -96,12 +135,23 @@ DWORD g_mapCorpseLineColor = 0xFFFFFF00;
 
 DWORD g_mapButtonColorEnabled     = 0xFF00FF00;
 DWORD g_mapButtonColorDisabled    = 0xFFFF0000;
-DWORD g_mapButtonColorMinMaxClose = 0xFFFF00FF; // -- [_] X
+DWORD g_mapButtonColorMinMaxClose = 0xFFFF00FF; // - + x
 
-float g_mapElementOffset = 5.0f;
+int g_mapButtonTextColorEnabled     = EQ_TEXT_COLOR_LIGHT_GREEN;
+int g_mapButtonTextColorDisabled    = EQ_TEXT_COLOR_RED;
+int g_mapButtonTextColorMinMaxClose = EQ_TEXT_COLOR_PINK;
 
-float g_mapButtonWidth  = 10.0f;
-float g_mapButtonHeight = 10.0f;
+int g_mapDefaultTextColor      = EQ_TEXT_COLOR_LIGHT_GREEN;
+int g_mapZoneInfoTextColor     = EQ_TEXT_COLOR_LIGHT_GREEN;
+
+int g_mapPointTextColor        = EQ_TEXT_COLOR_LIGHT_GRAY;
+int g_mapPlayerTextColor       = EQ_TEXT_COLOR_RED;
+int g_mapPlayerCorpseTextColor = EQ_TEXT_COLOR_YELLOW;
+int g_mapNpcTextColor          = EQ_TEXT_COLOR_CYAN;
+int g_mapNpcCorpseTextColor    = EQ_TEXT_COLOR_YELLOW;
+int g_mapGroupMemberTextColor  = EQ_TEXT_COLOR_LIGHT_GREEN;
+int g_mapTargetTextColor       = EQ_TEXT_COLOR_PINK;
+int g_mapGameMasterTextColor   = EQ_TEXT_COLOR_PINK;
 
 float g_mapButtonZoomInX;
 float g_mapButtonZoomInY;
@@ -111,9 +161,6 @@ float g_mapButtonZoomOutY;
 
 float g_mapButtonZoom1X;
 float g_mapButtonZoom1Y;
-
-float g_mapButtonToggleMapSizeX;
-float g_mapButtonToggleMapSizeY;
 
 float g_mapButtonToggleLineColorX;
 float g_mapButtonToggleLineColorY;
@@ -133,89 +180,107 @@ float g_mapButtonTogglePointsY;
 float g_mapButtonToggleLinesX;
 float g_mapButtonToggleLinesY;
 
-float g_mapButtonToggleEspX;
-float g_mapButtonToggleEspY;
-
-float g_mapButtonToggleDoorsX;
-float g_mapButtonToggleDoorsY;
-
-float g_mapButtonToggleBuffsX;
-float g_mapButtonToggleBuffsY;
-
-float g_mapButtonTogglePlayerInfoX;
-float g_mapButtonTogglePlayerInfoY;
-
-float g_mapButtonToggleTargetInfoX;
-float g_mapButtonToggleTargetInfoY;
+float g_mapButtonMinimizeX;
+float g_mapButtonMinimizeY;
 
 float g_mapButtonMaximizeX;
 float g_mapButtonMaximizeY;
 
-float g_mapButtonMinimizeX;
-float g_mapButtonMinimizeY;
-
-float g_mapButtonExitX;
-float g_mapButtonExitY;
+float g_mapButtonRestoreX;
+float g_mapButtonRestoreY;
 
 std::vector<EQMAPLINE>  g_mapLineList;
 std::vector<EQMAPPOINT> g_mapPointList;
 
 int g_mapNumLines = 0;
 
-unsigned int g_mapTimerLeftClick;
+bool g_espIsEnabled = true;
 
-unsigned int g_mapClickDelay = 250; // delay in milliseconds
+bool g_espShowYourselfIsEnabled     = true;
+bool g_espShowPlayerIsEnabled       = true;
+bool g_espShowPlayerCorpseIsEnabled = true;
+bool g_espShowNpcIsEnabled          = true;
+bool g_espShowNpcCorpseIsEnabled    = true;
+bool g_espShowGroundSpawnIsEnabled  = true;
+bool g_espShowDoorIsEnabled         = false;
+bool g_espShowUniqueDoorIsEnabled   = true;
+
+bool g_espDistanceIsEnabled = true;
+float g_espDistance = 400.0f;
+
+bool g_espDistancePlayerIsEnabled       = false;
+bool g_espDistancePlayerCorpseIsEnabled = false;
+bool g_espDistanceNpcIsEnabled          = true;
+bool g_espDistanceNpcCorpseIsEnabled    = false;
+bool g_espDistanceGroundSpawnIsEnabled  = true;
+bool g_espDistanceDoorIsEnabled         = true;
+
+int g_espPlayerTextColor       = EQ_TEXT_COLOR_RED;
+int g_espPlayerCorpseTextColor = EQ_TEXT_COLOR_YELLOW;
+int g_espNpcTextColor          = EQ_TEXT_COLOR_CYAN;
+int g_espNpcCorpseTextColor    = EQ_TEXT_COLOR_YELLOW;
+int g_espGroupMemberTextColor  = EQ_TEXT_COLOR_LIGHT_GREEN;
+int g_espTargetTextColor       = EQ_TEXT_COLOR_PINK;
+int g_espGameMasterTextColor   = EQ_TEXT_COLOR_PINK;
+int g_espGroundSpawnTextColor  = EQ_TEXT_COLOR_WHITE;
+int g_espDoorTextColor         = EQ_TEXT_COLOR_WHITE;
 
 bool g_buffsIsEnabled = true;
 
 float g_buffsX = 768.0f;
 float g_buffsY = 30.0f;
 
+int g_buffsTextColor = EQ_TEXT_COLOR_YELLOW;
+
 bool g_playerInfoIsEnabled = true;
 
-float g_playerInfoX = 256.0f;
-float g_playerInfoY = 384.0f;
+float g_playerInfoX = 768.0f;
+float g_playerInfoY = 256.0f;
+
+int g_playerInfoTextColor = EQ_TEXT_COLOR_CYAN;
 
 bool g_targetInfoIsEnabled = true;
 
 float g_targetInfoX = 768.0f;
 float g_targetInfoY = 384.0f;
 
+int g_targetInfoTextColor = EQ_TEXT_COLOR_PINK;
+
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
 // need this to clip lines within the map window rectangle
-#define EQMACESP_LINECLIP_INSIDE 0 // 0000
-#define EQMACESP_LINECLIP_LEFT   1 // 0001
-#define EQMACESP_LINECLIP_RIGHT  2 // 0010
-#define EQMACESP_LINECLIP_BOTTOM 4 // 0100
-#define EQMACESP_LINECLIP_TOP    8 // 1000
+#define EQMACHUD_LINECLIP_INSIDE 0 // 0000
+#define EQMACHUD_LINECLIP_LEFT   1 // 0001
+#define EQMACHUD_LINECLIP_RIGHT  2 // 0010
+#define EQMACHUD_LINECLIP_BOTTOM 4 // 0100
+#define EQMACHUD_LINECLIP_TOP    8 // 1000
 
-int EQMACESP_GetLineClipValue(float x, float y, float minX, float minY, float maxX, float maxY)
+int EQMACHUD_GetLineClipValue(float x, float y, float minX, float minY, float maxX, float maxY)
 {
-    int value = EQMACESP_LINECLIP_INSIDE;
+    int value = EQMACHUD_LINECLIP_INSIDE;
  
     if (x < minX)
     {
-        value |= EQMACESP_LINECLIP_LEFT;
+        value |= EQMACHUD_LINECLIP_LEFT;
     }
     else if (x > maxX)
     {
-        value |= EQMACESP_LINECLIP_RIGHT;
+        value |= EQMACHUD_LINECLIP_RIGHT;
     }
 
     if (y < minY)
     {
-        value |= EQMACESP_LINECLIP_BOTTOM;
+        value |= EQMACHUD_LINECLIP_BOTTOM;
     }
     else if (y > maxY)
     {
-        value |= EQMACESP_LINECLIP_TOP;
+        value |= EQMACHUD_LINECLIP_TOP;
     }
  
     return value;
 }
 
-bool EQMACESP_DoClipLine(EQLINE* line, float minX, float minY, float maxX, float maxY)
+bool EQMACHUD_DoClipLine(EQLINE* line, float minX, float minY, float maxX, float maxY)
 {
     bool bDrawLine = false;
 
@@ -225,8 +290,8 @@ bool EQMACESP_DoClipLine(EQLINE* line, float minX, float minY, float maxX, float
     maxX = maxX - 1.0f;
     maxY = maxY - 1.0f;
 
-    int lineClipValue1 = EQMACESP_GetLineClipValue(line->X1, line->Y1, minX, minY, maxX, maxY);
-    int lineClipValue2 = EQMACESP_GetLineClipValue(line->X2, line->Y2, minX, minY, maxX, maxY);
+    int lineClipValue1 = EQMACHUD_GetLineClipValue(line->X1, line->Y1, minX, minY, maxX, maxY);
+    int lineClipValue2 = EQMACHUD_GetLineClipValue(line->X2, line->Y2, minX, minY, maxX, maxY);
 
     while (true)
     {
@@ -246,22 +311,22 @@ bool EQMACESP_DoClipLine(EQLINE* line, float minX, float minY, float maxX, float
  
             int lineClipValueOut = lineClipValue1 ? lineClipValue1 : lineClipValue2;
  
-            if (lineClipValueOut & EQMACESP_LINECLIP_TOP)
+            if (lineClipValueOut & EQMACHUD_LINECLIP_TOP)
             {
                 x = line->X1 + (line->X2 - line->X1) * (maxY - line->Y1) / (line->Y2 - line->Y1);
                 y = maxY;
             }
-            else if (lineClipValueOut & EQMACESP_LINECLIP_BOTTOM)
+            else if (lineClipValueOut & EQMACHUD_LINECLIP_BOTTOM)
             {
                 x = line->X1 + (line->X2 - line->X1) * (minY - line->Y1) / (line->Y2 - line->Y1);
                 y = minY;
             }
-            else if (lineClipValueOut & EQMACESP_LINECLIP_RIGHT)
+            else if (lineClipValueOut & EQMACHUD_LINECLIP_RIGHT)
             {
                 y = line->Y1 + (line->Y2 - line->Y1) * (maxX - line->X1) / (line->X2 - line->X1);
                 x = maxX;
             }
-            else if (lineClipValueOut & EQMACESP_LINECLIP_LEFT)
+            else if (lineClipValueOut & EQMACHUD_LINECLIP_LEFT)
             {
                 y = line->Y1 + (line->Y2 - line->Y1) * (minX - line->X1) / (line->X2 - line->X1);
                 x = minX;
@@ -271,13 +336,13 @@ bool EQMACESP_DoClipLine(EQLINE* line, float minX, float minY, float maxX, float
             {
                 line->X1 = x;
                 line->Y1 = y;
-                lineClipValue1 = EQMACESP_GetLineClipValue(line->X1, line->Y1, minX, minY, maxX, maxY);
+                lineClipValue1 = EQMACHUD_GetLineClipValue(line->X1, line->Y1, minX, minY, maxX, maxY);
             }
             else
             {
                 line->X2 = x;
                 line->Y2 = y;
-                lineClipValue2 = EQMACESP_GetLineClipValue(line->X2, line->Y2, minX, minY, maxX, maxY);
+                lineClipValue2 = EQMACHUD_GetLineClipValue(line->X2, line->Y2, minX, minY, maxX, maxY);
             }
         }
     }
@@ -285,7 +350,7 @@ bool EQMACESP_DoClipLine(EQLINE* line, float minX, float minY, float maxX, float
     return bDrawLine;
 }
 
-bool EQMACESP_IsPointInsideRectangle(int pointX, int pointY, int rectX, int rectY, int rectWidth, int rectHeight)
+bool EQMACHUD_IsPointInsideRectangle(int pointX, int pointY, int rectX, int rectY, int rectWidth, int rectHeight)
 {
     if (pointX < rectX) return false;
     if (pointY < rectY) return false;
@@ -295,7 +360,7 @@ bool EQMACESP_IsPointInsideRectangle(int pointX, int pointY, int rectX, int rect
     return true;
 }
 
-void EQMACESP_StringReplaceAll(std::string& subject, const std::string& search, const std::string& replace)
+void EQMACHUD_StringReplaceAll(std::string& subject, const std::string& search, const std::string& replace)
 {
     std::size_t position = 0;
     while ((position = subject.find(search, position)) != std::string::npos)
@@ -305,7 +370,44 @@ void EQMACESP_StringReplaceAll(std::string& subject, const std::string& search, 
     }
 }
 
-bool EQMACESP_ParseMap(const std::string& filename)
+int EQMACHUD_ConfigReadInt(const char* filename, const char* section, const char* key, int defaultValue)
+{
+    return GetPrivateProfileIntA(section, key, defaultValue, filename);
+}
+
+float EQMACHUD_ConfigReadFloat(const char* filename, const char* section, const char* key, float defaultValue)
+{
+    char bufferResult[255];
+    char bufferDefault[255];
+
+    sprintf_s(bufferDefault, "%f", defaultValue);
+
+    GetPrivateProfileStringA(section, key, bufferDefault, bufferResult, 255, filename);
+
+    float result = (float)atof(bufferResult);
+
+    return result;
+}
+
+const char* EQMACHUD_ConfigReadString(const char* filename, const char* section, const char* key, const char* defaultValue)
+{
+    static char result[255];
+    GetPrivateProfileStringA(section, key, defaultValue, result, 255, filename);
+    return result;
+}
+
+bool EQMACHUD_LoadConfig(const std::string& filename)
+{
+    g_mapDefaultX = EQMACHUD_ConfigReadFloat(filename.c_str(), "Map", "fX", g_mapDefaultX);
+    g_mapDefaultY = EQMACHUD_ConfigReadFloat(filename.c_str(), "Map", "fY", g_mapDefaultY);
+
+    g_mapDefaultWidth  = EQMACHUD_ConfigReadFloat(filename.c_str(), "Map", "fWidth",  g_mapDefaultWidth);
+    g_mapDefaultHeight = EQMACHUD_ConfigReadFloat(filename.c_str(), "Map", "fHeight", g_mapDefaultHeight);
+
+    return true;
+}
+
+bool EQMACHUD_LoadMap(const std::string& filename)
 {
     std::ifstream file(filename.c_str());
     if (!file.is_open())
@@ -387,7 +489,7 @@ bool EQMACESP_ParseMap(const std::string& filename)
             mapPoint.Size = std::stoi(lineTokens.at(6));
 
             std::string mapPointText = lineTokens.at(7);
-            EQMACESP_StringReplaceAll(mapPointText, "_", " ");
+            EQMACHUD_StringReplaceAll(mapPointText, "_", " ");
             strcpy_s(mapPoint.Text, mapPointText.c_str());
 
             g_mapPointList.push_back(mapPoint);
@@ -399,8 +501,26 @@ bool EQMACESP_ParseMap(const std::string& filename)
     return true;
 }
 
-void EQMACESP_MapRecalculateCoordinates()
+void EQMACHUD_GuiRecalculateCoordinates()
 {
+    // important to update this in order for maximize/restore to work properly
+    if (g_mapIsMaximized == false)
+    {
+        g_mapX = g_mapDefaultX;
+        g_mapY = g_mapDefaultY;
+
+        g_mapWidth  = g_mapDefaultWidth;
+        g_mapHeight = g_mapDefaultHeight;
+    }
+    else
+    {
+        g_mapX = g_mapMaximizedX;
+        g_mapY = g_mapMaximizedY;
+
+        g_mapWidth  = g_mapMaximizedWidth;
+        g_mapHeight = g_mapMaximizedHeight;
+    }
+
     g_mapMinX = g_mapX;
     g_mapMaxX = g_mapX + g_mapWidth;
 
@@ -410,92 +530,95 @@ void EQMACESP_MapRecalculateCoordinates()
     g_mapOriginX = g_mapX + (g_mapWidth  * 0.5f);
     g_mapOriginY = g_mapY + (g_mapHeight * 0.5f);
 
-    g_mapButtonZoomInX = g_mapMaxX + g_mapElementOffset;
+    float buttonIndex;
+
+    // exit row buttons
+
+    buttonIndex = 1.0f;
+
+    g_buttonToggleEspX = g_buttonExitX + g_buttonWidth + g_elementOffset;
+    g_buttonToggleEspY = g_buttonExitY;
+
+    buttonIndex += 1.0f;
+
+    g_buttonToggleDoorsX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_buttonToggleDoorsY = g_buttonExitY;
+
+    buttonIndex += 1.0f;
+
+    g_buttonToggleBuffsX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_buttonToggleBuffsY = g_buttonExitY;
+
+    buttonIndex += 1.0f;
+
+    g_buttonTogglePlayerInfoX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_buttonTogglePlayerInfoY = g_buttonExitY;
+
+    buttonIndex += 1.0f;
+
+    g_buttonToggleTargetInfoX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_buttonToggleTargetInfoY = g_buttonExitY;
+
+    buttonIndex += 1.0f;
+
+    // map buttons
+
+    g_mapButtonZoomInX = g_mapMaxX + g_elementOffset;
     g_mapButtonZoomInY = g_mapY;
 
-    float mapButtonIndex = 1.0f;
+    buttonIndex = 1.0f;
 
-    g_mapButtonZoomOutX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonZoomOutY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonZoomOutX = g_mapMaxX + g_elementOffset;
+    g_mapButtonZoomOutY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
-    mapButtonIndex += 1.0f;
+    buttonIndex += 1.0f;
 
-    g_mapButtonZoom1X = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonZoom1Y = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonZoom1X = g_mapMaxX + g_elementOffset;
+    g_mapButtonZoom1Y = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
-    mapButtonIndex += 1.0f;
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleMapSizeX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonToggleMapSizeY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonToggleLineColorX = g_mapMaxX + g_elementOffset;
+    g_mapButtonToggleLineColorY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
-    mapButtonIndex += 1.0f;
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleLineColorX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonToggleLineColorY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonToggleHeightFilterX = g_mapMaxX + g_elementOffset;
+    g_mapButtonToggleHeightFilterY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
-    mapButtonIndex += 1.0f;
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleHeightFilterX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonToggleHeightFilterY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonToggleZoneInfoX = g_mapMaxX + g_elementOffset;
+    g_mapButtonToggleZoneInfoY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
-    mapButtonIndex += 1.0f;
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleZoneInfoX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonToggleZoneInfoY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonToggleSpawnsX = g_mapMaxX + g_elementOffset;
+    g_mapButtonToggleSpawnsY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
-    mapButtonIndex += 1.0f;
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleSpawnsX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonToggleSpawnsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonTogglePointsX = g_mapMaxX + g_elementOffset;
+    g_mapButtonTogglePointsY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
-    mapButtonIndex += 1.0f;
+    buttonIndex += 1.0f;
 
-    g_mapButtonTogglePointsX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonTogglePointsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonToggleLinesX = g_mapMaxX + g_elementOffset;
+    g_mapButtonToggleLinesY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
-    mapButtonIndex += 1.0f;
+    buttonIndex += 1.0f;
 
-    g_mapButtonToggleLinesX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonToggleLinesY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
+    g_mapButtonMinimizeX = g_mapMaxX - g_buttonWidth - g_elementOffset - g_buttonWidth;
+    g_mapButtonMinimizeY = g_mapY - g_buttonHeight - g_elementOffset;
 
-    mapButtonIndex += 1.0f;
+    g_mapButtonMaximizeX = g_mapMaxX - g_buttonWidth;
+    g_mapButtonMaximizeY = g_mapY - g_buttonHeight - g_elementOffset;
 
-    g_mapButtonToggleEspX = g_mapMaxX + g_mapElementOffset;
-    g_mapButtonToggleEspY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
-
-    mapButtonIndex += 1.0f;
-
-    g_mapButtonToggleDoorsX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleDoorsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
-
-    mapButtonIndex += 1.0f;
-
-    g_mapButtonToggleBuffsX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleBuffsY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
-
-    mapButtonIndex += 1.0f;
-
-    g_mapButtonTogglePlayerInfoX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonTogglePlayerInfoY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
-
-    mapButtonIndex += 1.0f;
-
-    g_mapButtonToggleTargetInfoX = g_mapX + g_mapWidth + g_mapElementOffset;
-    g_mapButtonToggleTargetInfoY = g_mapY + ((g_mapButtonHeight + g_mapElementOffset) * mapButtonIndex);
-
-    mapButtonIndex += 1.0f;
-
-    g_mapButtonMaximizeX = g_mapX;
-    g_mapButtonMaximizeY = g_mapY;
-
-    g_mapButtonMinimizeX = g_mapMaxX - g_mapButtonWidth - g_mapElementOffset - g_mapButtonWidth;
-    g_mapButtonMinimizeY = g_mapY - g_mapButtonHeight - g_mapElementOffset;
-
-    g_mapButtonExitX = g_mapMaxX - g_mapButtonWidth;
-    g_mapButtonExitY = g_mapY - g_mapButtonHeight - g_mapElementOffset;
+    g_mapButtonRestoreX = g_mapX;
+    g_mapButtonRestoreY = g_mapY;
 }
 
-void EQMACESP_MapZoomOut()
+void EQMACHUD_MapZoomOut()
 {
     g_mapZoom -= g_mapZoom * g_mapZoomMultiplier;
 
@@ -505,7 +628,7 @@ void EQMACESP_MapZoomOut()
     }
 }
 
-void EQMACESP_MapZoomIn()
+void EQMACHUD_MapZoomIn()
 {
     g_mapZoom += g_mapZoom * g_mapZoomMultiplier;
 
@@ -515,92 +638,92 @@ void EQMACESP_MapZoomIn()
     }
 }
 
-void EQMACESP_MapSetZoom(float zoom)
+void EQMACHUD_MapSetZoom(float zoom)
 {
     g_mapZoom = zoom;
 }
 
-void EQMACESP_MapToggleMinimized()
+void EQMACHUD_MapToggleMinimized()
 {
     EQ_ToggleBool(g_mapIsMinimized);
 }
 
-void EQMACESP_MapToggleSize()
+void EQMACHUD_MapToggleMaximized()
 {
-    EQ_ToggleBool(g_mapSizeIsDefault);
+    EQ_ToggleBool(g_mapIsMaximized);
 
-    if (g_mapSizeIsDefault == true)
+    if (g_mapIsMaximized == false)
     {
-        g_mapX = g_mapX_default;
-        g_mapY = g_mapY_default;
+        g_mapX = g_mapDefaultX;
+        g_mapY = g_mapDefaultY;
 
-        g_mapWidth  = g_mapWidth_default;
-        g_mapHeight = g_mapWidth_default;
+        g_mapWidth  = g_mapDefaultWidth;
+        g_mapHeight = g_mapDefaultHeight;
     }
     else
     {
-        g_mapX = g_mapX_alternate;
-        g_mapY = g_mapY_alternate;
+        g_mapX = g_mapMaximizedX;
+        g_mapY = g_mapMaximizedY;
 
-        g_mapWidth  = g_mapWidth_alternate;
-        g_mapHeight = g_mapHeight_alternate;
+        g_mapWidth  = g_mapMaximizedWidth;
+        g_mapHeight = g_mapMaximizedHeight;
     }
 
-    EQMACESP_MapRecalculateCoordinates();
+    EQMACHUD_GuiRecalculateCoordinates();
 }
 
 
-void EQMACESP_MapToggleHeightFilter()
+void EQMACHUD_MapToggleHeightFilter()
 {
     EQ_ToggleBool(g_mapHeightFilterIsEnabled);
 }
 
-void EQMACESP_MapToggleZoneInfo()
+void EQMACHUD_MapToggleZoneInfo()
 {
     EQ_ToggleBool(g_mapZoneInfoIsEnabled);
 }
 
-void EQMACESP_MapToggleSpawns()
+void EQMACHUD_MapToggleSpawns()
 {
     EQ_ToggleBool(g_mapSpawnsIsEnabled);
 }
 
-void EQMACESP_MapTogglePoints()
+void EQMACHUD_MapTogglePoints()
 {
     EQ_ToggleBool(g_mapPointsIsEnabled);
 }
 
-void EQMACESP_MapToggleLines()
+void EQMACHUD_MapToggleLines()
 {
     EQ_ToggleBool(g_mapLinesIsEnabled);
 }
 
-void EQMACESP_ToggleEsp()
+void EQMACHUD_ToggleEsp()
 {
     EQ_ToggleBool(g_espIsEnabled);
 }
 
-void EQMACESP_ToggleEspDoors()
+void EQMACHUD_ToggleEspShowDoor()
 {
-    EQ_ToggleBool(g_espDoorsIsEnabled);
+    EQ_ToggleBool(g_espShowDoorIsEnabled);
 }
 
-void EQMACESP_ToggleBuffs()
+void EQMACHUD_ToggleBuffs()
 {
     EQ_ToggleBool(g_buffsIsEnabled);
 }
 
-void EQMACESP_TogglePlayerInfo()
+void EQMACHUD_TogglePlayerInfo()
 {
     EQ_ToggleBool(g_playerInfoIsEnabled);
 }
 
-void EQMACESP_ToggleTargetInfo()
+void EQMACHUD_ToggleTargetInfo()
 {
     EQ_ToggleBool(g_targetInfoIsEnabled);
 }
 
-void EQMACESP_MapToggleLineColor()
+void EQMACHUD_MapToggleLineColor()
 {
     if (g_mapLineColor == 0xDEADBEEF)
     {
@@ -634,15 +757,24 @@ void EQMACESP_MapToggleLineColor()
     {
         g_mapLineColor = 0xDEADBEEF;
     }
+    else
+    {
+        g_mapLineColor = 0xDEADBEEF;
+    }
 }
 
-int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, unsigned short a4, unsigned short a5, int a6, unsigned short a7, unsigned long a8, long a9, unsigned long a10)
+int __cdecl EQMACHUD_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, unsigned short a4, unsigned short a5, int a6, unsigned short a7, unsigned long a8, long a9, unsigned long a10)
 {
     g_mapNumLines = 0;
 
     DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
     DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_T3D_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+
+    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+
+    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
@@ -660,6 +792,8 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
     EQLOCATION playerLocation = {EQ_OBJECT_PlayerSpawn->Y, EQ_OBJECT_PlayerSpawn->X, EQ_OBJECT_PlayerSpawn->Z};
 
+    EQLOCATION targetLocation = {EQ_OBJECT_TargetSpawn->Y, EQ_OBJECT_TargetSpawn->X, EQ_OBJECT_TargetSpawn->Z};
+
     DWORD zoneId = EQ_READ_MEMORY<DWORD>(EQ_ZONE_ID);
 
     EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
@@ -667,9 +801,9 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
     if (g_mapZoneId != zoneId)
     {
         std::stringstream mapFilename;
-        mapFilename << "maps/" << zoneInfo->ShortName << ".txt";
+        mapFilename << ".\\maps\\" << zoneInfo->ShortName << ".txt";
 
-        if (EQMACESP_ParseMap(mapFilename.str()) == true)
+        if (EQMACHUD_LoadMap(mapFilename.str()) == true)
         {
             g_mapZoneId = zoneId;
         }
@@ -679,34 +813,272 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             g_mapPointList.clear();
         }
 
-        // TODO: parse zone specific config file
+        std::stringstream mapConfigFilename;
+        mapConfigFilename << ".\\maps\\" << zoneInfo->ShortName << ".ini";
 
-        EQMACESP_MapRecalculateCoordinates();
+        EQMACHUD_LoadConfig(mapConfigFilename.str());
+
+        EQMACHUD_GuiRecalculateCoordinates();
     }
 
     EQ_CLASS_CDisplay->WriteTextHD2
     (
         "Map",
         (int)g_mapX,
-        (int)(g_mapY - g_mapElementOffset) - g_fontHeight,
-        EQ_TEXT_COLOR_LIGHT_GREEN,
+        (int)(g_mapY - g_elementOffset) - g_fontHeight,
+        g_mapDefaultTextColor,
         fontArial14
     );
 
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_buttonExitX, (int)g_buttonExitY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        char buttonText[128];
+        strcpy_s(buttonText, "Exit ");
+        strcat_s(buttonText, g_applicationName);
 
-    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            buttonText,
+            (int)(g_buttonExitX),
+            (int)(g_buttonExitY + g_buttonHeight + g_elementOffset),
+            g_mapButtonTextColorMinMaxClose,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            g_bExit = 1;
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_buttonToggleEspX, (int)g_buttonToggleEspY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "ESP",
+            (int)(g_buttonToggleEspX),
+            (int)(g_buttonToggleEspY + g_buttonHeight + g_elementOffset),
+            g_mapButtonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            {
+                g_mouseLeftClickTimer = currentTime;
+
+                EQMACHUD_ToggleEsp();
+
+                if (g_espIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_buttonToggleDoorsX, (int)g_buttonToggleDoorsY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "ESP Doors",
+            (int)(g_buttonToggleDoorsX),
+            (int)(g_buttonToggleDoorsY + g_buttonHeight + g_elementOffset),
+            g_mapButtonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            {
+                g_mouseLeftClickTimer = currentTime;
+
+                EQMACHUD_ToggleEspShowDoor();
+
+                if (g_espShowDoorIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Doors enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Doors disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_buttonToggleBuffsX, (int)g_buttonToggleBuffsY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Buffs",
+            (int)(g_buttonToggleBuffsX),
+            (int)(g_buttonToggleBuffsY + g_buttonHeight + g_elementOffset),
+            g_mapButtonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            {
+                g_mouseLeftClickTimer = currentTime;
+
+                EQMACHUD_ToggleBuffs();
+
+                if (g_buffsIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Buffs enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Buffs disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_buttonTogglePlayerInfoX, (int)g_buttonTogglePlayerInfoY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Player Info",
+            (int)(g_buttonTogglePlayerInfoX),
+            (int)(g_buttonTogglePlayerInfoY + g_buttonHeight + g_elementOffset),
+            g_mapButtonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            {
+                g_mouseLeftClickTimer = currentTime;
+
+                EQMACHUD_TogglePlayerInfo();
+
+                if (g_playerInfoIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Player Info enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Player Info disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_buttonToggleTargetInfoX, (int)g_buttonToggleTargetInfoY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Target Info",
+            (int)(g_buttonToggleTargetInfoX),
+            (int)(g_buttonToggleTargetInfoY + g_buttonHeight + g_elementOffset),
+            g_mapButtonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            {
+                g_mouseLeftClickTimer = currentTime;
+
+                EQMACHUD_ToggleTargetInfo();
+
+                if (g_targetInfoIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Target Info enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Target Info disabled.");
+                }
+            }
+        }
+    }
 
     if (g_mapIsMinimized == false)
     {
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonZoomInX, (int)g_mapButtonZoomInY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -714,25 +1086,25 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             EQ_CLASS_CDisplay->WriteTextHD2
             (
                 "Zoom In",
-                (int)(g_mapButtonZoomInX + g_mapButtonWidth + g_mapElementOffset),
+                (int)(g_mapButtonZoomInX + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonZoomInY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
             if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
             {
-                EQMACESP_MapZoomIn();
+                EQMACHUD_MapZoomIn();
             }
         }
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonZoomOutX, (int)g_mapButtonZoomOutY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -740,25 +1112,25 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             EQ_CLASS_CDisplay->WriteTextHD2
             (
                 "Zoom Out",
-                (int)(g_mapButtonZoomOutX + g_mapButtonWidth + g_mapElementOffset),
+                (int)(g_mapButtonZoomOutX + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonZoomOutY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
             if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
             {
-                EQMACESP_MapZoomOut();
+                EQMACHUD_MapZoomOut();
             }
         }
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonZoom1X, (int)g_mapButtonZoom1Y,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -766,58 +1138,25 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             EQ_CLASS_CDisplay->WriteTextHD2
             (
                 "Zoom 1x",
-                (int)(g_mapButtonZoom1X + g_mapButtonWidth + g_mapElementOffset),
+                (int)(g_mapButtonZoom1X + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonZoom1Y - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
             if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
             {
-                EQMACESP_MapSetZoom(1.0f);
+                EQMACHUD_MapSetZoom(1.0f);
             }
         }
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleMapSizeX, (int)g_mapButtonToggleMapSizeY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Map Size",
-                (int)(g_mapButtonToggleMapSizeX + g_mapButtonWidth + g_mapElementOffset),
-                (int)(g_mapButtonToggleMapSizeY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
-                {
-                    g_mapTimerLeftClick = currentTime;
-
-                    EQMACESP_MapToggleSize();
-                }
-            }
-        }
-
-        if
-        (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonToggleHeightFilterX, (int)g_mapButtonToggleHeightFilterY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -825,9 +1164,9 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             EQ_CLASS_CDisplay->WriteTextHD2
             (
                 "Height Filter",
-                (int)(g_mapButtonToggleHeightFilterX + g_mapButtonWidth + g_mapElementOffset),
+                (int)(g_mapButtonToggleHeightFilterX + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonToggleHeightFilterY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
@@ -835,11 +1174,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             {
                 DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
                 {
-                    g_mapTimerLeftClick = currentTime;
+                    g_mouseLeftClickTimer = currentTime;
 
-                    EQMACESP_MapToggleHeightFilter();
+                    EQMACHUD_MapToggleHeightFilter();
 
                     if (g_mapHeightFilterIsEnabled == true)
                     {
@@ -855,11 +1194,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonToggleLineColorX, (int)g_mapButtonToggleLineColorY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -867,9 +1206,9 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             EQ_CLASS_CDisplay->WriteTextHD2
             (
                 "Line Color",
-                (int)(g_mapButtonToggleLineColorX + g_mapButtonWidth + g_mapElementOffset),
+                (int)(g_mapButtonToggleLineColorX + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonToggleLineColorY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
@@ -877,22 +1216,22 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             {
                 DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
                 {
-                    g_mapTimerLeftClick = currentTime;
+                    g_mouseLeftClickTimer = currentTime;
 
-                    EQMACESP_MapToggleLineColor();
+                    EQMACHUD_MapToggleLineColor();
                 }
             }
         }
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonToggleZoneInfoX, (int)g_mapButtonToggleZoneInfoY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -900,9 +1239,9 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             EQ_CLASS_CDisplay->WriteTextHD2
             (
                 "Zone Info",
-                (int)(g_mapButtonToggleZoneInfoX + g_mapButtonWidth + g_mapElementOffset),
+                (int)(g_mapButtonToggleZoneInfoX + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonToggleZoneInfoY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
@@ -910,11 +1249,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             {
                 DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
                 {
-                    g_mapTimerLeftClick = currentTime;
+                    g_mouseLeftClickTimer = currentTime;
 
-                    EQMACESP_MapToggleZoneInfo();
+                    EQMACHUD_MapToggleZoneInfo();
 
                     if (g_mapZoneInfoIsEnabled == true)
                     {
@@ -930,11 +1269,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonToggleSpawnsX, (int)g_mapButtonToggleSpawnsY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -942,9 +1281,9 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             EQ_CLASS_CDisplay->WriteTextHD2
             (
                 "Spawns",
-                (int)(g_mapButtonToggleSpawnsX + g_mapButtonWidth + g_mapElementOffset),
+                (int)(g_mapButtonToggleSpawnsX + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonToggleSpawnsY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
@@ -952,11 +1291,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             {
                 DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
                 {
-                    g_mapTimerLeftClick = currentTime;
+                    g_mouseLeftClickTimer = currentTime;
 
-                    EQMACESP_MapToggleSpawns();
+                    EQMACHUD_MapToggleSpawns();
 
                     if (g_mapSpawnsIsEnabled == true)
                     {
@@ -972,21 +1311,21 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonTogglePointsX, (int)g_mapButtonTogglePointsY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
         {
             EQ_CLASS_CDisplay->WriteTextHD2
             (
-                "Points",
-                (int)(g_mapButtonTogglePointsX + g_mapButtonWidth + g_mapElementOffset),
+                "Points (Labels)",
+                (int)(g_mapButtonTogglePointsX + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonTogglePointsY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
@@ -994,11 +1333,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             {
                 DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
                 {
-                    g_mapTimerLeftClick = currentTime;
+                    g_mouseLeftClickTimer = currentTime;
 
-                    EQMACESP_MapTogglePoints();
+                    EQMACHUD_MapTogglePoints();
 
                     if (g_mapPointsIsEnabled == true)
                     {
@@ -1014,11 +1353,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonToggleLinesX, (int)g_mapButtonToggleLinesY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -1026,9 +1365,9 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             EQ_CLASS_CDisplay->WriteTextHD2
             (
                 "Lines",
-                (int)(g_mapButtonToggleLinesX + g_mapButtonWidth + g_mapElementOffset),
+                (int)(g_mapButtonToggleLinesX + g_buttonWidth + g_elementOffset),
                 (int)(g_mapButtonToggleLinesY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
+                g_mapButtonTextColorEnabled,
                 fontArial14
             );
 
@@ -1036,11 +1375,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             {
                 DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
                 {
-                    g_mapTimerLeftClick = currentTime;
+                    g_mouseLeftClickTimer = currentTime;
 
-                    EQMACESP_MapToggleLines();
+                    EQMACHUD_MapToggleLines();
 
                     if (g_mapLinesIsEnabled == true)
                     {
@@ -1056,221 +1395,11 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleEspX, (int)g_mapButtonToggleEspY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "ESP",
-                (int)(g_mapButtonToggleEspX + g_mapButtonWidth + g_mapElementOffset),
-                (int)(g_mapButtonToggleEspY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
-                {
-                    g_mapTimerLeftClick = currentTime;
-
-                    EQMACESP_ToggleEsp();
-
-                    if (g_espIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> ESP enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> ESP disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACESP_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleDoorsX, (int)g_mapButtonToggleDoorsY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Doors",
-                (int)(g_mapButtonToggleDoorsX + g_mapButtonWidth + g_mapElementOffset),
-                (int)(g_mapButtonToggleDoorsY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
-                {
-                    g_mapTimerLeftClick = currentTime;
-
-                    EQMACESP_ToggleEspDoors();
-
-                    if (g_espDoorsIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> ESP Doors enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> ESP Doors disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACESP_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleBuffsX, (int)g_mapButtonToggleBuffsY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Buffs",
-                (int)(g_mapButtonToggleBuffsX + g_mapButtonWidth + g_mapElementOffset),
-                (int)(g_mapButtonToggleBuffsY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
-                {
-                    g_mapTimerLeftClick = currentTime;
-
-                    EQMACESP_ToggleBuffs();
-
-                    if (g_buffsIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Buffs enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Buffs disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACESP_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonTogglePlayerInfoX, (int)g_mapButtonTogglePlayerInfoY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Player Info",
-                (int)(g_mapButtonTogglePlayerInfoX + g_mapButtonWidth + g_mapElementOffset),
-                (int)(g_mapButtonTogglePlayerInfoY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
-                {
-                    g_mapTimerLeftClick = currentTime;
-
-                    EQMACESP_TogglePlayerInfo();
-
-                    if (g_playerInfoIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Player Info enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Player Info disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACESP_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleTargetInfoX, (int)g_mapButtonToggleTargetInfoY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Target Info",
-                (int)(g_mapButtonToggleTargetInfoX + g_mapButtonWidth + g_mapElementOffset),
-                (int)(g_mapButtonToggleTargetInfoY - 2.0f),
-                EQ_TEXT_COLOR_LIGHT_GREEN,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
-                {
-                    g_mapTimerLeftClick = currentTime;
-
-                    EQMACESP_ToggleTargetInfo();
-
-                    if (g_targetInfoIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Target Info enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Target Info disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
                 (int)g_mapButtonMinimizeX, (int)g_mapButtonMinimizeY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
@@ -1279,8 +1408,8 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             (
                 "Minimize",
                 (int)(g_mapButtonMinimizeX),
-                (int)(g_mapButtonMinimizeY - g_mapElementOffset) - g_fontHeight,
-                EQ_TEXT_COLOR_PINK,
+                (int)(g_mapButtonMinimizeY - g_elementOffset) - g_fontHeight,
+                g_mapButtonTextColorMinMaxClose,
                 fontArial14
             );
 
@@ -1288,38 +1417,56 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             {
                 DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
                 {
-                    g_mapTimerLeftClick = currentTime;
+                    g_mouseLeftClickTimer = currentTime;
 
-                    EQMACESP_MapToggleMinimized();
+                    EQMACHUD_MapToggleMinimized();
                 }
             }
         }
 
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
-                (int)g_mapButtonExitX, (int)g_mapButtonExitY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_mapButtonMaximizeX, (int)g_mapButtonMaximizeY,
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
         {
+            char buttonText[128];
+
+            if (g_mapIsMaximized == false)
+            {
+                strcpy_s(buttonText, "Maximize");
+            }
+            else
+            {
+                strcpy_s(buttonText, "Restore");
+            }
+
             EQ_CLASS_CDisplay->WriteTextHD2
             (
-                "Exit",
-                (int)(g_mapButtonExitX),
-                (int)(g_mapButtonExitY - g_mapElementOffset) - g_fontHeight,
-                EQ_TEXT_COLOR_PINK,
+                buttonText,
+                (int)(g_mapButtonMaximizeX),
+                (int)(g_mapButtonMaximizeY - g_elementOffset) - g_fontHeight,
+                g_mapButtonTextColorMinMaxClose,
                 fontArial14
             );
 
             if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
             {
-                g_bExit = 1;
+                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+                {
+                    g_mouseLeftClickTimer = currentTime;
+
+                    EQMACHUD_MapToggleMaximized();
+                }
             }
         }
     } //if (g_mapIsMinimized == false)
@@ -1327,21 +1474,21 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
     {
         if
         (
-            EQMACESP_IsPointInsideRectangle
+            EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
-                (int)g_mapButtonMaximizeX, (int)g_mapButtonMaximizeY,
-                (int)g_mapButtonWidth, (int)g_mapButtonHeight
+                (int)g_mapButtonRestoreX, (int)g_mapButtonRestoreY,
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
         {
             EQ_CLASS_CDisplay->WriteTextHD2
             (
-                "Maximize",
-                (int)(g_mapButtonMaximizeX + g_mapButtonWidth + g_mapElementOffset),
-                (int)(g_mapButtonMaximizeY - 2.0f),
-                EQ_TEXT_COLOR_PINK,
+                "Restore",
+                (int)(g_mapButtonRestoreX + g_buttonWidth + g_elementOffset),
+                (int)(g_mapButtonRestoreY - 2.0f),
+                g_mapButtonTextColorMinMaxClose,
                 fontArial14
             );
 
@@ -1349,17 +1496,17 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             {
                 DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-                if ((currentTime - g_mapTimerLeftClick) > g_mapClickDelay)
+                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
                 {
-                    g_mapTimerLeftClick = currentTime;
+                    g_mouseLeftClickTimer = currentTime;
 
-                    EQMACESP_MapToggleMinimized();
+                    EQMACHUD_MapToggleMinimized();
                 }
             }
         }
     }
 
-    if (g_espIsEnabled == true && (g_mapSizeIsDefault == true || g_mapIsMinimized == true))
+    if (g_espIsEnabled == true && (g_mapIsMaximized == false || g_mapIsMinimized == true))
     {
         while (doorSpawn)
         {
@@ -1367,10 +1514,13 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
             float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
 
-            if (spawnDistance > g_espDistance)
+            if (g_espDistanceIsEnabled == true)
             {
-                doorSpawn = doorSpawn->Next;
-                continue;
+                if (g_espDistanceDoorIsEnabled == true && spawnDistance > g_espDistance)
+                {
+                    doorSpawn = doorSpawn->Next;
+                    continue;
+                }
             }
 
             float resultX = 0.0f;
@@ -1396,11 +1546,19 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
                 if (std::strlen(doorDescription) > 0)
                 {
-                    sprintf_s(spawnText, "+ %s", doorDescription);
+                    if (g_espShowUniqueDoorIsEnabled == true)
+                    {
+                        sprintf_s(spawnText, "+ %s", doorDescription);
+                    }
+                    else
+                    {
+                        doorSpawn = doorSpawn->Next;
+                        continue;
+                    }
                 }
                 else
                 {
-                    if (g_espDoorsIsEnabled == true)
+                    if (g_espShowDoorIsEnabled == true)
                     {
                         sprintf_s(spawnText, "+ Door: %s", spawnName);
                     }
@@ -1415,22 +1573,25 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 sprintf_s(distanceText, " (%d)", (int)spawnDistance);
                 strcat_s(spawnText, distanceText);
 
-                EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, EQ_TEXT_COLOR_WHITE, fontArial14);
+                EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, g_espDoorTextColor, fontArial14);
             }
 
             doorSpawn = doorSpawn->Next;
         }
 
-        while (groundSpawn)
+        while (groundSpawn && g_espShowGroundSpawnIsEnabled == true)
         {
             EQLOCATION spawnLocation = {groundSpawn->Y, groundSpawn->X, groundSpawn->Z};
 
             float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
 
-            if (spawnDistance > g_espDistance)
+            if (g_espDistanceIsEnabled == true) 
             {
-                groundSpawn = groundSpawn->Next;
-                continue;
+                if (g_espDistanceGroundSpawnIsEnabled == true && spawnDistance > g_espDistance)
+                {
+                    groundSpawn = groundSpawn->Next;
+                    continue;
+                }
             }
 
             float resultX = 0.0f;
@@ -1462,7 +1623,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 sprintf_s(distanceText, " (%d)", (int)spawnDistance);
                 strcat_s(spawnText, distanceText);
 
-                EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, EQ_TEXT_COLOR_WHITE, fontArial14);
+                EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, g_espGroundSpawnTextColor, fontArial14);
             }
 
             groundSpawn = groundSpawn->Next;
@@ -1470,14 +1631,69 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         while (spawn)
         {
+            if (g_espShowPlayerIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER && spawn != targetSpawn)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+
+            if (g_espShowPlayerCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE && spawn != targetSpawn)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+
+            if (g_espShowNpcIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC && spawn != targetSpawn)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+
+            if (g_espShowNpcCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE && spawn != targetSpawn)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+
             EQLOCATION spawnLocation = {spawn->Y, spawn->X, spawn->Z};
 
             float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
 
-            if (spawnDistance > g_espDistance && spawn->Type == EQ_SPAWN_TYPE_NPC)
+            if (g_espDistanceIsEnabled == true)
             {
-                spawn = spawn->Next;
-                continue;
+                bool applyDistance = false;
+
+                if (g_espDistancePlayerIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
+                {
+                    applyDistance = true;
+                }
+
+                if (g_espDistancePlayerCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+                {
+                    applyDistance = true;
+                }
+
+                if (g_espDistanceNpcIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC)
+                {
+                    applyDistance = true;
+                }
+
+                if (g_espDistanceNpcCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+                {
+                    applyDistance = true;
+                }
+
+                // target is always visible
+                if (spawn == targetSpawn)
+                {
+                    applyDistance = false;
+                }
+
+                if (applyDistance == true && spawnDistance > g_espDistance)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
             }
 
             float resultX = 0.0f;
@@ -1489,7 +1705,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 int screenX = (int)resultX;
                 int screenY = (int)resultY;
 
-                if (spawn == playerSpawn)
+                if (g_espShowYourselfIsEnabled == true && spawn == playerSpawn)
                 {
                     int playerTextY = screenY;
 
@@ -1533,16 +1749,19 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 switch (spawn->Type)
                 {
                     case EQ_SPAWN_TYPE_PLAYER:
-                        textColor = EQ_TEXT_COLOR_RED;
+                        textColor = g_espPlayerTextColor;
+                        break;
+
+                    case EQ_SPAWN_TYPE_PLAYER_CORPSE:
+                        textColor = g_espPlayerCorpseTextColor;
                         break;
 
                     case EQ_SPAWN_TYPE_NPC:
-                        textColor = EQ_TEXT_COLOR_CYAN;
+                        textColor = g_espNpcTextColor;
                         break;
 
                     case EQ_SPAWN_TYPE_NPC_CORPSE:
-                    case EQ_SPAWN_TYPE_PLAYER_CORPSE:
-                        textColor = EQ_TEXT_COLOR_YELLOW;
+                        textColor = g_espNpcCorpseTextColor;
                         break;
                 }
 
@@ -1550,19 +1769,19 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 {
                     if (spawn == groupList->GroupMember[i])
                     {
-                        textColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+                        textColor = g_espGroupMemberTextColor;
                         break;
                     }
                 }
 
                 if (spawn == targetSpawn)
                 {
-                    textColor = EQ_TEXT_COLOR_PINK;
+                    textColor = g_espTargetTextColor;
                 }
 
                 if (spawn->IsGameMaster == 1)
                 {
-                    textColor = EQ_TEXT_COLOR_PINK;
+                    textColor = g_espGameMasterTextColor;
 
                     strcat_s(spawnText, " GM");
                 }
@@ -1577,9 +1796,17 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                     strcat_s(spawnText, " AFK");
                 }
 
-                if (spawn->IsLinkDead == 1 && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
+                if (spawn->Type == EQ_SPAWN_TYPE_PLAYER)
                 {
-                    strcat_s(spawnText, " LD");
+                    if (spawn->IsLinkDead == 1)
+                    {
+                        strcat_s(spawnText, " LD");
+                    }
+
+                    if (spawn->StandingState == EQ_STANDING_STATE_FEIGNED)
+                    {
+                        strcat_s(spawnText, " FD");
+                    }
                 }
 
                 char levelText[32];
@@ -1659,7 +1886,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
     if (g_playerInfoIsEnabled == true && playerSpawn)
     {
-        EQ_CLASS_CDisplay->WriteTextHD2("Player", (int)g_playerInfoX, (int)g_playerInfoY, EQ_TEXT_COLOR_CYAN, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2("Player", (int)g_playerInfoX, (int)g_playerInfoY, g_playerInfoTextColor, fontArial14);
 
         int playerTextY = (int)g_playerInfoY + g_fontHeight + 1;
 
@@ -1668,7 +1895,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         char hpText[128];
         sprintf_s(hpText, "HP: %d/%d (%d%%)", playerSpawn->HpCurrent, playerSpawn->HpMax, hpPercent);
 
-        EQ_CLASS_CDisplay->WriteTextHD2(hpText, (int)g_playerInfoX, playerTextY, EQ_TEXT_COLOR_CYAN, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2(hpText, (int)g_playerInfoX, playerTextY, g_playerInfoTextColor, fontArial14);
 
         playerTextY = playerTextY + g_fontHeight + 1;
 
@@ -1679,7 +1906,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         char manaText[128];
         sprintf_s(manaText, "MANA: %d/%d (%d%%)", charInfo->Mana, manaMax, manaPercent);
 
-        EQ_CLASS_CDisplay->WriteTextHD2(manaText, (int)g_playerInfoX, playerTextY, EQ_TEXT_COLOR_CYAN, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2(manaText, (int)g_playerInfoX, playerTextY, g_playerInfoTextColor, fontArial14);
 
         playerTextY = playerTextY + g_fontHeight + 1;
     } // if (g_playerInfoIsEnabled = true)
@@ -1701,12 +1928,20 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             strcat_s(targetText, " AFK");
         }
 
-        if (targetSpawn->IsLinkDead == 1 && targetSpawn->Type == EQ_SPAWN_TYPE_PLAYER)
+        if (targetSpawn->Type == EQ_SPAWN_TYPE_PLAYER)
         {
-            strcat_s(targetText, " LD");
+            if (targetSpawn->IsLinkDead == 1)
+            {
+                strcat_s(targetText, " LD");
+            }
+
+            if (targetSpawn->StandingState == EQ_STANDING_STATE_FEIGNED)
+            {
+                strcat_s(targetText, " FD");
+            }
         }
 
-        EQ_CLASS_CDisplay->WriteTextHD2(targetText, (int)g_targetInfoX, (int)g_targetInfoY, EQ_TEXT_COLOR_PINK, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2(targetText, (int)g_targetInfoX, (int)g_targetInfoY, g_targetInfoTextColor, fontArial14);
 
         int targetTextY = (int)g_targetInfoY + g_fontHeight + 1;
 
@@ -1717,7 +1952,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         char levelRaceClassText[128];
         sprintf_s(levelRaceClassText, "L%d %s %s", targetSpawn->Level, raceShortName, classShortName);
 
-        EQ_CLASS_CDisplay->WriteTextHD2(levelRaceClassText, (int)g_targetInfoX, targetTextY, EQ_TEXT_COLOR_PINK, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2(levelRaceClassText, (int)g_targetInfoX, targetTextY, g_targetInfoTextColor, fontArial14);
 
         targetTextY = targetTextY + g_fontHeight + 1;
 
@@ -1726,7 +1961,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             char guildText[128];
             sprintf_s(guildText, "<%s>", EQ_GetGuildNameById(targetSpawn->GuildId));
 
-            EQ_CLASS_CDisplay->WriteTextHD2(guildText, (int)g_targetInfoX, targetTextY, EQ_TEXT_COLOR_PINK, fontArial14);
+            EQ_CLASS_CDisplay->WriteTextHD2(guildText, (int)g_targetInfoX, targetTextY, g_targetInfoTextColor, fontArial14);
 
             targetTextY = targetTextY + g_fontHeight + 1;
         }
@@ -1746,7 +1981,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 sprintf_s(hpText, "HP: %d%%", targetSpawn->HpCurrent);
             }
 
-            EQ_CLASS_CDisplay->WriteTextHD2(hpText, (int)g_targetInfoX, targetTextY, EQ_TEXT_COLOR_PINK, fontArial14);
+            EQ_CLASS_CDisplay->WriteTextHD2(hpText, (int)g_targetInfoX, targetTextY, g_targetInfoTextColor, fontArial14);
 
             targetTextY = targetTextY + g_fontHeight + 1;
         }
@@ -1760,7 +1995,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             char manaText[128];
             sprintf_s(manaText, "MANA: %d/%d (%d%%)", charInfo->Mana, manaMax, manaPercent);
 
-            EQ_CLASS_CDisplay->WriteTextHD2(manaText, (int)g_targetInfoX, targetTextY, EQ_TEXT_COLOR_PINK, fontArial14);
+            EQ_CLASS_CDisplay->WriteTextHD2(manaText, (int)g_targetInfoX, targetTextY, g_targetInfoTextColor, fontArial14);
 
             targetTextY = targetTextY + g_fontHeight + 1;
         }
@@ -1768,7 +2003,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
     if (g_buffsIsEnabled == true)
     {
-        EQ_CLASS_CDisplay->WriteTextHD2("Buffs", (int)g_buffsX, (int)g_buffsY, EQ_TEXT_COLOR_YELLOW, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2("Buffs", (int)g_buffsX, (int)g_buffsY, g_buffsTextColor, fontArial14);
 
         int buffY = (int)g_buffsY + g_fontHeight + 1;
 
@@ -1798,7 +2033,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             char buffText[128];
             sprintf_s(buffText, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
 
-            EQ_CLASS_CDisplay->WriteTextHD2(buffText, (int)g_buffsX, buffY, EQ_TEXT_COLOR_YELLOW, fontArial14);
+            EQ_CLASS_CDisplay->WriteTextHD2(buffText, (int)g_buffsX, buffY, g_buffsTextColor, fontArial14);
 
             buffY = buffY + g_fontHeight + 1;
         }
@@ -1807,10 +2042,10 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
     if (g_mapIsMinimized == true)
     {
         int mapButtonColor = g_mapButtonColorMinMaxClose;
-        int mapButtonTextColor = EQ_TEXT_COLOR_PINK;
+        int mapButtonTextColor = g_mapButtonTextColorMinMaxClose;
 
-        EQ_DrawRectangle(g_mapButtonMaximizeX, g_mapButtonMaximizeY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonMaximizeX + 3.0f), (int)(g_mapButtonMaximizeY - 2.0f), mapButtonTextColor, fontArial14);
+        EQ_DrawRectangle(g_mapButtonRestoreX, g_mapButtonRestoreY, g_buttonWidth, g_buttonHeight, mapButtonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonRestoreX + 3.0f), (int)(g_mapButtonRestoreY - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
     }
@@ -1821,183 +2056,108 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         g_mapNumLines += 4;
 
         int mapButtonColor = g_mapButtonColorEnabled;
-        int mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+        int mapButtonTextColor = g_mapButtonTextColorEnabled;
 
-        EQ_DrawRectangle(g_mapButtonZoomInX, g_mapButtonZoomInY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonZoomInX, g_mapButtonZoomInY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonZoomInX + 3.0f), (int)(g_mapButtonZoomInY - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
-        EQ_DrawRectangle(g_mapButtonZoomOutX, g_mapButtonZoomOutY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonZoomOutX, g_mapButtonZoomOutY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonZoomOutX + 4.0f), (int)(g_mapButtonZoomOutY - 3.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
-        EQ_DrawRectangle(g_mapButtonZoom1X, g_mapButtonZoom1Y, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonZoom1X, g_mapButtonZoom1Y, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonZoom1X + 4.0f), (int)(g_mapButtonZoom1Y - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
-        EQ_DrawRectangle(g_mapButtonToggleMapSizeX, g_mapButtonToggleMapSizeY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("m", (int)(g_mapButtonToggleMapSizeX + 2.0f), (int)(g_mapButtonToggleMapSizeY - 2.0f), mapButtonTextColor, fontArial14);
-
-        g_mapNumLines += 4;
-
-        EQ_DrawRectangle(g_mapButtonToggleLineColorX, g_mapButtonToggleLineColorY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonToggleLineColorX, g_mapButtonToggleLineColorY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonToggleLineColorX + 3.0f), (int)(g_mapButtonToggleLineColorY - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
         mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+        mapButtonTextColor = g_mapButtonTextColorEnabled;
 
         if (g_mapHeightFilterIsEnabled == false)
         {
             mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
+            mapButtonTextColor = g_mapButtonTextColorDisabled;
         }
 
-        EQ_DrawRectangle(g_mapButtonToggleHeightFilterX, g_mapButtonToggleHeightFilterY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonToggleHeightFilterX, g_mapButtonToggleHeightFilterY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("h", (int)(g_mapButtonToggleHeightFilterX + 3.0f), (int)(g_mapButtonToggleHeightFilterY - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
         mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+        mapButtonTextColor = g_mapButtonTextColorEnabled;
 
         if (g_mapZoneInfoIsEnabled == false)
         {
             mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
+            mapButtonTextColor = g_mapButtonTextColorDisabled;
         }
 
-        EQ_DrawRectangle(g_mapButtonToggleZoneInfoX, g_mapButtonToggleZoneInfoY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonToggleZoneInfoX, g_mapButtonToggleZoneInfoY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("z", (int)(g_mapButtonToggleZoneInfoX + 3.0f), (int)(g_mapButtonToggleZoneInfoY - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
         mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+        mapButtonTextColor = g_mapButtonTextColorEnabled;
 
         if (g_mapSpawnsIsEnabled == false)
         {
             mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
+            mapButtonTextColor = g_mapButtonTextColorDisabled;
         }
 
-        EQ_DrawRectangle(g_mapButtonToggleSpawnsX, g_mapButtonToggleSpawnsY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonToggleSpawnsX, g_mapButtonToggleSpawnsY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_mapButtonToggleSpawnsX + 3.0f), (int)(g_mapButtonToggleSpawnsY - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
         mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+        mapButtonTextColor = g_mapButtonTextColorEnabled;
 
         if (g_mapPointsIsEnabled == false)
         {
             mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
+            mapButtonTextColor = g_mapButtonTextColorDisabled;
         }
 
-        EQ_DrawRectangle(g_mapButtonTogglePointsX, g_mapButtonTogglePointsY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonTogglePointsX, g_mapButtonTogglePointsY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_mapButtonTogglePointsX + 3.0f), (int)(g_mapButtonTogglePointsY - 3.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
         mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+        mapButtonTextColor = g_mapButtonTextColorEnabled;
 
         if (g_mapLinesIsEnabled == false)
         {
             mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
+            mapButtonTextColor = g_mapButtonTextColorDisabled;
         }
 
-        EQ_DrawRectangle(g_mapButtonToggleLinesX, g_mapButtonToggleLinesY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonToggleLinesX, g_mapButtonToggleLinesY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("l", (int)(g_mapButtonToggleLinesX + 5.0f), (int)(g_mapButtonToggleLinesY - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
-        mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
-
-        if (g_espIsEnabled == false)
-        {
-            mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleEspX, g_mapButtonToggleEspY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("e", (int)(g_mapButtonToggleEspX + 3.0f), (int)(g_mapButtonToggleEspY - 2.0f), mapButtonTextColor, fontArial14);
-
-        g_mapNumLines += 4;
-
-        mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
-
-        if (g_espDoorsIsEnabled == false)
-        {
-            mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleDoorsX, g_mapButtonToggleDoorsY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_mapButtonToggleDoorsX + 3.0f), (int)(g_mapButtonToggleDoorsY - 2.0f), mapButtonTextColor, fontArial14);
-
-        g_mapNumLines += 4;
-
-        mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
-
-        if (g_buffsIsEnabled == false)
-        {
-            mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleBuffsX, g_mapButtonToggleBuffsY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_mapButtonToggleBuffsX + 3.0f), (int)(g_mapButtonToggleBuffsY - 2.0f), mapButtonTextColor, fontArial14);
-
-        g_mapNumLines += 4;
-
-        mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
-
-        if (g_playerInfoIsEnabled == false)
-        {
-            mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
-        }
-
-        EQ_DrawRectangle(g_mapButtonTogglePlayerInfoX, g_mapButtonTogglePlayerInfoY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("y", (int)(g_mapButtonTogglePlayerInfoX + 3.0f), (int)(g_mapButtonTogglePlayerInfoY - 3.0f), mapButtonTextColor, fontArial14);
-
-        g_mapNumLines += 4;
-
-        mapButtonColor = g_mapButtonColorEnabled;
-        mapButtonTextColor = EQ_TEXT_COLOR_LIGHT_GREEN;
-
-        if (g_targetInfoIsEnabled == false)
-        {
-            mapButtonColor = g_mapButtonColorDisabled;
-            mapButtonTextColor = EQ_TEXT_COLOR_RED;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleTargetInfoX, g_mapButtonToggleTargetInfoY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("t", (int)(g_mapButtonToggleTargetInfoX + 5.0f), (int)(g_mapButtonToggleTargetInfoY - 2.0f), mapButtonTextColor, fontArial14);
-
-        g_mapNumLines += 4;
-
         mapButtonColor = g_mapButtonColorMinMaxClose;
-        mapButtonTextColor = EQ_TEXT_COLOR_PINK;
+        mapButtonTextColor = g_mapButtonTextColorMinMaxClose;
 
-        EQ_DrawRectangle(g_mapButtonMinimizeX, g_mapButtonMinimizeY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
+        EQ_DrawRectangle(g_mapButtonMinimizeX, g_mapButtonMinimizeY, g_buttonWidth, g_buttonHeight, mapButtonColor);
         EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonMinimizeX + 4.0f), (int)(g_mapButtonMinimizeY - 3.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
-        EQ_DrawRectangle(g_mapButtonExitX, g_mapButtonExitY, g_mapButtonWidth, g_mapButtonHeight, mapButtonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("x", (int)(g_mapButtonExitX + 3.0f), (int)(g_mapButtonExitY - 2.0f), mapButtonTextColor, fontArial14);
+        EQ_DrawRectangle(g_mapButtonMaximizeX, g_mapButtonMaximizeY, g_buttonWidth, g_buttonHeight, mapButtonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonMaximizeX + 3.0f), (int)(g_mapButtonMaximizeY - 2.0f), mapButtonTextColor, fontArial14);
 
         g_mapNumLines += 4;
 
@@ -2064,7 +2224,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
                 // Cohen-Sutherland algorithm
                 // clip the map lines to the rectangle
-                bool bDrawLine = EQMACESP_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+                bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
 
                 // only use 75% of the maximum allowed number of deferred objects
                 // the game needs to reserve some to draw stuff
@@ -2117,7 +2277,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 line.Y2 = ((-targetSpawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
                 line.Z2 = 1.0f;
 
-                bool bDrawLine = EQMACESP_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+                bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
 
                 if
                 (
@@ -2150,7 +2310,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
             }
         }
 
-        if (g_mapPointsIsEnabled == true && g_mapSizeIsDefault == false)
+        if (g_mapPointsIsEnabled == true && g_mapIsMaximized == true)
         {
             for (const EQMAPPOINT &mapPoint : g_mapPointList)
             {
@@ -2171,7 +2331,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 char pointText[128];
                 sprintf_s(pointText, "+ %s", mapPoint.Text);
 
-                EQ_CLASS_CDisplay->WriteTextHD2(pointText, pointX, pointY, EQ_TEXT_COLOR_LIGHT_GRAY, fontArial14);
+                EQ_CLASS_CDisplay->WriteTextHD2(pointText, pointX, pointY, g_mapPointTextColor, fontArial14);
             }
         }
 
@@ -2187,14 +2347,69 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                     continue;
                 }
 
+                if (g_mapShowPlayerIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER && spawn != targetSpawn)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
+
+                if (g_mapShowPlayerCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE && spawn != targetSpawn)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
+
+                if (g_mapShowNpcIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC && spawn != targetSpawn)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
+
+                if (g_mapShowNpcCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE && spawn != targetSpawn)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
+
                 EQLOCATION spawnLocation = {spawn->Y, spawn->X, spawn->Z};
 
                 float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
 
-                if (spawnDistance > g_espDistance && spawn->Type == EQ_SPAWN_TYPE_NPC)
+                if (g_mapSpawnDistanceIsEnabled == true)
                 {
-                    spawn = spawn->Next;
-                    continue;
+                    bool applyDistance = false;
+
+                    if (g_mapSpawnDistancePlayerIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
+                    {
+                        applyDistance = true;
+                    }
+
+                    if (g_mapSpawnDistancePlayerCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+                    {
+                        applyDistance = true;
+                    }
+
+                    if (g_mapSpawnDistanceNpcIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC)
+                    {
+                        applyDistance = true;
+                    }
+
+                    if (g_mapSpawnDistanceNpcCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+                    {
+                        applyDistance = true;
+                    }
+
+                    // target is always visible
+                    if (spawn == targetSpawn)
+                    {
+                        applyDistance = false;
+                    }
+
+                    if (applyDistance == true && spawnDistance > g_mapSpawnDistance)
+                    {
+                        spawn = spawn->Next;
+                        continue;
+                    }
                 }
 
                 DWORD textColor = EQ_TEXT_COLOR_WHITE;
@@ -2202,16 +2417,19 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 switch (spawn->Type)
                 {
                     case EQ_SPAWN_TYPE_PLAYER:
-                        textColor = EQ_TEXT_COLOR_RED;
+                        textColor = g_mapPlayerTextColor;
+                        break;
+
+                    case EQ_SPAWN_TYPE_PLAYER_CORPSE:
+                        textColor = g_mapPlayerCorpseTextColor;
                         break;
 
                     case EQ_SPAWN_TYPE_NPC:
-                        textColor = EQ_TEXT_COLOR_CYAN;
+                        textColor = g_mapNpcTextColor;
                         break;
 
                     case EQ_SPAWN_TYPE_NPC_CORPSE:
-                    case EQ_SPAWN_TYPE_PLAYER_CORPSE:
-                        textColor = EQ_TEXT_COLOR_YELLOW;
+                        textColor = g_mapNpcCorpseTextColor;
                         break;
                 }
 
@@ -2219,14 +2437,19 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 {
                     if (spawn == groupList->GroupMember[i])
                     {
-                        textColor = EQ_TEXT_COLOR_LIGHT_GREEN;
+                        textColor = g_mapGroupMemberTextColor;
                         break;
                     }
                 }
 
                 if (spawn == targetSpawn)
                 {
-                    textColor = EQ_TEXT_COLOR_PINK;
+                    textColor = g_mapTargetTextColor;
+                }
+
+                if (spawn->IsGameMaster == 1)
+                {
+                    textColor = g_mapGameMasterTextColor;
                 }
 
                 int mapSpawnX = (int)(((-spawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom));
@@ -2244,7 +2467,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                     continue;
                 }
 
-                if (g_mapSizeIsDefault == true)
+                if (g_mapIsMaximized == false)
                 {
                     EQ_CLASS_CDisplay->WriteTextHD2("*", mapSpawnX, mapSpawnY, textColor, fontArial14);
                 }
@@ -2289,7 +2512,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                         line.Y2 = ((-spawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
                         line.Z2 = 1.0f;
 
-                        bool bDrawLine = EQMACESP_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+                        bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
 
                         if
                         (
@@ -2356,7 +2579,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 playerHeadingC = playerHeadingC + 512.0f;
             }
 
-            float playerHeadingRadiansC = playerHeadingC * 3.14159265358979f / 256.0f;
+            float playerHeadingRadiansC = playerHeadingC * g_mathPi / 256.0f;
 
             float arrowAddCX = std::cosf(playerHeadingRadiansC);
             arrowAddCX = arrowAddCX * g_mapArrowRadius;
@@ -2376,7 +2599,7 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
                 playerHeadingB = playerHeadingB + 512.0f;
             }
 
-            float playerHeadingRadiansB = playerHeadingB * 3.14159265358979f / 256.0f;
+            float playerHeadingRadiansB = playerHeadingB * g_mathPi / 256.0f;
 
             float arrowAddBX = std::cosf(playerHeadingRadiansB);
             arrowAddBX = arrowAddBX * (g_mapArrowRadius * 0.5f);
@@ -2449,32 +2672,110 @@ int __cdecl EQMACESP_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         {
             char zoneText[128];
             sprintf_s(zoneText, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
-            EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)(g_mapMaxY + g_mapElementOffset), EQ_TEXT_COLOR_LIGHT_GREEN, fontArial14);
+            EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)(g_mapMaxY + g_elementOffset), g_mapZoneInfoTextColor, fontArial14);
         }
     } // if (g_mapIsMinimized == true)
 
-    return EQMACESP_DrawNetStatus_REAL(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    int mapButtonColor = g_mapButtonColorMinMaxClose;
+    int mapButtonTextColor = g_mapButtonTextColorMinMaxClose;
+
+    EQ_DrawRectangle(g_buttonExitX, g_buttonExitY, g_buttonWidth, g_buttonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("x", (int)(g_buttonExitX + 3.0f), (int)(g_buttonExitY - 2.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    mapButtonColor = g_mapButtonColorEnabled;
+    mapButtonTextColor = g_mapButtonTextColorEnabled;
+
+    if (g_espIsEnabled == false)
+    {
+        mapButtonColor = g_mapButtonColorDisabled;
+        mapButtonTextColor = g_mapButtonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_buttonToggleEspX, g_buttonToggleEspY, g_buttonWidth, g_buttonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("e", (int)(g_buttonToggleEspX + 3.0f), (int)(g_buttonToggleEspY - 2.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    mapButtonColor = g_mapButtonColorEnabled;
+    mapButtonTextColor = g_mapButtonTextColorEnabled;
+
+    if (g_espShowDoorIsEnabled == false)
+    {
+        mapButtonColor = g_mapButtonColorDisabled;
+        mapButtonTextColor = g_mapButtonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_buttonToggleDoorsX, g_buttonToggleDoorsY, g_buttonWidth, g_buttonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_buttonToggleDoorsX + 3.0f), (int)(g_buttonToggleDoorsY - 2.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    mapButtonColor = g_mapButtonColorEnabled;
+    mapButtonTextColor = g_mapButtonTextColorEnabled;
+
+    if (g_buffsIsEnabled == false)
+    {
+        mapButtonColor = g_mapButtonColorDisabled;
+        mapButtonTextColor = g_mapButtonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_buttonToggleBuffsX, g_buttonToggleBuffsY, g_buttonWidth, g_buttonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_buttonToggleBuffsX + 3.0f), (int)(g_buttonToggleBuffsY - 2.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    mapButtonColor = g_mapButtonColorEnabled;
+    mapButtonTextColor = g_mapButtonTextColorEnabled;
+
+    if (g_playerInfoIsEnabled == false)
+    {
+        mapButtonColor = g_mapButtonColorDisabled;
+        mapButtonTextColor = g_mapButtonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_buttonTogglePlayerInfoX, g_buttonTogglePlayerInfoY, g_buttonWidth, g_buttonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("y", (int)(g_buttonTogglePlayerInfoX + 3.0f), (int)(g_buttonTogglePlayerInfoY - 3.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    mapButtonColor = g_mapButtonColorEnabled;
+    mapButtonTextColor = g_mapButtonTextColorEnabled;
+
+    if (g_targetInfoIsEnabled == false)
+    {
+        mapButtonColor = g_mapButtonColorDisabled;
+        mapButtonTextColor = g_mapButtonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_buttonToggleTargetInfoX, g_buttonToggleTargetInfoY, g_buttonWidth, g_buttonHeight, mapButtonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("t", (int)(g_buttonToggleTargetInfoX + 5.0f), (int)(g_buttonToggleTargetInfoY - 2.0f), mapButtonTextColor, fontArial14);
+
+    g_mapNumLines += 4;
+
+    return EQMACHUD_DrawNetStatus_REAL(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 }
 
-DWORD WINAPI EQMACESP_ThreadLoop(LPVOID param)
+DWORD WINAPI EQMACHUD_ThreadLoop(LPVOID param)
 {
     while (g_bExit == 0)
     {
         Sleep(1000);
     }
 
-    DetourRemove((PBYTE)EQMACESP_DrawNetStatus_REAL, (PBYTE)EQMACESP_DrawNetStatus_DETOUR);
+    DetourRemove((PBYTE)EQMACHUD_DrawNetStatus_REAL, (PBYTE)EQMACHUD_DrawNetStatus_DETOUR);
 
     FreeLibraryAndExitThread(g_module, 0);
     return 0;
 }
 
-DWORD WINAPI EQMACESP_ThreadLoad(LPVOID param)
+DWORD WINAPI EQMACHUD_ThreadLoad(LPVOID param)
 {
     HINSTANCE graphicsDll = LoadLibraryA(EQ_STRING_GRAPHICS_DLL_NAME);
     if (!graphicsDll)
     {
-        MessageBoxA(NULL, "Error: Failed to LoadLibrary EQGfx_Dx8.dll!", "EQMac ESP", MB_ICONERROR);
+        MessageBoxA(NULL, "Error: Failed to LoadLibrary EQGfx_Dx8.dll!", g_applicationName, MB_ICONERROR);
 
         FreeLibraryAndExitThread(g_module, 0);
         return 0;
@@ -2483,7 +2784,7 @@ DWORD WINAPI EQMACESP_ThreadLoad(LPVOID param)
     EQGfx_Dx8__t3dWorldSpaceToScreenSpace = (EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)GetProcAddress(graphicsDll, EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_FUNCTION_NAME);
     if (!EQGfx_Dx8__t3dWorldSpaceToScreenSpace)
     {
-        MessageBoxA(NULL, "Error: World to Screen function not found!", "EQMac ESP", MB_ICONERROR);
+        MessageBoxA(NULL, "Error: World to Screen function not found!", g_applicationName, MB_ICONERROR);
 
         FreeLibraryAndExitThread(g_module, 0);
         return 0;
@@ -2492,17 +2793,22 @@ DWORD WINAPI EQMACESP_ThreadLoad(LPVOID param)
     EQGfx_Dx8__t3dDeferLine = (EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine)GetProcAddress(graphicsDll, EQ_T3D_DEFER_LINE_FUNCTION_NAME);
     if (!EQGfx_Dx8__t3dDeferLine)
     {
-        MessageBoxA(NULL, "Error: Draw Line function not found!", "EQMac ESP", MB_ICONERROR);
+        MessageBoxA(NULL, "Error: Draw Line function not found!", g_applicationName, MB_ICONERROR);
 
         FreeLibraryAndExitThread(g_module, 0);
         return 0;
     }
 
-    // TODO: parse config file
+    std::stringstream configFilename;
+    configFilename << ".\\" << g_applicationConfigFilename;
 
-    EQMACESP_DrawNetStatus_REAL = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)EQMACESP_DrawNetStatus_DETOUR);
+    EQMACHUD_LoadConfig(configFilename.str());
 
-    g_handleThreadLoop = CreateThread(NULL, 0, &EQMACESP_ThreadLoop, NULL, 0, NULL);
+    EQMACHUD_GuiRecalculateCoordinates();
+
+    EQMACHUD_DrawNetStatus_REAL = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)EQMACHUD_DrawNetStatus_DETOUR);
+
+    g_handleThreadLoop = CreateThread(NULL, 0, &EQMACHUD_ThreadLoop, NULL, 0, NULL);
 
     return 0;
 }
@@ -2515,7 +2821,7 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID reserved)
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(module);
-            g_handleThreadLoad = CreateThread(NULL, 0, &EQMACESP_ThreadLoad, NULL, 0, NULL);
+            g_handleThreadLoad = CreateThread(NULL, 0, &EQMACHUD_ThreadLoad, NULL, 0, NULL);
             break;
 
         case DLL_PROCESS_DETACH:

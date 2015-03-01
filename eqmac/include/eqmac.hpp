@@ -5,11 +5,7 @@
 #include <cstring>
 #include <cmath>
 
-#include <string>
-
 #include <windows.h>
-
-#include "cmemory.hpp"
 
 const char* EQ_STRING_WINDOW_TITLE = "EverQuest";
 const char* EQ_STRING_WINDOW_TITLE_EQW = "EQW beta 2.32";
@@ -345,7 +341,7 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_OFFSET_CLASS_GUILDMASTER 16 // EQ_CLASS_x + 16 = EQ_CLASS_x_GUILDMASTER
 
-#define EQ_STRUCTURE_GUILD_LIST 0x007F9C94 /// EQGUILDINFO
+#define EQ_STRUCTURE_GUILD_LIST 0x007F9C94 // EQGUILDINFO
 #define EQ_GUILDS_MAX 512
 
 #define EQ_STRUCTURE_GROUP_LIST 0x007913F8 // EQSPAWNINFO
@@ -423,6 +419,33 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE 0xFFFF3D3E // world space to screen space failed because the location is not on screen
 
 #define EQ_T3D_DEFER_LINE_FUNCTION_NAME "t3dDeferLine" // EQGfx_Dx8.t3dDeferLine
+
+std::size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
+
+const char* EQ_STRING_TEXT_COLOR_NAME[21] =
+{
+    "Black",
+    "Gray",
+    "Green",
+    "Gray 2",
+    "Blue",
+    "Pink",
+    "Gray 3",
+    "White",
+    "Gray 4",
+    "Gray 5",
+    "White 2",
+    "Gray 6",
+    "Light Gray",
+    "Red",
+    "Light Green",
+    "Yellow",
+    "Light Blue",
+    "Gray 7",
+    "Cyan",
+    "Gray 8",
+    "Black 2",
+};
 
 std::size_t EQ_STRINGSIZE_RACE_NAME = 13;
 
@@ -631,6 +654,7 @@ typedef struct _EQMAPLINE
         };
         DWORD RGB;
     };
+    BYTE Layer;
 } EQMAPLINE, *PEQMAPLINE;
 
 typedef struct _EQMAPPOINT
@@ -651,6 +675,7 @@ typedef struct _EQMAPPOINT
     };
     DWORD Size;
     CHAR Text[128];
+    BYTE Layer;
 } EQMAPPOINT, *PEQMAPPOINT;
 
 typedef struct _EQARGBCOLOR
@@ -946,28 +971,17 @@ const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], std::size
     return "";
 }
 
-bool EQ_IsInGame(CMemory* mem)
+int EQ_GetTextColorIdByName(const char* name)
 {
-    BYTE result = mem->ReadAny<BYTE>(EQ_IS_IN_GAME);
+    for (std::size_t i = 0; i < EQ_STRINGSIZE_TEXT_COLOR_NAME; i++)
+    {
+        if (std::strcmp(EQ_STRING_TEXT_COLOR_NAME[i], name) == 0)
+        {
+            return i;
+        }
+    }
 
-    return (result != 0);
-}
-
-bool EQ_IsAutoAttackEnabled(CMemory* mem)
-{
-    BYTE result = mem->ReadAny<BYTE>(EQ_IS_AUTO_ATTACK_ENABLED);
-
-    return (result != 0);
-}
-
-DWORD EQ_GetZoneId(CMemory* mem)
-{
-    return mem->ReadAny<DWORD>(EQ_ZONE_ID);
-}
-
-EQCHARINFO EQ_GetCharInfo(CMemory* mem)
-{
-    return mem->ReadStructFromPointer<EQCHARINFO>(EQ_POINTER_CHAR_INFO);
+    return EQ_TEXT_COLOR_WHITE;
 }
 
 const char* EQ_GetRaceName(int race)
@@ -1046,7 +1060,7 @@ const char* EQ_GetClassShortName(int _class)
 
 const char* EQ_GetStandingStateString(int standingState)
 {
-    const char* standingStateString;
+    const char* standingStateString = "";
 
     switch (standingState)
     {
@@ -1084,18 +1098,6 @@ const char* EQ_GetStandingStateString(int standingState)
     }
 
     return standingStateString;
-}
-
-char* EQ_GetGuildNameById(CMemory* mem, int guildId)
-{
-    if (guildId == EQ_GUILD_ID_NULL)
-    {
-        return "Unknown Guild";
-    }
-
-    EQGUILDLIST guildList = mem->ReadAny<EQGUILDLIST>(EQ_STRUCTURE_GUILD_LIST);
-
-    return guildList.Guild[guildId].Name;
 }
 
 #endif // EQMAC_HPP

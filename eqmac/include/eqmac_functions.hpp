@@ -566,7 +566,7 @@ void everquest_function_update_spawns(std::vector<everquest_spawn_t> &spawns)
         {
             std::string player_name = everquest_function_read_memory_string(player_spawn_info + EQ_OFFSET_SPAWN_INFO_NAME, EQ_SPAWN_INFO_NAME_SIZE);
 
-            std::size_t found = spawn.name.find(player_name);
+            size_t found = spawn.name.find(player_name);
 
             if (found != std::string::npos)
             {
@@ -945,7 +945,7 @@ int everquest_function_get_spawn_info_by_name(std::string spawn_name, bool parti
 
         if (partial_match == true)
         {
-            std::size_t found = spawns_it->name.find(spawn_name);
+            size_t found = spawns_it->name.find(spawn_name);
 
             if (found != std::string::npos)
             {
@@ -1102,7 +1102,7 @@ int everquest_function_get_loot_slot_of_item_by_name(std::string item_name, bool
     {
         if (partial_match == true)
         {
-            std::size_t found = loot_items_it->name.find(item_name);
+            size_t found = loot_items_it->name.find(item_name);
 
             if (found != std::string::npos)
             {
@@ -1159,7 +1159,7 @@ bool everquest_function_loot_all_items_by_name(std::string item_name, bool parti
 
         if (partial_match == true)
         {
-            std::size_t found = loot_items_it->name.find(item_name);
+            size_t found = loot_items_it->name.find(item_name);
 
             if (found != std::string::npos)
             {

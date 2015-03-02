@@ -7,7 +7,7 @@
 
 #include <windows.h>
 
-const char* EQ_STRING_WINDOW_TITLE = "EverQuest";
+const char* EQ_STRING_WINDOW_TITLE     = "EverQuest";
 const char* EQ_STRING_WINDOW_TITLE_EQW = "EQW beta 2.32";
 
 const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
@@ -420,7 +420,7 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_T3D_DEFER_LINE_FUNCTION_NAME "t3dDeferLine" // EQGfx_Dx8.t3dDeferLine
 
-std::size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
+size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
 
 const char* EQ_STRING_TEXT_COLOR_NAME[21] =
 {
@@ -447,7 +447,7 @@ const char* EQ_STRING_TEXT_COLOR_NAME[21] =
     "Black 2",
 };
 
-std::size_t EQ_STRINGSIZE_RACE_NAME = 13;
+size_t EQ_STRINGSIZE_RACE_NAME = 13;
 
 const char* EQ_STRING_RACE_NAME[13] =
 {
@@ -469,7 +469,7 @@ const char* EQ_STRING_RACE_NAME[13] =
     // Froglok
 };
 
-std::size_t EQ_STRINGSIZE_RACE_SHORT_NAME = 13;
+size_t EQ_STRINGSIZE_RACE_SHORT_NAME = 13;
 
 const char* EQ_STRING_RACE_SHORT_NAME[13] =
 {
@@ -491,7 +491,7 @@ const char* EQ_STRING_RACE_SHORT_NAME[13] =
     // FRG
 };
 
-std::size_t EQ_STRINGSIZE_CLASS_NAME = 33;
+size_t EQ_STRINGSIZE_CLASS_NAME = 33;
 
 const char* EQ_STRING_CLASS_NAME[33] =
 {
@@ -530,7 +530,7 @@ const char* EQ_STRING_CLASS_NAME[33] =
     "Merchant",
 };
 
-std::size_t EQ_STRINGSIZE_CLASS_SHORT_NAME = 33;
+size_t EQ_STRINGSIZE_CLASS_SHORT_NAME = 33;
 
 const char* EQ_STRING_CLASS_SHORT_NAME[33] =
 {
@@ -569,7 +569,7 @@ const char* EQ_STRING_CLASS_SHORT_NAME[33] =
     "MERCHANT",
 };
 
-std::size_t EQ_KEYVALUESTRINGLISTSIZE_DOOR_SPAWN_NAME_DESCRIPTION = 22;
+size_t EQ_KEYVALUESTRINGLISTSIZE_DOOR_SPAWN_NAME_DESCRIPTION = 22;
 
 const char* EQ_KEYVALUESTRINGLIST_DOOR_SPAWN_NAME_DESCRIPTION[][2] =
 {
@@ -599,7 +599,7 @@ const char* EQ_KEYVALUESTRINGLIST_DOOR_SPAWN_NAME_DESCRIPTION[][2] =
     {"FAYLEVATOR",    "Faydark Elevator"},
 };
 
-std::size_t EQ_KEYVALUESTRINGLISTSIZE_GROUND_SPAWN_NAME_DESCRIPTION = 11;
+size_t EQ_KEYVALUESTRINGLISTSIZE_GROUND_SPAWN_NAME_DESCRIPTION = 11;
 
 const char* EQ_KEYVALUESTRINGLIST_GROUND_SPAWN_NAME_DESCRIPTION[][2] =
 {
@@ -958,9 +958,9 @@ float EQ_CalculateDistance(float x1, float y1, float x2, float y2)
     return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2));
 }
 
-const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], std::size_t listSize, char key[])
+const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], size_t listSize, char key[])
 {
-    for (std::size_t i = 0; i < listSize; i++)
+    for (size_t i = 0; i < listSize; i++)
     {
         if (std::strcmp(list[i][0], key) == 0)
         {
@@ -968,12 +968,12 @@ const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], std::size
         }
     }
 
-    return "";
+    return NULL;
 }
 
 int EQ_GetTextColorIdByName(const char* name)
 {
-    for (std::size_t i = 0; i < EQ_STRINGSIZE_TEXT_COLOR_NAME; i++)
+    for (size_t i = 0; i < EQ_STRINGSIZE_TEXT_COLOR_NAME; i++)
     {
         if (std::strcmp(EQ_STRING_TEXT_COLOR_NAME[i], name) == 0)
         {
@@ -986,7 +986,7 @@ int EQ_GetTextColorIdByName(const char* name)
 
 const char* EQ_GetRaceName(int race)
 {
-    const char* name = "";
+    const char* name = NULL;
 
     switch (race)
     {
@@ -1008,7 +1008,7 @@ const char* EQ_GetRaceName(int race)
         name = EQ_STRING_RACE_NAME[race];
     }
 
-    if (std::strlen(name) == 0)
+    if (name == NULL)
     {
         return "Unknown";
     }
@@ -1018,7 +1018,7 @@ const char* EQ_GetRaceName(int race)
 
 const char* EQ_GetRaceShortName(int race)
 {
-    const char* name = "";
+    const char* name = NULL;
 
     switch (race)
     {
@@ -1040,7 +1040,7 @@ const char* EQ_GetRaceShortName(int race)
         name = EQ_STRING_RACE_SHORT_NAME[race];
     }
 
-    if (std::strlen(name) == 0)
+    if (name == NULL)
     {
         return "UNK";
     }
@@ -1060,7 +1060,7 @@ const char* EQ_GetClassShortName(int _class)
 
 const char* EQ_GetStandingStateString(int standingState)
 {
-    const char* standingStateString = "";
+    const char* standingStateString = NULL;
 
     switch (standingState)
     {
@@ -1091,10 +1091,11 @@ const char* EQ_GetStandingStateString(int standingState)
         case EQ_STANDING_STATE_DEAD:
             standingStateString = "Dead";
             break;
+    }
 
-        default:
-            standingStateString = "Unknown";
-            break;
+    if (standingStateString == NULL)
+    {
+        return "Unknown";
     }
 
     return standingStateString;

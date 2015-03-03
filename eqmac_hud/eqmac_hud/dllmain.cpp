@@ -15,6 +15,8 @@ const char* g_applicationName = "EQMac HUD";
 
 const char* g_applicationConfigFilename = "eqmac_hud.ini";
 
+bool g_bLoaded = false;
+
 volatile int g_bExit = 0;
 
 HMODULE g_module;
@@ -54,8 +56,11 @@ float g_buttonToggleMapY;
 float g_buttonToggleEspX;
 float g_buttonToggleEspY;
 
-float g_buttonToggleEspDoorsX;
-float g_buttonToggleEspDoorsY;
+float g_buttonToggleEspGroundSpawnX;
+float g_buttonToggleEspGroundSpawnY;
+
+float g_buttonToggleEspDoorSpawnX;
+float g_buttonToggleEspDoorSpawnY;
 
 float g_buttonToggleEspDistanceX;
 float g_buttonToggleEspDistanceY;
@@ -69,17 +74,17 @@ float g_buttonTogglePlayerInfoY;
 float g_buttonToggleTargetInfoX;
 float g_buttonToggleTargetInfoY;
 
-unsigned int g_mouseLeftClickTimer;
-unsigned int g_mouseLeftClickDelay = 250; // delay in milliseconds
+unsigned int g_mouseClickTimer;
+unsigned int g_mouseClickDelay = 250; // delay in milliseconds
 
 bool g_mapIsEnabled = true;
 
-bool g_mapIsMinimized = false;
 bool g_mapIsMaximized = false;
 
 bool g_mapArrowIsEnabled        = true;
 bool g_mapZoneInfoIsEnabled     = true;
 bool g_mapHeightFilterIsEnabled = false;
+bool g_mapRotateIsEnabled       = false;
 
 bool g_mapSpawnsIsEnabled = true;
 bool g_mapPointsIsEnabled = true;
@@ -112,7 +117,7 @@ float g_mapDefaultHeight = 200.0f;
 float g_mapX = g_mapDefaultX;
 float g_mapY = g_mapDefaultY;
 
-float g_mapWidth = g_mapDefaultWidth;
+float g_mapWidth  = g_mapDefaultWidth;
 float g_mapHeight = g_mapDefaultHeight;
 
 float g_mapMaximizedX = 5.0f;
@@ -145,7 +150,7 @@ float g_mapCenterLineSize = 5.0f;
 
 DWORD g_mapBorderColor     = 0xFF00FF00;
 DWORD g_mapArrowColor      = 0xFF00FF00;
-DWORD g_mapLineColor       = 0xDEADBEEF; // DEADBEEF uses the map txt file line colors
+DWORD g_mapLineColor       = 0xDEADBEEF; // DEADBEEF uses the map text file line colors
 DWORD g_mapTargetLineColor = 0xFFFF00FF;
 DWORD g_mapCorpseLineColor = 0xFFFFFF00;
 
@@ -176,6 +181,9 @@ float g_mapButtonToggleLineColorY;
 float g_mapButtonToggleHeightFilterX;
 float g_mapButtonToggleHeightFilterY;
 
+float g_mapButtonToggleRotateX;
+float g_mapButtonToggleRotateY;
+
 float g_mapButtonToggleZoneInfoX;
 float g_mapButtonToggleZoneInfoY;
 
@@ -191,28 +199,22 @@ float g_mapButtonToggleLinesY;
 float g_mapButtonToggleSpawnDistanceX;
 float g_mapButtonToggleSpawnDistanceY;
 
-float g_mapButtonMinimizeX;
-float g_mapButtonMinimizeY;
-
 float g_mapButtonMaximizeX;
 float g_mapButtonMaximizeY;
 
-float g_mapButtonRestoreX;
-float g_mapButtonRestoreY;
-
-struct _EQMAPLINE* g_mapLineListHead = NULL;
+struct _EQMAPLINE*  g_mapLineListHead  = NULL;
 struct _EQMAPPOINT* g_mapPointListHead = NULL;
 
 bool g_espIsEnabled = true;
 
-bool g_espShowYourselfIsEnabled     = true;
-bool g_espShowPlayerIsEnabled       = true;
-bool g_espShowPlayerCorpseIsEnabled = true;
-bool g_espShowNpcIsEnabled          = true;
-bool g_espShowNpcCorpseIsEnabled    = true;
-bool g_espShowGroundSpawnIsEnabled  = true;
-bool g_espShowDoorIsEnabled         = false;
-bool g_espShowUniqueDoorIsEnabled   = true;
+bool g_espShowYourselfIsEnabled          = true;
+bool g_espShowPlayerIsEnabled            = true;
+bool g_espShowPlayerCorpseIsEnabled      = true;
+bool g_espShowNpcIsEnabled               = true;
+bool g_espShowNpcCorpseIsEnabled         = true;
+bool g_espShowGroundSpawnIsEnabled       = true;
+bool g_espShowDoorSpawnIsEnabled         = false;
+bool g_espShowDoorUniqueSpawnIsEnabled   = true;
 
 bool g_espDistanceIsEnabled = true;
 float g_espDistance = 400.0f;
@@ -222,7 +224,7 @@ bool g_espDistancePlayerCorpseIsEnabled = false;
 bool g_espDistanceNpcIsEnabled          = true;
 bool g_espDistanceNpcCorpseIsEnabled    = false;
 bool g_espDistanceGroundSpawnIsEnabled  = true;
-bool g_espDistanceDoorIsEnabled         = true;
+bool g_espDistanceDoorSpawnIsEnabled    = true;
 
 int g_espPlayerTextColor       = EQ_TEXT_COLOR_RED;
 int g_espPlayerCorpseTextColor = EQ_TEXT_COLOR_YELLOW;
@@ -232,7 +234,7 @@ int g_espGroupMemberTextColor  = EQ_TEXT_COLOR_LIGHT_GREEN;
 int g_espTargetTextColor       = EQ_TEXT_COLOR_PINK;
 int g_espGameMasterTextColor   = EQ_TEXT_COLOR_PINK;
 int g_espGroundSpawnTextColor  = EQ_TEXT_COLOR_WHITE;
-int g_espDoorTextColor         = EQ_TEXT_COLOR_WHITE;
+int g_espDoorSpawnTextColor    = EQ_TEXT_COLOR_WHITE;
 
 bool g_buffsIsEnabled = true;
 
@@ -369,6 +371,20 @@ bool EQMACHUD_IsPointInsideRectangle(int pointX, int pointY, int rectX, int rect
     return true;
 }
 
+void EQMACHUD_Rotate2D(float cx, float cy, float& x, float& y, float angle)
+{
+    float radians = angle * (g_mathPi / 256.0f);
+
+    float c = cosf(radians);
+    float s = sinf(radians);
+
+    float nx = (c * (x - cx)) - (s * (y - cy)) + cx;
+    float ny = (s * (x - cx)) + (c * (y - cy)) + cy;
+
+    x = nx;
+    y = ny;
+}
+
 bool EQMACHUD_FileExists(const char* filename)
 {
     FILE *file;
@@ -408,11 +424,9 @@ float EQMACHUD_ConfigReadFloat(const char* filename, const char* section, const 
     return result;
 }
 
-const char* EQMACHUD_ConfigReadString(const char* filename, const char* section, const char* key, const char* defaultValue)
+void EQMACHUD_ConfigReadString(const char* filename, const char* section, const char* key, const char* defaultValue, char result[])
 {
-    static char result[255];
     GetPrivateProfileStringA(section, key, defaultValue, result, 255, filename);
-    return result;
 }
 
 bool EQMACHUD_LoadConfig(const char* filename)
@@ -424,21 +438,35 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     // HUD
 
-    g_mouseLeftClickDelay = EQMACHUD_ConfigReadInt(filename, "HUD", "iMouseLeftClickDelay", g_mouseLeftClickDelay);
+    g_mouseClickDelay = EQMACHUD_ConfigReadInt(filename, "HUD", "iMouseClickDelay", g_mouseClickDelay);
 
     g_buttonExitX = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonExitX", g_buttonExitX);
     g_buttonExitY = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonExitY", g_buttonExitY);
+
+    g_buttonColorEnabled     = EQMACHUD_ConfigReadInt(filename, "HUD", "argbButtonColorEnabled",     g_buttonColorEnabled);
+    g_buttonColorDisabled    = EQMACHUD_ConfigReadInt(filename, "HUD", "argbButtonColorDisabled",    g_buttonColorDisabled);
+    g_buttonColorMinMaxClose = EQMACHUD_ConfigReadInt(filename, "HUD", "argbButtonColorMinMaxClose", g_buttonColorMinMaxClose);
+
+    char g_buttonTextColorEnabled_string[32];
+    char g_buttonTextColorDisabled_string[32];
+    char g_buttonTextColorMinMaxClose_string[32];
+    EQMACHUD_ConfigReadString(filename, "HUD", "sButtonTextColorEnabled",     "Light Green", g_buttonTextColorEnabled_string);
+    EQMACHUD_ConfigReadString(filename, "HUD", "sButtonTextColorDisabled",    "Red",         g_buttonTextColorDisabled_string);
+    EQMACHUD_ConfigReadString(filename, "HUD", "sButtonTextColorMinMaxClose", "Pink",        g_buttonTextColorMinMaxClose_string);
+    g_buttonTextColorEnabled     = EQ_GetTextColorIdByName(g_buttonTextColorEnabled_string);
+    g_buttonTextColorDisabled    = EQ_GetTextColorIdByName(g_buttonTextColorDisabled_string);
+    g_buttonTextColorMinMaxClose = EQ_GetTextColorIdByName(g_buttonTextColorMinMaxClose_string);
 
     // Map
 
     g_mapIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bEnabled", g_mapIsEnabled);
 
-    g_mapIsMinimized = EQMACHUD_ConfigReadBool(filename, "Map", "bIsMinimized", g_mapIsMinimized);
     g_mapIsMaximized = EQMACHUD_ConfigReadBool(filename, "Map", "bIsMaximized", g_mapIsMaximized);
 
     g_mapArrowIsEnabled        = EQMACHUD_ConfigReadBool(filename, "Map", "bArrow",        g_mapArrowIsEnabled);
     g_mapZoneInfoIsEnabled     = EQMACHUD_ConfigReadBool(filename, "Map", "bZoneInfo",     g_mapZoneInfoIsEnabled);
     g_mapHeightFilterIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bHeightFilter", g_mapHeightFilterIsEnabled);
+    g_mapRotateIsEnabled       = EQMACHUD_ConfigReadBool(filename, "Map", "bRotate",       g_mapRotateIsEnabled);
 
     g_mapSpawnsIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bSpawns", g_mapSpawnsIsEnabled);
     g_mapPointsIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bPoints", g_mapPointsIsEnabled);
@@ -449,7 +477,18 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     g_mapReplaceBlackLinesWithWhiteLinesIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bReplaceBlackLinesWithWhiteLines", g_mapReplaceBlackLinesWithWhiteLinesIsEnabled);
 
-    // TODO //
+    g_mapShowPlayerIsEnabled       = EQMACHUD_ConfigReadBool(filename, "Map", "bShowPlayer",       g_mapShowPlayerIsEnabled);
+    g_mapShowPlayerCorpseIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bShowPlayerCorpse", g_mapShowPlayerCorpseIsEnabled);
+    g_mapShowNpcIsEnabled          = EQMACHUD_ConfigReadBool(filename, "Map", "bShowNpc",          g_mapShowNpcIsEnabled);
+    g_mapShowNpcCorpseIsEnabled    = EQMACHUD_ConfigReadBool(filename, "Map", "bShowNpcCorpse",    g_mapShowNpcCorpseIsEnabled);
+
+    g_mapSpawnDistanceIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bSpawnDistance", g_mapSpawnDistanceIsEnabled);
+    g_mapSpawnDistance = EQMACHUD_ConfigReadFloat(filename, "Map", "fSpawnDistance", g_mapSpawnDistance);
+
+    g_mapSpawnDistancePlayerIsEnabled       = EQMACHUD_ConfigReadBool(filename, "Map", "bSpawnDistancePlayer",       g_mapSpawnDistancePlayerIsEnabled);
+    g_mapSpawnDistancePlayerCorpseIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bSpawnDistancePlayerCorpse", g_mapSpawnDistancePlayerCorpseIsEnabled);
+    g_mapSpawnDistanceNpcIsEnabled          = EQMACHUD_ConfigReadBool(filename, "Map", "bSpawnDistanceNpc",          g_mapSpawnDistanceNpcIsEnabled);
+    g_mapSpawnDistanceNpcCorpseIsEnabled    = EQMACHUD_ConfigReadBool(filename, "Map", "bSpawnDistanceNpcCorpse",    g_mapSpawnDistanceNpcCorpseIsEnabled);
 
     g_mapDefaultX = EQMACHUD_ConfigReadFloat(filename, "Map", "fDefaultX", g_mapDefaultX);
     g_mapDefaultY = EQMACHUD_ConfigReadFloat(filename, "Map", "fDefaultY", g_mapDefaultY);
@@ -463,21 +502,138 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_mapMaximizedWidth  = EQMACHUD_ConfigReadFloat(filename, "Map", "fMaximizedWidth",  g_mapMaximizedWidth);
     g_mapMaximizedHeight = EQMACHUD_ConfigReadFloat(filename, "Map", "fMaximizedHeight", g_mapMaximizedHeight);
 
+    g_mapHeightFilterLow  = EQMACHUD_ConfigReadFloat(filename, "Map", "fHeightFilterLow",  g_mapHeightFilterLow);
+    g_mapHeightFilterHigh = EQMACHUD_ConfigReadFloat(filename, "Map", "fHeightFilterHigh", g_mapHeightFilterHigh);
+
+    g_mapZoom           = EQMACHUD_ConfigReadFloat(filename, "Map", "fZoom",           g_mapZoom);
+    g_mapZoomMultiplier = EQMACHUD_ConfigReadFloat(filename, "Map", "fZoomMultiplier", g_mapZoomMultiplier);
+    g_mapZoomMinimum    = EQMACHUD_ConfigReadFloat(filename, "Map", "fZoomMinimum",    g_mapZoomMinimum);
+    g_mapZoomMaximum    = EQMACHUD_ConfigReadFloat(filename, "Map", "fZoomMaximum",    g_mapZoomMaximum);
+
+    g_mapArrowRadius = EQMACHUD_ConfigReadFloat(filename, "Map", "fArrowRadius", g_mapArrowRadius);
+
+    g_mapCenterLineSize = EQMACHUD_ConfigReadFloat(filename, "Map", "fCenterLineSize", g_mapCenterLineSize);
+
+    g_mapBorderColor     = EQMACHUD_ConfigReadInt(filename, "Map", "argbBorderColor",       g_mapBorderColor);
+    g_mapArrowColor      = EQMACHUD_ConfigReadInt(filename, "Map", "argbArrowColor",        g_mapArrowColor);
+    g_mapLineColor       = EQMACHUD_ConfigReadInt(filename, "Map", "argbLineColor",         g_mapLineColor);
+    g_mapTargetLineColor = EQMACHUD_ConfigReadInt(filename, "Map", "argbTargetLineColor",   g_mapTargetLineColor);
+    g_mapCorpseLineColor = EQMACHUD_ConfigReadInt(filename, "Map", "argbCorpseLineColor",   g_mapCorpseLineColor);
+
+    char g_mapDefaultTextColor_string[32];
+    char g_mapZoneInfoTextColor_string[32];
+    char g_mapPointTextColor_string[32];
+    char g_mapPlayerTextColor_string[32];
+    char g_mapPlayerCorpseTextColor_string[32];
+    char g_mapNpcTextColor_string[32];
+    char g_mapNpcCorpseTextColor_string[32];
+    char g_mapGroupMemberTextColor_string[32];
+    char g_mapTargetTextColor_string[32];
+    char g_mapGameMasterTextColor_string[32];
+    EQMACHUD_ConfigReadString(filename, "Map", "sDefaultTextColor",      "Light Green", g_mapDefaultTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sZoneInfoTextColor",     "Light Green", g_mapZoneInfoTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sPointTextColor",        "Light Gray",  g_mapPointTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sPlayerTextColor",       "Red",         g_mapPlayerTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sPlayerCorpseTextColor", "Yellow",      g_mapPlayerCorpseTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sNpcTextColor",          "Cyan",        g_mapNpcTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sNpcCorpseTextColor",    "Yellow",      g_mapNpcCorpseTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sGroupMemberTextColor",  "Light Green", g_mapGroupMemberTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sTargetTextColor",       "Pink",        g_mapTargetTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "Map", "sGameMasterTextColor",   "Pink",        g_mapGameMasterTextColor_string);
+    g_mapDefaultTextColor      = EQ_GetTextColorIdByName(g_mapDefaultTextColor_string);
+    g_mapZoneInfoTextColor     = EQ_GetTextColorIdByName(g_mapZoneInfoTextColor_string);
+    g_mapPointTextColor        = EQ_GetTextColorIdByName(g_mapPointTextColor_string);
+    g_mapPlayerTextColor       = EQ_GetTextColorIdByName(g_mapPlayerTextColor_string);
+    g_mapPlayerCorpseTextColor = EQ_GetTextColorIdByName(g_mapPlayerCorpseTextColor_string);
+    g_mapNpcTextColor          = EQ_GetTextColorIdByName(g_mapNpcTextColor_string);
+    g_mapNpcCorpseTextColor    = EQ_GetTextColorIdByName(g_mapNpcCorpseTextColor_string);
+    g_mapGroupMemberTextColor  = EQ_GetTextColorIdByName(g_mapGroupMemberTextColor_string);
+    g_mapTargetTextColor       = EQ_GetTextColorIdByName(g_mapTargetTextColor_string);
+    g_mapGameMasterTextColor   = EQ_GetTextColorIdByName(g_mapGameMasterTextColor_string);
+
     // ESP
 
     g_espIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bEnabled", g_espIsEnabled);
+
+    g_espShowYourselfIsEnabled        = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowYourself",        g_espShowYourselfIsEnabled);
+    g_espShowPlayerIsEnabled          = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowPlayer",          g_espShowPlayerIsEnabled);
+    g_espShowPlayerCorpseIsEnabled    = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowPlayerCorpse",    g_espShowPlayerCorpseIsEnabled);
+    g_espShowNpcIsEnabled             = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowNpc",             g_espShowNpcIsEnabled);
+    g_espShowNpcCorpseIsEnabled       = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowNpcCorpse",       g_espShowNpcCorpseIsEnabled);
+    g_espShowGroundSpawnIsEnabled     = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowGroundSpawn",     g_espShowGroundSpawnIsEnabled);
+    g_espShowDoorSpawnIsEnabled       = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowDoorSpawn",       g_espShowDoorSpawnIsEnabled);
+    g_espShowDoorUniqueSpawnIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowDoorUniqueSpawn", g_espShowDoorUniqueSpawnIsEnabled);
+
+    g_espDistanceIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bDistance", g_espDistanceIsEnabled);
+    g_espDistance = EQMACHUD_ConfigReadFloat(filename, "ESP", "fDistance", g_espDistance);
+
+    g_espDistancePlayerIsEnabled       = EQMACHUD_ConfigReadBool(filename, "ESP", "bDistancePlayer",       g_espDistancePlayerIsEnabled);
+    g_espDistancePlayerCorpseIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bDistancePlayerCorpse", g_espDistancePlayerCorpseIsEnabled);
+    g_espDistanceNpcIsEnabled          = EQMACHUD_ConfigReadBool(filename, "ESP", "bDistanceNpc",          g_espDistanceNpcIsEnabled);
+    g_espDistanceNpcCorpseIsEnabled    = EQMACHUD_ConfigReadBool(filename, "ESP", "bDistanceNpcCorpse",    g_espDistanceNpcCorpseIsEnabled);
+    g_espDistanceGroundSpawnIsEnabled  = EQMACHUD_ConfigReadBool(filename, "ESP", "bDistanceGroundSpawn",  g_espDistanceGroundSpawnIsEnabled);
+    g_espDistanceDoorSpawnIsEnabled    = EQMACHUD_ConfigReadBool(filename, "ESP", "bDistanceDoorSpawn",    g_espDistanceDoorSpawnIsEnabled);
+
+    char g_espPlayerTextColor_string[32];
+    char g_espPlayerCorpseTextColor_string[32];
+    char g_espNpcTextColor_string[32];
+    char g_espNpcCorpseTextColor_string[32];
+    char g_espGroupMemberTextColor_string[32];
+    char g_espTargetTextColor_string[32];
+    char g_espGameMasterTextColor_string[32];
+    char g_espGroundSpawnTextColor_string[32];
+    char g_espDoorSpawnTextColor_string[32];
+    EQMACHUD_ConfigReadString(filename, "ESP", "sPlayerTextColor",       "Red",         g_espPlayerTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "ESP", "sPlayerCorpseTextColor", "Yellow",      g_espPlayerCorpseTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "ESP", "sNpcTextColor",          "Cyan",        g_espNpcTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "ESP", "sNpcCorpseTextColor",    "Yellow",      g_espNpcCorpseTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "ESP", "sGroupMemberTextColor",  "Light Green", g_espGroupMemberTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "ESP", "sTargetTextColor",       "Pink",        g_espTargetTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "ESP", "sGameMasterTextColor",   "Pink",        g_espGameMasterTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "ESP", "sGroundSpawnTextColor",  "White",       g_espGroundSpawnTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "ESP", "sDoorSpawnTextColor",    "White",       g_espDoorSpawnTextColor_string);
+    g_espPlayerTextColor       = EQ_GetTextColorIdByName(g_espPlayerTextColor_string);
+    g_espPlayerCorpseTextColor = EQ_GetTextColorIdByName(g_espPlayerCorpseTextColor_string);
+    g_espNpcTextColor          = EQ_GetTextColorIdByName(g_espNpcTextColor_string);
+    g_espNpcCorpseTextColor    = EQ_GetTextColorIdByName(g_espNpcCorpseTextColor_string);
+    g_espGroupMemberTextColor  = EQ_GetTextColorIdByName(g_espGroupMemberTextColor_string);
+    g_espTargetTextColor       = EQ_GetTextColorIdByName(g_espTargetTextColor_string);
+    g_espGameMasterTextColor   = EQ_GetTextColorIdByName(g_espGameMasterTextColor_string);
+    g_espGroundSpawnTextColor  = EQ_GetTextColorIdByName(g_espGroundSpawnTextColor_string);
+    g_espDoorSpawnTextColor    = EQ_GetTextColorIdByName(g_espDoorSpawnTextColor_string);
 
     // Buffs
 
     g_buffsIsEnabled = EQMACHUD_ConfigReadBool(filename, "Buffs", "bEnabled", g_buffsIsEnabled);
 
-    // Player Info
+    g_buffsX = EQMACHUD_ConfigReadFloat(filename, "Buffs", "fX", g_buffsX);
+    g_buffsY = EQMACHUD_ConfigReadFloat(filename, "Buffs", "fY", g_buffsY);
 
-    g_playerInfoIsEnabled = EQMACHUD_ConfigReadBool(filename, "Player Info", "bEnabled", g_playerInfoIsEnabled);
+    char g_buffsTextColor_string[32];
+    EQMACHUD_ConfigReadString(filename, "Buffs", "sTextColor", "Yellow", g_buffsTextColor_string);
+    g_buffsTextColor = EQ_GetTextColorIdByName(g_buffsTextColor_string);
+    
+    // PlayerInfo
 
-    // Target Info
+    g_playerInfoIsEnabled = EQMACHUD_ConfigReadBool(filename, "PlayerInfo", "bEnabled", g_playerInfoIsEnabled);
 
-    g_targetInfoIsEnabled = EQMACHUD_ConfigReadBool(filename, "Target Info", "bEnabled", g_targetInfoIsEnabled);
+    g_playerInfoX = EQMACHUD_ConfigReadFloat(filename, "PlayerInfo", "fX", g_playerInfoX);
+    g_playerInfoY = EQMACHUD_ConfigReadFloat(filename, "PlayerInfo", "fY", g_playerInfoY);
+
+    char g_playerInfoTextColor_string[32];
+    EQMACHUD_ConfigReadString(filename, "PlayerInfo", "sTextColor", "Cyan", g_playerInfoTextColor_string);
+    g_playerInfoTextColor = EQ_GetTextColorIdByName(g_playerInfoTextColor_string);
+
+    // TargetInfo
+
+    g_targetInfoIsEnabled = EQMACHUD_ConfigReadBool(filename, "TargetInfo", "bEnabled", g_targetInfoIsEnabled);
+
+    g_targetInfoX = EQMACHUD_ConfigReadFloat(filename, "TargetInfo", "fX", g_targetInfoX);
+    g_targetInfoY = EQMACHUD_ConfigReadFloat(filename, "TargetInfo", "fY", g_targetInfoY);
+
+    char g_targetInfoTextColor_string[32];
+    EQMACHUD_ConfigReadString(filename, "TargetInfo", "sTextColor", "Pink", g_targetInfoTextColor_string);
+    g_targetInfoTextColor = EQ_GetTextColorIdByName(g_targetInfoTextColor_string);
 
     return true;
 }
@@ -684,11 +840,11 @@ bool EQMACHUD_LoadMap(const char* filename)
             int lineB;
 
             int result =
-                sscanf
+                sscanf_s
                 (
                     line,
                     "%c %f, %f, %f, %f, %f, %f, %d, %d, %d",
-                    &lineType,
+                    &lineType, (rsize_t)1,
                     &mapLine.X1, &mapLine.Y1, &mapLine.Z1,
                     &mapLine.X2, &mapLine.Y2, &mapLine.Z2,
                     &lineR,      &lineG,      &lineB
@@ -698,7 +854,7 @@ bool EQMACHUD_LoadMap(const char* filename)
             mapLine.G = lineG;
             mapLine.B = lineB;
 
-            if (result == 10)
+            if (result == 10) // the number of values for a line in the map text file
             {
                 EQMACHUD_MapLineList_Add(&mapLine);
             }
@@ -718,15 +874,15 @@ bool EQMACHUD_LoadMap(const char* filename)
             char pointText[128];
 
             int result =
-                sscanf
+                sscanf_s
                 (
                     line,
                     "%c %f, %f, %f, %d, %d, %d, %d, %s",
-                    &lineType,
+                    &lineType, (rsize_t)1,
                     &mapPoint.X, &mapPoint.Y, &mapPoint.Z,
                     &pointR,     &pointG,     &pointB,
                     &pointSize,
-                    pointText
+                    pointText, (rsize_t)sizeof(pointText)
                 );
 
             mapPoint.R = pointR;
@@ -735,8 +891,7 @@ bool EQMACHUD_LoadMap(const char* filename)
 
             mapPoint.Size = pointSize;
 
-            size_t i;
-            for (i = 0; pointText[i] != '\0'; i++)
+            for (size_t i = 0; pointText[i] != '\0'; i++)
             {
                 if (pointText[i] == '_')
                 {
@@ -746,7 +901,7 @@ bool EQMACHUD_LoadMap(const char* filename)
 
             strcpy_s(mapPoint.Text, pointText);
 
-            if (result == 9)
+            if (result == 9) // the number of values for a point in the map text file
             {
                 EQMACHUD_MapPointList_Add(&mapPoint);
             }
@@ -806,8 +961,13 @@ void EQMACHUD_GuiRecalculateCoordinates()
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleEspDoorsX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleEspDoorsY = g_buttonExitY;
+    g_buttonToggleEspGroundSpawnX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_buttonToggleEspGroundSpawnY = g_buttonExitY;
+
+    buttonIndex += 1.0f;
+
+    g_buttonToggleEspDoorSpawnX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_buttonToggleEspDoorSpawnY = g_buttonExitY;
 
     buttonIndex += 1.0f;
 
@@ -858,6 +1018,11 @@ void EQMACHUD_GuiRecalculateCoordinates()
 
     buttonIndex += 1.0f;
 
+    g_mapButtonToggleRotateX = g_mapMaxX + g_elementOffset;
+    g_mapButtonToggleRotateY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
+
+    buttonIndex += 1.0f;
+
     g_mapButtonToggleZoneInfoX = g_mapMaxX + g_elementOffset;
     g_mapButtonToggleZoneInfoY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
@@ -883,14 +1048,8 @@ void EQMACHUD_GuiRecalculateCoordinates()
 
     buttonIndex += 1.0f;
 
-    g_mapButtonMinimizeX = g_mapMaxX - g_buttonWidth - g_elementOffset - g_buttonWidth;
-    g_mapButtonMinimizeY = g_mapY - g_buttonHeight - g_elementOffset;
-
     g_mapButtonMaximizeX = g_mapMaxX - g_buttonWidth;
     g_mapButtonMaximizeY = g_mapY - g_buttonHeight - g_elementOffset;
-
-    g_mapButtonRestoreX = g_mapX;
-    g_mapButtonRestoreY = g_mapY;
 }
 
 void EQMACHUD_MapZoomOut()
@@ -918,11 +1077,6 @@ void EQMACHUD_MapSetZoom(float zoom)
     g_mapZoom = zoom;
 }
 
-void EQMACHUD_MapToggleMinimized()
-{
-    EQ_ToggleBool(g_mapIsMinimized);
-}
-
 void EQMACHUD_MapToggleMaximized()
 {
     EQ_ToggleBool(g_mapIsMaximized);
@@ -933,6 +1087,11 @@ void EQMACHUD_MapToggleMaximized()
 void EQMACHUD_MapToggleHeightFilter()
 {
     EQ_ToggleBool(g_mapHeightFilterIsEnabled);
+}
+
+void EQMACHUD_MapToggleRotate()
+{
+    EQ_ToggleBool(g_mapRotateIsEnabled);
 }
 
 void EQMACHUD_MapToggleZoneInfo()
@@ -1010,9 +1169,14 @@ void EQMACHUD_ToggleEsp()
     EQ_ToggleBool(g_espIsEnabled);
 }
 
-void EQMACHUD_ToggleEspShowDoor()
+void EQMACHUD_ToggleEspShowGroundSpawn()
 {
-    EQ_ToggleBool(g_espShowDoorIsEnabled);
+    EQ_ToggleBool(g_espShowGroundSpawnIsEnabled);
+}
+
+void EQMACHUD_ToggleEspShowDoorSpawn()
+{
+    EQ_ToggleBool(g_espShowDoorSpawnIsEnabled);
 }
 
 void EQMACHUD_ToggleEspDistance()
@@ -1100,7 +1264,24 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
 
         if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
         {
-            g_bExit = 1;
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > 1000)
+            {
+                g_mouseClickTimer = currentTime;
+
+                BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
+
+                if (isInGame == 1)
+                {
+                    char unloadedText[128];
+                    sprintf_s(unloadedText, "%s exiting...", g_applicationName);
+
+                    EQ_CLASS_CEverQuest->dsp_chat(unloadedText);
+                }
+
+                g_bExit = 1;
+            }
         }
     }
 
@@ -1128,9 +1309,9 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
             {
-                g_mouseLeftClickTimer = currentTime;
+                g_mouseClickTimer = currentTime;
 
                 EQMACHUD_ToggleMap();
 
@@ -1170,9 +1351,9 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
             {
-                g_mouseLeftClickTimer = currentTime;
+                g_mouseClickTimer = currentTime;
 
                 EQMACHUD_ToggleEsp();
 
@@ -1193,7 +1374,7 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         EQMACHUD_IsPointInsideRectangle
         (
             mouseX, mouseY,
-            (int)g_buttonToggleEspDoorsX, (int)g_buttonToggleEspDoorsY,
+            (int)g_buttonToggleEspGroundSpawnX, (int)g_buttonToggleEspGroundSpawnY,
             (int)g_buttonWidth, (int)g_buttonHeight
         )
         == true
@@ -1201,9 +1382,9 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
     {
         EQ_CLASS_CDisplay->WriteTextHD2
         (
-            "ESP Doors",
-            (int)(g_buttonToggleEspDoorsX),
-            (int)(g_buttonToggleEspDoorsY + g_buttonHeight + g_elementOffset),
+            "ESP Ground Spawns",
+            (int)(g_buttonToggleEspGroundSpawnX),
+            (int)(g_buttonToggleEspGroundSpawnY + g_buttonHeight + g_elementOffset),
             g_buttonTextColorEnabled,
             fontArial14
         );
@@ -1212,19 +1393,61 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
             {
-                g_mouseLeftClickTimer = currentTime;
+                g_mouseClickTimer = currentTime;
 
-                EQMACHUD_ToggleEspShowDoor();
+                EQMACHUD_ToggleEspShowGroundSpawn();
 
-                if (g_espShowDoorIsEnabled == true)
+                if (g_espShowGroundSpawnIsEnabled == true)
                 {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Doors enabled.");
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Ground Spawns enabled.");
                 }
                 else
                 {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Doors disabled.");
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Ground Spawns disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_buttonToggleEspDoorSpawnX, (int)g_buttonToggleEspDoorSpawnY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "ESP Door Spawns",
+            (int)(g_buttonToggleEspDoorSpawnX),
+            (int)(g_buttonToggleEspDoorSpawnY + g_buttonHeight + g_elementOffset),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_ToggleEspShowDoorSpawn();
+
+                if (g_espShowDoorSpawnIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Door Spawns enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> ESP Door Spawns disabled.");
                 }
             }
         }
@@ -1254,9 +1477,9 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
             {
-                g_mouseLeftClickTimer = currentTime;
+                g_mouseClickTimer = currentTime;
 
                 EQMACHUD_ToggleEspDistance();
 
@@ -1296,9 +1519,9 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
             {
-                g_mouseLeftClickTimer = currentTime;
+                g_mouseClickTimer = currentTime;
 
                 EQMACHUD_ToggleBuffs();
 
@@ -1338,9 +1561,9 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
             {
-                g_mouseLeftClickTimer = currentTime;
+                g_mouseClickTimer = currentTime;
 
                 EQMACHUD_TogglePlayerInfo();
 
@@ -1380,9 +1603,9 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         {
             DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
 
-            if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
             {
-                g_mouseLeftClickTimer = currentTime;
+                g_mouseClickTimer = currentTime;
 
                 EQMACHUD_ToggleTargetInfo();
 
@@ -1398,480 +1621,450 @@ void EQMACHUD_DoButtonToolTipTextAndMouseClick()
         }
     }
 
-    if (g_mapIsMinimized == false)
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonZoomInX, (int)g_mapButtonZoomInY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
     {
-        if
+        EQ_CLASS_CDisplay->WriteTextHD2
         (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonZoomInX, (int)g_mapButtonZoomInY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
+            "Zoom In",
+            (int)(g_mapButtonZoomInX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonZoomInY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
         {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Zoom In",
-                (int)(g_mapButtonZoomInX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonZoomInY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                EQMACHUD_MapZoomIn();
-            }
+            EQMACHUD_MapZoomIn();
         }
+    }
 
-        if
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
         (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonZoomOutX, (int)g_mapButtonZoomOutY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
+            mouseX, mouseY,
+            (int)g_mapButtonZoomOutX, (int)g_mapButtonZoomOutY,
+            (int)g_buttonWidth, (int)g_buttonHeight
         )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Zoom Out",
-                (int)(g_mapButtonZoomOutX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonZoomOutY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                EQMACHUD_MapZoomOut();
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonZoom1X, (int)g_mapButtonZoom1Y,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Zoom 1x",
-                (int)(g_mapButtonZoom1X + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonZoom1Y - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                EQMACHUD_MapSetZoom(1.0f);
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleHeightFilterX, (int)g_mapButtonToggleHeightFilterY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Height Filter",
-                (int)(g_mapButtonToggleHeightFilterX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonToggleHeightFilterY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleHeightFilter();
-
-                    if (g_mapHeightFilterIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Height Filter enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Height Filter disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleLineColorX, (int)g_mapButtonToggleLineColorY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Line Color",
-                (int)(g_mapButtonToggleLineColorX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonToggleLineColorY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleLineColor();
-                }
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleZoneInfoX, (int)g_mapButtonToggleZoneInfoY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Zone Info",
-                (int)(g_mapButtonToggleZoneInfoX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonToggleZoneInfoY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleZoneInfo();
-
-                    if (g_mapZoneInfoIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Zone Info enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Zone Info disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleSpawnsX, (int)g_mapButtonToggleSpawnsY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Spawns",
-                (int)(g_mapButtonToggleSpawnsX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonToggleSpawnsY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleSpawns();
-
-                    if (g_mapSpawnsIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawns enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawns disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonTogglePointsX, (int)g_mapButtonTogglePointsY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Points (Labels)",
-                (int)(g_mapButtonTogglePointsX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonTogglePointsY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapTogglePoints();
-
-                    if (g_mapPointsIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Points enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Points disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleLinesX, (int)g_mapButtonToggleLinesY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Lines",
-                (int)(g_mapButtonToggleLinesX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonToggleLinesY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleLines();
-
-                    if (g_mapLinesIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Lines enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Lines disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonToggleSpawnDistanceX, (int)g_mapButtonToggleSpawnDistanceY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Spawn Distance",
-                (int)(g_mapButtonToggleSpawnDistanceX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonToggleSpawnDistanceY - 2.0f),
-                g_buttonTextColorEnabled,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleSpawnDistance();
-
-                    if (g_mapSpawnDistanceIsEnabled == true)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawn Distance enabled.");
-                    }
-                    else
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawn Distance disabled.");
-                    }
-                }
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonMinimizeX, (int)g_mapButtonMinimizeY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Minimize",
-                (int)(g_mapButtonMinimizeX),
-                (int)(g_mapButtonMinimizeY - g_elementOffset) - g_fontHeight,
-                g_buttonTextColorMinMaxClose,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleMinimized();
-                }
-            }
-        }
-
-        if
-        (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonMaximizeX, (int)g_mapButtonMaximizeY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
-        {
-            char buttonText[128];
-
-            if (g_mapIsMaximized == false)
-            {
-                strcpy_s(buttonText, "Maximize");
-            }
-            else
-            {
-                strcpy_s(buttonText, "Restore");
-            }
-
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                buttonText,
-                (int)(g_mapButtonMaximizeX),
-                (int)(g_mapButtonMaximizeY - g_elementOffset) - g_fontHeight,
-                g_buttonTextColorMinMaxClose,
-                fontArial14
-            );
-
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
-            {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
-                {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleMaximized();
-                }
-            }
-        }
-    } //if (g_mapIsMinimized == false)
-    else
+        == true
+    )
     {
-        if
+        EQ_CLASS_CDisplay->WriteTextHD2
         (
-            EQMACHUD_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapButtonRestoreX, (int)g_mapButtonRestoreY,
-                (int)g_buttonWidth, (int)g_buttonHeight
-            )
-            == true
-        )
+            "Zoom Out",
+            (int)(g_mapButtonZoomOutX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonZoomOutY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
         {
-            EQ_CLASS_CDisplay->WriteTextHD2
-            (
-                "Restore",
-                (int)(g_mapButtonRestoreX + g_buttonWidth + g_elementOffset),
-                (int)(g_mapButtonRestoreY - 2.0f),
-                g_buttonTextColorMinMaxClose,
-                fontArial14
-            );
+            EQMACHUD_MapZoomOut();
+        }
+    }
 
-            if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonZoom1X, (int)g_mapButtonZoom1Y,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Zoom 1x",
+            (int)(g_mapButtonZoom1X + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonZoom1Y - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            EQMACHUD_MapSetZoom(1.0f);
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleHeightFilterX, (int)g_mapButtonToggleHeightFilterY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Height Filter",
+            (int)(g_mapButtonToggleHeightFilterX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonToggleHeightFilterY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
             {
-                DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+                g_mouseClickTimer = currentTime;
 
-                if ((currentTime - g_mouseLeftClickTimer) > g_mouseLeftClickDelay)
+                EQMACHUD_MapToggleHeightFilter();
+
+                if (g_mapHeightFilterIsEnabled == true)
                 {
-                    g_mouseLeftClickTimer = currentTime;
-
-                    EQMACHUD_MapToggleMinimized();
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Height Filter enabled.");
                 }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Height Filter disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleRotateX, (int)g_mapButtonToggleRotateY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Rotate",
+            (int)(g_mapButtonToggleRotateX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonToggleRotateY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_MapToggleRotate();
+
+                if (g_mapRotateIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Rotate enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Rotate disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleLineColorX, (int)g_mapButtonToggleLineColorY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Line Color",
+            (int)(g_mapButtonToggleLineColorX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonToggleLineColorY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_MapToggleLineColor();
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleZoneInfoX, (int)g_mapButtonToggleZoneInfoY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Zone Info",
+            (int)(g_mapButtonToggleZoneInfoX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonToggleZoneInfoY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_MapToggleZoneInfo();
+
+                if (g_mapZoneInfoIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Zone Info enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Zone Info disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleSpawnsX, (int)g_mapButtonToggleSpawnsY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Spawns",
+            (int)(g_mapButtonToggleSpawnsX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonToggleSpawnsY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_MapToggleSpawns();
+
+                if (g_mapSpawnsIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawns enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawns disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonTogglePointsX, (int)g_mapButtonTogglePointsY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Points (Labels)",
+            (int)(g_mapButtonTogglePointsX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonTogglePointsY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_MapTogglePoints();
+
+                if (g_mapPointsIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Points enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Points disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleLinesX, (int)g_mapButtonToggleLinesY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Lines",
+            (int)(g_mapButtonToggleLinesX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonToggleLinesY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_MapToggleLines();
+
+                if (g_mapLinesIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Lines enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Lines disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonToggleSpawnDistanceX, (int)g_mapButtonToggleSpawnDistanceY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            "Spawn Distance",
+            (int)(g_mapButtonToggleSpawnDistanceX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonToggleSpawnDistanceY - 2.0f),
+            g_buttonTextColorEnabled,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_MapToggleSpawnDistance();
+
+                if (g_mapSpawnDistanceIsEnabled == true)
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawn Distance enabled.");
+                }
+                else
+                {
+                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawn Distance disabled.");
+                }
+            }
+        }
+    }
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            mouseX, mouseY,
+            (int)g_mapButtonMaximizeX, (int)g_mapButtonMaximizeY,
+            (int)g_buttonWidth, (int)g_buttonHeight
+        )
+        == true
+    )
+    {
+        char buttonText[128];
+        if (g_mapIsMaximized == false)
+        {
+            strcpy_s(buttonText, "Maximize");
+        }
+        else
+        {
+            strcpy_s(buttonText, "Restore");
+        }
+
+        EQ_CLASS_CDisplay->WriteTextHD2
+        (
+            buttonText,
+            (int)(g_mapButtonMaximizeX),
+            (int)(g_mapButtonMaximizeY - g_elementOffset) - g_fontHeight,
+            g_buttonTextColorMinMaxClose,
+            fontArial14
+        );
+
+        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+        {
+            DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+            if ((currentTime - g_mouseClickTimer) > g_mouseClickDelay)
+            {
+                g_mouseClickTimer = currentTime;
+
+                EQMACHUD_MapToggleMaximized();
             }
         }
     }
@@ -1934,14 +2127,28 @@ void EQMACHUD_DoExitRowButtons()
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
 
-    if (g_espShowDoorIsEnabled == false)
+    if (g_espShowGroundSpawnIsEnabled == false)
     {
         buttonColor = g_buttonColorDisabled;
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleEspDoorsX, g_buttonToggleEspDoorsY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("o", (int)(g_buttonToggleEspDoorsX + 3.0f), (int)(g_buttonToggleEspDoorsY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_buttonToggleEspGroundSpawnX, g_buttonToggleEspGroundSpawnY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("g", (int)(g_buttonToggleEspGroundSpawnX + 3.0f), (int)(g_buttonToggleEspGroundSpawnY - 3.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorEnabled;
+    buttonTextColor = g_buttonTextColorEnabled;
+
+    if (g_espShowDoorSpawnIsEnabled == false)
+    {
+        buttonColor = g_buttonColorDisabled;
+        buttonTextColor = g_buttonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_buttonToggleEspDoorSpawnX, g_buttonToggleEspDoorSpawnY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("o", (int)(g_buttonToggleEspDoorSpawnX + 3.0f), (int)(g_buttonToggleEspDoorSpawnY - 2.0f), buttonTextColor, fontArial14);
 
     g_numLinesDeferred += 4;
 
@@ -2023,308 +2230,495 @@ void EQMACHUD_DoMap()
         fontArial14
     );
 
-    if (g_mapIsMinimized == true)
+    EQ_DrawRectangle(g_mapX, g_mapY, g_mapWidth, g_mapHeight, g_mapBorderColor);
+
+    g_numLinesDeferred += 4;
+
+    int buttonColor = g_buttonColorEnabled;
+    int buttonTextColor = g_buttonTextColorEnabled;
+
+    EQ_DrawRectangle(g_mapButtonZoomInX, g_mapButtonZoomInY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonZoomInX + 3.0f), (int)(g_mapButtonZoomInY - 2.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    EQ_DrawRectangle(g_mapButtonZoomOutX, g_mapButtonZoomOutY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonZoomOutX + 4.0f), (int)(g_mapButtonZoomOutY - 3.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    EQ_DrawRectangle(g_mapButtonZoom1X, g_mapButtonZoom1Y, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonZoom1X + 4.0f), (int)(g_mapButtonZoom1Y - 2.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    EQ_DrawRectangle(g_mapButtonToggleLineColorX, g_mapButtonToggleLineColorY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonToggleLineColorX + 3.0f), (int)(g_mapButtonToggleLineColorY - 2.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorEnabled;
+    buttonTextColor = g_buttonTextColorEnabled;
+
+    if (g_mapHeightFilterIsEnabled == false)
     {
-        int buttonColor = g_buttonColorMinMaxClose;
-        int buttonTextColor = g_buttonTextColorMinMaxClose;
+        buttonColor = g_buttonColorDisabled;
+        buttonTextColor = g_buttonTextColorDisabled;
+    }
 
-        EQ_DrawRectangle(g_mapButtonRestoreX, g_mapButtonRestoreY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonRestoreX + 3.0f), (int)(g_mapButtonRestoreY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_mapButtonToggleHeightFilterX, g_mapButtonToggleHeightFilterY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("h", (int)(g_mapButtonToggleHeightFilterX + 3.0f), (int)(g_mapButtonToggleHeightFilterY - 2.0f), buttonTextColor, fontArial14);
 
-        g_numLinesDeferred += 4;
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorEnabled;
+    buttonTextColor = g_buttonTextColorEnabled;
+
+    if (g_mapRotateIsEnabled == false)
+    {
+        buttonColor = g_buttonColorDisabled;
+        buttonTextColor = g_buttonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_mapButtonToggleRotateX, g_mapButtonToggleRotateY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_mapButtonToggleRotateX + 4.0f), (int)(g_mapButtonToggleRotateY - 2.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorEnabled;
+    buttonTextColor = g_buttonTextColorEnabled;
+
+    if (g_mapZoneInfoIsEnabled == false)
+    {
+        buttonColor = g_buttonColorDisabled;
+        buttonTextColor = g_buttonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_mapButtonToggleZoneInfoX, g_mapButtonToggleZoneInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("z", (int)(g_mapButtonToggleZoneInfoX + 3.0f), (int)(g_mapButtonToggleZoneInfoY - 2.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorEnabled;
+    buttonTextColor = g_buttonTextColorEnabled;
+
+    if (g_mapSpawnsIsEnabled == false)
+    {
+        buttonColor = g_buttonColorDisabled;
+        buttonTextColor = g_buttonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_mapButtonToggleSpawnsX, g_mapButtonToggleSpawnsY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_mapButtonToggleSpawnsX + 3.0f), (int)(g_mapButtonToggleSpawnsY - 2.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorEnabled;
+    buttonTextColor = g_buttonTextColorEnabled;
+
+    if (g_mapPointsIsEnabled == false)
+    {
+        buttonColor = g_buttonColorDisabled;
+        buttonTextColor = g_buttonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_mapButtonTogglePointsX, g_mapButtonTogglePointsY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_mapButtonTogglePointsX + 3.0f), (int)(g_mapButtonTogglePointsY - 3.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorEnabled;
+    buttonTextColor = g_buttonTextColorEnabled;
+
+    if (g_mapLinesIsEnabled == false)
+    {
+        buttonColor = g_buttonColorDisabled;
+        buttonTextColor = g_buttonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_mapButtonToggleLinesX, g_mapButtonToggleLinesY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("l", (int)(g_mapButtonToggleLinesX + 5.0f), (int)(g_mapButtonToggleLinesY - 2.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorEnabled;
+    buttonTextColor = g_buttonTextColorEnabled;
+
+    if (g_mapSpawnDistanceIsEnabled == false)
+    {
+        buttonColor = g_buttonColorDisabled;
+        buttonTextColor = g_buttonTextColorDisabled;
+    }
+
+    EQ_DrawRectangle(g_mapButtonToggleSpawnDistanceX, g_mapButtonToggleSpawnDistanceY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_mapButtonToggleSpawnDistanceX + 3.0f), (int)(g_mapButtonToggleSpawnDistanceY - 2.0f), buttonTextColor, fontArial14);
+
+    g_numLinesDeferred += 4;
+
+    buttonColor = g_buttonColorMinMaxClose;
+    buttonTextColor = g_buttonTextColorMinMaxClose;
+
+    char mapButtonMaximizeText[8];
+    float mapButtonMaximizeTextOffsetX;
+    float mapButtonMaximizeTextOffsetY;
+    if (g_mapIsMaximized == false)
+    {
+        strcpy_s(mapButtonMaximizeText, "+");
+        mapButtonMaximizeTextOffsetX = 3.0;
+        mapButtonMaximizeTextOffsetY = 2.0;
     }
     else
     {
-        EQ_DrawRectangle(g_mapX, g_mapY, g_mapWidth, g_mapHeight, g_mapBorderColor);
+        strcpy_s(mapButtonMaximizeText, "-");
+        mapButtonMaximizeTextOffsetX = 4.0;
+        mapButtonMaximizeTextOffsetY = 2.0;
+    }
 
-        g_numLinesDeferred += 4;
+    EQ_DrawRectangle(g_mapButtonMaximizeX, g_mapButtonMaximizeY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2(mapButtonMaximizeText, (int)(g_mapButtonMaximizeX + mapButtonMaximizeTextOffsetX), (int)(g_mapButtonMaximizeY - mapButtonMaximizeTextOffsetY), buttonTextColor, fontArial14);
 
-        int buttonColor = g_buttonColorEnabled;
-        int buttonTextColor = g_buttonTextColorEnabled;
+    g_numLinesDeferred += 4;
 
-        EQ_DrawRectangle(g_mapButtonZoomInX, g_mapButtonZoomInY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonZoomInX + 3.0f), (int)(g_mapButtonZoomInY - 2.0f), buttonTextColor, fontArial14);
+    if (g_mapLinesIsEnabled == true)
+    {
+        struct _EQMAPLINE *mapLine = g_mapLineListHead;
 
-        g_numLinesDeferred += 4;
-
-        EQ_DrawRectangle(g_mapButtonZoomOutX, g_mapButtonZoomOutY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonZoomOutX + 4.0f), (int)(g_mapButtonZoomOutY - 3.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        EQ_DrawRectangle(g_mapButtonZoom1X, g_mapButtonZoom1Y, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonZoom1X + 4.0f), (int)(g_mapButtonZoom1Y - 2.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        EQ_DrawRectangle(g_mapButtonToggleLineColorX, g_mapButtonToggleLineColorY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonToggleLineColorX + 3.0f), (int)(g_mapButtonToggleLineColorY - 2.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        buttonColor = g_buttonColorEnabled;
-        buttonTextColor = g_buttonTextColorEnabled;
-
-        if (g_mapHeightFilterIsEnabled == false)
+        while (mapLine)
         {
-            buttonColor = g_buttonColorDisabled;
-            buttonTextColor = g_buttonTextColorDisabled;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleHeightFilterX, g_mapButtonToggleHeightFilterY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("h", (int)(g_mapButtonToggleHeightFilterX + 3.0f), (int)(g_mapButtonToggleHeightFilterY - 2.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        buttonColor = g_buttonColorEnabled;
-        buttonTextColor = g_buttonTextColorEnabled;
-
-        if (g_mapZoneInfoIsEnabled == false)
-        {
-            buttonColor = g_buttonColorDisabled;
-            buttonTextColor = g_buttonTextColorDisabled;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleZoneInfoX, g_mapButtonToggleZoneInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("z", (int)(g_mapButtonToggleZoneInfoX + 3.0f), (int)(g_mapButtonToggleZoneInfoY - 2.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        buttonColor = g_buttonColorEnabled;
-        buttonTextColor = g_buttonTextColorEnabled;
-
-        if (g_mapSpawnsIsEnabled == false)
-        {
-            buttonColor = g_buttonColorDisabled;
-            buttonTextColor = g_buttonTextColorDisabled;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleSpawnsX, g_mapButtonToggleSpawnsY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_mapButtonToggleSpawnsX + 3.0f), (int)(g_mapButtonToggleSpawnsY - 2.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        buttonColor = g_buttonColorEnabled;
-        buttonTextColor = g_buttonTextColorEnabled;
-
-        if (g_mapPointsIsEnabled == false)
-        {
-            buttonColor = g_buttonColorDisabled;
-            buttonTextColor = g_buttonTextColorDisabled;
-        }
-
-        EQ_DrawRectangle(g_mapButtonTogglePointsX, g_mapButtonTogglePointsY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_mapButtonTogglePointsX + 3.0f), (int)(g_mapButtonTogglePointsY - 3.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        buttonColor = g_buttonColorEnabled;
-        buttonTextColor = g_buttonTextColorEnabled;
-
-        if (g_mapLinesIsEnabled == false)
-        {
-            buttonColor = g_buttonColorDisabled;
-            buttonTextColor = g_buttonTextColorDisabled;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleLinesX, g_mapButtonToggleLinesY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("l", (int)(g_mapButtonToggleLinesX + 5.0f), (int)(g_mapButtonToggleLinesY - 2.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        buttonColor = g_buttonColorEnabled;
-        buttonTextColor = g_buttonTextColorEnabled;
-
-        if (g_mapSpawnDistanceIsEnabled == false)
-        {
-            buttonColor = g_buttonColorDisabled;
-            buttonTextColor = g_buttonTextColorDisabled;
-        }
-
-        EQ_DrawRectangle(g_mapButtonToggleSpawnDistanceX, g_mapButtonToggleSpawnDistanceY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_mapButtonToggleSpawnDistanceX + 3.0f), (int)(g_mapButtonToggleSpawnDistanceY - 2.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        buttonColor = g_buttonColorMinMaxClose;
-        buttonTextColor = g_buttonTextColorMinMaxClose;
-
-        EQ_DrawRectangle(g_mapButtonMinimizeX, g_mapButtonMinimizeY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonMinimizeX + 4.0f), (int)(g_mapButtonMinimizeY - 3.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        EQ_DrawRectangle(g_mapButtonMaximizeX, g_mapButtonMaximizeY, g_buttonWidth, g_buttonHeight, buttonColor);
-        EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonMaximizeX + 3.0f), (int)(g_mapButtonMaximizeY - 2.0f), buttonTextColor, fontArial14);
-
-        g_numLinesDeferred += 4;
-
-        if (g_mapLinesIsEnabled == true)
-        {
-            struct _EQMAPLINE *mapLine = g_mapLineListHead;
-
-            while (mapLine)
+            if (g_mapHeightFilterIsEnabled == true)
             {
-                if (g_mapHeightFilterIsEnabled == true)
+                if (g_mapHeightFilterLow > 0.0f)
                 {
-                    if (g_mapHeightFilterLow > 0.0f)
+                    if
+                    (
+                        mapLine->Z1 < (playerSpawn->Z - g_mapHeightFilterLow) ||
+                        mapLine->Z2 < (playerSpawn->Z - g_mapHeightFilterLow)
+                    )
                     {
-                        if
-                        (
-                            mapLine->Z1 < (playerSpawn->Z - g_mapHeightFilterLow) ||
-                            mapLine->Z2 < (playerSpawn->Z - g_mapHeightFilterLow)
-                        )
-                        {
-                            mapLine = mapLine->Next;
-                            continue;
-                        }
-                    }
-
-                    if (g_mapHeightFilterHigh > 0.0f)
-                    {
-                        if
-                        (
-                            mapLine->Z1 > (playerSpawn->Z + g_mapHeightFilterHigh) ||
-                            mapLine->Z2 > (playerSpawn->Z + g_mapHeightFilterHigh)
-                        )
-                        {
-                            mapLine = mapLine->Next;
-                            continue;
-                        }
+                        mapLine = mapLine->Next;
+                        continue;
                     }
                 }
 
-                EQLINE line;
-                line.X1 = ((mapLine->X1 * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-                line.Y1 = ((mapLine->Y1 * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
-                line.Z1 = 1.0f;
-                line.X2 = ((mapLine->X2 * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-                line.Y2 = ((mapLine->Y2 * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
-                line.Z2 = 1.0f;
-
-                if
-                (
-                    line.X1 > g_mapMaxX &&
-                    line.X2 > g_mapMaxX &&
-                    line.X1 < g_mapMinX &&
-                    line.X2 < g_mapMinX
-                )
+                if (g_mapHeightFilterHigh > 0.0f)
                 {
-                    mapLine = mapLine->Next;
-                    continue;
-                }
-
-                if
-                (
-                    line.Y1 > g_mapMaxY &&
-                    line.Y2 > g_mapMaxY &&
-                    line.Y1 < g_mapMinY &&
-                    line.Y2 < g_mapMinY
-                )
-                {
-                    mapLine = mapLine->Next;
-                    continue;
-                }
-
-                // Cohen-Sutherland algorithm
-                // clip the map lines to the rectangle
-                bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
-
-                // only use 75% of the maximum allowed number of deferred objects
-                // the game needs to reserve some to draw stuff
-                // this also leaves some extra to draw the player arrow, target line, etc
-                if (g_numLinesDeferred > (int)(EQ_GRAPHICS_DLL_DEFERRED_OBJECTS_MAX * 0.75f))
-                {
-                    bDrawLine = false;
-                }
-
-                if (bDrawLine == true)
-                {
-                    int mapLineColor = g_mapLineColor;
-
-                    if (mapLineColor == 0xDEADBEEF)
+                    if
+                    (
+                        mapLine->Z1 > (playerSpawn->Z + g_mapHeightFilterHigh) ||
+                        mapLine->Z2 > (playerSpawn->Z + g_mapHeightFilterHigh)
+                    )
                     {
-                        EQARGBCOLOR argbColor;
-                        argbColor.A = 0xFF;
-                        argbColor.R = mapLine->R;
-                        argbColor.G = mapLine->G;
-                        argbColor.B = mapLine->B;
-
-                        mapLineColor = argbColor.ARGB;
-
-                        // replace black lines with white lines for visibility
-                        if (g_mapReplaceBlackLinesWithWhiteLinesIsEnabled == true)
-                        {
-                            if (mapLineColor == 0xFF000000)
-                            {
-                                mapLineColor = 0xFFFFFFFF;
-                            }
-                        }
+                        mapLine = mapLine->Next;
+                        continue;
                     }
-
-                    EQGfx_Dx8__t3dDeferLine(&line, mapLineColor);
-
-                    g_numLinesDeferred += 1;
                 }
+            }
 
+            EQLINE line;
+            line.X1 = ((mapLine->X1 * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
+            line.Y1 = ((mapLine->Y1 * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+            line.Z1 = 1.0f;
+            line.X2 = ((mapLine->X2 * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
+            line.Y2 = ((mapLine->Y2 * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+            line.Z2 = 1.0f;
+
+            if (g_mapRotateIsEnabled == true)
+            {
+                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
+                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
+            }
+
+            if
+            (
+                line.X1 > g_mapMaxX &&
+                line.X2 > g_mapMaxX &&
+                line.X1 < g_mapMinX &&
+                line.X2 < g_mapMinX
+            )
+            {
                 mapLine = mapLine->Next;
+                continue;
             }
-        } // if (g_mapLinesIsEnabled == true)
 
-        if (g_mapTargetLineIsEnabled == true)
-        {
-            if (targetSpawn && targetSpawn != playerSpawn)
+            if
+            (
+                line.Y1 > g_mapMaxY &&
+                line.Y2 > g_mapMaxY &&
+                line.Y1 < g_mapMinY &&
+                line.Y2 < g_mapMinY
+            )
             {
-                EQLINE line;
-                line.X1 = g_mapOriginX;
-                line.Y1 = g_mapOriginY;
-                line.Z1 = 1.0f;
-                line.X2 = ((-targetSpawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-                line.Y2 = ((-targetSpawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
-                line.Z2 = 1.0f;
+                mapLine = mapLine->Next;
+                continue;
+            }
 
-                bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+            // Cohen-Sutherland algorithm
+            // clip the map lines to the rectangle
+            bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
 
-                if (bDrawLine == true)
+            // only use 75% of the maximum allowed number of deferred objects
+            // the game needs to reserve some to draw stuff
+            // this also leaves some extra to draw the player arrow, target line, etc
+            if (g_numLinesDeferred > (int)(EQ_GRAPHICS_DLL_DEFERRED_OBJECTS_MAX * 0.75f))
+            {
+                bDrawLine = false;
+            }
+
+            if (bDrawLine == true)
+            {
+                int mapLineColor = g_mapLineColor;
+
+                if (mapLineColor == 0xDEADBEEF)
                 {
-                    EQGfx_Dx8__t3dDeferLine(&line, g_mapTargetLineColor);
+                    EQARGBCOLOR argbColor;
+                    argbColor.A = 0xFF;
+                    argbColor.R = mapLine->R;
+                    argbColor.G = mapLine->G;
+                    argbColor.B = mapLine->B;
 
-                    g_numLinesDeferred += 1;
+                    mapLineColor = argbColor.ARGB;
+
+                    // replace black lines with white lines for visibility
+                    if (g_mapReplaceBlackLinesWithWhiteLinesIsEnabled == true)
+                    {
+                        if (mapLineColor == 0xFF000000)
+                        {
+                            mapLineColor = 0xFFFFFFFF;
+                        }
+                    }
                 }
+
+                EQGfx_Dx8__t3dDeferLine(&line, mapLineColor);
+
+                g_numLinesDeferred += 1;
+            }
+
+            mapLine = mapLine->Next;
+        }
+    } // if (g_mapLinesIsEnabled == true)
+
+    if (g_mapTargetLineIsEnabled == true)
+    {
+        if (targetSpawn && targetSpawn != playerSpawn)
+        {
+            EQLINE line;
+            line.X1 = g_mapOriginX;
+            line.Y1 = g_mapOriginY;
+            line.Z1 = 1.0f;
+            line.X2 = ((-targetSpawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
+            line.Y2 = ((-targetSpawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+            line.Z2 = 1.0f;
+
+            if (g_mapRotateIsEnabled == true)
+            {
+                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
+                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
+            }
+
+            bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+
+            if (bDrawLine == true)
+            {
+                EQGfx_Dx8__t3dDeferLine(&line, g_mapTargetLineColor);
+
+                g_numLinesDeferred += 1;
             }
         }
+    }
 
-        if (g_mapPointsIsEnabled == true && g_mapIsMaximized == true)
+    if (g_mapPointsIsEnabled == true && g_mapIsMaximized == true)
+    {
+        struct _EQMAPPOINT *mapPoint = g_mapPointListHead;
+
+        while (mapPoint)
         {
-            struct _EQMAPPOINT *mapPoint = g_mapPointListHead;
+            float pointX = (((mapPoint->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom));
+            float pointY = (((mapPoint->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom));
 
-            while (mapPoint)
+            if (g_mapRotateIsEnabled == true)
             {
-                int pointX = (int)(((mapPoint->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom));
-                int pointY = (int)(((mapPoint->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom));
+                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, pointX, pointY, playerSpawn->Heading);
+            }
 
-                if
-                (
-                    pointX >= g_mapMaxX ||
-                    pointY >= g_mapMaxY ||
-                    pointX <= g_mapMinX ||
-                    pointY <= g_mapMinY
-                )
+            if
+            (
+                pointX >= g_mapMaxX ||
+                pointY >= g_mapMaxY ||
+                pointX <= g_mapMinX ||
+                pointY <= g_mapMinY
+            )
+            {
+                mapPoint = mapPoint->Next;
+                continue;
+            }
+
+            char pointText[128];
+            sprintf_s(pointText, "+ %s", mapPoint->Text);
+
+            EQ_CLASS_CDisplay->WriteTextHD2(pointText, (int)pointX, (int)pointY, g_mapPointTextColor, fontArial14);
+
+            mapPoint = mapPoint->Next;
+        }
+    }
+
+    if (g_mapSpawnsIsEnabled == true)
+    {
+        spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+        while (spawn)
+        {
+            if (spawn == playerSpawn)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+
+            if (spawn != targetSpawn)
+            {
+                if (g_mapShowPlayerIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
                 {
-                    mapPoint = mapPoint->Next;
+                    spawn = spawn->Next;
                     continue;
                 }
 
-                char pointText[128];
-                sprintf_s(pointText, "+ %s", mapPoint->Text);
+                if (g_mapShowPlayerCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
 
-                EQ_CLASS_CDisplay->WriteTextHD2(pointText, pointX, pointY, g_mapPointTextColor, fontArial14);
+                if (g_mapShowNpcIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
 
-                mapPoint = mapPoint->Next;
+                if (g_mapShowNpcCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
             }
+
+            EQLOCATION spawnLocation = {spawn->Y, spawn->X, spawn->Z};
+
+            float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
+
+            if (g_mapSpawnDistanceIsEnabled == true)
+            {
+                bool applyDistance = false;
+
+                if (g_mapSpawnDistancePlayerIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
+                {
+                    applyDistance = true;
+                }
+
+                if (g_mapSpawnDistancePlayerCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+                {
+                    applyDistance = true;
+                }
+
+                if (g_mapSpawnDistanceNpcIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC)
+                {
+                    applyDistance = true;
+                }
+
+                if (g_mapSpawnDistanceNpcCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+                {
+                    applyDistance = true;
+                }
+
+                // target is always visible
+                if (spawn == targetSpawn)
+                {
+                    applyDistance = false;
+                }
+
+                if (applyDistance == true && spawnDistance > g_mapSpawnDistance)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
+            }
+
+            DWORD textColor = EQ_TEXT_COLOR_WHITE;
+
+            switch (spawn->Type)
+            {
+                case EQ_SPAWN_TYPE_PLAYER:
+                    textColor = g_mapPlayerTextColor;
+                    break;
+
+                case EQ_SPAWN_TYPE_PLAYER_CORPSE:
+                    textColor = g_mapPlayerCorpseTextColor;
+                    break;
+
+                case EQ_SPAWN_TYPE_NPC:
+                    textColor = g_mapNpcTextColor;
+                    break;
+
+                case EQ_SPAWN_TYPE_NPC_CORPSE:
+                    textColor = g_mapNpcCorpseTextColor;
+                    break;
+            }
+
+            for (size_t i = 0; i < EQ_GROUP_MEMBERS_MAX; i++)
+            {
+                if (spawn == groupList->GroupMember[i])
+                {
+                    textColor = g_mapGroupMemberTextColor;
+                    break;
+                }
+            }
+
+            if (spawn == targetSpawn)
+            {
+                textColor = g_mapTargetTextColor;
+            }
+
+            if (spawn->IsGameMaster == 1)
+            {
+                textColor = g_mapGameMasterTextColor;
+            }
+
+            float mapSpawnX = (((-spawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom));
+            float mapSpawnY = (((-spawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom));
+
+            if (g_mapRotateIsEnabled == true)
+            {
+                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, mapSpawnX, mapSpawnY, playerSpawn->Heading);
+            }
+
+            if
+            (
+                mapSpawnX >= g_mapMaxX ||
+                mapSpawnY >= g_mapMaxY ||
+                mapSpawnX <= g_mapMinX ||
+                mapSpawnY <= g_mapMinY
+            )
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+
+            if (g_mapIsMaximized == false)
+            {
+                EQ_CLASS_CDisplay->WriteTextHD2("*", (int)mapSpawnX, (int)mapSpawnY, textColor, fontArial14);
+            }
+            else
+            {
+                const char* spawnName = EQ_CLASS_CEverQuest->trimName(spawn->Name);
+
+                char spawnText[128];
+                sprintf_s(spawnText, "+ %s", spawnName);
+
+                EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mapSpawnX, (int)mapSpawnY, textColor, fontArial14);
+            }
+
+            spawn = spawn->Next;
         }
 
-        if (g_mapSpawnsIsEnabled == true)
+        if (g_mapYourselfCorpseLineIsEnabled == true)
         {
             spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
 
@@ -2336,320 +2730,188 @@ void EQMACHUD_DoMap()
                     continue;
                 }
 
-                if (spawn != targetSpawn)
-                {
-                    if (g_mapShowPlayerIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
-                    {
-                        spawn = spawn->Next;
-                        continue;
-                    }
-
-                    if (g_mapShowPlayerCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
-                    {
-                        spawn = spawn->Next;
-                        continue;
-                    }
-
-                    if (g_mapShowNpcIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC)
-                    {
-                        spawn = spawn->Next;
-                        continue;
-                    }
-
-                    if (g_mapShowNpcCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
-                    {
-                        spawn = spawn->Next;
-                        continue;
-                    }
-                }
-
-                EQLOCATION spawnLocation = {spawn->Y, spawn->X, spawn->Z};
-
-                float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
-
-                if (g_mapSpawnDistanceIsEnabled == true)
-                {
-                    bool applyDistance = false;
-
-                    if (g_mapSpawnDistancePlayerIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
-                    {
-                        applyDistance = true;
-                    }
-
-                    if (g_mapSpawnDistancePlayerCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
-                    {
-                        applyDistance = true;
-                    }
-
-                    if (g_mapSpawnDistanceNpcIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC)
-                    {
-                        applyDistance = true;
-                    }
-
-                    if (g_mapSpawnDistanceNpcCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
-                    {
-                        applyDistance = true;
-                    }
-
-                    // target is always visible
-                    if (spawn == targetSpawn)
-                    {
-                        applyDistance = false;
-                    }
-
-                    if (applyDistance == true && spawnDistance > g_mapSpawnDistance)
-                    {
-                        spawn = spawn->Next;
-                        continue;
-                    }
-                }
-
-                DWORD textColor = EQ_TEXT_COLOR_WHITE;
-
-                switch (spawn->Type)
-                {
-                    case EQ_SPAWN_TYPE_PLAYER:
-                        textColor = g_mapPlayerTextColor;
-                        break;
-
-                    case EQ_SPAWN_TYPE_PLAYER_CORPSE:
-                        textColor = g_mapPlayerCorpseTextColor;
-                        break;
-
-                    case EQ_SPAWN_TYPE_NPC:
-                        textColor = g_mapNpcTextColor;
-                        break;
-
-                    case EQ_SPAWN_TYPE_NPC_CORPSE:
-                        textColor = g_mapNpcCorpseTextColor;
-                        break;
-                }
-
-                for (size_t i = 0; i < EQ_GROUP_MEMBERS_MAX; i++)
-                {
-                    if (spawn == groupList->GroupMember[i])
-                    {
-                        textColor = g_mapGroupMemberTextColor;
-                        break;
-                    }
-                }
-
-                if (spawn == targetSpawn)
-                {
-                    textColor = g_mapTargetTextColor;
-                }
-
-                if (spawn->IsGameMaster == 1)
-                {
-                    textColor = g_mapGameMasterTextColor;
-                }
-
-                int mapSpawnX = (int)(((-spawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom));
-                int mapSpawnY = (int)(((-spawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom));
-
-                if
-                (
-                    mapSpawnX >= g_mapMaxX ||
-                    mapSpawnY >= g_mapMaxY ||
-                    mapSpawnX <= g_mapMinX ||
-                    mapSpawnY <= g_mapMinY
-                )
+                if (spawn->Type != EQ_SPAWN_TYPE_PLAYER_CORPSE)
                 {
                     spawn = spawn->Next;
                     continue;
                 }
 
-                if (g_mapIsMaximized == false)
+                if (std::strstr(spawn->Name, playerSpawn->Name) != NULL)
                 {
-                    EQ_CLASS_CDisplay->WriteTextHD2("*", mapSpawnX, mapSpawnY, textColor, fontArial14);
-                }
-                else
-                {
-                    const char* spawnName = EQ_CLASS_CEverQuest->trimName(spawn->Name);
+                    EQLINE line;
+                    line.X1 = g_mapOriginX;
+                    line.Y1 = g_mapOriginY;
+                    line.Z1 = 1.0f;
+                    line.X2 = ((-spawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
+                    line.Y2 = ((-spawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+                    line.Z2 = 1.0f;
 
-                    char spawnText[128];
-                    sprintf_s(spawnText, "+ %s", spawnName);
+                    if (g_mapRotateIsEnabled == true)
+                    {
+                        EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
+                        EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
+                    }
 
-                    EQ_CLASS_CDisplay->WriteTextHD2(spawnText, mapSpawnX, mapSpawnY, textColor, fontArial14);
+                    bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+
+                    if (bDrawLine == true)
+                    {
+                        EQGfx_Dx8__t3dDeferLine(&line, g_mapCorpseLineColor);
+
+                        g_numLinesDeferred += 1;
+                    }
                 }
 
                 spawn = spawn->Next;
             }
+        }
+    } // if (g_mapSpawnsIsEnabled == true)
 
-            if (g_mapYourselfCorpseLineIsEnabled == true)
-            {
-                spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+    EQLINE mapCenterLineHorizontal;
+    mapCenterLineHorizontal.X1 = g_mapOriginX - g_mapCenterLineSize;
+    mapCenterLineHorizontal.Y1 = g_mapOriginY;
+    mapCenterLineHorizontal.Z1 = 1.0f;
+    mapCenterLineHorizontal.X2 = g_mapOriginX + g_mapCenterLineSize;
+    mapCenterLineHorizontal.Y2 = g_mapOriginY;
+    mapCenterLineHorizontal.Z2 = 1.0f;
 
-                while (spawn)
-                {
-                    if (spawn == playerSpawn)
-                    {
-                        spawn = spawn->Next;
-                        continue;
-                    }
+    EQLINE mapCenterLineVertical;
+    mapCenterLineVertical.X1 = g_mapOriginX;
+    mapCenterLineVertical.Y1 = g_mapOriginY  - g_mapCenterLineSize;
+    mapCenterLineVertical.Z1 = 1.0f;
+    mapCenterLineVertical.X2 = g_mapOriginX;
+    mapCenterLineVertical.Y2 = g_mapOriginY  + g_mapCenterLineSize;
+    mapCenterLineVertical.Z2 = 1.0f;
 
-                    if (spawn->Type != EQ_SPAWN_TYPE_PLAYER_CORPSE)
-                    {
-                        spawn = spawn->Next;
-                        continue;
-                    }
+    EQGfx_Dx8__t3dDeferLine(&mapCenterLineHorizontal, g_mapArrowColor);
+    EQGfx_Dx8__t3dDeferLine(&mapCenterLineVertical,   g_mapArrowColor);
 
-                    if (std::strstr(spawn->Name, playerSpawn->Name) != NULL)
-                    {
-                        EQLINE line;
-                        line.X1 = g_mapOriginX;
-                        line.Y1 = g_mapOriginY;
-                        line.Z1 = 1.0f;
-                        line.X2 = ((-spawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-                        line.Y2 = ((-spawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
-                        line.Z2 = 1.0f;
+    if (g_mapArrowIsEnabled == true && g_mapRotateIsEnabled == false)
+    {
+        float playerHeadingC = playerSpawn->Heading;
 
-                        bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+        playerHeadingC = playerHeadingC - 128.0f;
 
-                        if (bDrawLine == true)
-                        {
-                            EQGfx_Dx8__t3dDeferLine(&line, g_mapCorpseLineColor);
-
-                            g_numLinesDeferred += 1;
-                        }
-                    }
-
-                    spawn = spawn->Next;
-                }
-            }
-        } // if (g_mapSpawnsIsEnabled == true)
-
-        if (g_mapArrowIsEnabled == true)
+        if (playerHeadingC < 0.0f)
         {
-            EQLINE mapCenterLineHorizontal;
-            mapCenterLineHorizontal.X1 = g_mapOriginX - g_mapCenterLineSize;
-            mapCenterLineHorizontal.Y1 = g_mapOriginY;
-            mapCenterLineHorizontal.Z1 = 1.0f;
-            mapCenterLineHorizontal.X2 = g_mapOriginX + g_mapCenterLineSize;
-            mapCenterLineHorizontal.Y2 = g_mapOriginY;
-            mapCenterLineHorizontal.Z2 = 1.0f;
+            playerHeadingC = playerHeadingC + 512.0f;
+        }
 
-            EQLINE mapCenterLineVertical;
-            mapCenterLineVertical.X1 = g_mapOriginX;
-            mapCenterLineVertical.Y1 = g_mapOriginY  - g_mapCenterLineSize;
-            mapCenterLineVertical.Z1 = 1.0f;
-            mapCenterLineVertical.X2 = g_mapOriginX;
-            mapCenterLineVertical.Y2 = g_mapOriginY  + g_mapCenterLineSize;
-            mapCenterLineVertical.Z2 = 1.0f;
+        float playerHeadingRadiansC = playerHeadingC * (g_mathPi / 256.0f);
 
-            EQGfx_Dx8__t3dDeferLine(&mapCenterLineHorizontal, g_mapArrowColor);
-            EQGfx_Dx8__t3dDeferLine(&mapCenterLineVertical,   g_mapArrowColor);
+        float arrowAddCX = std::cosf(playerHeadingRadiansC);
+        arrowAddCX = arrowAddCX * g_mapArrowRadius;
 
-            float playerHeadingC = playerSpawn->Heading;
+        float arrowAddCY = std::sinf(playerHeadingRadiansC);
+        arrowAddCY = arrowAddCY * g_mapArrowRadius;
 
-            playerHeadingC = playerHeadingC - 128.0f;
+        float arrowCX = -playerSpawn->X - arrowAddCX;
+        float arrowCY = -playerSpawn->Y + arrowAddCY;
 
-            if (playerHeadingC < 0.0f)
-            {
-                playerHeadingC = playerHeadingC + 512.0f;
-            }
+        float playerHeadingB = playerHeadingC;
 
-            float playerHeadingRadiansC = playerHeadingC * g_mathPi / 256.0f;
+        playerHeadingB = playerHeadingB - 32.0f;
 
-            float arrowAddCX = std::cosf(playerHeadingRadiansC);
-            arrowAddCX = arrowAddCX * g_mapArrowRadius;
-
-            float arrowAddCY = std::sinf(playerHeadingRadiansC);
-            arrowAddCY = arrowAddCY * g_mapArrowRadius;
-
-            float arrowCX = -playerSpawn->X - arrowAddCX;
-            float arrowCY = -playerSpawn->Y + arrowAddCY;
-
-            float playerHeadingB = playerHeadingC;
-
-            playerHeadingB = playerHeadingB - 32.0f;
-
-            if (playerHeadingB < 0.0f)
-            {
-                playerHeadingB = playerHeadingB + 512.0f;
-            }
-
-            float playerHeadingRadiansB = playerHeadingB * g_mathPi / 256.0f;
-
-            float arrowAddBX = std::cosf(playerHeadingRadiansB);
-            arrowAddBX = arrowAddBX * (g_mapArrowRadius * 0.5f);
-
-            float arrowAddBY = std::sinf(playerHeadingRadiansB);
-            arrowAddBY = arrowAddBY * (g_mapArrowRadius * 0.5f);
-
-            float arrowBX = arrowCX + arrowAddBX;
-            float arrowBY = arrowCY - arrowAddBY;
-
-            float playerHeadingA = playerHeadingC;
-
-            playerHeadingA = playerHeadingA + 32.0f;
-
-            if (playerHeadingA > 512.0f)
-            {
-                playerHeadingA = playerHeadingA - 512.0f;
-            }
-
-            float playerHeadingRadiansA = playerHeadingA * 3.14159265358979f / 256.0f;
-
-            float arrowAddAX = std::cosf(playerHeadingRadiansA);
-            arrowAddAX = arrowAddAX * (g_mapArrowRadius * 0.5f);
-
-            float arrowAddAY = std::sinf(playerHeadingRadiansA);
-            arrowAddAY = arrowAddAY * (g_mapArrowRadius * 0.5f);
-
-            float arrowAX = arrowCX + arrowAddAX;
-            float arrowAY = arrowCY - arrowAddAY;
-
-            float mapArrowCX = (arrowCX + g_mapOriginX) + playerSpawn->X;
-            float mapArrowCY = (arrowCY + g_mapOriginY) + playerSpawn->Y;
-
-            float mapArrowBX = (arrowBX + g_mapOriginX) + playerSpawn->X;
-            float mapArrowBY = (arrowBY + g_mapOriginY) + playerSpawn->Y;
-
-            float mapArrowAX = (arrowAX + g_mapOriginX) + playerSpawn->X;
-            float mapArrowAY = (arrowAY + g_mapOriginY) + playerSpawn->Y;
-
-            EQLINE mapArrowLineA;
-            mapArrowLineA.X1 = mapArrowCX;
-            mapArrowLineA.Y1 = mapArrowCY;
-            mapArrowLineA.Z1 = 1.0f;
-            mapArrowLineA.X2 = mapArrowAX;
-            mapArrowLineA.Y2 = mapArrowAY;
-            mapArrowLineA.Z2 = 1.0f;
-
-            EQLINE mapArrowLineB;
-            mapArrowLineB.X1 = mapArrowCX;
-            mapArrowLineB.Y1 = mapArrowCY;
-            mapArrowLineB.Z1 = 1.0f;
-            mapArrowLineB.X2 = mapArrowBX;
-            mapArrowLineB.Y2 = mapArrowBY;
-            mapArrowLineB.Z2 = 1.0f;
-
-            EQLINE mapArrowLineC;
-            mapArrowLineC.X1 = g_mapOriginX;
-            mapArrowLineC.Y1 = g_mapOriginY;
-            mapArrowLineC.Z1 = 1.0f;
-            mapArrowLineC.X2 = mapArrowCX;
-            mapArrowLineC.Y2 = mapArrowCY;
-            mapArrowLineC.Z2 = 1.0f;
-
-            EQGfx_Dx8__t3dDeferLine(&mapArrowLineA, g_mapArrowColor);
-            EQGfx_Dx8__t3dDeferLine(&mapArrowLineB, g_mapArrowColor);
-            EQGfx_Dx8__t3dDeferLine(&mapArrowLineC, g_mapArrowColor);
-        } // if (g_mapArrowIsEnabled == true)
-
-        if (g_mapZoneInfoIsEnabled == true)
+        if (playerHeadingB < 0.0f)
         {
-            char zoneText[128];
-            sprintf_s(zoneText, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
-            EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)(g_mapMaxY + g_elementOffset), g_mapZoneInfoTextColor, fontArial14);
+            playerHeadingB = playerHeadingB + 512.0f;
+        }
 
-            if (g_mapIsMaximized == true)
-            {
-                char locationText[128];
-                sprintf_s(locationText, "Location: %.2f, %.2f, %.2f", playerLocation.Y, playerLocation.X, playerLocation.Z);
-                EQ_CLASS_CDisplay->WriteTextHD2(locationText, (int)g_mapX, (int)(g_mapMaxY + g_elementOffset + g_elementOffset) + g_fontHeight, g_mapZoneInfoTextColor, fontArial14);
-            }
+        float playerHeadingRadiansB = playerHeadingB * (g_mathPi / 256.0f);
+
+        float arrowAddBX = std::cosf(playerHeadingRadiansB);
+        arrowAddBX = arrowAddBX * (g_mapArrowRadius * 0.5f);
+
+        float arrowAddBY = std::sinf(playerHeadingRadiansB);
+        arrowAddBY = arrowAddBY * (g_mapArrowRadius * 0.5f);
+
+        float arrowBX = arrowCX + arrowAddBX;
+        float arrowBY = arrowCY - arrowAddBY;
+
+        float playerHeadingA = playerHeadingC;
+
+        playerHeadingA = playerHeadingA + 32.0f;
+
+        if (playerHeadingA > 512.0f)
+        {
+            playerHeadingA = playerHeadingA - 512.0f;
+        }
+
+        float playerHeadingRadiansA = playerHeadingA * (g_mathPi / 256.0f);
+
+        float arrowAddAX = std::cosf(playerHeadingRadiansA);
+        arrowAddAX = arrowAddAX * (g_mapArrowRadius * 0.5f);
+
+        float arrowAddAY = std::sinf(playerHeadingRadiansA);
+        arrowAddAY = arrowAddAY * (g_mapArrowRadius * 0.5f);
+
+        float arrowAX = arrowCX + arrowAddAX;
+        float arrowAY = arrowCY - arrowAddAY;
+
+        float mapArrowCX = (arrowCX + g_mapOriginX) + playerSpawn->X;
+        float mapArrowCY = (arrowCY + g_mapOriginY) + playerSpawn->Y;
+
+        float mapArrowBX = (arrowBX + g_mapOriginX) + playerSpawn->X;
+        float mapArrowBY = (arrowBY + g_mapOriginY) + playerSpawn->Y;
+
+        float mapArrowAX = (arrowAX + g_mapOriginX) + playerSpawn->X;
+        float mapArrowAY = (arrowAY + g_mapOriginY) + playerSpawn->Y;
+
+        EQLINE mapArrowLineA;
+        mapArrowLineA.X1 = mapArrowCX;
+        mapArrowLineA.Y1 = mapArrowCY;
+        mapArrowLineA.Z1 = 1.0f;
+        mapArrowLineA.X2 = mapArrowAX;
+        mapArrowLineA.Y2 = mapArrowAY;
+        mapArrowLineA.Z2 = 1.0f;
+
+        EQLINE mapArrowLineB;
+        mapArrowLineB.X1 = mapArrowCX;
+        mapArrowLineB.Y1 = mapArrowCY;
+        mapArrowLineB.Z1 = 1.0f;
+        mapArrowLineB.X2 = mapArrowBX;
+        mapArrowLineB.Y2 = mapArrowBY;
+        mapArrowLineB.Z2 = 1.0f;
+
+        EQLINE mapArrowLineC;
+        mapArrowLineC.X1 = g_mapOriginX;
+        mapArrowLineC.Y1 = g_mapOriginY;
+        mapArrowLineC.Z1 = 1.0f;
+        mapArrowLineC.X2 = mapArrowCX;
+        mapArrowLineC.Y2 = mapArrowCY;
+        mapArrowLineC.Z2 = 1.0f;
+
+        EQGfx_Dx8__t3dDeferLine(&mapArrowLineA, g_mapArrowColor);
+        EQGfx_Dx8__t3dDeferLine(&mapArrowLineB, g_mapArrowColor);
+        EQGfx_Dx8__t3dDeferLine(&mapArrowLineC, g_mapArrowColor);
+    } // if (g_mapArrowIsEnabled == true)
+
+    if (g_mapZoneInfoIsEnabled == true)
+    {
+        float textY = g_mapMaxY + g_elementOffset;
+
+        char zoneText[128];
+        sprintf_s(zoneText, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
+        EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
+
+        textY = textY + g_fontHeight + g_elementOffset;
+
+        if (g_mapIsMaximized == true)
+        {
+            char locationText[128];
+            sprintf_s(locationText, "Location: %.2f, %.2f, %.2f", playerLocation.Y, playerLocation.X, playerLocation.Z);
+            EQ_CLASS_CDisplay->WriteTextHD2(locationText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
+
+            textY = textY + g_fontHeight + g_elementOffset;
+        }
+
+        if (g_mapRotateIsEnabled == true)
+        {
+            char headingText[128];
+            sprintf_s(headingText, "Heading: %s", EQ_GetCardinalDirectionByHeading(playerSpawn->Heading));
+            EQ_CLASS_CDisplay->WriteTextHD2(headingText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
+
+            textY = textY + g_fontHeight + g_elementOffset;
         }
     }
 }
@@ -2688,7 +2950,7 @@ void EQMACHUD_DoEsp()
 
         if (g_espDistanceIsEnabled == true)
         {
-            if (g_espDistanceDoorIsEnabled == true && spawnDistance > g_espDistance)
+            if (g_espDistanceDoorSpawnIsEnabled == true && spawnDistance > g_espDistance)
             {
                 doorSpawn = doorSpawn->Next;
                 continue;
@@ -2718,7 +2980,7 @@ void EQMACHUD_DoEsp()
 
             if (doorDescription != NULL)
             {
-                if (g_espShowUniqueDoorIsEnabled == true)
+                if (g_espShowDoorUniqueSpawnIsEnabled == true)
                 {
                     sprintf_s(spawnText, "+ %s", doorDescription);
                 }
@@ -2730,7 +2992,7 @@ void EQMACHUD_DoEsp()
             }
             else
             {
-                if (g_espShowDoorIsEnabled == true)
+                if (g_espShowDoorSpawnIsEnabled == true)
                 {
                     sprintf_s(spawnText, "+ Door: %s", spawnName);
                 }
@@ -2745,7 +3007,7 @@ void EQMACHUD_DoEsp()
             sprintf_s(distanceText, " (%d)", (int)spawnDistance);
             strcat_s(spawnText, distanceText);
 
-            EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, g_espDoorTextColor, fontArial14);
+            EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, g_espDoorSpawnTextColor, fontArial14);
         }
 
         doorSpawn = doorSpawn->Next;
@@ -3096,15 +3358,30 @@ void EQMACHUD_DoBuffs()
 
         int buffTicks = charInfo->Buffs[i].Ticks;
 
-        int buffSeconds = buffTicks * 3;
+        if (buffTicks == 0)
+        {
+            continue;
+        }
 
-        int buffHours = buffSeconds / (60 * 60);
+        int buffHours   = 0;
+        int buffMinutes = 0;
+        int buffSeconds = 0;
 
-        buffSeconds = buffSeconds - buffHours * (60 * 60);
+        buffSeconds = buffTicks * 3;
 
-        int buffMinutes = buffSeconds / 60;
+        if (buffSeconds > 0)
+        {
+            buffHours = buffSeconds / (60 * 60);
 
-        buffSeconds = buffSeconds - buffMinutes * 60;
+            buffSeconds = buffSeconds - buffHours * (60 * 60);
+
+            if (buffSeconds > 0)
+            {
+                buffMinutes = buffSeconds / 60;
+
+                buffSeconds = buffSeconds - buffMinutes * 60;
+            }
+        }
 
         char buffText[128];
         sprintf_s(buffText, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
@@ -3286,13 +3563,28 @@ void EQMACHUD_DoTargetInfo()
 
 int __cdecl EQMACHUD_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned short a3, unsigned short a4, unsigned short a5, int a6, unsigned short a7, unsigned long a8, long a9, unsigned long a10)
 {
+    if (g_bLoaded == false)
+    {
+        g_bLoaded = true;
+
+        BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
+
+        if (isInGame == 1)
+        {
+            char loadedText[128];
+            sprintf_s(loadedText, "%s loaded.", g_applicationName);
+
+            EQ_CLASS_CEverQuest->dsp_chat(loadedText);
+        }
+    }
+
     g_numLinesDeferred = 0;
 
     EQMACHUD_DoUpdateZone();
 
     EQMACHUD_DoButtonToolTipTextAndMouseClick();
 
-    if (g_espIsEnabled == true && (g_mapIsMaximized == false || g_mapIsMinimized == true))
+    if (g_espIsEnabled == true && g_mapIsMaximized == false)
     {
         EQMACHUD_DoEsp();
     }

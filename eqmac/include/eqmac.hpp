@@ -1103,4 +1103,50 @@ const char* EQ_GetStandingStateString(int standingState)
     return standingStateString;
 }
 
+const char* EQ_GetCardinalDirectionByHeading(float heading)
+{
+    const char* direction = NULL;
+
+    heading = roundf(heading);
+
+    if (heading >= 0.0f && heading <= 31.0f)
+    {
+        direction = "North";
+    }
+    else if (heading >= 32.0f && heading <= 95.0f)
+    {
+        direction = "North West";
+    }
+    else if (heading >= 96.0f && heading <= 159.0f)
+    {
+        direction = "West";
+    }
+    else if (heading >= 160.0f && heading <= 223.0f)
+    {
+        direction = "South West";
+    }
+    else if (heading >= 224.0f && heading <= 287.0f)
+    {
+        direction = "South";
+    }
+    else if (heading >= 288.0f && heading <= 351.0f)
+    {
+        direction = "South East";
+    }
+    else if (heading >= 352.0f && heading <= 415.0f)
+    {
+        direction = "East";
+    }
+    else if (heading >= 416.0f && heading <= 479.0f)
+    {
+        direction = "North East";
+    }
+    else if (heading >= 480.0f && heading <= 512.0f)
+    {
+        direction = "North";
+    }
+
+    return direction;
+}
+
 #endif // EQMAC_HPP

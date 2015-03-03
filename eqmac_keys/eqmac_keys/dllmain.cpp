@@ -1,151 +1,192 @@
-#include <string>
+#include <cstdio>
+#include <cstring>
+#include <cmath>
 
 #include <windows.h>
 
 #include "vk_keys.h"
 
-#include "memory.hpp"
-
 #include "eqmac.hpp"
 #include "eqmac_functions.hpp"
 
-memory mem;
+HMODULE g_module;
 
-HMODULE module_global;
+HANDLE g_handleThreadLoad;
+HANDLE g_handleThreadLoop;
 
-#define APPLICATION_NAME "EQMac Keys"
+const char* g_applicationName = "EQMac Keys";
 
-DWORD WINAPI thread_function(LPVOID param)
+unsigned int g_hotkeyTimer = 0;
+unsigned int g_hotkeyDelay = 500;
+
+bool EQMACKEYS_IsForegroundWindowCurrentProcessId()
 {
-    everquest_function_write_text_to_chat(APPLICATION_NAME " loaded.");
-    Sleep(1000);
+    HWND foregroundHwnd = GetForegroundWindow();
 
-    while (1)
+    DWORD foregroundProcessId;
+    GetWindowThreadProcessId(foregroundHwnd, &foregroundProcessId);
+
+    return (foregroundProcessId == GetCurrentProcessId());
+}
+
+DWORD WINAPI EQMACKEYS_ThreadLoop(LPVOID param)
+{
+    BYTE isInGame;
+
+    isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
+
+    if (isInGame == 1)
     {
-        if (everquest_function_is_in_game() == false)
+        char loadedText[128];
+        sprintf_s(loadedText, "%s loaded.", g_applicationName);
+
+        EQ_CLASS_CEverQuest->dsp_chat(loadedText);
+    }
+
+    while (true)
+    {
+        isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
+
+        if (isInGame == 0)
         {
-            Sleep(100);
+            Sleep(1000);
             continue;
         }
 
-        if (mem.is_foreground_window_current_process_id() == true)
+        DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+        if ((currentTime - g_hotkeyTimer) < g_hotkeyDelay)
+        {
+            Sleep(10);
+            continue;
+        }
+
+        if (EQMACKEYS_IsForegroundWindowCurrentProcessId() == true)
         {
             if
             (
                 (KEYDOWN(VK_CONTROL)) &&
-                (KEYDOWN(VK_ALT)) &&
+                (KEYDOWN(VK_ALT))     &&
                 (KEYDOWN(VK_BACK))
             )
             {
                 break;
             }
-
-            Sleep(10);
-            continue;
         }
-
-        if (KEYDOWN(VK_1) && KEYDOWN(VK_CONTROL))
+        else
         {
-            everquest_function_do_hot_button(1);
-            Sleep(1000);
-        }
+            if (KEYDOWN(VK_1) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(0, 1);
 
-        if (KEYDOWN(VK_2) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(2);
-            Sleep(1000);
-        }
+                g_hotkeyTimer = currentTime;
+            }
 
-        if (KEYDOWN(VK_3) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(3);
-            Sleep(1000);
-        }
+            if (KEYDOWN(VK_2) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(1, 1);
 
-        if (KEYDOWN(VK_4) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(4);
-            Sleep(1000);
-        }
+                g_hotkeyTimer = currentTime;
+            }
 
-        if (KEYDOWN(VK_5) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(5);
-            Sleep(1000);
-        }
+            if (KEYDOWN(VK_3) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(2, 1);
 
-        if (KEYDOWN(VK_6) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(6);
-            Sleep(1000);
-        }
+                g_hotkeyTimer = currentTime;
+            }
 
-        if (KEYDOWN(VK_7) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(7);
-            Sleep(1000);
-        }
+            if (KEYDOWN(VK_4) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(3, 1);
 
-        if (KEYDOWN(VK_8) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(8);
-            Sleep(1000);
-        }
+                g_hotkeyTimer = currentTime;
+            }
 
-        if (KEYDOWN(VK_9) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(9);
-            Sleep(1000);
-        }
+            if (KEYDOWN(VK_5) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(4, 1);
 
-        if (KEYDOWN(VK_0) && KEYDOWN(VK_CONTROL))
-        {
-            everquest_function_do_hot_button(10);
-            Sleep(1000);
+                g_hotkeyTimer = currentTime;
+            }
+
+            if (KEYDOWN(VK_6) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(5, 1);
+
+                g_hotkeyTimer = currentTime;
+            }
+
+            if (KEYDOWN(VK_7) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(6, 1);
+
+                g_hotkeyTimer = currentTime;
+            }
+
+            if (KEYDOWN(VK_8) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(7, 1);
+
+                g_hotkeyTimer = currentTime;
+            }
+
+            if (KEYDOWN(VK_9) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(8, 1);
+
+                g_hotkeyTimer = currentTime;
+            }
+
+            if (KEYDOWN(VK_0) && KEYDOWN(VK_CONTROL))
+            {
+                EQ_CLASS_CHotButtonWnd->DoHotButton(9, 1);
+
+                g_hotkeyTimer = currentTime;
+            }
         }
 
         Sleep(10);
     }
 
-    everquest_function_write_text_to_chat(APPLICATION_NAME " unloaded.");
-    Sleep(1000);
+    isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
 
-    FreeLibraryAndExitThread(module_global, 0);
+    if (isInGame == 1)
+    {
+        char unloadedText[128];
+        sprintf_s(unloadedText, "%s unloaded.", g_applicationName);
+
+        EQ_CLASS_CEverQuest->dsp_chat(unloadedText);
+    }
+
+    FreeLibraryAndExitThread(g_module, 0);
     return 0;
 }
 
-DWORD WINAPI thread_load(LPVOID param)
+DWORD WINAPI EQMACKEYS_ThreadLoad(LPVOID param)
 {
-    mem.enable_debug_privileges();
-    mem.set_process_by_id(GetCurrentProcessId());
-
-    if (mem.get_process_id() == 0)
-    {
-        FreeLibraryAndExitThread(module_global, 0);
-        return 0;
-    }
-
-    HANDLE process_handle = GetCurrentProcess();
-    SetPriorityClass(process_handle, BELOW_NORMAL_PRIORITY_CLASS);
-
-    CreateThread(NULL, 0, &thread_function, NULL, 0, NULL);
+    g_handleThreadLoop = CreateThread(NULL, 0, &EQMACKEYS_ThreadLoop, NULL, 0, NULL);
 
     return 0;
 }
 
 BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID reserved)
 {
-    module_global = module;
+    g_module = module;
 
     switch (reason)
     {
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(module);
-            CreateThread(NULL, 0, &thread_load, NULL, 0, NULL);
+            g_handleThreadLoad = CreateThread(NULL, 0, &EQMACKEYS_ThreadLoad, NULL, 0, NULL);
             break;
 
         case DLL_PROCESS_DETACH:
-            FreeLibraryAndExitThread(module_global, 0);
+            //WaitForSingleObject(g_handleThreadLoad, INFINITE);
+            CloseHandle(g_handleThreadLoad);
+
+            //WaitForSingleObject(g_handleThreadLoop, INFINITE);
+            CloseHandle(g_handleThreadLoop);
             break;
     }
 

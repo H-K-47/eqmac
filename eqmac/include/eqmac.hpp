@@ -637,6 +637,7 @@ typedef struct _EQLINE
 
 typedef struct _EQMAPLINE
 {
+    struct _EQMAPLINE* Next;
     FLOAT X1;
     FLOAT Y1;
     FLOAT Z1;
@@ -659,6 +660,7 @@ typedef struct _EQMAPLINE
 
 typedef struct _EQMAPPOINT
 {
+    struct _EQMAPPOINT* Next;
     FLOAT X;
     FLOAT Y;
     FLOAT Z;

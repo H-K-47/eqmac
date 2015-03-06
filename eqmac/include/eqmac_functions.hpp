@@ -100,6 +100,10 @@ public:
     CEverQuest::CEverQuest(struct HWND__*);
     void CEverQuest::dsp_chat(const char* text, uint16_t color, bool filtered);
     void CEverQuest::dsp_chat(const char* text);
+    int __cdecl CEverQuest::LMouseDown(uint16_t x, uint16_t y);
+    int __cdecl CEverQuest::LMouseUp(uint16_t x, uint16_t y);
+    int __cdecl CEverQuest::RMouseDown(uint16_t x, uint16_t y);
+    int __cdecl CEverQuest::RMouseUp(uint16_t x, uint16_t y);
     char* CEverQuest::trimName(char*);
     int CEverQuest::MoveToZone(char* zoneShortName, char* text, int destinationType, int zoneRequestReason);
     int CEverQuest::MoveToZone(int zoneId, char* text, int destinationType, int zoneRequestReason);
@@ -183,6 +187,30 @@ EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*,uint16_t,bool), EQ_
 EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*), EQ_FUNCTION_CEverQuest__dsp_chat2);
 #endif
 
+#define EQ_FUNCTION_CEverQuest__LMouseDown 0x005465AA
+#ifdef EQ_FUNCTION_CEverQuest__LMouseDown
+typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__LMouseDown)(uint16_t x, uint16_t y);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::LMouseDown(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__LMouseDown);
+#endif
+
+#define EQ_FUNCTION_CEverQuest__LMouseUp 0x00531614
+#ifdef EQ_FUNCTION_CEverQuest__LMouseUp
+typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__LMouseUp)(uint16_t x, uint16_t y);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::LMouseUp(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__LMouseUp);
+#endif
+
+#define EQ_FUNCTION_CEverQuest__RMouseDown 0x0054699D
+#ifdef EQ_FUNCTION_CEverQuest__RMouseDown
+typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__RMouseDown)(uint16_t x, uint16_t y);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::RMouseDown(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__RMouseDown);
+#endif
+
+#define EQ_FUNCTION_CEverQuest__RMouseUp 0x00546B71
+#ifdef EQ_FUNCTION_CEverQuest__RMouseUp
+typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__RMouseUp)(uint16_t x, uint16_t y);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::RMouseUp(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__RMouseUp);
+#endif
+
 #define EQ_FUNCTION_CEverQuest__trimName 0x00537D39
 #ifdef EQ_FUNCTION_CEverQuest__trimName
 EQ_FUNCTION_AT_ADDRESS(char* CEverQuest::trimName(char*), EQ_FUNCTION_CEverQuest__trimName);
@@ -261,6 +289,11 @@ EQ_FUNCTION_AT_ADDRESS(unsigned short EQ_Character::Max_Mana(void), EQ_FUNCTION_
 #define EQ_FUNCTION_DrawNetStatus 0x0054D3AE
 #ifdef EQ_FUNCTION_DrawNetStatus
 typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsigned short, unsigned short, unsigned short, int, unsigned short, unsigned long, long, unsigned long);
+#endif
+
+#define EQ_FUNCTION_HandleMouseWheel 0x0055B2E0
+#ifdef EQ_FUNCTION_HandleMouseWheel
+typedef int (__cdecl* EQ_FUNCTION_TYPE_HandleMouseWheel)(int);
 #endif
 
 // world to screen function

@@ -34,13 +34,15 @@ float g_mathPi = 3.14159265358979f;
 
 int g_zoneId = 0;
 
-int g_numLinesDeferred = 0;
+int g_numDeferred2dItems = 0;
 
 int g_fontHeight = 10;
 
 float g_elementOffset = 5.0f;
 
-bool g_writeTextToChatWindow = true;
+bool g_writeTextToChatWindowIsEnabled = true;
+
+unsigned int g_playerExperience = 0;
 
 float g_buttonWidth  = 10.0f;
 float g_buttonHeight = 10.0f;
@@ -266,8 +268,8 @@ float g_mapButtonToggleSpawnDistanceY;
 float g_mapButtonToggleSpawnFilterNpcX;
 float g_mapButtonToggleSpawnFilterNpcY;
 
-struct _EQMAPLINE*  g_mapLineListHead  = NULL;
-struct _EQMAPPOINT* g_mapPointListHead = NULL;
+struct _EQMAPLINE*  g_mapLineListBegin  = NULL;
+struct _EQMAPPOINT* g_mapPointListBegin = NULL;
 
 bool g_espIsEnabled = true;
 
@@ -278,9 +280,11 @@ bool g_espShowNpcIsEnabled               = true;
 bool g_espShowNpcCorpseIsEnabled         = true;
 bool g_espShowGroundSpawnIsEnabled       = true;
 bool g_espShowDoorSpawnIsEnabled         = false;
-bool g_espShowDoorUniqueSpawnIsEnabled   = true;
+bool g_espShowDoorUniqueSpawnIsEnabled   = true; // POK books, POK portals, etc
 
 bool g_espShowTextIsEnabled = true; // show/hide all ESP text
+
+bool g_espShowTextOnMouseHover = true;
 
 bool g_espShowTextDistanceIsEnabled           = true;
 bool g_espShowTextLevelIsEnabled              = true;
@@ -356,6 +360,36 @@ float g_targetInfoY = 384.0f;
 int g_targetInfoTextColor = EQ_TEXT_COLOR_PINK;
 
 char g_targetInfoTextColor_string[32];
+
+char g_messageText[128];
+int g_messageTextColor = EQ_TEXT_COLOR_WHITE;
+
+float g_messageTextX = 512.0f;
+float g_messageTextY = 256.0f;
+
+unsigned int g_messageTextTimer = 0;
+unsigned int g_messageTextDelay = 10000; // delay in milliseconds
+
+bool g_messageTextIsEnabled = true;
+bool g_messageTextGainedExperienceIsEnabled = true;
+
+bool g_healthBarsIsEnabled = true;
+
+bool g_healthBarsClickToTargetIsEnabled = true;
+
+float g_healthBarsWidth  = 50.0f;
+float g_healthBarsHeight = 10.0f;
+
+#define EQMACHUD_HEALTH_BAR_DEFAULT_BACKGROUND_COLOR 0xC8000000
+#define EQMACHUD_HEALTH_BAR_DEFAULT_FOREGROUND_COLOR 0xC8FF0000
+
+DWORD g_healthBarsBackgroundColor       = 0xC8000000;
+DWORD g_healthBarsForegroundPlayerColor = 0xC800FF00;
+DWORD g_healthBarsForegroundNpcColor    = 0xC8FF0000;
+DWORD g_healthBarsForegroundTargetColor = 0xC8FF00FF;
+
+bool g_healthBarsDistanceIsEnabled = true;
+float g_healthBarsDistance = 400.0f;
 
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
@@ -536,7 +570,8 @@ bool EQMACHUD_LoadConfig(const char* filename)
     }
 
     // HUD
-    g_writeTextToChatWindow = EQMACHUD_ConfigReadBool(filename, "HUD", "bWriteTextToChatWindow", g_writeTextToChatWindow);
+
+    g_writeTextToChatWindowIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bWriteTextToChatWindow", g_writeTextToChatWindowIsEnabled);
 
     g_buttonExitX = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonExitX", g_buttonExitX);
     g_buttonExitY = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonExitY", g_buttonExitY);
@@ -663,6 +698,8 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     g_espShowTextIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowText", g_espShowTextIsEnabled);
 
+    g_espShowTextOnMouseHover = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowTextOnMouseHover", g_espShowTextOnMouseHover);
+
     g_espShowTextDistanceIsEnabled           = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowTextDistance",           g_espShowTextDistanceIsEnabled);
     g_espShowTextLevelIsEnabled              = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowTextLevel",              g_espShowTextLevelIsEnabled);
     g_espShowTextYourselfHpIsEnabled         = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowTextYourselfHp",         g_espShowTextYourselfHpIsEnabled);
@@ -709,6 +746,34 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_espGameMasterTextColor   = EQ_GetTextColorIdByName(g_espGameMasterTextColor_string);
     g_espGroundSpawnTextColor  = EQ_GetTextColorIdByName(g_espGroundSpawnTextColor_string);
     g_espDoorSpawnTextColor    = EQ_GetTextColorIdByName(g_espDoorSpawnTextColor_string);
+
+    // HealthBars
+
+    g_healthBarsIsEnabled = EQMACHUD_ConfigReadBool(filename, "HealthBars", "bEnabled", g_healthBarsIsEnabled);
+
+    g_healthBarsClickToTargetIsEnabled = EQMACHUD_ConfigReadBool(filename, "HealthBars", "bClickToTarget", g_healthBarsClickToTargetIsEnabled);
+
+    g_healthBarsWidth  = EQMACHUD_ConfigReadFloat(filename, "HealthBars", "fWidth",  g_healthBarsWidth);
+    g_healthBarsHeight = EQMACHUD_ConfigReadFloat(filename, "HealthBars", "fHeight", g_healthBarsHeight);
+
+    g_healthBarsBackgroundColor       = EQMACHUD_ConfigReadInt(filename, "HealthBars", "argbBackgroundColor",       g_healthBarsBackgroundColor);
+    g_healthBarsForegroundPlayerColor = EQMACHUD_ConfigReadInt(filename, "HealthBars", "argbForegroundPlayerColor", g_healthBarsForegroundPlayerColor);
+    g_healthBarsForegroundNpcColor    = EQMACHUD_ConfigReadInt(filename, "HealthBars", "argbForegroundNpcColor",    g_healthBarsForegroundNpcColor);
+    g_healthBarsForegroundTargetColor = EQMACHUD_ConfigReadInt(filename, "HealthBars", "argbForegroundTargetColor", g_healthBarsForegroundTargetColor);
+
+    g_healthBarsDistanceIsEnabled = EQMACHUD_ConfigReadBool(filename, "HealthBars", "bDistance", g_healthBarsDistanceIsEnabled);
+    g_healthBarsDistance = EQMACHUD_ConfigReadFloat(filename, "HealthBars", "fDistance", g_healthBarsDistance);
+
+    // MessageText
+
+    g_messageTextIsEnabled = EQMACHUD_ConfigReadBool(filename, "MessageText", "bEnabled", g_messageTextIsEnabled);
+
+    g_messageTextX = EQMACHUD_ConfigReadFloat(filename, "MessageText", "fX", g_messageTextX);
+    g_messageTextY = EQMACHUD_ConfigReadFloat(filename, "MessageText", "fY", g_messageTextY);
+
+    g_messageTextDelay = EQMACHUD_ConfigReadInt(filename, "MessageText", "iDelay", g_messageTextDelay);
+
+    g_messageTextGainedExperienceIsEnabled = EQMACHUD_ConfigReadBool(filename, "MessageText", "bGainedExperience", g_messageTextGainedExperienceIsEnabled);
 
     // Buffs
 
@@ -769,44 +834,44 @@ void EQMACHUD_CopyTargetMapLocationToClipboard()
 
         OpenClipboard(0);
         EmptyClipboard();
-        SetClipboardData(CF_TEXT,  mem);
+        SetClipboardData(CF_TEXT, mem);
         CloseClipboard();
     }
 }
 
 struct _EQMAPLINE* EQMACHUD_MapLineList_Create(EQMAPLINE* mapLine)
 {
-    g_mapLineListHead = (struct _EQMAPLINE*)malloc(sizeof(struct _EQMAPLINE));
+    g_mapLineListBegin = (struct _EQMAPLINE*)malloc(sizeof(struct _EQMAPLINE));
 
-    if (g_mapLineListHead == NULL)
+    if (g_mapLineListBegin == NULL)
     {
         return NULL;
     }
 
-    g_mapLineListHead->Next = NULL;
+    g_mapLineListBegin->Next = NULL;
 
-    g_mapLineListHead->X1    = mapLine->X1;
-    g_mapLineListHead->Y1    = mapLine->Y1;
-    g_mapLineListHead->Z1    = mapLine->Z1;
-    g_mapLineListHead->X2    = mapLine->X2;
-    g_mapLineListHead->Y2    = mapLine->Y2;
-    g_mapLineListHead->Z2    = mapLine->Z2;
-    g_mapLineListHead->R     = mapLine->R;
-    g_mapLineListHead->G     = mapLine->G;
-    g_mapLineListHead->B     = mapLine->B;
-    g_mapLineListHead->Layer = mapLine->Layer;
+    g_mapLineListBegin->X1    = mapLine->X1;
+    g_mapLineListBegin->Y1    = mapLine->Y1;
+    g_mapLineListBegin->Z1    = mapLine->Z1;
+    g_mapLineListBegin->X2    = mapLine->X2;
+    g_mapLineListBegin->Y2    = mapLine->Y2;
+    g_mapLineListBegin->Z2    = mapLine->Z2;
+    g_mapLineListBegin->R     = mapLine->R;
+    g_mapLineListBegin->G     = mapLine->G;
+    g_mapLineListBegin->B     = mapLine->B;
+    g_mapLineListBegin->Layer = mapLine->Layer;
 
-    return g_mapLineListHead;
+    return g_mapLineListBegin;
 }
 
 struct _EQMAPLINE* EQMACHUD_MapLineList_Add(EQMAPLINE* mapLine)
 {
-    if (g_mapLineListHead == NULL)
+    if (g_mapLineListBegin == NULL)
     {
         return (EQMACHUD_MapLineList_Create(mapLine));
     }
 
-    struct _EQMAPLINE *current = g_mapLineListHead;
+    struct _EQMAPLINE *current = g_mapLineListBegin;
 
     if (current == NULL)
     {
@@ -837,7 +902,7 @@ struct _EQMAPLINE* EQMACHUD_MapLineList_Add(EQMAPLINE* mapLine)
 
 void EQMACHUD_MapLineList_Destroy()
 {
-    struct _EQMAPLINE *current = g_mapLineListHead;
+    struct _EQMAPLINE *current = g_mapLineListBegin;
 
     if (current == NULL)
     {
@@ -853,42 +918,42 @@ void EQMACHUD_MapLineList_Destroy()
         current = next;
     }
 
-    g_mapLineListHead = NULL;
+    g_mapLineListBegin = NULL;
 }
 
 struct _EQMAPPOINT* EQMACHUD_MapPointList_Create(EQMAPPOINT* mapPoint)
 {
-    g_mapPointListHead = (struct _EQMAPPOINT*)malloc(sizeof(struct _EQMAPPOINT));
+    g_mapPointListBegin = (struct _EQMAPPOINT*)malloc(sizeof(struct _EQMAPPOINT));
 
-    if (g_mapPointListHead == NULL)
+    if (g_mapPointListBegin == NULL)
     {
         return NULL;
     }
 
-    g_mapPointListHead->Next = NULL;
+    g_mapPointListBegin->Next = NULL;
 
-    g_mapPointListHead->X     = mapPoint->X;
-    g_mapPointListHead->Y     = mapPoint->Y;
-    g_mapPointListHead->Z     = mapPoint->Z;
-    g_mapPointListHead->R     = mapPoint->R;
-    g_mapPointListHead->G     = mapPoint->G;
-    g_mapPointListHead->B     = mapPoint->B;
-    g_mapPointListHead->Size  = mapPoint->Size;
-    g_mapPointListHead->Layer = mapPoint->Layer;
+    g_mapPointListBegin->X     = mapPoint->X;
+    g_mapPointListBegin->Y     = mapPoint->Y;
+    g_mapPointListBegin->Z     = mapPoint->Z;
+    g_mapPointListBegin->R     = mapPoint->R;
+    g_mapPointListBegin->G     = mapPoint->G;
+    g_mapPointListBegin->B     = mapPoint->B;
+    g_mapPointListBegin->Size  = mapPoint->Size;
+    g_mapPointListBegin->Layer = mapPoint->Layer;
 
-    strcpy_s(g_mapPointListHead->Text, mapPoint->Text);
+    strcpy_s(g_mapPointListBegin->Text, mapPoint->Text);
 
-    return g_mapPointListHead;
+    return g_mapPointListBegin;
 }
 
 struct _EQMAPPOINT* EQMACHUD_MapPointList_Add(EQMAPPOINT* mapPoint)
 {
-    if (g_mapPointListHead == NULL)
+    if (g_mapPointListBegin == NULL)
     {
         return (EQMACHUD_MapPointList_Create(mapPoint));
     }
 
-    struct _EQMAPPOINT *current = g_mapPointListHead;
+    struct _EQMAPPOINT *current = g_mapPointListBegin;
 
     if (current == NULL)
     {
@@ -919,7 +984,7 @@ struct _EQMAPPOINT* EQMACHUD_MapPointList_Add(EQMAPPOINT* mapPoint)
 
 void EQMACHUD_MapPointList_Destroy()
 {
-    struct _EQMAPPOINT *current = g_mapPointListHead;
+    struct _EQMAPPOINT *current = g_mapPointListBegin;
 
     if (current == NULL)
     {
@@ -935,7 +1000,7 @@ void EQMACHUD_MapPointList_Destroy()
         current = next;
     }
 
-    g_mapPointListHead = NULL;
+    g_mapPointListBegin = NULL;
 }
 
 bool EQMACHUD_LoadMap(const char* filename, int layer)
@@ -1650,7 +1715,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
         == true
     )
     {
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
 
@@ -1682,7 +1747,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
 
         EQMACHUD_GuiRecalculateCoordinates();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             EQ_CLASS_CEverQuest->dsp_chat("-> Config reloaded.");
         }
@@ -1703,7 +1768,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleMap();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapIsEnabled == true)
             {
@@ -1731,7 +1796,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleEsp();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_espIsEnabled == true)
             {
@@ -1759,7 +1824,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleEspShowText();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_espShowTextIsEnabled == true)
             {
@@ -1787,7 +1852,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleEspShowGroundSpawn();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_espShowGroundSpawnIsEnabled == true)
             {
@@ -1815,7 +1880,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleEspShowDoorSpawn();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_espShowDoorSpawnIsEnabled == true)
             {
@@ -1843,7 +1908,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleEspDistance();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_espDistanceIsEnabled == true)
             {
@@ -1876,7 +1941,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleEspFilterNpc();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_espFilterNpcIsEnabled == true)
             {
@@ -1909,7 +1974,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleBuffs();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_buffsIsEnabled == true)
             {
@@ -1937,7 +2002,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_TogglePlayerInfo();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_playerInfoIsEnabled == true)
             {
@@ -1965,7 +2030,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_ToggleTargetInfo();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_targetInfoIsEnabled == true)
             {
@@ -2039,7 +2104,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleArrow();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapArrowIsEnabled == true)
             {
@@ -2067,7 +2132,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleHeightFilter();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapHeightFilterIsEnabled == true)
             {
@@ -2105,7 +2170,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleRotate();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapRotateIsEnabled == true)
             {
@@ -2148,7 +2213,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleZoneInfo();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapZoneInfoIsEnabled == true)
             {
@@ -2176,7 +2241,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleSpawns();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapSpawnsIsEnabled == true)
             {
@@ -2204,7 +2269,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapTogglePoints();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapPointsIsEnabled == true)
             {
@@ -2232,7 +2297,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleLines();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapLinesIsEnabled == true)
             {
@@ -2260,7 +2325,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleSpawnDistance();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapSpawnDistanceIsEnabled == true)
             {
@@ -2293,7 +2358,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleSpawnFilterNpc();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapSpawnFilterNpcIsEnabled == true)
             {
@@ -2328,7 +2393,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
 
         EQMACHUD_GuiRecalculateCoordinates();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             EQ_CLASS_CEverQuest->dsp_chat("-> Map reloaded.");
         }
@@ -2349,7 +2414,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_CopyTargetMapLocationToClipboard();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             EQ_CLASS_CEverQuest->dsp_chat("-> Target's map location copied to clipboard.");
         }
@@ -2370,7 +2435,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleLayer0();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapLayer0IsEnabled == true)
             {
@@ -2398,7 +2463,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleLayer1();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapLayer1IsEnabled == true)
             {
@@ -2426,7 +2491,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleLayer2();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapLayer2IsEnabled == true)
             {
@@ -2454,7 +2519,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         EQMACHUD_MapToggleLayer3();
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             if (g_mapLayer3IsEnabled == true)
             {
@@ -3263,7 +3328,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonExitX, g_buttonExitY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("x", (int)(g_buttonExitX + 3.0f), (int)(g_buttonExitY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3271,7 +3336,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonReloadConfigX, g_buttonReloadConfigY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_buttonReloadConfigX + 4.0f), (int)(g_buttonReloadConfigY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3285,7 +3350,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleMapX, g_buttonToggleMapY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("m", (int)(g_buttonToggleMapX + 2.0f), (int)(g_buttonToggleMapY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3299,7 +3364,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleEspX, g_buttonToggleEspY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("e", (int)(g_buttonToggleEspX + 3.0f), (int)(g_buttonToggleEspY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3313,7 +3378,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleEspTextX, g_buttonToggleEspTextY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_buttonToggleEspTextX + 3.0f), (int)(g_buttonToggleEspTextY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3327,7 +3392,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleEspDistanceX, g_buttonToggleEspDistanceY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_buttonToggleEspDistanceX + 3.0f), (int)(g_buttonToggleEspDistanceY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3341,7 +3406,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleEspFilterNpcX, g_buttonToggleEspFilterNpcY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("f", (int)(g_buttonToggleEspFilterNpcX + 4.0f), (int)(g_buttonToggleEspFilterNpcY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3355,7 +3420,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleEspGroundSpawnX, g_buttonToggleEspGroundSpawnY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("g", (int)(g_buttonToggleEspGroundSpawnX + 3.0f), (int)(g_buttonToggleEspGroundSpawnY - 3.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3369,7 +3434,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleEspDoorSpawnX, g_buttonToggleEspDoorSpawnY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("o", (int)(g_buttonToggleEspDoorSpawnX + 3.0f), (int)(g_buttonToggleEspDoorSpawnY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3383,7 +3448,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleBuffsX, g_buttonToggleBuffsY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_buttonToggleBuffsX + 3.0f), (int)(g_buttonToggleBuffsY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3397,7 +3462,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonTogglePlayerInfoX, g_buttonTogglePlayerInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_buttonTogglePlayerInfoX + 3.0f), (int)(g_buttonTogglePlayerInfoY - 3.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3411,7 +3476,7 @@ void EQMACHUD_DoExitRowButtons()
     EQ_DrawRectangle(g_buttonToggleTargetInfoX, g_buttonToggleTargetInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("t", (int)(g_buttonToggleTargetInfoX + 5.0f), (int)(g_buttonToggleTargetInfoY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 }
 
 void EQMACHUD_DoMap()
@@ -3458,7 +3523,7 @@ void EQMACHUD_DoMap()
 
     EQ_DrawRectangle(g_mapX, g_mapY, g_mapWidth, g_mapHeight, g_mapBorderColor);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     int buttonColor = g_buttonColorEnabled;
     int buttonTextColor = g_buttonTextColorEnabled;
@@ -3466,22 +3531,22 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonZoomInX, g_mapButtonZoomInY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonZoomInX + 3.0f), (int)(g_mapButtonZoomInY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     EQ_DrawRectangle(g_mapButtonZoomOutX, g_mapButtonZoomOutY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonZoomOutX + 4.0f), (int)(g_mapButtonZoomOutY - 3.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     EQ_DrawRectangle(g_mapButtonZoom1X, g_mapButtonZoom1Y, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonZoom1X + 3.0f), (int)(g_mapButtonZoom1Y - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     EQ_DrawRectangle(g_mapButtonToggleLineColorX, g_mapButtonToggleLineColorY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonToggleLineColorX + 3.0f), (int)(g_mapButtonToggleLineColorY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3495,7 +3560,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleArrowX, g_mapButtonToggleArrowY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("a", (int)(g_mapButtonToggleArrowX + 3.0f), (int)(g_mapButtonToggleArrowY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3509,7 +3574,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleHeightFilterX, g_mapButtonToggleHeightFilterY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("h", (int)(g_mapButtonToggleHeightFilterX + 3.0f), (int)(g_mapButtonToggleHeightFilterY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3523,7 +3588,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleRotateX, g_mapButtonToggleRotateY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_mapButtonToggleRotateX + 4.0f), (int)(g_mapButtonToggleRotateY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3537,7 +3602,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleZoneInfoX, g_mapButtonToggleZoneInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("z", (int)(g_mapButtonToggleZoneInfoX + 3.0f), (int)(g_mapButtonToggleZoneInfoY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3551,7 +3616,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleSpawnsX, g_mapButtonToggleSpawnsY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_mapButtonToggleSpawnsX + 3.0f), (int)(g_mapButtonToggleSpawnsY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3565,7 +3630,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonTogglePointsX, g_mapButtonTogglePointsY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_mapButtonTogglePointsX + 3.0f), (int)(g_mapButtonTogglePointsY - 3.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3579,7 +3644,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleLinesX, g_mapButtonToggleLinesY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("l", (int)(g_mapButtonToggleLinesX + 5.0f), (int)(g_mapButtonToggleLinesY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3593,7 +3658,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleSpawnDistanceX, g_mapButtonToggleSpawnDistanceY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_mapButtonToggleSpawnDistanceX + 3.0f), (int)(g_mapButtonToggleSpawnDistanceY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3607,7 +3672,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleSpawnFilterNpcX, g_mapButtonToggleSpawnFilterNpcY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("f", (int)(g_mapButtonToggleSpawnFilterNpcX + 4.0f), (int)(g_mapButtonToggleSpawnFilterNpcY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3615,7 +3680,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonReloadMapX, g_mapButtonReloadMapY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_mapButtonReloadMapX + 4.0f), (int)(g_mapButtonReloadMapY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3623,7 +3688,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonCopyTargetMapLocationToClipboardX, g_mapButtonCopyTargetMapLocationToClipboardY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonCopyTargetMapLocationToClipboardX + 3.0f), (int)(g_mapButtonCopyTargetMapLocationToClipboardY - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3637,7 +3702,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleLayer0X, g_mapButtonToggleLayer0Y, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_mapButtonToggleLayer0X + 3.0f), (int)(g_mapButtonToggleLayer0Y - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3651,7 +3716,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleLayer1X, g_mapButtonToggleLayer1Y, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonToggleLayer1X + 3.0f), (int)(g_mapButtonToggleLayer1Y - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3665,7 +3730,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleLayer2X, g_mapButtonToggleLayer2Y, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("2", (int)(g_mapButtonToggleLayer2X + 3.0f), (int)(g_mapButtonToggleLayer2Y - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
@@ -3679,7 +3744,7 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonToggleLayer3X, g_mapButtonToggleLayer3Y, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2("3", (int)(g_mapButtonToggleLayer3X + 3.0f), (int)(g_mapButtonToggleLayer3Y - 2.0f), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorMinMaxClose;
     buttonTextColor = g_buttonTextColorMinMaxClose;
@@ -3703,11 +3768,11 @@ void EQMACHUD_DoMap()
     EQ_DrawRectangle(g_mapButtonMaximizeX, g_mapButtonMaximizeY, g_buttonWidth, g_buttonHeight, buttonColor);
     EQ_CLASS_CDisplay->WriteTextHD2(mapButtonMaximizeText, (int)(g_mapButtonMaximizeX + mapButtonMaximizeTextOffsetX), (int)(g_mapButtonMaximizeY - mapButtonMaximizeTextOffsetY), buttonTextColor, fontArial14);
 
-    g_numLinesDeferred += 4;
+    g_numDeferred2dItems += 4;
 
     if (g_mapLinesIsEnabled == true)
     {
-        struct _EQMAPLINE *mapLine = g_mapLineListHead;
+        struct _EQMAPLINE *mapLine = g_mapLineListBegin;
 
         while (mapLine)
         {
@@ -3806,10 +3871,10 @@ void EQMACHUD_DoMap()
             // clip the map lines to the rectangle
             bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
 
-            // only use 75% of the maximum allowed number of deferred objects
+            // only use 75% of the maximum allowed number of deferred 2D items
             // the game needs to reserve some to draw stuff
-            // this also leaves some extra to draw the player arrow, target line, etc
-            if (g_numLinesDeferred > (int)(EQ_GRAPHICS_DLL_DEFERRED_OBJECTS_MAX * 0.75f))
+            // this application also needs to reserve some
+            if (g_numDeferred2dItems > (int)(EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX * 0.75f))
             {
                 bDrawLine = false;
             }
@@ -3840,7 +3905,7 @@ void EQMACHUD_DoMap()
 
                 EQGfx_Dx8__t3dDeferLine(&line, mapLineColor);
 
-                g_numLinesDeferred += 1;
+                g_numDeferred2dItems += 1;
             }
 
             mapLine = mapLine->Next;
@@ -3871,14 +3936,14 @@ void EQMACHUD_DoMap()
             {
                 EQGfx_Dx8__t3dDeferLine(&line, g_mapTargetLineColor);
 
-                g_numLinesDeferred += 1;
+                g_numDeferred2dItems += 1;
             }
         }
     }
 
     if (g_mapPointsIsEnabled == true && g_mapIsMaximized == true)
     {
-        struct _EQMAPPOINT *mapPoint = g_mapPointListHead;
+        struct _EQMAPPOINT *mapPoint = g_mapPointListBegin;
 
         while (mapPoint)
         {
@@ -3980,35 +4045,41 @@ void EQMACHUD_DoMap()
 
             if (g_mapSpawnDistanceIsEnabled == true)
             {
-                bool applyDistance = false;
+                bool bApplyDistance = false;
 
                 if (g_mapSpawnDistancePlayerIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
                 {
-                    applyDistance = true;
+                    bApplyDistance = true;
                 }
 
                 if (g_mapSpawnDistancePlayerCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
                 {
-                    applyDistance = true;
+                    bApplyDistance = true;
                 }
 
                 if (g_mapSpawnDistanceNpcIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC)
                 {
-                    applyDistance = true;
+                    bApplyDistance = true;
                 }
 
                 if (g_mapSpawnDistanceNpcCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
                 {
-                    applyDistance = true;
+                    bApplyDistance = true;
                 }
 
                 // target is always visible
                 if (spawn == targetSpawn)
                 {
-                    applyDistance = false;
+                    bApplyDistance = false;
                 }
 
-                if (applyDistance == true && spawnDistance > g_mapSpawnDistance)
+                // gamemaster is always visible
+                if (spawn->IsGameMaster == 1)
+                {
+                    bApplyDistance = false;
+                }
+
+                if (bApplyDistance == true && spawnDistance > g_mapSpawnDistance)
                 {
                     spawn = spawn->Next;
                     continue;
@@ -4182,7 +4253,7 @@ void EQMACHUD_DoMap()
                     {
                         EQGfx_Dx8__t3dDeferLine(&line, g_mapCorpseLineColor);
 
-                        g_numLinesDeferred += 1;
+                        g_numDeferred2dItems += 1;
                     }
                 }
 
@@ -4344,7 +4415,14 @@ void EQMACHUD_DoEsp()
 {
     DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
-    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_T3D_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+
+    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+
+    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
+
+    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
@@ -4385,7 +4463,7 @@ void EQMACHUD_DoEsp()
         float resultY = 0.0f;
         int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &spawnLocation, &resultX, &resultY);
 
-        if (result != EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+        if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
             int screenX = (int)resultX;
             int screenY = (int)resultY;
@@ -4442,6 +4520,17 @@ void EQMACHUD_DoEsp()
             {
                 EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, g_espDoorSpawnTextColor, fontArial14);
             }
+
+            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHover == true)
+            {
+                if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
+                {
+                    if (mouseOverGuiElement == 0x00000000)
+                    {
+                        EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + 16 + 1, (int)mouseY, g_espDoorSpawnTextColor, fontArial14);
+                    }
+                }
+            }
         }
 
         doorSpawn = doorSpawn->Next;
@@ -4468,7 +4557,7 @@ void EQMACHUD_DoEsp()
         float resultY = 0.0f;
         int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &spawnLocation, &resultX, &resultY);
 
-        if (result != EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+        if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
             int screenX = (int)resultX;
             int screenY = (int)resultY;
@@ -4503,6 +4592,17 @@ void EQMACHUD_DoEsp()
             else
             {
                 EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, g_espGroundSpawnTextColor, fontArial14);
+            }
+
+            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHover == true)
+            {
+                if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
+                {
+                    if (mouseOverGuiElement == 0x00000000)
+                    {
+                        EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + 16 + 1, (int)mouseY, g_espGroundSpawnTextColor, fontArial14);
+                    }
+                }
             }
         }
 
@@ -4546,35 +4646,41 @@ void EQMACHUD_DoEsp()
 
         if (g_espDistanceIsEnabled == true)
         {
-            bool applyDistance = false;
+            bool bApplyDistance = false;
 
             if (g_espDistancePlayerIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
             {
-                applyDistance = true;
+                bApplyDistance = true;
             }
 
             if (g_espDistancePlayerCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
             {
-                applyDistance = true;
+                bApplyDistance = true;
             }
 
             if (g_espDistanceNpcIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC)
             {
-                applyDistance = true;
+                bApplyDistance = true;
             }
 
             if (g_espDistanceNpcCorpseIsEnabled == true && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
             {
-                applyDistance = true;
+                bApplyDistance = true;
             }
 
             // target is always visible
             if (spawn == targetSpawn)
             {
-                applyDistance = false;
+                bApplyDistance = false;
             }
 
-            if (applyDistance == true && spawnDistance > g_espDistance)
+            // gamemaster is always visible
+            if (spawn->IsGameMaster == 1)
+            {
+                bApplyDistance = false;
+            }
+
+            if (bApplyDistance == true && spawnDistance > g_espDistance)
             {
                 spawn = spawn->Next;
                 continue;
@@ -4585,7 +4691,7 @@ void EQMACHUD_DoEsp()
         float resultY = 0.0f;
         int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &spawnLocation, &resultX, &resultY);
 
-        if (result != EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+        if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
             int screenX = (int)resultX;
             int screenY = (int)resultY;
@@ -4850,6 +4956,17 @@ void EQMACHUD_DoEsp()
                     }
                 }
             }
+
+            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHover == true)
+            {
+                if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
+                {
+                    if (mouseOverGuiElement == 0x00000000)
+                    {
+                        EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + 16 + 1, (int)mouseY, textColor, fontArial14);
+                    }
+                }
+            }
         }
 
         spawn = spawn->Next;
@@ -5082,6 +5199,191 @@ void EQMACHUD_DoTargetInfo()
     }
 }
 
+void EQMACHUD_DoHealthBars()
+{
+    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+
+    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+
+    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
+
+    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    EQLOCATION playerLocation = {EQ_OBJECT_PlayerSpawn->Y, EQ_OBJECT_PlayerSpawn->X, EQ_OBJECT_PlayerSpawn->Z};
+
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+    while (spawn)
+    {
+        EQLOCATION spawnLocation = {spawn->Y, spawn->X, spawn->Z};
+
+        float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
+
+        if (g_healthBarsDistanceIsEnabled == true)
+        {
+            if (spawnDistance > g_healthBarsDistance && spawn != targetSpawn)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+        }
+
+        if (spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE || spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+
+        int hpCurrent = spawn->HpCurrent;
+        int hpMax     = spawn->HpMax;
+
+        if (hpCurrent == 0 || hpCurrent == hpMax)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+
+        float hpPercent = 0.0f;
+
+        if (hpCurrent > 0 && hpMax > 0)
+        {
+            hpPercent = (float)hpCurrent / (float)hpMax;
+        }
+
+        if (hpPercent == 0.0 || hpPercent == 1.0)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+
+        float spawnZOffset = 0.0f;
+
+        if
+        (
+            spawn->StandingState == EQ_STANDING_STATE_SITTING ||
+            spawn->StandingState == EQ_STANDING_STATE_DUCKING ||
+            spawn->StandingState == EQ_STANDING_STATE_LOOTING ||
+            spawn->StandingState == EQ_STANDING_STATE_FEIGNED
+        )
+        {
+            spawnZOffset = spawn->CameraHeightOffset * 0.5f;
+        }
+        else
+        {
+            spawnZOffset = spawn->CameraHeightOffset;
+        }
+
+        EQLOCATION healthBarLocation =
+        {
+            spawn->Y,
+            spawn->X,
+            spawn->Z + spawnZOffset
+        };
+
+        DWORD healthBarForegroundColor = EQMACHUD_HEALTH_BAR_DEFAULT_FOREGROUND_COLOR;
+
+        if (spawn->Type == EQ_SPAWN_TYPE_PLAYER)
+        {
+            healthBarForegroundColor = g_healthBarsForegroundPlayerColor;
+        }
+        else if (spawn->Type == EQ_SPAWN_TYPE_NPC)
+        {
+            healthBarForegroundColor = g_healthBarsForegroundNpcColor;
+        }
+
+        if (spawn == targetSpawn)
+        {
+            healthBarForegroundColor = g_healthBarsForegroundTargetColor;
+        }
+
+        float resultX = 0.0f;
+        float resultY = 0.0f;
+        int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &healthBarLocation, &resultX, &resultY);
+
+        if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+        {
+            float screenX = resultX;
+            float screenY = resultY;
+
+            screenX = screenX - g_healthBarsWidth * 0.5f;
+
+            EQ_DrawRectangle(screenX, screenY, g_healthBarsWidth, g_healthBarsHeight, g_healthBarsBackgroundColor, true);
+            EQ_DrawRectangle(screenX + 1.0f, screenY + 1.0f, (g_healthBarsWidth - 2.0f) * hpPercent, g_healthBarsHeight - 2.0f, healthBarForegroundColor, true);
+
+            if (g_healthBarsClickToTargetIsEnabled == true)
+            {
+                if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)screenX, (int)screenY, (int)g_healthBarsWidth, (int)g_healthBarsHeight) == true)
+                {
+                    if (mouseOverGuiElement == 0x00000000)
+                    {
+                        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+                        {
+                            EQ_OBJECT_TargetSpawn = spawn;
+                        }
+                    }
+                }
+            }
+        }
+
+        spawn = spawn->Next;
+        continue;
+    }
+}
+
+void EQMACHUD_DoMessageText()
+{
+    if (strlen(g_messageText) == 0)
+    {
+        return;
+    }
+
+    DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+    if (currentTime < g_messageTextTimer)
+    {
+        DWORD fontArial16 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL16);
+
+        EQ_CLASS_CDisplay->WriteTextHD2(g_messageText, (int)g_messageTextX, (int)g_messageTextY, g_messageTextColor, fontArial16);
+    }
+}
+
+void EQMACHUD_DoMessageTextGainedExperience()
+{
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+    if (charInfo == NULL)
+    {
+        return;
+    }
+
+    DWORD currentExperience = charInfo->Experience;
+
+    if (g_playerExperience == 0)
+    {
+        g_playerExperience = currentExperience;
+    }
+
+    if (currentExperience > g_playerExperience)
+    {
+        int gainedExperience = currentExperience - g_playerExperience;
+
+        g_playerExperience = currentExperience;
+
+        sprintf_s(g_messageText, "You gained %d experience!", gainedExperience);
+
+        g_messageTextColor = EQ_TEXT_COLOR_YELLOW;
+
+        DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+        g_messageTextTimer = currentTime + g_messageTextDelay;
+    }
+}
+
 int __cdecl EQMACHUD_CEverQuest__LMouseDown_DETOUR(unsigned short a1, unsigned short a2)
 {
     if (g_bExit == 1)
@@ -5134,6 +5436,11 @@ int __cdecl EQMACHUD_CEverQuest__LMouseUp_DETOUR(unsigned short a1, unsigned sho
 
 int __cdecl EQMACHUD_HandleMouseWheel_DETOUR(int a1)
 {
+    if (g_bExit == 1)
+    {
+        return EQMACHUD_HandleMouseWheel_REAL(a1);
+    }
+
     int mouseWheelDelta = a1;
 
     BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
@@ -5191,7 +5498,7 @@ int __cdecl EQMACHUD_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
 
         EQ_WRITE_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED, 1);
 
-        if (g_writeTextToChatWindow == true)
+        if (g_writeTextToChatWindowIsEnabled == true)
         {
             BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
 
@@ -5205,9 +5512,21 @@ int __cdecl EQMACHUD_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
         }
     }
 
-    g_numLinesDeferred = 0;
+    g_numDeferred2dItems = 0;
+
+    BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
+
+    if (isNetStatusEnabled == 0)
+    {
+        g_messageTextTimer = 0;
+    }
 
     EQMACHUD_DoUpdateZone();
+
+    if (g_healthBarsIsEnabled == true)
+    {
+        EQMACHUD_DoHealthBars();
+    }
 
     EQMACHUD_DoButtonToolTipText();
 
@@ -5236,6 +5555,16 @@ int __cdecl EQMACHUD_DrawNetStatus_DETOUR(int a1, unsigned short a2, unsigned sh
     if (g_mapIsEnabled == true)
     {
         EQMACHUD_DoMap();
+    }
+
+    if (g_messageTextGainedExperienceIsEnabled == true)
+    {
+        EQMACHUD_DoMessageTextGainedExperience();
+    }
+
+    if (g_messageTextIsEnabled == true)
+    {
+        EQMACHUD_DoMessageText();
     }
 
     EQMACHUD_DoExitRowButtons();
@@ -5272,7 +5601,7 @@ DWORD WINAPI EQMACHUD_ThreadLoad(LPVOID param)
         return 0;
     }
 
-    EQGfx_Dx8__t3dWorldSpaceToScreenSpace = (EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)GetProcAddress(graphicsDll, EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_FUNCTION_NAME);
+    EQGfx_Dx8__t3dWorldSpaceToScreenSpace = (EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)GetProcAddress(graphicsDll, EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dWorldSpaceToScreenSpace);
     if (!EQGfx_Dx8__t3dWorldSpaceToScreenSpace)
     {
         MessageBoxA(NULL, "Error: World to screen function not found!", g_applicationName, MB_ICONERROR);
@@ -5281,10 +5610,28 @@ DWORD WINAPI EQMACHUD_ThreadLoad(LPVOID param)
         return 0;
     }
 
-    EQGfx_Dx8__t3dDeferLine = (EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine)GetProcAddress(graphicsDll, EQ_T3D_DEFER_LINE_FUNCTION_NAME);
+    EQGfx_Dx8__t3dDeferLine = (EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine)GetProcAddress(graphicsDll, EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferLine);
     if (!EQGfx_Dx8__t3dDeferLine)
     {
         MessageBoxA(NULL, "Error: Draw line function not found!", g_applicationName, MB_ICONERROR);
+
+        FreeLibraryAndExitThread(g_module, 0);
+        return 0;
+    }
+
+    EQGfx_Dx8__t3dDeferRect = (EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferRect)GetProcAddress(graphicsDll, EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferRect);
+    if (!EQGfx_Dx8__t3dDeferRect)
+    {
+        MessageBoxA(NULL, "Error: Draw rectangle function not found!", g_applicationName, MB_ICONERROR);
+
+        FreeLibraryAndExitThread(g_module, 0);
+        return 0;
+    }
+
+    EQGfx_Dx8__t3dDeferQuad = (EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad)GetProcAddress(graphicsDll, EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferQuad);
+    if (!EQGfx_Dx8__t3dDeferQuad)
+    {
+        MessageBoxA(NULL, "Error: Draw quad function not found!", g_applicationName, MB_ICONERROR);
 
         FreeLibraryAndExitThread(g_module, 0);
         return 0;

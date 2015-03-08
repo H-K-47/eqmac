@@ -29,13 +29,20 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_POINTER_GRAPHICS_DLL 0x007F9C50 // EQGfx_Dx8.DLL base address
 
-#define EQ_GRAPHICS_DLL_DEFERRED_OBJECTS_MAX 4000 // t3dDeferLine, etc
+#define EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX 4000 // t3dDeferX
 
 #define EQ_POINTER_StringTable 0x007F9490 // eqstr_xx.txt
 
 #define EQ_POINTER_SPELL_MANAGER 0x805CB0
 
+#define EQ_POINTER_FONT_ARIAL10 0x0063D3A8
+#define EQ_POINTER_FONT_ARIAL12 0x0063D3AC
 #define EQ_POINTER_FONT_ARIAL14 0x0063D3B0
+#define EQ_POINTER_FONT_ARIAL15 0x0063D3B4
+#define EQ_POINTER_FONT_ARIAL16 0x0063D3B8
+#define EQ_POINTER_FONT_ARIAL20 0x0063D3BC
+
+#define EQ_TOOLTIP_TEXT_BACKGROUND_COLOR 0xC8000080 // ARGB 0xAARRGGBB
 
 #define EQ_POINTER_CEverQuest 0x00809478
 #define EQ_OFFSET_CEverQuest_GAME_STATE 0x5AC // DWORD
@@ -431,13 +438,15 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_TEXT_COLOR_GRAY8       0x13
 #define EQ_TEXT_COLOR_BLACK2      0x14
 
-#define EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_FUNCTION_NAME "t3dWorldSpaceToScreenSpace" // EQGfx_Dx8.t3dWorldSpaceToScreenSpace
+#define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dWorldSpaceToScreenSpace "t3dWorldSpaceToScreenSpace" // EQGfx_Dx8.t3dWorldSpaceToScreenSpace
 
-#define EQ_POINTER_T3D_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA 0x0063B924 // pass this to function as first argument
+#define EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA 0x0063B924 // pass this to function as first argument
 
-#define EQ_T3D_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE 0xFFFF3D3E // world space to screen space failed because the location is not on screen
+#define EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE 0xFFFF3D3E // world space to screen space failed because the location is not on screen
 
-#define EQ_T3D_DEFER_LINE_FUNCTION_NAME "t3dDeferLine" // EQGfx_Dx8.t3dDeferLine
+#define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferLine "t3dDeferLine" // EQGfx_Dx8.t3dDeferLine
+#define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferRect "t3dDeferRect" // EQGfx_Dx8.t3dDeferRect
+#define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferQuad "t3dDeferQuad" // EQGfx_Dx8.t3dDeferQuad
 
 size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
 
@@ -653,6 +662,22 @@ typedef struct _EQLINE
     FLOAT Y2;
     FLOAT Z2 = 1.0f;
 } EQLINE, *PEQLINE;
+
+typedef struct _EQRECT
+{
+    FLOAT X1;
+    FLOAT Y1;
+    FLOAT Z1 = 1.0f;
+    FLOAT X2;
+    FLOAT Y2;
+    FLOAT Z2 = 1.0f;
+    FLOAT X3;
+    FLOAT Y3;
+    FLOAT Z3 = 1.0f;
+    FLOAT X4;
+    FLOAT Y4;
+    FLOAT Z4 = 1.0f;
+} EQRECT, *PEQRECT;
 
 typedef struct _EQMAPLINE
 {

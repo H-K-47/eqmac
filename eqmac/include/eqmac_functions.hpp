@@ -293,7 +293,7 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsig
 
 #define EQ_FUNCTION_HandleMouseWheel 0x0055B2E0
 #ifdef EQ_FUNCTION_HandleMouseWheel
-typedef int (__cdecl* EQ_FUNCTION_TYPE_HandleMouseWheel)(int);
+typedef int (__cdecl* EQ_FUNCTION_TYPE_HandleMouseWheel)(int); // int mouseWheelDelta
 #endif
 
 // world to screen function
@@ -303,6 +303,14 @@ EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace EQGfx_Dx8__t3dWorldSpaceT
 // draw line function
 typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine)(EQLINE*, int); // int color ; 0xAARRGGBB
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine EQGfx_Dx8__t3dDeferLine;
+
+// draw rectangle function
+typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferRect)(EQRECT*, int); // int color ; 0xAARRGGBB
+EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferRect EQGfx_Dx8__t3dDeferRect;
+
+// draw quad function
+typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad)(EQRECT*, int); // int color ; 0xAARRGGBB
+EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad EQGfx_Dx8__t3dDeferQuad;
 
 // EQWorldData::GetFullZoneName
 // call 00523E49
@@ -337,44 +345,65 @@ char* EQ_GetGuildNameById(int guildId)
     return guildList->Guild[guildId].Name;
 }
 
-void EQ_DrawRectangle(float x, float y, float width, float height, int color)
+void EQ_DrawRectangle(float x, float y, float width, float height, int color, bool filled = false)
 {
-    EQLINE lineTop;
-    lineTop.X1 = x;
-    lineTop.Y1 = y;
-    lineTop.Z1 = 1.0f;
-    lineTop.X2 = x + width;
-    lineTop.Y2 = y;
-    lineTop.Z2 = 1.0f;
+    EQRECT rect;
 
-    EQLINE lineLeft;
-    lineLeft.X1 = x;
-    lineLeft.Y1 = y;
-    lineLeft.Z1 = 1.0f;
-    lineLeft.X2 = x;
-    lineLeft.Y2 = y + height;
-    lineLeft.Z2 = 1.0f;
+    // top left
+    rect.X1 = x;
+    rect.Y1 = y;
+    rect.Z1 = 1.0f;
 
-    EQLINE lineRight;
-    lineRight.X1 = x + width;
-    lineRight.Y1 = y;
-    lineRight.Z1 = 1.0f;
-    lineRight.X2 = x + width;
-    lineRight.Y2 = y + height;
-    lineRight.Z2 = 1.0f;
+    // top right
+    rect.X2 = x + width;
+    rect.Y2 = y;
+    rect.Z2 = 1.0f;
 
-    EQLINE lineBottom;
-    lineBottom.X1 = x;
-    lineBottom.Y1 = y + height;
-    lineBottom.Z1 = 1.0f;
-    lineBottom.X2 = x + width;
-    lineBottom.Y2 = y + height;
-    lineBottom.Z2 = 1.0f;
+    // bottom right
+    rect.X3 = x + width;
+    rect.Y3 = y + height;
+    rect.Z3 = 1.0f;
 
-    EQGfx_Dx8__t3dDeferLine(&lineTop,    color);
-    EQGfx_Dx8__t3dDeferLine(&lineLeft,   color);
-    EQGfx_Dx8__t3dDeferLine(&lineRight,  color);
-    EQGfx_Dx8__t3dDeferLine(&lineBottom, color);
+    // bottom left
+    rect.X4 = x;
+    rect.Y4 = y + height;
+    rect.Z4 = 1.0f;
+
+    if (filled == false)
+    {
+        EQGfx_Dx8__t3dDeferRect(&rect, color);
+    }
+    else
+    {
+        EQGfx_Dx8__t3dDeferQuad(&rect, color);
+    }
+}
+
+void EQ_DrawQuad(float x, float y, float width, float height, int color)
+{
+    EQRECT rect;
+
+    // top left
+    rect.X1 = x;
+    rect.Y1 = y;
+    rect.Z1 = 1.0f;
+
+    // top right
+    rect.X2 = x + width;
+    rect.Y2 = y;
+    rect.Z2 = 1.0f;
+
+    // bottom right
+    rect.X3 = x + width;
+    rect.Y3 = y + height;
+    rect.Z3 = 1.0f;
+
+    // bottom left
+    rect.X4 = x;
+    rect.Y4 = y + height;
+    rect.Z4 = 1.0f;
+
+    EQGfx_Dx8__t3dDeferQuad(&rect, color);
 }
 
 /*

@@ -62,6 +62,9 @@ EQSPAWNINFO** ppPlayerSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_PLAYER_SPAWN_INFO;
 EQSPAWNINFO** ppTargetSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_TARGET_SPAWN_INFO;
 #define EQ_OBJECT_TargetSpawn (*ppTargetSpawnInfo)
 
+EQCITEMDISPLAYWND** ppCItemDisplayWndEx = (EQCITEMDISPLAYWND**)EQ_POINTER_CItemDisplayWnd;
+#define EQ_OBJECT_CItemDisplayWnd (*ppCItemDisplayWndEx)
+
 //class CXWnd;
 class CSidlScreenWnd;
 
@@ -179,6 +182,7 @@ EQ_FUNCTION_AT_ADDRESS(int CDisplay::WriteTextHD2(const char*, int, int, int, in
 
 #define EQ_FUNCTION_CEverQuest__dsp_chat 0x00537F99
 #ifdef EQ_FUNCTION_CEverQuest__dsp_chat
+typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)(const char* text, uint16_t textColor, bool b);
 EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*,uint16_t,bool), EQ_FUNCTION_CEverQuest__dsp_chat);
 #endif
 
@@ -379,31 +383,121 @@ void EQ_DrawRectangle(float x, float y, float width, float height, int color, bo
     }
 }
 
-void EQ_DrawQuad(float x, float y, float width, float height, int color)
+int EQ_GetFontTextWidth(DWORD fontPointer, char text[])
 {
-    EQRECT rect;
+    unsigned int textLength = strlen(text);
 
-    // top left
-    rect.X1 = x;
-    rect.Y1 = y;
-    rect.Z1 = 1.0f;
+    if (textLength == 0)
+    {
+        return 0;
+    }
 
-    // top right
-    rect.X2 = x + width;
-    rect.Y2 = y;
-    rect.Z2 = 1.0f;
+    int* fontGlyphArray = NULL;
 
-    // bottom right
-    rect.X3 = x + width;
-    rect.Y3 = y + height;
-    rect.Z3 = 1.0f;
+    if (fontPointer == EQ_POINTER_FONT_ARIAL10)
+    {
+        fontGlyphArray = EQ_FONT_GLYPH_SIZES_ARIAL10;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL12)
+    {
+        fontGlyphArray = EQ_FONT_GLYPH_SIZES_ARIAL12;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL14)
+    {
+        fontGlyphArray = EQ_FONT_GLYPH_SIZES_ARIAL14;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL15)
+    {
+        fontGlyphArray = EQ_FONT_GLYPH_SIZES_ARIAL15;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL16)
+    {
+        fontGlyphArray = EQ_FONT_GLYPH_SIZES_ARIAL16;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL20)
+    {
+        fontGlyphArray = EQ_FONT_GLYPH_SIZES_ARIAL20;
+    }
 
-    // bottom left
-    rect.X4 = x;
-    rect.Y4 = y + height;
-    rect.Z4 = 1.0f;
+    if (fontGlyphArray == NULL)
+    {
+        return 0;
+    }
 
-    EQGfx_Dx8__t3dDeferQuad(&rect, color);
+    int width = 0;
+
+    for (size_t i = 0; i < textLength; i++)
+    {
+        int asciiIndex = (int)text[i];
+
+        if (asciiIndex > 128)
+        {
+            continue;
+        }
+
+        width += fontGlyphArray[asciiIndex];
+    }
+
+    return width;
+}
+
+void EQ_DrawTooltipText(char text[], int x, int y, int textColor, DWORD fontPointer)
+{
+    unsigned int textLength = strlen(text);
+
+    if (textLength == 0)
+    {
+        return;
+    }
+
+    DWORD font = EQ_READ_MEMORY<DWORD>(fontPointer);
+
+    int fontHeight = 0;
+
+    if (fontPointer == EQ_POINTER_FONT_ARIAL10)
+    {
+        fontHeight = 10;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL12)
+    {
+        fontHeight = 12;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL14)
+    {
+        fontHeight = 14;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL15)
+    {
+        fontHeight = 15;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL16)
+    {
+        fontHeight = 16;
+    }
+    else if (fontPointer == EQ_POINTER_FONT_ARIAL20)
+    {
+        fontHeight = 20;
+    }
+
+    if (fontHeight == 0)
+    {
+        return;
+    }
+
+    int textWidth = EQ_GetFontTextWidth(fontPointer, text);
+
+    if (textWidth == 0)
+    {
+        return;
+    }
+
+    int textX = x - 1;
+
+    textWidth = textWidth + 1;
+
+    EQ_DrawRectangle((float)textX, (float)y, (float)textWidth, (float)fontHeight, EQ_TOOLTIP_TEXT_BACKGROUND_COLOR, true);
+
+    EQ_CLASS_CDisplay->WriteTextHD2(text, x, y, textColor, font);
 }
 
 /*

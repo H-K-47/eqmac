@@ -20,6 +20,8 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_IS_NET_STATUS_ENABLED 0x007985EC // BYTE
 
+#define EQ_EXPERIENCE_MAX 350
+
 #define EQ_IS_KEY_PRESSED_SHIFT   0x0080931C // DWORD
 #define EQ_IS_KEY_PRESSED_CONTROL 0x00809320 // DWORD
 #define EQ_IS_KEY_PRESSED_ALT     0x0080932C // DWORD
@@ -41,6 +43,17 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_POINTER_FONT_ARIAL15 0x0063D3B4
 #define EQ_POINTER_FONT_ARIAL16 0x0063D3B8
 #define EQ_POINTER_FONT_ARIAL20 0x0063D3BC
+
+// requires old UI from 1999 (NewUI=FALSE in eqclient.ini)
+// pointers are NULL while using new UI from Luclin expansion
+// ASCII table characters (0-128)
+// [pointer + DWORD * ASCII character index] = glyph size
+#define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL10 0x00809444
+#define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL12 0x00809448
+#define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL14 0x0080944C
+#define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL15 0x00809450
+#define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL16 0x00809454
+#define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL20 0x00809458
 
 #define EQ_TOOLTIP_TEXT_BACKGROUND_COLOR 0xC8000080 // ARGB 0xAARRGGBB
 
@@ -68,6 +81,8 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_POINTER_CTradeWnd 0x0063D668
 
 #define EQ_POINTER_CGiveWnd 0x0063D678
+
+#define EQ_POINTER_CItemDisplayWnd 0x0063D5E0
 
 #define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
 #define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
@@ -279,6 +294,9 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_RESOLUTION_WIDTH  0x00798564 // DWORD
 #define EQ_RESOLUTION_HEIGHT 0x00798568 // DWORD
+
+#define EQ_MOUSE_CURSOR_WIDTH  16 // pixels
+#define EQ_MOUSE_CURSOR_HEIGHT 16 // pixels
 
 #define EQ_MOUSE_X_EX 0x008092E8 // DWORD
 #define EQ_MOUSE_Y_EX 0x008092EC // DWORD
@@ -644,6 +662,56 @@ const char* EQ_KEYVALUESTRINGLIST_GROUND_SPAWN_NAME_DESCRIPTION[][2] =
     {"IT10645_ACTORDEF", "Book"},
 };
 
+// font glpyh sizes use ASCII table indexes
+
+int EQ_FONT_GLYPH_SIZES_ARIAL10[128] =
+{
+    6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,
+    2 ,3 ,3 ,4 ,4 ,7 ,5 ,2 ,3 ,3 ,3 ,5 ,2 ,3 ,2 ,2 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,4 ,2 ,2 ,5 ,5 ,5 ,4 ,
+    8 ,5 ,5 ,6 ,6 ,5 ,5 ,6 ,6 ,2 ,4 ,5 ,4 ,7 ,6 ,6 ,5 ,6 ,6 ,5 ,5 ,6 ,5 ,7 ,5 ,5 ,5 ,2 ,2 ,2 ,3 ,4 ,
+    3 ,4 ,4 ,4 ,4 ,4 ,2 ,5 ,4 ,2 ,2 ,3 ,2 ,6 ,4 ,4 ,4 ,5 ,3 ,4 ,2 ,4 ,3 ,5 ,3 ,3 ,4 ,3 ,3 ,3 ,5 ,6 ,
+};
+
+int EQ_FONT_GLYPH_SIZES_ARIAL12[128] =
+{
+    7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,
+    3 ,3 ,3 ,5 ,5 ,8 ,6 ,2 ,3 ,3 ,4 ,5 ,3 ,3 ,3 ,3 ,5 ,5 ,5 ,5 ,5 ,5 ,5 ,5 ,5 ,5 ,3 ,3 ,5 ,5 ,5 ,5 ,
+    9 ,6 ,6 ,7 ,7 ,6 ,6 ,7 ,7 ,3 ,5 ,6 ,5 ,7 ,7 ,7 ,6 ,7 ,7 ,6 ,5 ,7 ,6 ,9 ,5 ,7 ,6 ,3 ,3 ,3 ,3 ,5 ,
+    3 ,5 ,5 ,5 ,5 ,5 ,4 ,5 ,5 ,2 ,2 ,5 ,2 ,8 ,5 ,5 ,5 ,5 ,3 ,5 ,3 ,5 ,6 ,6 ,5 ,6 ,4 ,3 ,3 ,3 ,5 ,7 ,
+};
+
+int EQ_FONT_GLYPH_SIZES_ARIAL14[128] =
+{
+    8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,8 ,
+    3 ,2 ,4 ,6 ,6 ,10,7 ,2 ,4 ,4 ,4 ,6 ,3 ,4 ,3 ,3 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,6 ,3 ,3 ,6 ,6 ,6 ,6 ,
+    11,8 ,7 ,7 ,7 ,6 ,6 ,8 ,7 ,2 ,5 ,7 ,6 ,8 ,7 ,8 ,6 ,8 ,7 ,7 ,6 ,7 ,8 ,10,7 ,8 ,7 ,3 ,3 ,3 ,5 ,6 ,
+    4 ,6 ,6 ,6 ,6 ,6 ,4 ,6 ,6 ,2 ,2 ,5 ,2 ,8 ,6 ,6 ,6 ,6 ,4 ,6 ,3 ,6 ,6 ,10,6 ,6 ,6 ,4 ,2 ,4 ,6 ,8 ,
+};
+
+int EQ_FONT_GLYPH_SIZES_ARIAL15[128] =
+{
+    9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,
+    3 ,3 ,4 ,7 ,7 ,11,8 ,2 ,4 ,4 ,5 ,7 ,3 ,4 ,3 ,3 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,3 ,3 ,7 ,7 ,7 ,7 ,
+    12,7 ,8 ,9 ,9 ,8 ,7 ,9 ,9 ,3 ,6 ,8 ,7 ,9 ,9 ,9 ,8 ,9 ,9 ,8 ,7 ,9 ,7 ,11,7 ,7 ,7 ,3 ,3 ,3 ,5 ,7 ,
+    4 ,7 ,7 ,6 ,7 ,7 ,3 ,7 ,7 ,3 ,3 ,6 ,3 ,11,7 ,7 ,7 ,7 ,4 ,7 ,3 ,7 ,5 ,9 ,5 ,5 ,5 ,4 ,3 ,4 ,7 ,9 ,
+};
+
+int EQ_FONT_GLYPH_SIZES_ARIAL16[128] =
+{
+    10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
+    4 ,3 ,5 ,7 ,7 ,12,9 ,2 ,4 ,4 ,5 ,8 ,4 ,4 ,4 ,4 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,7 ,4 ,4 ,8 ,8 ,8 ,7 ,
+    13,9 ,9 ,9 ,9 ,9 ,8 ,10,9 ,3 ,6 ,9 ,7 ,11,9 ,10,9 ,10,9 ,9 ,7 ,9 ,9 ,13,7 ,9 ,7 ,4 ,4 ,4 ,5 ,7 ,
+    4 ,7 ,7 ,7 ,7 ,7 ,3 ,7 ,7 ,3 ,3 ,7 ,3 ,11,7 ,7 ,7 ,7 ,4 ,7 ,4 ,7 ,5 ,9 ,7 ,7 ,7 ,4 ,3 ,4 ,8 ,10,
+};
+
+int EQ_FONT_GLYPH_SIZES_ARIAL20[128] =
+{
+    13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,13,
+    5 ,5 ,6 ,9 ,9 ,15,11,3 ,6 ,6 ,7 ,10,5 ,6 ,5 ,5 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,9 ,5 ,5 ,10,10,10,9 ,
+    17,11,11,12,12,11,10,12,11,5 ,9 ,11,9 ,13,11,12,11,12,11,11,9 ,11,11,17,11,11,9 ,5 ,5 ,5 ,7 ,9 ,
+    6 ,9 ,9 ,9 ,9 ,9 ,5 ,9 ,9 ,4 ,3 ,8 ,3 ,13,9 ,9 ,9 ,9 ,6 ,8 ,4 ,9 ,7 ,11,7 ,9 ,8 ,6 ,5 ,6 ,10,13,
+};
+
 /****************************************************************************************************/
 
 typedef struct _EQLOCATION
@@ -759,6 +827,53 @@ typedef struct _EQBUFFINFO
 /* 0x0008 */ WORD Unknown0008;
 } EQBUFFINFO, *PEQBUFFINFO;
 
+#define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
+#define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
+#define EQ_OFFSET_ITEM_INFO_ID_FILE          0x090 // STRING [0x06]
+#define EQ_OFFSET_ITEM_INFO_WEIGHT           0x0AE // BYTE ; multiply by 0.1 for actual decimal weight
+#define EQ_OFFSET_ITEM_INFO_IS_NO_RENT       0x0AF // BYTE ; 255 = False
+#define EQ_OFFSET_ITEM_INFO_IS_NO_DROP       0x0B0 // BYTE ; 255 = False
+#define EQ_OFFSET_ITEM_INFO_SIZE             0x0B1 // BYTE ; EQ_ITEM_SIZE_x
+#define EQ_OFFSET_ITEM_INFO_IS_CONTAINER     0x0B2 // BYTE ; 1 = True
+#define EQ_OFFSET_ITEM_INFO_ID               0x0B4 // WORD
+#define EQ_OFFSET_ITEM_INFO_ICON             0x0B6 // WORD
+#define EQ_OFFSET_ITEM_INFO_EQUIP_SLOT       0x0B8 // DWORD
+#define EQ_OFFSET_ITEM_INFO_EQUIPPABLE_SLOTS 0x0BC // DWORD
+#define EQ_OFFSET_ITEM_INFO_COST             0x0C0 // DWORD
+#define EQ_OFFSET_ITEM_INFO_IS_STACKABLE     0x0F6 // BYTE ; can have quantity more than 1
+#define EQ_OFFSET_ITEM_INFO_QUANTITY         0x116 // BYTE ; count, amount
+
+typedef struct _EQITEMINFO {
+/* 0x0000 */ CHAR Name[64]; // [0x40]
+/* 0x0040 */ CHAR LoreName[80]; // [0x50]
+/* 0x0090 */ CHAR IdFile[6]; // [0x06]
+/* 0x0096 */ BYTE Unknown0096[24];
+/* 0x00AE */ BYTE Weight; // multiply by 0.1 for actual decimal weight
+/* 0x00AF */ BYTE NoRent; // 0x00 = True, 0xFF = False
+/* 0x00B0 */ BYTE NoDrop; // 0x00 = True, 0xFF = False
+/* 0x00B1 */ BYTE Size; // EQ_ITEM_SIZE_x
+/* 0x00B2 */ BYTE IsContainer;
+/* 0x00B3 */ BYTE Unknown00B3;
+/* 0x00B4 */ WORD Id;
+/* 0x00B6 */ WORD Icon;
+/* 0x00B8 */ DWORD EquipSlot;
+/* 0x00BC */ DWORD EquippableSlots; // flag
+/* 0x00C0 */ DWORD Cost; // value in copper, sells to merchant for value
+/* 0x00C4 */ BYTE Unknown00C4[50];
+/* 0x00F6 */ BYTE IsStackable; // can have quantity more than 1
+/* 0x00F7 */ BYTE Unknown00F7[31];
+/* 0x0116 */ BYTE Quantity; // count, amount
+/* ...... */ 
+/*
+    union
+    {
+        COMMON    Common;
+        CONTAINER Container;
+        BOOK      Book;
+    };
+*/
+} EQITEMINFO, *PEQITEMINFO;
+
 typedef struct _EQSPELLINFO
 {
     DWORD Id;
@@ -777,7 +892,7 @@ typedef struct _EQSPELLINFO
     short Max[12];
     WORD BookIcon;
     WORD GemIcon;
-    short ReagentID[4];
+    short ReagentId[4];
     short ReagentCount[4];
     BYTE Unknown0146[8];
     BYTE Calc[12];
@@ -991,6 +1106,20 @@ typedef struct _EQGUILDLIST
 {
     EQGUILDINFO Guild[512];
 } EQGUILDLIST, *PEQGUILDLIST;
+
+typedef struct _EQCITEMDISPLAYWND
+{
+/* 0x0000 */ BYTE Unknown0000[48];
+/* 0x0030 */ DWORD X1;
+/* 0x0034 */ DWORD Y1;
+/* 0x0038 */ DWORD X2; // determines width,  X2 - X1
+/* 0x003C */ DWORD Y2; // determines height, Y2 - Y1
+/* 0x0040 */ BYTE Unknown0040[16];
+/* 0x0050 */ BYTE IsVisible;
+/* 0x0051 */ BYTE Unknown0051[251];
+/* 0x014C */ EQITEMINFO Item;
+/* ...... */
+} EQCITEMDISPLAYWND, *PEQCITEMDISPLAYWND;
 
 /****************************************************************************************************/
 

@@ -35,7 +35,11 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_POINTER_StringTable 0x007F9490 // eqstr_xx.txt
 
+#define EQ_POINTER_CXWndManager 0x00809DB4
+
 #define EQ_POINTER_SPELL_MANAGER 0x805CB0
+
+#define EQ_POINTER_EqSoundManager 0x0063DEA8
 
 #define EQ_POINTER_FONT_ARIAL10 0x0063D3A8
 #define EQ_POINTER_FONT_ARIAL12 0x0063D3AC
@@ -59,9 +63,6 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_POINTER_CEverQuest 0x00809478
 #define EQ_OFFSET_CEverQuest_GAME_STATE 0x5AC // DWORD
-
-#define EQ_GAME_STATE_CHARACTER_SELECT 1
-#define EQ_GAME_STATE_INGAME           5
 
 #define EQ_POINTER_CDisplay 0x007F9510
 #define EQ_OFFSET_CDisplay_IS_CURSOR_ITEM   0x040 // BYTE ; when you pick up and hold an item on your mouse cursor
@@ -321,7 +322,7 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_CXWND_MOUSE_X 0x00809DD0 // DWORD
 #define EQ_CXWND_MOUSE_Y 0x00809DD4 // DWORD
 
-#define EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT 0x00809DD8 // DWORD
+#define EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW 0x00809DD8 // DWORD
 
 #define EQ_MOUSE_WHEEL_DELTA_UP   120
 #define EQ_MOUSE_WHEEL_DELTA_DOWN -120
@@ -428,6 +429,24 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_ANONYMOUS_STATE_FALSE    0x00
 #define EQ_ANONYMOUS_STATE_TRUE     0x01
 #define EQ_ANONYMOUS_STATE_ROLEPLAY 0x02
+
+#define EQ_GAME_STATE_CHARACTER_SELECT 1
+#define EQ_GAME_STATE_ZONING           3
+#define EQ_GAME_STATE_ZONING2          4
+#define EQ_GAME_STATE_IN_GAME          5
+#define EQ_GAME_STATE_LOADING_SCREEN   6
+#define EQ_GAME_STATE_ZONING3          7
+
+#define EQ_MOUSE_ICON_ARROW             0
+#define EQ_MOUSE_ICON_SIZE_ALL          1
+#define EQ_MOUSE_ICON_SIZE_LEFT         2
+#define EQ_MOUSE_ICON_SIZE_TOP          3
+#define EQ_MOUSE_ICON_SIZE_RIGHT        4
+#define EQ_MOUSE_ICON_SIZE_BOTTOM       5
+#define EQ_MOUSE_ICON_SIZE_TOP_LEFT     6
+#define EQ_MOUSE_ICON_SIZE_TOP_RIGHt    7
+#define EQ_MOUSE_ICON_SIZE_BOTTOM_LEFT  8
+#define EQ_MOUSE_ICON_SIZE_BOTTOM_RIGHt 9
 
 #define EQ_HEADING_MAX 512 // yaw
 
@@ -827,22 +846,6 @@ typedef struct _EQBUFFINFO
 /* 0x0008 */ WORD Unknown0008;
 } EQBUFFINFO, *PEQBUFFINFO;
 
-#define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
-#define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
-#define EQ_OFFSET_ITEM_INFO_ID_FILE          0x090 // STRING [0x06]
-#define EQ_OFFSET_ITEM_INFO_WEIGHT           0x0AE // BYTE ; multiply by 0.1 for actual decimal weight
-#define EQ_OFFSET_ITEM_INFO_IS_NO_RENT       0x0AF // BYTE ; 255 = False
-#define EQ_OFFSET_ITEM_INFO_IS_NO_DROP       0x0B0 // BYTE ; 255 = False
-#define EQ_OFFSET_ITEM_INFO_SIZE             0x0B1 // BYTE ; EQ_ITEM_SIZE_x
-#define EQ_OFFSET_ITEM_INFO_IS_CONTAINER     0x0B2 // BYTE ; 1 = True
-#define EQ_OFFSET_ITEM_INFO_ID               0x0B4 // WORD
-#define EQ_OFFSET_ITEM_INFO_ICON             0x0B6 // WORD
-#define EQ_OFFSET_ITEM_INFO_EQUIP_SLOT       0x0B8 // DWORD
-#define EQ_OFFSET_ITEM_INFO_EQUIPPABLE_SLOTS 0x0BC // DWORD
-#define EQ_OFFSET_ITEM_INFO_COST             0x0C0 // DWORD
-#define EQ_OFFSET_ITEM_INFO_IS_STACKABLE     0x0F6 // BYTE ; can have quantity more than 1
-#define EQ_OFFSET_ITEM_INFO_QUANTITY         0x116 // BYTE ; count, amount
-
 typedef struct _EQITEMINFO {
 /* 0x0000 */ CHAR Name[64]; // [0x40]
 /* 0x0040 */ CHAR LoreName[80]; // [0x50]
@@ -1107,6 +1110,44 @@ typedef struct _EQGUILDLIST
     EQGUILDINFO Guild[512];
 } EQGUILDLIST, *PEQGUILDLIST;
 
+typedef struct _EQCEVERQUEST
+{
+/* 0x0000 */ BYTE Unknown0000[1452];
+/* 0x05AC */ DWORD GameState; // EQ_GAME_STATE_x
+} EQCEVERQUEST, *PEQEVERQUEST;
+
+typedef struct _EQCXWNDMANGER
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD WindowList;
+/* 0x0008 */ DWORD Unknown0008;
+/* 0x000C */ DWORD Unknown000C;
+/* 0x0010 */ DWORD Unknown0010;
+/* 0x0014 */ DWORD LastPressedKeyCode;
+/* 0x0018 */ DWORD LastKeyboardMouseInputTimer;
+/* 0x001C */ DWORD Unknown001C;
+/* 0x0020 */ DWORD Unknown0020;
+/* 0x0024 */ DWORD Unknown0024;
+/* 0x0028 */ DWORD Unknown0028;
+/* 0x002C */ DWORD Unknown002C;
+/* 0x0030 */ DWORD FocusedWindow;
+/* 0x0034 */ DWORD DraggedWindow; // mouse dragging
+/* 0x0038 */ DWORD Unknown0038;
+/* 0x003C */ DWORD HoveredWindow; // mouse hover over
+/* 0x0040 */ DWORD Unknown0040;
+/* 0x0044 */ DWORD Unknown0044;
+/* 0x0048 */ DWORD Unknown0048;
+/* 0x004C */ DWORD MouseX;
+/* 0x0050 */ DWORD MouseY;
+/* 0x0054 */ DWORD KeyboardModifierKeyFlags; // CTRL, SHIFT and ALT
+/* 0x0058 */ DWORD Unknown0058;
+/* 0x005C */ DWORD MouseIcon;
+/* 0x0060 */ DWORD Unknown0060;
+/* 0x0064 */ DWORD TitleBarClickedX; // window titlebar
+/* 0x0068 */ DWORD TitleBarClickedY; // window titlebar
+/* ...... */
+} EQCXWNDMANGER, *PEQCXWNDMANGER;
+
 typedef struct _EQCITEMDISPLAYWND
 {
 /* 0x0000 */ BYTE Unknown0000[48];
@@ -1137,7 +1178,7 @@ const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], size_t li
 {
     for (size_t i = 0; i < listSize; i++)
     {
-        if (std::strcmp(list[i][0], key) == 0)
+        if (strcmp(list[i][0], key) == 0)
         {
             return list[i][1]; // return Value if Key is found
         }
@@ -1150,7 +1191,7 @@ int EQ_GetTextColorIdByName(const char* name)
 {
     for (size_t i = 0; i < EQ_STRINGSIZE_TEXT_COLOR_NAME; i++)
     {
-        if (std::strcmp(EQ_STRING_TEXT_COLOR_NAME[i], name) == 0)
+        if (strcmp(EQ_STRING_TEXT_COLOR_NAME[i], name) == 0)
         {
             return i;
         }

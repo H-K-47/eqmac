@@ -41,66 +41,75 @@ void EQ_WRITE_MEMORY(DWORD address, T value)
     *buffer = value;
 }
 
-EQSPELLLIST** ppSpellList = (EQSPELLLIST**)EQ_POINTER_SPELL_MANAGER;
-#define EQ_OBJECT_SpellList (*ppSpellList)
+EQSPELLLIST** EQ_OBJECT_ppSpellList = (EQSPELLLIST**)EQ_POINTER_SPELL_MANAGER;
+#define EQ_OBJECT_SpellList (*EQ_OBJECT_ppSpellList)
 
-EQCHARINFO** ppCharInfo = (EQCHARINFO**)EQ_POINTER_CHAR_INFO;
-#define EQ_OBJECT_CharInfo (*ppCharInfo)
+EQCHARINFO** EQ_OBJECT_ppCharInfo = (EQCHARINFO**)EQ_POINTER_CHAR_INFO;
+#define EQ_OBJECT_CharInfo (*EQ_OBJECT_ppCharInfo)
 
-EQSPAWNINFO** ppSpawnsBegin = (EQSPAWNINFO**)EQ_POINTER_SPAWNS_BEGIN;
-#define EQ_OBJECT_FirstSpawn (*ppSpawnsBegin)
+EQSPAWNINFO** EQ_OBJECT_ppSpawnsBegin = (EQSPAWNINFO**)EQ_POINTER_SPAWNS_BEGIN;
+#define EQ_OBJECT_FirstSpawn (*EQ_OBJECT_ppSpawnsBegin)
 
-EQGROUNDSPAWNINFO** ppGroundSpawnsBegin = (EQGROUNDSPAWNINFO**)EQ_POINTER_GROUND_SPAWNS_BEGIN;
-#define EQ_OBJECT_FirstGroundSpawn (*ppGroundSpawnsBegin)
+EQGROUNDSPAWNINFO** EQ_OBJECT_ppGroundSpawnsBegin = (EQGROUNDSPAWNINFO**)EQ_POINTER_GROUND_SPAWNS_BEGIN;
+#define EQ_OBJECT_FirstGroundSpawn (*EQ_OBJECT_ppGroundSpawnsBegin)
 
-EQDOORSPAWNINFO** ppDoorSpawnsBegin = (EQDOORSPAWNINFO**)EQ_POINTER_DOOR_SPAWNS_BEGIN;
-#define EQ_OBJECT_FirstDoorSpawn (*ppDoorSpawnsBegin)
+EQDOORSPAWNINFO** EQ_OBJECT_ppDoorSpawnsBegin = (EQDOORSPAWNINFO**)EQ_POINTER_DOOR_SPAWNS_BEGIN;
+#define EQ_OBJECT_FirstDoorSpawn (*EQ_OBJECT_ppDoorSpawnsBegin)
 
-EQSPAWNINFO** ppPlayerSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_PLAYER_SPAWN_INFO;
-#define EQ_OBJECT_PlayerSpawn (*ppPlayerSpawnInfo)
+EQSPAWNINFO** EQ_OBJECT_ppPlayerSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_PLAYER_SPAWN_INFO;
+#define EQ_OBJECT_PlayerSpawn (*EQ_OBJECT_ppPlayerSpawnInfo)
 
-EQSPAWNINFO** ppTargetSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_TARGET_SPAWN_INFO;
-#define EQ_OBJECT_TargetSpawn (*ppTargetSpawnInfo)
+EQSPAWNINFO** EQ_OBJECT_ppTargetSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_TARGET_SPAWN_INFO;
+#define EQ_OBJECT_TargetSpawn (*EQ_OBJECT_ppTargetSpawnInfo)
 
-EQCITEMDISPLAYWND** ppCItemDisplayWndEx = (EQCITEMDISPLAYWND**)EQ_POINTER_CItemDisplayWnd;
-#define EQ_OBJECT_CItemDisplayWnd (*ppCItemDisplayWndEx)
+EQCEVERQUEST** EQ_OBJECT_ppCEverquest = (EQCEVERQUEST**)EQ_POINTER_CEverQuest;
+#define EQ_OBJECT_CEverQuest (*EQ_OBJECT_ppCEverquest)
 
-//class CXWnd;
+EQCXWNDMANGER** EQ_OBJECT_ppCXWndManager = (EQCXWNDMANGER**)EQ_POINTER_CXWndManager;
+#define EQ_OBJECT_CXWndManager (*EQ_OBJECT_ppCXWndManager)
+
+EQCITEMDISPLAYWND** EQ_OBJECT_ppCItemDisplayWnd = (EQCITEMDISPLAYWND**)EQ_POINTER_CItemDisplayWnd;
+#define EQ_OBJECT_CItemDisplayWnd (*EQ_OBJECT_ppCItemDisplayWnd)
+
+class CXWndManager;
 class CSidlScreenWnd;
-
 class CDisplay;
 class CEverQuest;
 class EQ_Character;
 class CHotButtonWnd;
 class CLootWnd;
 class CTradeWnd;
-
 class EQPlayer;
+
+class CXWndManager
+{
+public:
+    int CXWndManager::DrawCursor(void) const;
+    int CXWndManager::DrawWindows(void) const;
+};
+
+CXWndManager** EQ_CLASS_ppCXWndManager = (CXWndManager**)EQ_POINTER_CXWndManager;
+#define EQ_CLASS_CXWndManager (*EQ_CLASS_ppCXWndManager)
 
 class CSidlScreenWnd
 {
 public:
-    CSidlScreenWnd::~CSidlScreenWnd(void);
-    CSidlScreenWnd::CSidlScreenWnd() {};
+    //
 };
 
 class CDisplay
 {
 public:
-    CDisplay::~CDisplay(void);
-    CDisplay::CDisplay(struct HWND__*);
     void CDisplay::MoveLocalPlayerToSafeCoords(void);
     static int __cdecl CDisplay::WriteTextHD2(const char* text, int x, int y, int color, int font);
 };
 
-CDisplay** ppCDisplay = (CDisplay**)EQ_POINTER_CDisplay;
-#define EQ_CLASS_CDisplay (*ppCDisplay)
+CDisplay** EQ_CLASS_ppCDisplay = (CDisplay**)EQ_POINTER_CDisplay;
+#define EQ_CLASS_CDisplay (*EQ_CLASS_ppCDisplay)
 
 class CEverQuest
 {
 public:
-    CEverQuest::~CEverQuest(void);
-    CEverQuest::CEverQuest(struct HWND__*);
     void CEverQuest::dsp_chat(const char* text, uint16_t color, bool filtered);
     void CEverQuest::dsp_chat(const char* text);
     int __cdecl CEverQuest::LMouseDown(uint16_t x, uint16_t y);
@@ -113,19 +122,17 @@ public:
     int CEverQuest::LootCorpse(class EQPlayer*, int unknown);
 };
 
-CEverQuest** ppCEverQuest = (CEverQuest**)EQ_POINTER_CEverQuest;
-#define EQ_CLASS_CEverQuest (*ppCEverQuest)
+CEverQuest** EQ_CLASS_ppCEverQuest = (CEverQuest**)EQ_POINTER_CEverQuest;
+#define EQ_CLASS_CEverQuest (*EQ_CLASS_ppCEverQuest)
 
 class EQ_Character
 {
 public:
-    EQ_Character::~EQ_Character(void);
-    EQ_Character::EQ_Character(void);
     uint16_t EQ_Character::Max_Mana(void);
 };
 
-EQ_Character** ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character;
-#define EQ_CLASS_EQ_Character (*ppEQ_Character)
+EQ_Character** EQ_CLASS_ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character;
+#define EQ_CLASS_EQ_Character (*EQ_CLASS_ppEQ_Character)
 
 class CHotButtonWnd : public CSidlScreenWnd
 {
@@ -133,8 +140,8 @@ public:
     void CHotButtonWnd::DoHotButton(uint16_t buttonIndex, int allowAutoRightClick);
 };
 
-CHotButtonWnd** ppCHotButtonWnd = (CHotButtonWnd**)EQ_POINTER_CHotButtonWnd;
-#define EQ_CLASS_CHotButtonWnd (*ppCHotButtonWnd)
+CHotButtonWnd** EQ_CLASS_ppCHotButtonWnd = (CHotButtonWnd**)EQ_POINTER_CHotButtonWnd;
+#define EQ_CLASS_CHotButtonWnd (*EQ_CLASS_ppCHotButtonWnd)
 
 class CLootWnd : public CSidlScreenWnd
 {
@@ -143,8 +150,8 @@ public:
     void CLootWnd::RequestLootSlot(int slotIndex, bool autoLoot);
 };
 
-CLootWnd** ppCLootWnd = (CLootWnd**)EQ_POINTER_CLootWnd;
-#define EQ_CLASS_CLootWnd (*ppCLootWnd)
+CLootWnd** EQ_CLASS_ppCLootWnd = (CLootWnd**)EQ_POINTER_CLootWnd;
+#define EQ_CLASS_CLootWnd (*EQ_CLASS_ppCLootWnd)
 
 class CTradeWnd : public CSidlScreenWnd
 {
@@ -152,18 +159,28 @@ public:
     void CTradeWnd::Activate(class EQPlayer*, bool isTargetNpc); // if isTargetNpc == true, show Give Window
 };
 
-CTradeWnd** ppCTradeWnd = (CTradeWnd**)EQ_POINTER_CTradeWnd;
-#define EQ_CLASS_CTradeWnd (*ppCTradeWnd)
+CTradeWnd** EQ_CLASS_ppCTradeWnd = (CTradeWnd**)EQ_POINTER_CTradeWnd;
+#define EQ_CLASS_CTradeWnd (*EQ_CLASS_ppCTradeWnd)
 
 class EQPlayer
 {
 public:
-    EQPlayer::~EQPlayer(void);
-    EQPlayer::EQPlayer(class EQPlayer*, unsigned char, unsigned int, unsigned char, char*);
     void EQPlayer::ChangeHeight(float height);
     void EQPlayer::ChangePosition(uint8_t);
     void EQPlayer::FacePlayer(class EQPlayer*);
 };
+
+/* CXWndManager */
+
+#define EQ_FUNCTION_CXWndManager__DrawCursor 0x0059E320
+#ifdef EQ_FUNCTION_CXWndManager__DrawCursor
+EQ_FUNCTION_AT_ADDRESS(int CXWndManager::DrawCursor(void) const, EQ_FUNCTION_CXWndManager__DrawCursor);
+#endif
+
+#define EQ_FUNCTION_CXWndManager__DrawWindows 0x0059E000
+#ifdef EQ_FUNCTION_CXWndManager__DrawWindows
+EQ_FUNCTION_AT_ADDRESS(int CXWndManager::DrawWindows(void) const, EQ_FUNCTION_CXWndManager__DrawWindows);
+#endif
 
 /* CDisplay */
 
@@ -441,7 +458,7 @@ int EQ_GetFontTextWidth(DWORD fontPointer, char text[])
     return width;
 }
 
-void EQ_DrawTooltipText(char text[], int x, int y, int textColor, DWORD fontPointer)
+void EQ_DrawTooltipText(char text[], int x, int y, DWORD fontPointer)
 {
     unsigned int textLength = strlen(text);
 
@@ -497,7 +514,7 @@ void EQ_DrawTooltipText(char text[], int x, int y, int textColor, DWORD fontPoin
 
     EQ_DrawRectangle((float)textX, (float)y, (float)textWidth, (float)fontHeight, EQ_TOOLTIP_TEXT_BACKGROUND_COLOR, true);
 
-    EQ_CLASS_CDisplay->WriteTextHD2(text, x, y, textColor, font);
+    EQ_CLASS_CDisplay->WriteTextHD2(text, x, y, EQ_TEXT_COLOR_WHITE, font);
 }
 
 /*

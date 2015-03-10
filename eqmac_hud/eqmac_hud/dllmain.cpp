@@ -42,9 +42,15 @@ int g_fontHeight = 14;
 
 float g_elementOffset = 5.0f;
 
+bool g_mouseIsDragging = false;
+
+float g_mouseDraggingBeginX = 0.0f;
+float g_mouseDraggingBeginY = 0.0f;
+
 bool g_writeTextToChatWindowIsEnabled = true;
 
-unsigned int g_previousExperience = 0;
+unsigned int g_playerExperienceCurrent  = 0;
+unsigned int g_playerExperiencePrevious = 0;
 
 float g_buttonWidth  = 10.0f;
 float g_buttonHeight = 10.0f;
@@ -111,7 +117,7 @@ bool g_mapLayer1IsEnabled = true;
 bool g_mapLayer2IsEnabled = true;
 bool g_mapLayer3IsEnabled = true;
 
-bool g_mapSpawnClickToTargetIsEnabled = true;
+bool g_mapSpawnClickToTargetIsEnabled = false;
 
 bool g_mapArrowIsEnabled        = true;
 bool g_mapZoneInfoIsEnabled     = true;
@@ -170,6 +176,9 @@ float g_mapMaxY;
 float g_mapOriginX;
 float g_mapOriginY;
 
+float g_mapOffsetX = 0.0f;
+float g_mapOffsetY = 0.0f;
+
 float g_mapHeightFilterLow  = 10.0f; // z axis
 float g_mapHeightFilterHigh = 10.0f; // z axis
 
@@ -186,6 +195,7 @@ float g_mapArrowRadius = 20.0f;
 float g_mapCenterLineSize = 5.0f;
 
 DWORD g_mapBorderColor     = 0xFF00FF00;
+DWORD g_mapBackgroundColor = 0x00000000;
 DWORD g_mapArrowColor      = 0xFF00FF00;
 DWORD g_mapLineColor       = 0xDEADBEEF; // DEADBEEF uses the map text file line colors
 DWORD g_mapTargetLineColor = 0xFFFF00FF;
@@ -240,8 +250,8 @@ float g_mapButtonZoomInY;
 float g_mapButtonZoomOutX;
 float g_mapButtonZoomOutY;
 
-float g_mapButtonZoom1X;
-float g_mapButtonZoom1Y;
+float g_mapButtonResetZoomAndCenterX;
+float g_mapButtonResetZoomAndCenterY;
 
 float g_mapButtonToggleLineColorX;
 float g_mapButtonToggleLineColorY;
@@ -387,7 +397,7 @@ bool g_itemDisplayTextItemValueIsEnabled = true;
 
 bool g_healthBarsIsEnabled = true;
 
-bool g_healthBarsClickToTargetIsEnabled = true;
+bool g_healthBarsClickToTargetIsEnabled = false;
 
 float g_healthBarsWidth  = 50.0f;
 float g_healthBarsHeight = 10.0f;
@@ -669,6 +679,7 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_mapCenterLineSize = EQMACHUD_ConfigReadFloat(filename, "Map", "fCenterLineSize", g_mapCenterLineSize);
 
     g_mapBorderColor     = EQMACHUD_ConfigReadInt(filename, "Map", "argbBorderColor",       g_mapBorderColor);
+    g_mapBackgroundColor = EQMACHUD_ConfigReadInt(filename, "Map", "argbBackgroundColor",   g_mapBackgroundColor);
     g_mapArrowColor      = EQMACHUD_ConfigReadInt(filename, "Map", "argbArrowColor",        g_mapArrowColor);
     g_mapLineColor       = EQMACHUD_ConfigReadInt(filename, "Map", "argbLineColor",         g_mapLineColor);
     g_mapTargetLineColor = EQMACHUD_ConfigReadInt(filename, "Map", "argbTargetLineColor",   g_mapTargetLineColor);
@@ -1158,6 +1169,9 @@ void EQMACHUD_GuiRecalculateCoordinates()
         g_mapHeight = g_mapMaximizedHeight;
     }
 
+    g_mapOffsetX = 0.0f;
+    g_mapOffsetY = 0.0f;
+
     g_mapMinX = g_mapX;
     g_mapMaxX = g_mapX + g_mapWidth;
 
@@ -1245,8 +1259,8 @@ void EQMACHUD_GuiRecalculateCoordinates()
 
     buttonIndex += 1.0f;
 
-    g_mapButtonZoom1X = g_mapMaxX + g_elementOffset;
-    g_mapButtonZoom1Y = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
+    g_mapButtonResetZoomAndCenterX = g_mapMaxX + g_elementOffset;
+    g_mapButtonResetZoomAndCenterY = g_mapY + ((g_buttonHeight + g_elementOffset) * buttonIndex);
 
     buttonIndex += 1.0f;
 
@@ -1423,6 +1437,9 @@ void EQMACHUD_MapToggleHeightFilter()
 void EQMACHUD_MapToggleRotate()
 {
     EQ_ToggleBool(g_mapRotateIsEnabled);
+
+    g_mapOffsetX = 0.0f;
+    g_mapOffsetY = 0.0f;
 }
 
 void EQMACHUD_MapToggleZoneInfo()
@@ -1630,8 +1647,8 @@ void EQMACHUD_DoUpdateZone()
 bool EQMACHUD_DoButtonMouseLeftHeldDown()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
-    if (mouseOverGuiElement != 0x00000000)
+    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    if (mouseOverWindow != 0x00000000)
     {
         return true;
     }
@@ -1644,6 +1661,48 @@ bool EQMACHUD_DoButtonMouseLeftHeldDown()
     if (mouseClickState != EQ_MOUSE_CLICK_STATE_LEFT)
     {
         return true;
+    }
+
+    DWORD isKeyPressedControl = EQ_READ_MEMORY<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
+
+    if (isKeyPressedControl == 1)
+    {
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapX, (int)g_mapY,
+                (int)g_mapWidth, (int)g_mapHeight
+            )
+            == true
+        )
+        {
+            if (g_mapRotateIsEnabled == false)
+            {
+                EQ_OBJECT_CXWndManager->MouseIcon = EQ_MOUSE_ICON_SIZE_ALL;
+
+                if (g_mouseIsDragging == true)
+                {
+                    float addX = ((float)mouseX - g_mouseDraggingBeginX);
+                    float addY = ((float)mouseY - g_mouseDraggingBeginY);
+
+                    if (g_mapZoom > 0.0f)
+                    {
+                        addX = addX / g_mapZoom;
+                        addY = addY / g_mapZoom;
+                    }
+
+                    g_mapOffsetX += addX;
+                    g_mapOffsetY += addY;
+
+                    g_mouseDraggingBeginX = mouseX;
+                    g_mouseDraggingBeginY = mouseY;
+                }
+            }
+
+            return true;
+        }
     }
 
     if
@@ -1682,14 +1741,20 @@ bool EQMACHUD_DoButtonMouseLeftHeldDown()
 bool EQMACHUD_DoButtonMouseLeftDown()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
-    if (mouseOverGuiElement != 0x00000000)
+    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    if (mouseOverWindow != 0x00000000)
     {
+        g_mouseIsDragging = false;
+
         return true;
     }
 
     WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
     WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+
+    g_mouseIsDragging = true;
+    g_mouseDraggingBeginX = mouseX;
+    g_mouseDraggingBeginY = mouseY;
 
     if
     (
@@ -1724,15 +1789,36 @@ bool EQMACHUD_DoButtonMouseLeftDown()
 
 bool EQMACHUD_DoButtonMouseLeftUp()
 {
+    g_mouseIsDragging = false;
+
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
-    if (mouseOverGuiElement != 0x00000000)
+    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    if (mouseOverWindow != 0x00000000)
     {
         return true;
     }
 
     WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
     WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+
+    DWORD isKeyPressedControl = EQ_READ_MEMORY<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
+
+    if (isKeyPressedControl == 1)
+    {
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapX, (int)g_mapY,
+                (int)g_mapWidth, (int)g_mapHeight
+            )
+            == true
+        )
+        {
+            return true;
+        }
+    }
 
     if
     (
@@ -1747,9 +1833,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
         if (g_writeTextToChatWindowIsEnabled == true)
         {
-            BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
-
-            if (isInGame == 1)
+            if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
             {
                 char unloadedText[128];
                 sprintf_s(unloadedText, "%s exiting...", g_applicationName);
@@ -2138,7 +2222,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
         EQMACHUD_IsPointInsideRectangle
         (
             mouseX, mouseY,
-            (int)g_mapButtonZoom1X, (int)g_mapButtonZoom1Y,
+            (int)g_mapButtonResetZoomAndCenterX, (int)g_mapButtonResetZoomAndCenterY,
             (int)g_buttonWidth, (int)g_buttonHeight
         )
         == true
@@ -2146,6 +2230,10 @@ bool EQMACHUD_DoButtonMouseLeftUp()
     {
 
         EQMACHUD_MapSetZoom(1.0f);
+
+        g_mapOffsetX = 0.0f;
+        g_mapOffsetY = 0.0f;
+
         return true;
     }
 
@@ -2613,8 +2701,8 @@ bool EQMACHUD_DoButtonMouseLeftUp()
 bool EQMACHUD_DoButtonToolTipText()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
-    if (mouseOverGuiElement != 0x00000000)
+    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    if (mouseOverWindow != 0x00000000)
     {
         return true;
     }
@@ -2641,7 +2729,6 @@ bool EQMACHUD_DoButtonToolTipText()
             buttonText,
             (int)(g_buttonExitX),
             (int)(g_buttonExitY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2664,7 +2751,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Reload Config",
             (int)(g_buttonReloadConfigX),
             (int)(g_buttonReloadConfigY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2687,7 +2773,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Map",
             (int)(g_buttonToggleMapX),
             (int)(g_buttonToggleMapY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2710,7 +2795,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "ESP",
             (int)(g_buttonToggleEspX),
             (int)(g_buttonToggleEspY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2733,7 +2817,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "ESP Text",
             (int)(g_buttonToggleEspTextX),
             (int)(g_buttonToggleEspTextY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2756,7 +2839,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "ESP Ground Spawns",
             (int)(g_buttonToggleEspGroundSpawnX),
             (int)(g_buttonToggleEspGroundSpawnY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2779,7 +2861,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "ESP Door Spawns",
             (int)(g_buttonToggleEspDoorSpawnX),
             (int)(g_buttonToggleEspDoorSpawnY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2802,7 +2883,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "ESP Distance",
             (int)(g_buttonToggleEspDistanceX),
             (int)(g_buttonToggleEspDistanceY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2825,7 +2905,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "ESP Filter NPC",
             (int)(g_buttonToggleEspFilterNpcX),
             (int)(g_buttonToggleEspFilterNpcY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2848,7 +2927,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Health Bars",
             (int)(g_buttonToggleHealthBarsX),
             (int)(g_buttonToggleHealthBarsY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2871,7 +2949,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Buffs",
             (int)(g_buttonToggleBuffsX),
             (int)(g_buttonToggleBuffsY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2894,7 +2971,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Player Info",
             (int)(g_buttonTogglePlayerInfoX),
             (int)(g_buttonTogglePlayerInfoY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2917,7 +2993,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Target Info",
             (int)(g_buttonToggleTargetInfoX),
             (int)(g_buttonToggleTargetInfoY + g_buttonHeight + g_elementOffset),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2940,7 +3015,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Zoom In",
             (int)(g_mapButtonZoomInX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonZoomInY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2963,7 +3037,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Zoom Out",
             (int)(g_mapButtonZoomOutX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonZoomOutY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -2975,7 +3048,7 @@ bool EQMACHUD_DoButtonToolTipText()
         EQMACHUD_IsPointInsideRectangle
         (
             mouseX, mouseY,
-            (int)g_mapButtonZoom1X, (int)g_mapButtonZoom1Y,
+            (int)g_mapButtonResetZoomAndCenterX, (int)g_mapButtonResetZoomAndCenterY,
             (int)g_buttonWidth, (int)g_buttonHeight
         )
         == true
@@ -2983,10 +3056,9 @@ bool EQMACHUD_DoButtonToolTipText()
     {
         EQ_DrawTooltipText
         (
-            "Zoom 1x",
-            (int)(g_mapButtonZoom1X + g_buttonWidth + g_elementOffset),
-            (int)(g_mapButtonZoom1Y - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
+            "Reset Zoom and Center",
+            (int)(g_mapButtonResetZoomAndCenterX + g_buttonWidth + g_elementOffset),
+            (int)(g_mapButtonResetZoomAndCenterY - 2.0f),
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3009,7 +3081,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Arrow",
             (int)(g_mapButtonToggleArrowX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleArrowY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3032,7 +3103,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Height Filter",
             (int)(g_mapButtonToggleHeightFilterX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleHeightFilterY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3055,7 +3125,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Rotate",
             (int)(g_mapButtonToggleRotateX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleRotateY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3078,7 +3147,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Line Color",
             (int)(g_mapButtonToggleLineColorX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleLineColorY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3101,7 +3169,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Zone Info",
             (int)(g_mapButtonToggleZoneInfoX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleZoneInfoY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3124,7 +3191,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Spawns",
             (int)(g_mapButtonToggleSpawnsX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleSpawnsY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3147,7 +3213,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Points (Labels)",
             (int)(g_mapButtonTogglePointsX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonTogglePointsY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3170,7 +3235,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Lines",
             (int)(g_mapButtonToggleLinesX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleLinesY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3193,7 +3257,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Spawn Distance",
             (int)(g_mapButtonToggleSpawnDistanceX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleSpawnDistanceY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3216,7 +3279,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Spawn Filter NPC",
             (int)(g_mapButtonToggleSpawnFilterNpcX + g_buttonWidth + g_elementOffset),
             (int)(g_mapButtonToggleSpawnFilterNpcY - 2.0f),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3239,7 +3301,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Reload Map",
             (int)(g_mapButtonReloadMapX),
             (int)(g_mapButtonReloadMapY - g_elementOffset) - (g_fontHeight - 2),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3262,7 +3323,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Copy Target's Map Location to Clipboard",
             (int)(g_mapButtonCopyTargetMapLocationToClipboardX),
             (int)(g_mapButtonCopyTargetMapLocationToClipboardY - g_elementOffset) - (g_fontHeight - 2),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3285,7 +3345,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Base Layer",
             (int)(g_mapButtonToggleLayer0X),
             (int)(g_mapButtonToggleLayer0Y - g_elementOffset) - (g_fontHeight - 2),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3308,7 +3367,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Layer 1",
             (int)(g_mapButtonToggleLayer1X),
             (int)(g_mapButtonToggleLayer1Y - g_elementOffset) - (g_fontHeight - 2),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3331,7 +3389,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Layer 2",
             (int)(g_mapButtonToggleLayer2X),
             (int)(g_mapButtonToggleLayer2Y - g_elementOffset) - (g_fontHeight - 2),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3354,7 +3411,6 @@ bool EQMACHUD_DoButtonToolTipText()
             "Layer 3",
             (int)(g_mapButtonToggleLayer3X),
             (int)(g_mapButtonToggleLayer3Y - g_elementOffset) - (g_fontHeight - 2),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3387,7 +3443,6 @@ bool EQMACHUD_DoButtonToolTipText()
             buttonText,
             (int)(g_mapButtonMaximizeX),
             (int)(g_mapButtonMaximizeY - g_elementOffset) - (g_fontHeight - 2),
-            EQ_TEXT_COLOR_WHITE,
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -3581,7 +3636,7 @@ void EQMACHUD_DoMap()
 
     DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
 
-    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
+    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
     DWORD zoneId = EQ_READ_MEMORY<DWORD>(EQ_ZONE_ID);
 
@@ -3605,6 +3660,9 @@ void EQMACHUD_DoMap()
 
     EQLOCATION targetLocation = {EQ_OBJECT_TargetSpawn->Y, EQ_OBJECT_TargetSpawn->X, EQ_OBJECT_TargetSpawn->Z};
 
+    float mapPlayerX = (((-playerSpawn->X * g_mapZoom) + g_mapOriginX) + ((playerSpawn->X + g_mapOffsetX) * g_mapZoom));
+    float mapPlayerY = (((-playerSpawn->Y * g_mapZoom) + g_mapOriginY) + ((playerSpawn->Y + g_mapOffsetY) * g_mapZoom));
+
     EQ_CLASS_CDisplay->WriteTextHD2
     (
         "Map",
@@ -3615,6 +3673,11 @@ void EQMACHUD_DoMap()
     );
 
     EQ_DrawRectangle(g_mapX, g_mapY, g_mapWidth, g_mapHeight, g_mapBorderColor);
+
+    if (g_mapBackgroundColor != 0x00000000)
+    {
+        EQ_DrawRectangle(g_mapX + 1.0f, g_mapY + 1.0f, g_mapWidth - 1.0f, g_mapHeight - 1.0f, g_mapBackgroundColor, true);
+    }
 
     g_numDeferred2dItems += 4;
 
@@ -3631,8 +3694,8 @@ void EQMACHUD_DoMap()
 
     g_numDeferred2dItems += 4;
 
-    EQ_DrawRectangle(g_mapButtonZoom1X, g_mapButtonZoom1Y, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonZoom1X + 3.0f), (int)(g_mapButtonZoom1Y - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_mapButtonResetZoomAndCenterX, g_mapButtonResetZoomAndCenterY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("*", (int)(g_mapButtonResetZoomAndCenterX + 4.0f), (int)(g_mapButtonResetZoomAndCenterY - 0.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -3923,11 +3986,11 @@ void EQMACHUD_DoMap()
             }
 
             EQLINE line;
-            line.X1 = ((mapLine->X1 * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-            line.Y1 = ((mapLine->Y1 * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+            line.X1 = ((mapLine->X1 * g_mapZoom) + g_mapOriginX) + ((playerSpawn->X + g_mapOffsetX) * g_mapZoom);
+            line.Y1 = ((mapLine->Y1 * g_mapZoom) + g_mapOriginY) + ((playerSpawn->Y + g_mapOffsetY) * g_mapZoom);
             line.Z1 = 1.0f;
-            line.X2 = ((mapLine->X2 * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-            line.Y2 = ((mapLine->Y2 * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+            line.X2 = ((mapLine->X2 * g_mapZoom) + g_mapOriginX) + ((playerSpawn->X + g_mapOffsetX) * g_mapZoom);
+            line.Y2 = ((mapLine->Y2 * g_mapZoom) + g_mapOriginY) + ((playerSpawn->Y + g_mapOffsetY) * g_mapZoom);
             line.Z2 = 1.0f;
 
             if (g_mapRotateIsEnabled == true)
@@ -3987,11 +4050,20 @@ void EQMACHUD_DoMap()
                     mapLineColor = argbColor.ARGB;
 
                     // replace black lines with white lines for visibility
-                    if (g_mapReplaceBlackLinesWithWhiteLinesIsEnabled == true)
+                    if (g_mapReplaceBlackLinesWithWhiteLinesIsEnabled == true || g_mapBackgroundColor == 0xFF000000)
                     {
                         if (mapLineColor == 0xFF000000)
                         {
                             mapLineColor = 0xFFFFFFFF;
+                        }
+                    }
+
+                    // if map background is white, replace white lines with black lines
+                    if (g_mapBackgroundColor == 0xFFFFFFFF)
+                    {
+                        if (mapLineColor == 0xFFFFFFFF)
+                        {
+                            mapLineColor = 0xFF000000;
                         }
                     }
                 }
@@ -4010,11 +4082,11 @@ void EQMACHUD_DoMap()
         if (targetSpawn && targetSpawn != playerSpawn)
         {
             EQLINE line;
-            line.X1 = g_mapOriginX;
-            line.Y1 = g_mapOriginY;
+            line.X1 = mapPlayerX;
+            line.Y1 = mapPlayerY;
             line.Z1 = 1.0f;
-            line.X2 = ((-targetSpawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-            line.Y2 = ((-targetSpawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+            line.X2 = ((-targetSpawn->X * g_mapZoom) + g_mapOriginX) + ((playerSpawn->X + g_mapOffsetX) * g_mapZoom);
+            line.Y2 = ((-targetSpawn->Y * g_mapZoom) + g_mapOriginY) + ((playerSpawn->Y + g_mapOffsetY) * g_mapZoom);
             line.Z2 = 1.0f;
 
             if (g_mapRotateIsEnabled == true)
@@ -4064,8 +4136,8 @@ void EQMACHUD_DoMap()
                 continue;
             }
 
-            float pointX = (((mapPoint->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom));
-            float pointY = (((mapPoint->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom));
+            float pointX = (((mapPoint->X * g_mapZoom) + g_mapOriginX) + ((playerSpawn->X + g_mapOffsetX) * g_mapZoom));
+            float pointY = (((mapPoint->Y * g_mapZoom) + g_mapOriginY) + ((playerSpawn->Y + g_mapOffsetY) * g_mapZoom));
 
             if (g_mapRotateIsEnabled == true)
             {
@@ -4219,8 +4291,8 @@ void EQMACHUD_DoMap()
                 textColor = g_mapGameMasterTextColor;
             }
 
-            float mapSpawnX = (((-spawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom));
-            float mapSpawnY = (((-spawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom));
+            float mapSpawnX = (((-spawn->X * g_mapZoom) + g_mapOriginX) + ((playerSpawn->X + g_mapOffsetX) * g_mapZoom));
+            float mapSpawnY = (((-spawn->Y * g_mapZoom) + g_mapOriginY) + ((playerSpawn->Y + g_mapOffsetY) * g_mapZoom));
 
             if (g_mapRotateIsEnabled == true)
             {
@@ -4283,11 +4355,13 @@ void EQMACHUD_DoMap()
 
             if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(mapSpawnX + 1) - 4, (int)(mapSpawnY + 6) - 4, 8, 8) == true)
             {
-                if (mouseOverGuiElement == 0x00000000)
+                if (mouseOverWindow == 0x00000000)
                 {
                     if (g_mapSpawnClickToTargetIsEnabled == true)
                     {
-                        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
+                        DWORD isKeyPressedControl = EQ_READ_MEMORY<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
+
+                        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT && isKeyPressedControl == 0)
                         {
                             EQ_OBJECT_TargetSpawn = spawn;
                         }
@@ -4327,11 +4401,11 @@ void EQMACHUD_DoMap()
                 if (std::strstr(spawn->Name, playerSpawn->Name) != NULL)
                 {
                     EQLINE line;
-                    line.X1 = g_mapOriginX;
-                    line.Y1 = g_mapOriginY;
+                    line.X1 = mapPlayerX;
+                    line.Y1 = mapPlayerY;
                     line.Z1 = 1.0f;
-                    line.X2 = ((-spawn->X * g_mapZoom) + g_mapOriginX) + (playerSpawn->X * g_mapZoom);
-                    line.Y2 = ((-spawn->Y * g_mapZoom) + g_mapOriginY) + (playerSpawn->Y * g_mapZoom);
+                    line.X2 = ((-spawn->X * g_mapZoom) + g_mapOriginX) + ((playerSpawn->X + g_mapOffsetX) * g_mapZoom);
+                    line.Y2 = ((-spawn->Y * g_mapZoom) + g_mapOriginY) + ((playerSpawn->Y + g_mapOffsetY) * g_mapZoom);
                     line.Z2 = 1.0f;
 
                     if (g_mapRotateIsEnabled == true)
@@ -4355,124 +4429,140 @@ void EQMACHUD_DoMap()
         }
     } // if (g_mapSpawnsIsEnabled == true)
 
-    EQLINE mapCenterLineHorizontal;
-    mapCenterLineHorizontal.X1 = g_mapOriginX - g_mapCenterLineSize;
-    mapCenterLineHorizontal.Y1 = g_mapOriginY;
-    mapCenterLineHorizontal.Z1 = 1.0f;
-    mapCenterLineHorizontal.X2 = g_mapOriginX + g_mapCenterLineSize;
-    mapCenterLineHorizontal.Y2 = g_mapOriginY;
-    mapCenterLineHorizontal.Z2 = 1.0f;
+    bool bDrawCenterAndArrow = true;
 
-    EQLINE mapCenterLineVertical;
-    mapCenterLineVertical.X1 = g_mapOriginX;
-    mapCenterLineVertical.Y1 = g_mapOriginY  - g_mapCenterLineSize;
-    mapCenterLineVertical.Z1 = 1.0f;
-    mapCenterLineVertical.X2 = g_mapOriginX;
-    mapCenterLineVertical.Y2 = g_mapOriginY  + g_mapCenterLineSize;
-    mapCenterLineVertical.Z2 = 1.0f;
-
-    EQGfx_Dx8__t3dDeferLine(&mapCenterLineHorizontal, g_mapArrowColor);
-    EQGfx_Dx8__t3dDeferLine(&mapCenterLineVertical,   g_mapArrowColor);
-
-    if (g_mapArrowIsEnabled == true && g_mapRotateIsEnabled == false)
+    if
+    (
+        mapPlayerX >= g_mapMaxX ||
+        mapPlayerY >= g_mapMaxY ||
+        mapPlayerX <= g_mapMinX ||
+        mapPlayerY <= g_mapMinY
+    )
     {
-        float playerHeadingC = playerSpawn->Heading;
+        bDrawCenterAndArrow = false;
+    }
 
-        playerHeadingC = playerHeadingC - 128.0f;
+    if (bDrawCenterAndArrow == true)
+    {
+        EQLINE mapCenterLineHorizontal;
+        mapCenterLineHorizontal.X1 = mapPlayerX - g_mapCenterLineSize;
+        mapCenterLineHorizontal.Y1 = mapPlayerY;
+        mapCenterLineHorizontal.Z1 = 1.0f;
+        mapCenterLineHorizontal.X2 = mapPlayerX + g_mapCenterLineSize;
+        mapCenterLineHorizontal.Y2 = mapPlayerY;
+        mapCenterLineHorizontal.Z2 = 1.0f;
 
-        if (playerHeadingC < 0.0f)
+        EQLINE mapCenterLineVertical;
+        mapCenterLineVertical.X1 = mapPlayerX;
+        mapCenterLineVertical.Y1 = mapPlayerY  - g_mapCenterLineSize;
+        mapCenterLineVertical.Z1 = 1.0f;
+        mapCenterLineVertical.X2 = mapPlayerX;
+        mapCenterLineVertical.Y2 = mapPlayerY  + g_mapCenterLineSize;
+        mapCenterLineVertical.Z2 = 1.0f;
+
+        EQGfx_Dx8__t3dDeferLine(&mapCenterLineHorizontal, g_mapArrowColor);
+        EQGfx_Dx8__t3dDeferLine(&mapCenterLineVertical,   g_mapArrowColor);
+
+        if (g_mapArrowIsEnabled == true && g_mapRotateIsEnabled == false)
         {
-            playerHeadingC = playerHeadingC + 512.0f;
+            float playerHeadingC = playerSpawn->Heading;
+
+            playerHeadingC = playerHeadingC - 128.0f;
+
+            if (playerHeadingC < 0.0f)
+            {
+                playerHeadingC = playerHeadingC + 512.0f;
+            }
+
+            float playerHeadingRadiansC = playerHeadingC * (g_mathPi / 256.0f);
+
+            float arrowAddCX = std::cosf(playerHeadingRadiansC);
+            arrowAddCX = arrowAddCX * g_mapArrowRadius;
+
+            float arrowAddCY = std::sinf(playerHeadingRadiansC);
+            arrowAddCY = arrowAddCY * g_mapArrowRadius;
+
+            float arrowCX = -playerSpawn->X - arrowAddCX;
+            float arrowCY = -playerSpawn->Y + arrowAddCY;
+
+            float playerHeadingB = playerHeadingC;
+
+            playerHeadingB = playerHeadingB - 32.0f;
+
+            if (playerHeadingB < 0.0f)
+            {
+                playerHeadingB = playerHeadingB + 512.0f;
+            }
+
+            float playerHeadingRadiansB = playerHeadingB * (g_mathPi / 256.0f);
+
+            float arrowAddBX = std::cosf(playerHeadingRadiansB);
+            arrowAddBX = arrowAddBX * (g_mapArrowRadius * 0.5f);
+
+            float arrowAddBY = std::sinf(playerHeadingRadiansB);
+            arrowAddBY = arrowAddBY * (g_mapArrowRadius * 0.5f);
+
+            float arrowBX = arrowCX + arrowAddBX;
+            float arrowBY = arrowCY - arrowAddBY;
+
+            float playerHeadingA = playerHeadingC;
+
+            playerHeadingA = playerHeadingA + 32.0f;
+
+            if (playerHeadingA > 512.0f)
+            {
+                playerHeadingA = playerHeadingA - 512.0f;
+            }
+
+            float playerHeadingRadiansA = playerHeadingA * (g_mathPi / 256.0f);
+
+            float arrowAddAX = std::cosf(playerHeadingRadiansA);
+            arrowAddAX = arrowAddAX * (g_mapArrowRadius * 0.5f);
+
+            float arrowAddAY = std::sinf(playerHeadingRadiansA);
+            arrowAddAY = arrowAddAY * (g_mapArrowRadius * 0.5f);
+
+            float arrowAX = arrowCX + arrowAddAX;
+            float arrowAY = arrowCY - arrowAddAY;
+
+            float mapArrowCX = (arrowCX + mapPlayerX) + playerSpawn->X;
+            float mapArrowCY = (arrowCY + mapPlayerY) + playerSpawn->Y;
+
+            float mapArrowBX = (arrowBX + mapPlayerX) + playerSpawn->X;
+            float mapArrowBY = (arrowBY + mapPlayerY) + playerSpawn->Y;
+
+            float mapArrowAX = (arrowAX + mapPlayerX) + playerSpawn->X;
+            float mapArrowAY = (arrowAY + mapPlayerY) + playerSpawn->Y;
+
+            EQLINE mapArrowLineA;
+            mapArrowLineA.X1 = mapArrowCX;
+            mapArrowLineA.Y1 = mapArrowCY;
+            mapArrowLineA.Z1 = 1.0f;
+            mapArrowLineA.X2 = mapArrowAX;
+            mapArrowLineA.Y2 = mapArrowAY;
+            mapArrowLineA.Z2 = 1.0f;
+
+            EQLINE mapArrowLineB;
+            mapArrowLineB.X1 = mapArrowCX;
+            mapArrowLineB.Y1 = mapArrowCY;
+            mapArrowLineB.Z1 = 1.0f;
+            mapArrowLineB.X2 = mapArrowBX;
+            mapArrowLineB.Y2 = mapArrowBY;
+            mapArrowLineB.Z2 = 1.0f;
+
+            EQLINE mapArrowLineC;
+            mapArrowLineC.X1 = mapPlayerX;
+            mapArrowLineC.Y1 = mapPlayerY;
+            mapArrowLineC.Z1 = 1.0f;
+            mapArrowLineC.X2 = mapArrowCX;
+            mapArrowLineC.Y2 = mapArrowCY;
+            mapArrowLineC.Z2 = 1.0f;
+
+            EQGfx_Dx8__t3dDeferLine(&mapArrowLineA, g_mapArrowColor);
+            EQGfx_Dx8__t3dDeferLine(&mapArrowLineB, g_mapArrowColor);
+            EQGfx_Dx8__t3dDeferLine(&mapArrowLineC, g_mapArrowColor);
         }
-
-        float playerHeadingRadiansC = playerHeadingC * (g_mathPi / 256.0f);
-
-        float arrowAddCX = std::cosf(playerHeadingRadiansC);
-        arrowAddCX = arrowAddCX * g_mapArrowRadius;
-
-        float arrowAddCY = std::sinf(playerHeadingRadiansC);
-        arrowAddCY = arrowAddCY * g_mapArrowRadius;
-
-        float arrowCX = -playerSpawn->X - arrowAddCX;
-        float arrowCY = -playerSpawn->Y + arrowAddCY;
-
-        float playerHeadingB = playerHeadingC;
-
-        playerHeadingB = playerHeadingB - 32.0f;
-
-        if (playerHeadingB < 0.0f)
-        {
-            playerHeadingB = playerHeadingB + 512.0f;
-        }
-
-        float playerHeadingRadiansB = playerHeadingB * (g_mathPi / 256.0f);
-
-        float arrowAddBX = std::cosf(playerHeadingRadiansB);
-        arrowAddBX = arrowAddBX * (g_mapArrowRadius * 0.5f);
-
-        float arrowAddBY = std::sinf(playerHeadingRadiansB);
-        arrowAddBY = arrowAddBY * (g_mapArrowRadius * 0.5f);
-
-        float arrowBX = arrowCX + arrowAddBX;
-        float arrowBY = arrowCY - arrowAddBY;
-
-        float playerHeadingA = playerHeadingC;
-
-        playerHeadingA = playerHeadingA + 32.0f;
-
-        if (playerHeadingA > 512.0f)
-        {
-            playerHeadingA = playerHeadingA - 512.0f;
-        }
-
-        float playerHeadingRadiansA = playerHeadingA * (g_mathPi / 256.0f);
-
-        float arrowAddAX = std::cosf(playerHeadingRadiansA);
-        arrowAddAX = arrowAddAX * (g_mapArrowRadius * 0.5f);
-
-        float arrowAddAY = std::sinf(playerHeadingRadiansA);
-        arrowAddAY = arrowAddAY * (g_mapArrowRadius * 0.5f);
-
-        float arrowAX = arrowCX + arrowAddAX;
-        float arrowAY = arrowCY - arrowAddAY;
-
-        float mapArrowCX = (arrowCX + g_mapOriginX) + playerSpawn->X;
-        float mapArrowCY = (arrowCY + g_mapOriginY) + playerSpawn->Y;
-
-        float mapArrowBX = (arrowBX + g_mapOriginX) + playerSpawn->X;
-        float mapArrowBY = (arrowBY + g_mapOriginY) + playerSpawn->Y;
-
-        float mapArrowAX = (arrowAX + g_mapOriginX) + playerSpawn->X;
-        float mapArrowAY = (arrowAY + g_mapOriginY) + playerSpawn->Y;
-
-        EQLINE mapArrowLineA;
-        mapArrowLineA.X1 = mapArrowCX;
-        mapArrowLineA.Y1 = mapArrowCY;
-        mapArrowLineA.Z1 = 1.0f;
-        mapArrowLineA.X2 = mapArrowAX;
-        mapArrowLineA.Y2 = mapArrowAY;
-        mapArrowLineA.Z2 = 1.0f;
-
-        EQLINE mapArrowLineB;
-        mapArrowLineB.X1 = mapArrowCX;
-        mapArrowLineB.Y1 = mapArrowCY;
-        mapArrowLineB.Z1 = 1.0f;
-        mapArrowLineB.X2 = mapArrowBX;
-        mapArrowLineB.Y2 = mapArrowBY;
-        mapArrowLineB.Z2 = 1.0f;
-
-        EQLINE mapArrowLineC;
-        mapArrowLineC.X1 = g_mapOriginX;
-        mapArrowLineC.Y1 = g_mapOriginY;
-        mapArrowLineC.Z1 = 1.0f;
-        mapArrowLineC.X2 = mapArrowCX;
-        mapArrowLineC.Y2 = mapArrowCY;
-        mapArrowLineC.Z2 = 1.0f;
-
-        EQGfx_Dx8__t3dDeferLine(&mapArrowLineA, g_mapArrowColor);
-        EQGfx_Dx8__t3dDeferLine(&mapArrowLineB, g_mapArrowColor);
-        EQGfx_Dx8__t3dDeferLine(&mapArrowLineC, g_mapArrowColor);
-    } // if (g_mapArrowIsEnabled == true)
+    }
 
     if (g_mapZoneInfoIsEnabled == true)
     {
@@ -4513,7 +4603,7 @@ void EQMACHUD_DoEsp()
 
     DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
 
-    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
+    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
     DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
@@ -4618,7 +4708,7 @@ void EQMACHUD_DoEsp()
             {
                 if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
-                    if (mouseOverGuiElement == 0x00000000)
+                    if (mouseOverWindow == 0x00000000)
                     {
                         EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, (int)mouseY, g_espDoorSpawnTextColor, fontArial14);
                     }
@@ -4691,7 +4781,7 @@ void EQMACHUD_DoEsp()
             {
                 if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
-                    if (mouseOverGuiElement == 0x00000000)
+                    if (mouseOverWindow == 0x00000000)
                     {
                         EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, (int)mouseY, g_espGroundSpawnTextColor, fontArial14);
                     }
@@ -5054,7 +5144,7 @@ void EQMACHUD_DoEsp()
             {
                 if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
-                    if (mouseOverGuiElement == 0x00000000)
+                    if (mouseOverWindow == 0x00000000)
                     {
                         EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, (int)mouseY, textColor, fontArial14);
                     }
@@ -5299,7 +5389,7 @@ void EQMACHUD_DoHealthBars()
 
     DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
 
-    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
+    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
     DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
@@ -5412,7 +5502,7 @@ void EQMACHUD_DoHealthBars()
             {
                 if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)screenX, (int)screenY, (int)g_healthBarsWidth, (int)g_healthBarsHeight) == true)
                 {
-                    if (mouseOverGuiElement == 0x00000000)
+                    if (mouseOverWindow == 0x00000000)
                     {
                         if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
                         {
@@ -5430,9 +5520,9 @@ void EQMACHUD_DoHealthBars()
     
 void EQMACHUD_DoItemDisplayText()
 {
-    DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
+    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
-    if (mouseOverGuiElement == 0x00000000)
+    if (mouseOverWindow == 0x00000000)
     {
         return;
     }
@@ -5525,7 +5615,7 @@ void EQMACHUD_DoItemDisplayText()
             strcat_s(itemCostText, copperText);
         }
 
-        EQ_DrawTooltipText(itemCostText, mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, mouseY, EQ_TEXT_COLOR_WHITE, EQ_POINTER_FONT_ARIAL14);
+        EQ_DrawTooltipText(itemCostText, mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, mouseY, EQ_POINTER_FONT_ARIAL14);
     }
 }
 
@@ -5564,17 +5654,33 @@ void EQMACHUD_DoMessageTextGainedExperience()
         return;
     }
 
-    unsigned int currentExperience = charInfo->Experience;
+    g_playerExperienceCurrent = charInfo->Experience;
 
-    if (currentExperience > g_previousExperience)
+    if (g_playerExperiencePrevious == 0)
     {
-        unsigned int gainedExperience = currentExperience - g_previousExperience;
+        g_playerExperiencePrevious = g_playerExperienceCurrent;
+    }
 
-        float gainedExperiencePercent = (float)((gainedExperience * 100) / EQ_EXPERIENCE_MAX);
+    unsigned int gainedExperience = 0;
 
-        g_previousExperience = currentExperience;
+    if (g_playerExperienceCurrent > g_playerExperiencePrevious) // mid level
+    {
+        gainedExperience = g_playerExperienceCurrent - g_playerExperiencePrevious;
 
-        sprintf_s(g_messageText, "You gained %d experience! (%.2f%%)", gainedExperience, gainedExperiencePercent);
+        g_playerExperiencePrevious = g_playerExperienceCurrent;
+    }
+    else if (g_playerExperiencePrevious > g_playerExperienceCurrent) // level up
+    {
+        gainedExperience = (EQ_EXPERIENCE_MAX - g_playerExperiencePrevious) + g_playerExperienceCurrent;
+
+        g_playerExperiencePrevious = g_playerExperienceCurrent;
+    }
+
+    if (gainedExperience > 0)
+    {
+        float gainedExperiencePercent = (float)((gainedExperience * 100.0f) / EQ_EXPERIENCE_MAX);
+
+        sprintf_s(g_messageText, "You gained %d experience! (%.0f%%)", gainedExperience, gainedExperiencePercent);
 
         g_messageTextColor = EQ_TEXT_COLOR_YELLOW;
 
@@ -5596,9 +5702,7 @@ int __cdecl EQMACHUD_DETOUR_CEverQuest__LMouseDown(unsigned short a1, unsigned s
         return EQMACHUD_REAL_CEverQuest__LMouseDown(a1, a2);
     }
 
-    BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
-
-    if (isInGame == 1)
+    if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
     {
         BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
 
@@ -5621,9 +5725,7 @@ int __cdecl EQMACHUD_DETOUR_CEverQuest__LMouseUp(unsigned short a1, unsigned sho
         return EQMACHUD_REAL_CEverQuest__LMouseUp(a1, a2);
     }
 
-    BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
-
-    if (isInGame == 1)
+    if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
     {
         BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
 
@@ -5648,17 +5750,15 @@ int __cdecl EQMACHUD_DETOUR_HandleMouseWheel(int a1)
 
     int mouseWheelDelta = a1;
 
-    BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
-
-    if (isInGame == 1)
+    if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
     {
         BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
 
         if (isNetStatusEnabled == 1)
         {
-            DWORD mouseOverGuiElement = EQ_READ_MEMORY<DWORD>(EQ_POINT_CXWND_MOUSE_OVER_GUI_ELEMENT);
+            DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
-            if (mouseOverGuiElement == 0x00000000)
+            if (mouseOverWindow == 0x00000000)
             {
                 WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
                 WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
@@ -5692,13 +5792,10 @@ int __cdecl EQMACHUD_DETOUR_HandleMouseWheel(int a1)
 
 int __cdecl EQMACHUD_DETOUR_CEverQuest__dsp_chat(const char* a1, short a2, bool a3)
 {
-    if (g_messageTextGainedExperienceIsEnabled == true)
-    {
-        if (strcmp(a1, "You gain experience!!") == 0)
-        {
-            EQMACHUD_DoMessageTextGainedExperience();
-        }
-    }
+    //if (strcmp(a1, "You gain experience!!") == 0)
+    //{
+        //EQ_CLASS_CEverQuest->dsp_chat("You have %d/%d experience!", EQ_TEXT_COLOR_YELLOW, true);
+    //}
 
     return EQMACHUD_REAL_CEverQuest__dsp_chat(a1, a2, a3);
 }
@@ -5718,9 +5815,7 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
 
         if (g_writeTextToChatWindowIsEnabled == true)
         {
-            BYTE isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
-
-            if (isInGame == 1)
+            if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
             {
                 char loadedText[128];
                 sprintf_s(loadedText, "%s loaded.", g_applicationName);
@@ -5783,7 +5878,20 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
         EQMACHUD_DoMessageText();
     }
 
+    if (g_messageTextGainedExperienceIsEnabled == true)
+    {
+        EQMACHUD_DoMessageTextGainedExperience();
+    }
+
     EQMACHUD_DoExitRowButtons();
+
+    // redraw the cursor so that the HUD is underneath it
+    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+
+    if (mouseClickState != EQ_MOUSE_CLICK_STATE_RIGHT)
+    {
+        EQ_CLASS_CXWndManager->DrawCursor();
+    }
 
     EQMACHUD_DoButtonToolTipText();
 

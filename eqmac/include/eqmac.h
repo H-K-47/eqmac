@@ -1,5 +1,5 @@
-#ifndef EQMAC_HPP
-#define EQMAC_HPP
+#ifndef EQMAC_H
+#define EQMAC_H
 
 #include <cstdint>
 #include <cstring>
@@ -9,6 +9,11 @@
 
 const char* EQ_STRING_WINDOW_TITLE     = "EverQuest";
 const char* EQ_STRING_WINDOW_TITLE_EQW = "EQW beta 2.32";
+
+const char* EQ_STRING_EQ  = "EQ";
+const char* EQ_STRING_EQW = "EQW";
+
+const char* EQ_STRING_PROCESS_NAME = "eqgame.exe";
 
 const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
@@ -20,7 +25,9 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_IS_NET_STATUS_ENABLED 0x007985EC // BYTE
 
-#define EQ_EXPERIENCE_MAX 350
+#define EQ_EXPERIENCE_MAX 350 // the progress bar (0-350)
+
+#define EQ_ALTERNATE_ADVANCEMENT_EXPERIENCE_MAX 330 // the progress bar (0-330)
 
 #define EQ_IS_KEY_PRESSED_SHIFT   0x0080931C // DWORD
 #define EQ_IS_KEY_PRESSED_CONTROL 0x00809320 // DWORD
@@ -34,6 +41,8 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX 4000 // t3dDeferX
 
 #define EQ_POINTER_StringTable 0x007F9490 // eqstr_xx.txt
+
+#define EQ_POINTER_CAMERA_INFO 0x0063B928
 
 #define EQ_POINTER_CXWndManager 0x00809DB4
 
@@ -72,8 +81,8 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_POINTER_CHotButtonWnd 0x0063D628
 
 #define EQ_POINTER_CLootWnd 0x0063D65C
-#define EQ_OFFSET_CLootWnd_IS_OPEN       0x134 // BYTE
-#define EQ_OFFSET_CLootWnd_POINTER_ITEM1 0x1B8 // pointer to first item
+#define EQ_OFFSET_CLootWnd_IS_OPEN            0x134 // BYTE
+#define EQ_OFFSET_CLootWnd_POINTER_FIRST_ITEM 0x1B8
 
 #define EQ_CLootWnd_POINTER_ITEM_OFFSET 0x04 // offset between each item pointer
 
@@ -299,11 +308,11 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_MOUSE_CURSOR_WIDTH  16 // pixels
 #define EQ_MOUSE_CURSOR_HEIGHT 16 // pixels
 
-#define EQ_MOUSE_X_EX 0x008092E8 // DWORD
-#define EQ_MOUSE_Y_EX 0x008092EC // DWORD
+#define EQ_MOUSE_X_REAL 0x008092E8 // DWORD ; read/write, DirectInput Mouse
+#define EQ_MOUSE_Y_REAL 0x008092EC // DWORD ; read/write, DirectInput Mouse
 
-#define EQ_MOUSE_X 0x00798580 // WORD
-#define EQ_MOUSE_Y 0x00798582 // WORD
+#define EQ_MOUSE_X 0x00798580 // WORD ; read only
+#define EQ_MOUSE_Y 0x00798582 // WORD ; read-only
 
 #define EQ_MOUSE_CLICK_STATE 0x00798614 // DWORD
 
@@ -484,6 +493,17 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferLine "t3dDeferLine" // EQGfx_Dx8.t3dDeferLine
 #define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferRect "t3dDeferRect" // EQGfx_Dx8.t3dDeferRect
 #define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferQuad "t3dDeferQuad" // EQGfx_Dx8.t3dDeferQuad
+
+#define EQ_KEY_NULL    0
+#define EQ_KEY_M       50
+#define EQ_KEY_TILDE   41
+#define EQ_KEY_NUMPAD0 82
+#define EQ_KEY_NUMPAD1 79
+#define EQ_KEY_NUMPAD2 80
+#define EQ_KEY_NUMPAD3 81
+#define EQ_KEY_NUMPAD4 75
+#define EQ_KEY_NUMPAD5 76
+#define EQ_KEY_NUMPAD6 77
 
 size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
 
@@ -826,12 +846,38 @@ typedef struct _EQARGBCOLOR
     };
 } EQARGBCOLOR, *PEQARGBCOLOR;
 
+typedef struct _EQCAMERAINFO
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD RegionNumber;
+/* 0x0008 */ FLOAT Y;
+/* 0x000C */ FLOAT X;
+/* 0x0010 */ FLOAT Z;
+/* 0x0014 */ FLOAT Heading; // Yaw
+/* 0x0018 */ FLOAT Pitch;
+/* 0x001C */ FLOAT Roll;
+/* 0x0020 */ FLOAT FieldOfView;
+/* 0x0024 */ FLOAT AspectRatio;
+/* 0x0028 */ FLOAT Unknown0028;
+/* 0x002C */ FLOAT Unknown002C;
+/* 0x0030 */ FLOAT DrawDistance;
+/* 0x0034 */ BYTE Unknown0034[20];
+/* 0x0048 */ DWORD ResolutionWidth;
+/* 0x004C */ DWORD ResolutionHeight;
+/* 0x0050 */ BYTE Unknown0050[12];
+/* 0x005C */ FLOAT Unknown005C;
+/* 0x0060 */ FLOAT Unknown0060;
+/* 0x0064 */ FLOAT ResolutionWidthHalf;
+/* 0x0068 */ FLOAT ResolutionHeightHalf;
+/* ...... */ 
+} EQCAMERAINFO, *PEQCAMERAINFO;
+
 typedef struct _EQZONEINFO
 {
 /* 0x0000 */ CHAR PlayerName[64]; // [0x40]
 /* 0x0040 */ CHAR ShortName[32]; // [0x20]
 /* 0x0060 */ CHAR LongName[128]; // [0x80]
-/* ...... */ // TODO
+/* ...... */ 
 } EQZONEINFO, *PEQZONEINFO;
 
 // sizeof EQBUFFINFO 0x0A
@@ -916,12 +962,11 @@ typedef struct _EQSPELLINFO
     PCHAR CastOnYou; //[32];
     PCHAR CastOnOther; //[40];
     PCHAR WearOff; //[32];
-/* ...... */ // TODO
+/* ...... */ 
 } EQSPELLINFO, *PEQSPELLINFO;
 
 typedef struct _EQSPELLLIST
 {
-    //BYTE Unknown0000[4];
     struct _EQSPELLINFO* Spell[4096];
 } EQSPELLLIST, *PEQSPELLLIST;
 
@@ -938,7 +983,7 @@ typedef struct _EQCHARINFO
 /* 0x0090 */ WORD Level;
 /* 0x0092 */ WORD Unknown0092;
 /* 0x0094 */ DWORD Experience; // EXP
-/* 0x0098 */ WORD Face;
+/* 0x0098 */ WORD PracticePoints; // Training window
 /* 0x009A */ WORD Mana;
 /* 0x009C */ WORD BaseHP;
 /* 0x009E */ WORD StunnedState; // EQ_STUNNED_STATE_x
@@ -968,12 +1013,147 @@ typedef struct _EQCHARINFO
 /* 0x0B84 */ DWORD BankCopper;
 /* 0x0B88 */ BYTE Unknown0B88[32];
 /* 0x0BA8 */ WORD Skills[74];
-/* ...... */ // TODO
+/* ...... */ 
 } EQCHARINFO, *PEQCHARINFO;
+
+// used for name and guild name above head of each spawn
+typedef struct _EQSTRINGSPRITE
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD Unknown0004; // id or index?
+/* 0x0008 */ DWORD Unknown0008;
+/* 0x000C */ DWORD Unknown000C;
+/* 0x0010 */ DWORD Unknown0010;
+/* 0x0014 */ PVOID Unknown0014;
+/* 0x0018 */ PCHAR Text;
+/* 0x001C */ DWORD TextLength;
+/* 0x0020 */ DWORD Unknown0020;
+/* 0x0024 */ DWORD MaxScaleFactor1; // s3dSetStringSpriteMaxScaleFactor
+/* 0x0028 */ FLOAT MaxScaleFactor2; // s3dSetStringSpriteMaxScaleFactor
+/* 0x002C */ FLOAT MaxScaleFactor3; // s3dSetStringSpriteMaxScaleFactor
+/* 0x0030 */ DWORD IsYonClipEnabled; // s3dSetStringSpriteYonClip (draw distance)
+/* 0x0034 */ DWORD YonClipDistance; // s3dSetStringSpriteYonClip (draw distance)
+/* 0x0038 */ FLOAT Unknown0038; // unknown modifier for scale
+/* 0x003C */ DWORD Width; // how wide the text is stretched
+/* 0x0040 */ DWORD Height; // how tall the text is stretched
+/* 0x0044 */ FLOAT Unknown0044; // unknown multiplier
+/* 0x0048 */ EQARGBCOLOR Color; // s3dSetStringSpriteTint
+/* ...... */ 
+} EQSTRINGSPRITE, *PEQSTRINGSPRITE;
+
+// model skeleton animation?
+typedef struct _EQTRACK
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD Unknown0004;
+/* 0x0008 */ PCHAR Name; // x_TRACK, x_POINT_TRACK, etc
+/* ...... */ 
+} EQTRACK, *PEQTRACK;
+
+// model skeleton bones
+typedef struct _EQDAG
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ PCHAR Name; // x_DAG, x_POINT_DAG, etc
+/* 0x0008 */ struct _EQSTRINGSPRITE* StringSprite;
+/* 0x000C */ struct _EQDAG* Parent;
+/* 0x0010 */ struct _EQMODELINFO* ModelInfo;
+/* 0x0014 */ struct _EQTRACK* Track1;
+/* 0x0018 */ struct _EQTRACK* Track2;
+/* 0x001C */ BYTE Unknown001C[96];
+/* 0x007C */ FLOAT Y;
+/* 0x0080 */ FLOAT X;
+/* 0x0084 */ FLOAT Z;
+/* 0x0088 */ BYTE Unknown0088[96];
+/* 0x00E8 */ DWORD NumChildren;
+/* 0x00EC */ struct _EQDAGCHILDREN* Children;
+/* ...... */ 
+} EQDAG, *PEQDAG;
+
+typedef struct _EQDAGCHILDREN
+{
+/* 0x0000 */ struct _EQDAG* Child[4];
+} EQDAGCHILDREN, *PEQDAGCHILDREN;
+
+typedef struct _EQMODELINFO
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD Unknown0004;
+/* 0x0008 */ DWORD Unknown0008;
+/* 0x000C */ DWORD Unknown000C;
+/* 0x0010 */ DWORD Unknown0010;
+/* 0x0014 */ PVOID Unknown0014;
+/* 0x0018 */ PVOID Unknown0018;
+/* 0x001C */ PVOID ActorInstance;
+/* 0x0020 */ DWORD NumDag; // includes Root
+/* 0x0024 */ struct _EQDAG* DagRoot; // first dag
+/* ...... */ 
+} EQMODELINFO, *PEQMODELINFO;
 
 typedef struct _EQACTORINFO
 {
-/* ...... */ // TODO
+/* 0x0000 */ PVOID ActorInstance; // TODO
+/* 0x0004 */ PVOID Unknown0004;
+/* 0x0008 */ char ActorDef[64]; // xxx_ACTORDEF string (HUM_ACTORDEF, ELM_ACTORDEF, etc)
+/* 0x0048 */ FLOAT Z;
+/* 0x004C */ FLOAT ZCeiling; // Z axis of the ceiling or first collision above player
+/* 0x0050 */ PVOID Unknown0050;
+/* 0x0054 */ DWORD Unknown0054;
+/* 0x0058 */ DWORD UnknownTimer1;
+/* 0x005C */ DWORD UnknownTimer2;
+/* 0x0060 */ DWORD UnknownTimer3;
+/* 0x0064 */ DWORD UnknownTimer4;
+/* 0x0068 */ DWORD Unknown0068;
+/* 0x006C */ DWORD Unknown006C;
+/* 0x0070 */ DWORD Unknown0070;
+/* 0x0074 */ DWORD UnknownTimer5;
+/* 0x0078 */ DWORD UnknownTimer6;
+/* 0x007C */ DWORD UnknownTimer7;
+/* 0x0080 */ WORD LevitationMovementCounter; // loops from 0 to 512 while levitating, causes up/down movement, 0xFFFF = Not Levitating
+/* 0x0082 */ WORD DrunkMovementCounter; // loops from 0 to 512 while drunk, causes left/right movement, 0xFFFF = Not Drunk
+/* 0x0084 */ WORD Unknown0084;
+/* 0x0086 */ WORD Unknown0086;
+/* 0x0088 */ FLOAT DrunkMovementModifier; // how far left/right the player moves while drunk
+/* 0x008C */ FLOAT LevitationMovementModifier; // how far up/down the player moves while levitating
+/* 0x0090 */ BYTE IsAffectedByGravity; // gravity is enabled for the player (disabled while levitating)
+/* 0x0091 */ BYTE Unknown0091; // equals 0, 11 or 13
+/* 0x0092 */ BYTE Unknown0092;
+/* 0x0093 */ BYTE Unknown0093;
+/* 0x0094 */ PVOID Unknown0094; // pointer, static address 0x006EC6E8 has same value
+/* 0x0098 */ PVOID Unknown0098; // pointer, static address 0x006EC6E8 has same value
+/* 0x009C */ PVOID Unknown009C; // pointer, static address 0x006EC6E8 has same value
+/* 0x00A0 */ BYTE IsSwimmingUnderwater;
+/* 0x00A1 */ BYTE SwimmingWaterType; // 5,6,9,10 = Water, 7 = Lava, 8 = Freezing Water (7 and 8 cause damage!)
+/* 0x00A2 */ BYTE SwimmingFeetTouchingWater; // 0 = False, 5 = True
+/* 0x00A3 */ BYTE SwimmingUnknown1; // 0 = False, 5 = True
+/* 0x00A4 */ BYTE SwimmingUnknown2;
+/* 0x00A5 */ BYTE SwimmingUnknown3;
+/* 0x00A6 */ BYTE SwimmingUnknown4;
+/* 0x00A7 */ BYTE SwimmingUnknown5;
+/* 0x00A8 */ FLOAT MovementFriction1; // used for sliding on ice or slippery surfaces (Default = 0.625)
+/* 0x00AC */ FLOAT MovementFriction2; // used for sliding on ice or slippery surfaces (Default = 0.8000000119)
+/* 0x00B0 */ FLOAT JumpHeightModifier; // how high the player jumps (Default = 1.350000024)
+/* 0x00B4 */ FLOAT Unknown00B4;
+/* 0x00B8 */ FLOAT Unknown00B8;
+/* 0x00BC */ FLOAT MovementSpeedModifier; // how much slower/faster you move
+/* 0x00C0 */ BYTE Unknown00C0[196];
+/* 0x0184 */ DWORD Animation;
+/* 0x0188 */ BYTE Unknown0188[252];
+/* 0x0284 */ struct _EQMODELINFO* ModelInfo;
+/* 0x0288 */ struct _EQDAG* DagHeadPoint;
+/* 0x028C */ struct _EQDAG* DagHead;
+/* 0x0290 */ struct _EQDAG* DagUnknown;
+/* 0x0294 */ struct _EQDAG* DagRightPoint;
+/* 0x0298 */ struct _EQDAG* DagLeftPoint;
+/* 0x029C */ struct _EQDAG* DagShieldPoint;
+/* 0x02A0 */ BYTE Unknown02A0[128];
+/* 0x0320 */ BYTE MovementType; // 0 = None, 4 = Walking, 6 = Running, 7 = Swimming
+/* 0x0321 */ BYTE Unknown0321[12];
+/* 0x032D */ BYTE IsMovingTimer; // 0 = Moving, 1-6 = Recently Stopped Moving, 200 = Not Moving
+/* 0x032E */ BYTE Unknown032E[266];
+/* 0x0438 */ DWORD IsLookingForGroup;
+/* 0x043C */ DWORD IsTrader;
+/* ...... */ 
 } EQACTORINFO, *PEQACTORINFO;
 
 // sizeof EQSPAWNINFO 0x168
@@ -998,8 +1178,8 @@ typedef struct _EQSPAWNINFO
 /* 0x0078 */ struct _EQSPAWNINFO* Prev;
 /* 0x007C */ struct _EQSPAWNINFO* Next;
 /* 0x0080 */ PVOID Unknown0080;
-/* 0x0084 */ PEQACTORINFO ActorInfo; // EQACTORINFO
-/* 0x0088 */ PEQCHARINFO CharInfo; // EQCHARINFO
+/* 0x0084 */ struct _EQACTORINFO* ActorInfo;
+/* 0x0088 */ struct _EQCHARINFO* CharInfo;
 /* 0x008C */ FLOAT CameraHeightOffset;
 /* 0x0090 */ FLOAT ModelHeightOffset;
 /* 0x0094 */ WORD SpawnId;
@@ -1039,7 +1219,9 @@ typedef struct _EQSPAWNINFO
 /* 0x0114 */ DWORD AnonymousState; // EQ_ANONYMOUS_STATE_x, /anonymous and /roleplay
 /* 0x0118 */ DWORD Unknown0118;
 /* 0x011C */ DWORD IsAwayFromKeyboard; // AFK
-/* 0x0120 */ BYTE Unknown0120[12];
+/* 0x0120 */ BYTE Unknown0120[4];
+/* 0x0124 */ DWORD AlternateAdvancementRank; // AA points title value (0-3) (Venerable, Baroness, etc)
+/* 0x0128 */ BYTE Unknown0128[4];
 /* 0x012C */ CHAR LastName[22]; // surname or title
 /* 0x0142 */ BYTE Unknown0142[10];
 /* 0x014C */ WORD GuildRank;
@@ -1069,7 +1251,7 @@ typedef struct _EQGROUNDSPAWNINFO
 /* 0x0094 */ FLOAT X;
 /* 0x0098 */ FLOAT Y;
 /* 0x009C */ CHAR Name[30];
-/* ...... */ // TODO
+/* ...... */ 
 } EQGROUNDSPAWNINFO, *PEQGROUNDSPAWNINFO;
 
 typedef struct _EQDOORSPAWNINFO
@@ -1090,7 +1272,7 @@ typedef struct _EQDOORSPAWNINFO
 /* 0x0038 */ FLOAT X;
 /* 0x003C */ FLOAT Z;
 /* 0x0040 */ FLOAT Heading;
-/* ...... */ // TODO
+/* ...... */ 
 } EQDOORSPAWNINFO, *PEQDOORSPAWNINFO;
 
 typedef struct _EQGROUPLIST
@@ -1171,7 +1353,7 @@ void EQ_ToggleBool(bool &b)
 
 float EQ_CalculateDistance(float x1, float y1, float x2, float y2)
 {
-    return std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2));
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
 }
 
 const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], size_t listSize, char key[])
@@ -1363,4 +1545,4 @@ const char* EQ_GetCardinalDirectionByHeading(float heading)
     return direction;
 }
 
-#endif // EQMAC_HPP
+#endif // EQMAC_H

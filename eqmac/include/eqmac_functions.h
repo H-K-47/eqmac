@@ -1,11 +1,11 @@
-#ifndef EQMAC_FUNCTIONS_HPP
-#define EQMAC_FUNCTIONS_HPP
+#ifndef EQMAC_FUNCTIONS_H
+#define EQMAC_FUNCTIONS_H
 
 #include <cstdint>
 #include <cstring>
 #include <cmath>
 
-#include "eqmac.hpp"
+#include "eqmac.h"
 
 #define EQ_FUNCTION_AT_ADDRESS(function,offset) __declspec(naked) function\
 {\
@@ -43,6 +43,9 @@ void EQ_WRITE_MEMORY(DWORD address, T value)
 
 EQSPELLLIST** EQ_OBJECT_ppSpellList = (EQSPELLLIST**)EQ_POINTER_SPELL_MANAGER;
 #define EQ_OBJECT_SpellList (*EQ_OBJECT_ppSpellList)
+
+EQCAMERAINFO** EQ_OBJECT_ppCameraInfo = (EQCAMERAINFO**)EQ_POINTER_CAMERA_INFO;
+#define EQ_OBJECT_CameraInfo (*EQ_OBJECT_ppCameraInfo)
 
 EQCHARINFO** EQ_OBJECT_ppCharInfo = (EQCHARINFO**)EQ_POINTER_CHAR_INFO;
 #define EQ_OBJECT_CharInfo (*EQ_OBJECT_ppCharInfo)
@@ -315,6 +318,16 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsig
 #define EQ_FUNCTION_HandleMouseWheel 0x0055B2E0
 #ifdef EQ_FUNCTION_HandleMouseWheel
 typedef int (__cdecl* EQ_FUNCTION_TYPE_HandleMouseWheel)(int); // int mouseWheelDelta
+#endif
+
+#define EQ_FUNCTION_ProcessKeyDown 0x005257FA
+#ifdef EQ_FUNCTION_ProcessKeyDown
+typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyDown)(int); // int key
+#endif
+
+#define EQ_FUNCTION_ProcessKeyUp 0x0052462A
+#ifdef EQ_FUNCTION_ProcessKeyUp
+typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyUp)(int); // int key
 #endif
 
 // world to screen function
@@ -1365,4 +1378,4 @@ void everquest_function_trade_window_activate(int spawn_info, bool is_target_npc
 
 */
 
-#endif // EQMAC_FUNCTIONS_HPP
+#endif // EQMAC_FUNCTIONS_H

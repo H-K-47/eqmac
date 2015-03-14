@@ -795,6 +795,7 @@ void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAG dag1, PEQDAG dag2, int line
     g_numDeferred2dItems++;
 }
 
+// recursive function
 void EQMACHUD_DoEspSkeletonDraw(PEQDAG dag, int lineColor)
 {
     if (dag == NULL)
@@ -804,42 +805,15 @@ void EQMACHUD_DoEspSkeletonDraw(PEQDAG dag, int lineColor)
 
     if (dag->NumChildren > 0)
     {
-        if (strstr(dag->Children->Child[0]->Name, "POINT") == NULL)
+        for (size_t i = 0; i < dag->NumChildren; i++)
         {
-            EQMACHUD_DoEspSkeletonDrawLineBetweenDag(dag, dag->Children->Child[0], lineColor);
+            if (strstr(dag->Children->Child[i]->Name, "POINT") == NULL)
+            {
+                EQMACHUD_DoEspSkeletonDrawLineBetweenDag(dag, dag->Children->Child[i], lineColor);
+            }
+
+            EQMACHUD_DoEspSkeletonDraw(dag->Children->Child[i], lineColor);
         }
-
-        EQMACHUD_DoEspSkeletonDraw(dag->Children->Child[0], lineColor);
-    }
-
-    if (dag->NumChildren > 1)
-    {
-        if (strstr(dag->Children->Child[1]->Name, "POINT") == NULL)
-        {
-            EQMACHUD_DoEspSkeletonDrawLineBetweenDag(dag, dag->Children->Child[1], lineColor);
-        }
-
-        EQMACHUD_DoEspSkeletonDraw(dag->Children->Child[1], lineColor);
-    }
-
-    if (dag->NumChildren > 2)
-    {
-        if (strstr(dag->Children->Child[2]->Name, "POINT") == NULL)
-        {
-            EQMACHUD_DoEspSkeletonDrawLineBetweenDag(dag, dag->Children->Child[2], lineColor);
-        }
-
-        EQMACHUD_DoEspSkeletonDraw(dag->Children->Child[2], lineColor);
-    }
-
-    if (dag->NumChildren > 3)
-    {
-        if (strstr(dag->Children->Child[3]->Name, "POINT") == NULL)
-        {
-            EQMACHUD_DoEspSkeletonDrawLineBetweenDag(dag, dag->Children->Child[3], lineColor);
-        }
-
-        EQMACHUD_DoEspSkeletonDraw(dag->Children->Child[3], lineColor);
     }
 }
 

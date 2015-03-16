@@ -49,12 +49,7 @@ DWORD WINAPI EQMACKEYS_ThreadLoop(LPVOID param)
 
         if (EQMACKEYS_IsForegroundWindowCurrentProcessId() == true)
         {
-            if
-            (
-                (KEYDOWN(VK_CONTROL)) &&
-                (KEYDOWN(VK_ALT))     &&
-                (KEYDOWN(VK_BACK))
-            )
+            if (KEYDOWN(VK_PAUSE))
             {
                 break;
             }

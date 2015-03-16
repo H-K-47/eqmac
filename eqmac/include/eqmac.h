@@ -343,15 +343,17 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_CAMERA_VIEW 0x0063BE68 // DWORD ; EQ_CAMERA_VIEW_x
 
-#define EQ_CAMERA_VIEW_FIRST_PERSON   0
+#define EQ_CAMERA_VIEW_FIRST_PERSON  0
 #define EQ_CAMERA_VIEW_THIRD_PERSON1 1
 #define EQ_CAMERA_VIEW_THIRD_PERSON2 2
 #define EQ_CAMERA_VIEW_THIRD_PERSON3 3
 #define EQ_CAMERA_VIEW_THIRD_PERSON4 4
-#define EQ_CAMERA_VIEW_THIRD_PERSON5 5
 
-#define EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM     0x007996C0 // FLOAT ; min is spawn model height offset, max is 200.0f
-#define EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM_MAX 0x005E8538 // FLOAT ; equals 200.0f
+#define EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM 0x007996C0 // FLOAT ; min is spawn model height offset, max is 200.0f
+#define EQ_CAMERA_VIEW_THIRD_PERSON3_ZOOM 0x007996DC // FLOAT ; min is spawn model height offset, max is 200.0f
+#define EQ_CAMERA_VIEW_THIRD_PERSON4_ZOOM 0x007996F8 // FLOAT ; min is spawn model height offset, max is 200.0f
+
+#define EQ_CAMERA_VIEW_THIRD_PERSON_ZOOM_MAX 0x005E8538 // FLOAT ; equals 200.0f
 
 #define EQ_RACE_UNKNOWN   0
 #define EQ_RACE_HUMAN     1

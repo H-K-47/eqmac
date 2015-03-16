@@ -31,8 +31,8 @@ EQ_FUNCTION_TYPE_CEverQuest__LMouseUp   EQMACHUD_REAL_CEverQuest__LMouseUp   = N
 
 EQ_FUNCTION_TYPE_HandleMouseWheel EQMACHUD_REAL_HandleMouseWheel = NULL;
 
-EQ_FUNCTION_TYPE_ProcessKeyUp EQMACHUD_REAL_ProcessKeyDown = NULL;
-EQ_FUNCTION_TYPE_ProcessKeyUp EQMACHUD_REAL_ProcessKeyUp   = NULL;
+EQ_FUNCTION_TYPE_ProcessKeyDown EQMACHUD_REAL_ProcessKeyDown = NULL;
+EQ_FUNCTION_TYPE_ProcessKeyUp   EQMACHUD_REAL_ProcessKeyUp   = NULL;
 
 EQ_FUNCTION_TYPE_CEverQuest__dsp_chat EQMACHUD_REAL_CEverQuest__dsp_chat = NULL;
 
@@ -50,6 +50,8 @@ float g_elementOffset = 5.0f;
 
 DWORD g_eqProcesses[1024];
 unsigned int g_eqProcessesCount = 0;
+
+bool g_mouseWheelZoomIsEnabled = true;
 
 bool g_mouseIsDragging = false;
 
@@ -926,6 +928,8 @@ bool EQMACHUD_LoadConfig(const char* filename)
     }
 
     // HUD
+
+    g_mouseWheelZoomIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bMouseWheelZoom", g_mouseWheelZoomIsEnabled);
 
     g_writeTextToChatWindowIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bWriteTextToChatWindow", g_writeTextToChatWindowIsEnabled);
 
@@ -6837,6 +6841,93 @@ void EQMACHUD_DoMessageTextGainedExperience()
     g_playerExperiencePrevious = g_playerExperienceCurrent;
 }
 
+void EQMACHUD_DoMouseWheelZoom(int mouseWheelDelta)
+{
+    DWORD cameraView = EQ_READ_MEMORY<DWORD>(EQ_CAMERA_VIEW);
+
+    FLOAT cameraThirdPersonZoom = 0.0f;
+
+    FLOAT cameraThirdPersonZoomMax = EQ_READ_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON_ZOOM_MAX);
+
+    float zoom = 0.0f;
+
+    DWORD zoomAddress = NULL;
+
+    if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON2)
+    {
+        cameraThirdPersonZoom = EQ_READ_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM);
+
+        zoomAddress = EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM;
+    }
+    else if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON3)
+    {
+        cameraThirdPersonZoom = EQ_READ_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON3_ZOOM);
+
+        zoomAddress = EQ_CAMERA_VIEW_THIRD_PERSON3_ZOOM;
+    }
+    else if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON4)
+    {
+        cameraThirdPersonZoom = EQ_READ_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON4_ZOOM);
+
+        zoomAddress = EQ_CAMERA_VIEW_THIRD_PERSON4_ZOOM;
+    }
+
+    if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_UP)
+    {
+        if
+        (
+            cameraView == EQ_CAMERA_VIEW_THIRD_PERSON2 ||
+            cameraView == EQ_CAMERA_VIEW_THIRD_PERSON3 ||
+            cameraView == EQ_CAMERA_VIEW_THIRD_PERSON4
+        )
+        {
+            if (cameraThirdPersonZoom < EQ_OBJECT_PlayerSpawn->ModelHeightOffset)
+            {
+                EQ_WRITE_MEMORY<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_FIRST_PERSON);
+            }
+            else
+            {
+                if (zoomAddress != NULL)
+                {
+                    zoom = cameraThirdPersonZoom - EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+
+                    EQ_WRITE_MEMORY<FLOAT>(zoomAddress, zoom);
+                }
+            }
+        }
+    }
+    else if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_DOWN)
+    {
+        if (cameraView == EQ_CAMERA_VIEW_FIRST_PERSON)
+        {
+            zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+
+            EQ_WRITE_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM, zoom);
+
+            EQ_WRITE_MEMORY<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_THIRD_PERSON2);
+        }
+        else if
+        (
+            cameraView == EQ_CAMERA_VIEW_THIRD_PERSON2 ||
+            cameraView == EQ_CAMERA_VIEW_THIRD_PERSON3 ||
+            cameraView == EQ_CAMERA_VIEW_THIRD_PERSON4
+        )
+        {
+            if (zoomAddress != NULL)
+            {
+                zoom = cameraThirdPersonZoom + EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+
+                if (zoom > cameraThirdPersonZoomMax)
+                {
+                    zoom = cameraThirdPersonZoomMax;
+                }
+
+                EQ_WRITE_MEMORY<FLOAT>(zoomAddress, zoom);
+            }
+        }
+    }
+}
+
 int __cdecl EQMACHUD_DETOUR_CEverQuest__LMouseDown(unsigned short a1, unsigned short a2)
 {
     if (g_bExit == 1)
@@ -6902,21 +6993,21 @@ int __cdecl EQMACHUD_DETOUR_HandleMouseWheel(int a1)
 
             if (mouseOverWindow == 0x00000000)
             {
-                if (g_mapMouseWheelZoomIsEnabled == true)
-                {
-                    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-                    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+                WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
+                WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
 
-                    if
+                if
+                (
+                    EQMACHUD_IsPointInsideRectangle
                     (
-                        EQMACHUD_IsPointInsideRectangle
-                        (
-                            mouseX, mouseY,
-                            (int)g_mapX,     (int)g_mapY,
-                            (int)g_mapWidth, (int)g_mapHeight
-                        )
-                        == true
+                        mouseX, mouseY,
+                        (int)g_mapX,     (int)g_mapY,
+                        (int)g_mapWidth, (int)g_mapHeight
                     )
+                    == true
+                )
+                {
+                    if (g_mapMouseWheelZoomIsEnabled == true)
                     {
                         if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_UP)
                         {
@@ -6926,6 +7017,13 @@ int __cdecl EQMACHUD_DETOUR_HandleMouseWheel(int a1)
                         {
                             EQMACHUD_MapMouseWheelZoomOut();
                         }
+                    }
+                }
+                else
+                {
+                    if (g_mouseWheelZoomIsEnabled == true)
+                    {
+                        EQMACHUD_DoMouseWheelZoom(mouseWheelDelta);
                     }
                 }
             }
@@ -6970,7 +7068,7 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyDown(int a1)
 
     if (bHotkey == true)
     {
-        return EQMACHUD_REAL_ProcessKeyDown(0);
+        return EQMACHUD_REAL_ProcessKeyDown(EQ_KEY_NULL);
     }
 
     return EQMACHUD_REAL_ProcessKeyDown(a1);
@@ -7033,7 +7131,7 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyUp(int a1)
 
     if (bHotkey == true)
     {
-        return EQMACHUD_REAL_ProcessKeyDown(0);
+        return EQMACHUD_REAL_ProcessKeyUp(EQ_KEY_NULL);
     }
 
     return EQMACHUD_REAL_ProcessKeyUp(a1);

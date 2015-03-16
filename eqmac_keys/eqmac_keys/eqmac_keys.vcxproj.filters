@@ -20,19 +20,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\eqmac\include\eqmac.hpp">
+    <ClInclude Include="..\..\eqmac\include\eqmac.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\eqmac\include\eqmac_functions.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\eqmac\include\eqmac_structures.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\memory\include\memory.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\vk_keys\include\vk_keys.h">
+    <ClInclude Include="..\..\eqmac\include\eqmac_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

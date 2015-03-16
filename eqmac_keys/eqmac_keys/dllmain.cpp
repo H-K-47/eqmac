@@ -6,15 +6,15 @@
 
 #include "vk_keys.h"
 
-#include "eqmac.hpp"
-#include "eqmac_functions.hpp"
+#include "eqmac.h"
+#include "eqmac_functions.h"
+
+const char* g_applicationName = "EQMac Keys";
 
 HMODULE g_module;
 
 HANDLE g_handleThreadLoad;
 HANDLE g_handleThreadLoop;
-
-const char* g_applicationName = "EQMac Keys";
 
 unsigned int g_hotkeyTimer = 0;
 unsigned int g_hotkeyDelay = 500;
@@ -31,23 +31,9 @@ bool EQMACKEYS_IsForegroundWindowCurrentProcessId()
 
 DWORD WINAPI EQMACKEYS_ThreadLoop(LPVOID param)
 {
-    BYTE isInGame;
-
-    isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
-
-    if (isInGame == 1)
-    {
-        char loadedText[128];
-        sprintf_s(loadedText, "%s loaded.", g_applicationName);
-
-        EQ_CLASS_CEverQuest->dsp_chat(loadedText);
-    }
-
     while (true)
     {
-        isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
-
-        if (isInGame == 0)
+        if (EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
         {
             Sleep(1000);
             continue;
@@ -147,16 +133,6 @@ DWORD WINAPI EQMACKEYS_ThreadLoop(LPVOID param)
         }
 
         Sleep(10);
-    }
-
-    isInGame = EQ_READ_MEMORY<BYTE>(EQ_IS_IN_GAME);
-
-    if (isInGame == 1)
-    {
-        char unloadedText[128];
-        sprintf_s(unloadedText, "%s unloaded.", g_applicationName);
-
-        EQ_CLASS_CEverQuest->dsp_chat(unloadedText);
     }
 
     FreeLibraryAndExitThread(g_module, 0);

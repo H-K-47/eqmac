@@ -58,6 +58,8 @@ float g_mouseDraggingBeginY = 0.0f;
 
 bool g_writeTextToChatWindowIsEnabled = true;
 
+unsigned int g_playerLevelCurrent       = 0;
+unsigned int g_playerLevelPrevious      = 0;
 unsigned int g_playerExperienceCurrent  = 0;
 unsigned int g_playerExperiencePrevious = 0;
 
@@ -203,6 +205,7 @@ float g_mapZoomDefault    = 1.0f;
 float g_mapZoomMinimum    = 10.0f;
 float g_mapZoomMaximum    = 0.01f;
 
+bool g_mapMouseWheelZoomIsEnabled = true;
 float g_mapMouseWheelZoomMultiplier = 0.5f; // mouse wheel zoom speed
 
 float g_mapArrowRadius = 20.0f;
@@ -303,10 +306,14 @@ struct _EQMAPPOINT* g_mapPointListBegin = NULL;
 
 bool g_espIsEnabled = true;
 
+bool g_espClipToViewPortIsEnabled = true;
+
 bool g_espSkeletonIsEnabled = false; // like StickFigures=1 in eqclient.ini
 
+bool g_espSkeletonLineOfSightIsEnabled = false; // require the spawn to be out of line of sight to be drawn
+
 bool g_espSkeletonDistanceIsEnabled = true;
-float g_espSkeletonDistance = 100.0f;
+float g_espSkeletonDistance = 200.0f;
 
 int g_espSkeletonDefaultLineColor     = 0xFFFF8000;
 int g_espSkeletonPlayerLineColor      = 0xFF800000;
@@ -426,6 +433,8 @@ bool g_itemDisplayTextIsEnabled = true;
 bool g_itemDisplayTextItemValueIsEnabled = true;
 
 bool g_healthBarsIsEnabled = true;
+
+bool g_healthBarsClipToViewPortIsEnabled = true;
 
 bool g_healthBarsClickToTargetIsEnabled = false;
 
@@ -747,76 +756,6 @@ void EQMACHUD_DoClientSwitchNext()
     EQMACHUD_DoClientSwitch(processIndex);
 }
 
-void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAG dag1, PEQDAG dag2, int lineColor)
-{
-    if (g_numDeferred2dItems > (int)(EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX * 0.75f))
-    {
-        return;
-    }
-
-    if (dag1 == NULL || dag2 == NULL)
-    {
-        return;
-    }
-
-    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
-
-    EQLOCATION location1 = {dag1->Y, dag1->X, dag1->Z};
-    EQLOCATION location2 = {dag2->Y, dag2->X, dag2->Z};
-
-    float result1X = 0.0f;
-    float result1Y = 0.0f;
-    int result1 = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &location1, &result1X, &result1Y);
-
-    if (result1 == EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
-    {
-        return;
-    }
-
-    float result2X = 0.0f;
-    float result2Y = 0.0f;
-    int result2 = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &location2, &result2X, &result2Y);
-
-    if (result2 == EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
-    {
-        return;
-    }
-
-    EQLINE line;
-    line.X1 = result1X;
-    line.Y1 = result1Y;
-    line.Z1 = 1.0f;
-    line.X2 = result2X;
-    line.Y2 = result2Y;
-    line.Z2 = 1.0f;
-
-    EQGfx_Dx8__t3dDeferLine(&line, lineColor);
-
-    g_numDeferred2dItems++;
-}
-
-// recursive function
-void EQMACHUD_DoEspSkeletonDraw(PEQDAG dag, int lineColor)
-{
-    if (dag == NULL)
-    {
-        return;
-    }
-
-    if (dag->NumChildren > 0)
-    {
-        for (size_t i = 0; i < dag->NumChildren; i++)
-        {
-            if (strstr(dag->Children->Child[i]->Name, "POINT") == NULL)
-            {
-                EQMACHUD_DoEspSkeletonDrawLineBetweenDag(dag, dag->Children->Child[i], lineColor);
-            }
-
-            EQMACHUD_DoEspSkeletonDraw(dag->Children->Child[i], lineColor);
-        }
-    }
-}
-
 int EQMACHUD_GetLineClipValue(float x, float y, float minX, float minY, float maxX, float maxY)
 {
     int value = EQMACHUD_LINECLIP_INSIDE;
@@ -1075,6 +1014,7 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_mapZoomMinimum    = EQMACHUD_ConfigReadFloat(filename, "Map", "fZoomMinimum",    g_mapZoomMinimum);
     g_mapZoomMaximum    = EQMACHUD_ConfigReadFloat(filename, "Map", "fZoomMaximum",    g_mapZoomMaximum);
 
+    g_mapMouseWheelZoomIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bMouseWheelZoom", g_mapMouseWheelZoomIsEnabled);
     g_mapMouseWheelZoomMultiplier = EQMACHUD_ConfigReadFloat(filename, "Map", "fMouseWheelZoomMultiplier", g_mapMouseWheelZoomMultiplier);
 
     g_mapArrowRadius = EQMACHUD_ConfigReadFloat(filename, "Map", "fArrowRadius", g_mapArrowRadius);
@@ -1113,7 +1053,11 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     g_espIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bEnabled", g_espIsEnabled);
 
+    g_espClipToViewPortIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bClipToViewPort", g_espClipToViewPortIsEnabled);
+
     g_espSkeletonIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeleton", g_espSkeletonIsEnabled);
+
+    g_espSkeletonLineOfSightIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeletonLineOfSight", g_espSkeletonLineOfSightIsEnabled);
 
     g_espSkeletonDistanceIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeletonDistance", g_espSkeletonDistanceIsEnabled);
     g_espSkeletonDistance = EQMACHUD_ConfigReadFloat(filename, "ESP", "fSkeletonDistance", g_espSkeletonDistance);
@@ -1191,6 +1135,8 @@ bool EQMACHUD_LoadConfig(const char* filename)
     // HealthBars
 
     g_healthBarsIsEnabled = EQMACHUD_ConfigReadBool(filename, "HealthBars", "bEnabled", g_healthBarsIsEnabled);
+
+    g_healthBarsClipToViewPortIsEnabled = EQMACHUD_ConfigReadBool(filename, "HealthBars", "bClipToViewPort", g_healthBarsClipToViewPortIsEnabled);
 
     g_healthBarsClickToTargetIsEnabled = EQMACHUD_ConfigReadBool(filename, "HealthBars", "bClickToTarget", g_healthBarsClickToTargetIsEnabled);
 
@@ -2075,6 +2021,11 @@ void EQMACHUD_DoUpdateZone()
     {
         g_zoneId = zoneId;
 
+        g_playerLevelCurrent       = 0;
+        g_playerLevelPrevious      = 0;
+        g_playerExperienceCurrent  = 0;
+        g_playerExperiencePrevious = 0;
+
         EQMACHUD_DoLoadMap();
         EQMACHUD_DoLoadConfig();
 
@@ -2437,6 +2388,14 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             if (g_espSkeletonIsEnabled == true)
             {
                 EQ_CLASS_CEverQuest->dsp_chat("-> ESP Skeletons enabled.");
+
+                if (g_espSkeletonDistanceIsEnabled == true)
+                {
+                    char distanceText[128];
+                    sprintf_s(distanceText, "Distance: %.1f", g_espSkeletonDistance);
+
+                    EQ_CLASS_CEverQuest->dsp_chat(distanceText);
+                }
             }
             else
             {
@@ -4397,9 +4356,11 @@ void EQMACHUD_DoExitRowButtons()
 
 void EQMACHUD_DoClientSwitcherButtons()
 {
+    DWORD resolutionWidth = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_WIDTH);
+
     float totalWidth = g_buttonWidth + g_elementOffset + (float)((g_buttonWidth * g_eqProcessesCount) + (g_elementOffset + (g_eqProcessesCount - 1)));
 
-    g_clientSwitcherButtonRefreshX = EQ_OBJECT_CameraInfo->ResolutionWidthHalf - (totalWidth * 0.5f);
+    g_clientSwitcherButtonRefreshX = (resolutionWidth * 0.5f) - (totalWidth * 0.5f);
     g_clientSwitcherButtonRefreshY = 5.0f;
 
     g_clientSwitcherButtonRefreshX = floorf(g_clientSwitcherButtonRefreshX);
@@ -4879,10 +4840,19 @@ void EQMACHUD_DoMap()
                     argbColor.G = mapLine->G;
                     argbColor.B = mapLine->B;
 
-                    mapLineColor = argbColor.ARGB;
+                    mapLineColor = argbColor.Color;
 
                     // replace black lines with white lines for visibility
-                    if (g_mapReplaceBlackLinesWithWhiteLinesIsEnabled == true || g_mapBackgroundColor == 0xFF000000)
+                    if
+                    (
+                        g_mapReplaceBlackLinesWithWhiteLinesIsEnabled == true ||
+                        g_mapBackgroundColor == 0xFF000000                    ||
+
+                        (int)g_mapX                 < EQ_OBJECT_ViewPort.X1 ||
+                        (int)g_mapY                 < EQ_OBJECT_ViewPort.Y1 ||
+                        (int)(g_mapX + g_mapWidth)  > EQ_OBJECT_ViewPort.X2 ||
+                        (int)(g_mapY + g_mapHeight) > EQ_OBJECT_ViewPort.Y2
+                    )
                     {
                         if (mapLineColor == 0xFF000000)
                         {
@@ -5426,6 +5396,82 @@ void EQMACHUD_DoMap()
     }
 }
 
+void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, int lineColor)
+{
+    if (dag1 == NULL || dag2 == NULL)
+    {
+        return;
+    }
+
+    if (g_numDeferred2dItems > (int)(EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX * 0.75f))
+    {
+        return;
+    }
+
+    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+
+    EQLOCATION location1 = {dag1->Y, dag1->X, dag1->Z};
+    EQLOCATION location2 = {dag2->Y, dag2->X, dag2->Z};
+
+    float result1X = 0.0f;
+    float result1Y = 0.0f;
+    int result1 = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &location1, &result1X, &result1Y);
+
+    if (result1 == EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+    {
+        return;
+    }
+
+    result1X += EQ_OBJECT_ViewPort.X1;
+    result1Y += EQ_OBJECT_ViewPort.Y1;
+
+    float result2X = 0.0f;
+    float result2Y = 0.0f;
+    int result2 = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &location2, &result2X, &result2Y);
+
+    if (result2 == EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+    {
+        return;
+    }
+
+    result2X += EQ_OBJECT_ViewPort.X1;
+    result2Y += EQ_OBJECT_ViewPort.Y1;
+
+    EQLINE line;
+    line.X1 = result1X;
+    line.Y1 = result1Y;
+    line.Z1 = 1.0f;
+    line.X2 = result2X;
+    line.Y2 = result2Y;
+    line.Z2 = 1.0f;
+
+    EQGfx_Dx8__t3dDeferLine(&line, lineColor);
+
+    g_numDeferred2dItems++;
+}
+
+// recursive function
+void EQMACHUD_DoEspSkeletonDraw(PEQDAGINFO dag, int lineColor)
+{
+    if (dag == NULL)
+    {
+        return;
+    }
+
+    if (dag->NumChildren > 0)
+    {
+        for (size_t i = 0; i < dag->NumChildren; i++)
+        {
+            if (strstr(dag->Children->Child[i]->Name, "POINT") == NULL)
+            {
+                EQMACHUD_DoEspSkeletonDrawLineBetweenDag(dag, dag->Children->Child[i], lineColor);
+            }
+
+            EQMACHUD_DoEspSkeletonDraw(dag->Children->Child[i], lineColor);
+        }
+    }
+}
+
 void EQMACHUD_DoEsp()
 {
     DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
@@ -5482,11 +5528,49 @@ void EQMACHUD_DoEsp()
                 }
             }
 
-            PEQDAG dagRoot = spawn->ActorInfo->ModelInfo->DagRoot;
+            if (g_espSkeletonLineOfSightIsEnabled == true)
+            {
+                if (EQ_CastRay((EQPlayer*)playerSpawn, spawn->Y, spawn->X, spawn->Z) == 1)
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
+            }
+
+            if (g_espClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
+            {
+                float resultX = 0.0f;
+                float resultY = 0.0f;
+                int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &spawnLocation, &resultX, &resultY);
+
+                if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+                {
+                    int screenX = (int)(resultX + EQ_OBJECT_ViewPort.X1);
+                    int screenY = (int)(resultY + EQ_OBJECT_ViewPort.Y1);
+
+                    if
+                    (
+                        EQMACHUD_IsPointInsideRectangle
+                        (
+                            screenX, screenY,
+                            EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
+                            EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
+                            EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                        )
+                        == false
+                    )
+                    {
+                        spawn = spawn->Next;
+                        continue;
+                    }
+                }
+            }
+
+            PEQDAGINFO dagRoot = spawn->ActorInfo->ModelInfo->DagRoot;
 
             if (dagRoot && dagRoot->NumChildren > 0)
             {
-                PEQDAG dagFirst = dagRoot->Children->Child[0];
+                PEQDAGINFO dagFirst = dagRoot->Children->Child[0];
 
                 if (dagFirst == NULL)
                 {
@@ -5564,8 +5648,27 @@ void EQMACHUD_DoEsp()
 
         if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
-            int screenX = (int)resultX;
-            int screenY = (int)resultY;
+            int screenX = (int)(resultX + EQ_OBJECT_ViewPort.X1);
+            int screenY = (int)(resultY + EQ_OBJECT_ViewPort.Y1);
+
+            if (g_espClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
+            {
+                if
+                (
+                    EQMACHUD_IsPointInsideRectangle
+                    (
+                        screenX, screenY,
+                        EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
+                        EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
+                        EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                    )
+                    == false
+                )
+                {
+                    doorSpawn = doorSpawn->Next;
+                    continue;
+                }
+            }
 
             const char* spawnName = doorSpawn->Name;
 
@@ -5658,8 +5761,27 @@ void EQMACHUD_DoEsp()
 
         if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
-            int screenX = (int)resultX;
-            int screenY = (int)resultY;
+            int screenX = (int)(resultX + EQ_OBJECT_ViewPort.X1);
+            int screenY = (int)(resultY + EQ_OBJECT_ViewPort.Y1);
+
+            if (g_espClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
+            {
+                if
+                (
+                    EQMACHUD_IsPointInsideRectangle
+                    (
+                        screenX, screenY,
+                        EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
+                        EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
+                        EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                    )
+                    == false
+                )
+                {
+                    groundSpawn = groundSpawn->Next;
+                    continue;
+                }
+            }
 
             const char* spawnName =
                 EQ_KEYVALUESTRINGLIST_GetValueByKey
@@ -5792,8 +5914,27 @@ void EQMACHUD_DoEsp()
 
         if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
-            int screenX = (int)resultX;
-            int screenY = (int)resultY;
+            int screenX = (int)(resultX + EQ_OBJECT_ViewPort.X1);
+            int screenY = (int)(resultY + EQ_OBJECT_ViewPort.Y1);
+
+            if (g_espClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
+            {
+                if
+                (
+                    EQMACHUD_IsPointInsideRectangle
+                    (
+                        screenX, screenY,
+                        EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
+                        EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
+                        EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                    )
+                    == false
+                )
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
+            }
 
             if (g_espShowYourselfIsEnabled == true && spawn == playerSpawn)
             {
@@ -6308,6 +6449,15 @@ void EQMACHUD_DoTargetInfo()
 
             targetTextY = targetTextY + (g_fontHeight - 3);
         }
+
+        float experiencePercent = (float)((charInfo->Experience * 100.0f) / EQ_EXPERIENCE_MAX);
+
+        char experienceText[128];
+        sprintf_s(experienceText, "EXP: %d/%d (%.0f%%)", charInfo->Experience, EQ_EXPERIENCE_MAX, experiencePercent);
+
+        EQ_CLASS_CDisplay->WriteTextHD2(experienceText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
+
+        targetTextY = targetTextY + (g_fontHeight - 3);
     }
 }
 
@@ -6419,10 +6569,29 @@ void EQMACHUD_DoHealthBars()
 
         if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
-            float screenX = resultX;
-            float screenY = resultY;
+            float screenX = (float)(resultX + EQ_OBJECT_ViewPort.X1);
+            float screenY = (float)(resultY + EQ_OBJECT_ViewPort.Y1);
 
             screenX = screenX - g_healthBarsWidth * 0.5f;
+
+            if (g_healthBarsClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
+            {
+                if
+                (
+                    EQMACHUD_IsPointInsideRectangle
+                    (
+                        (int)screenX, (int)screenY,
+                        EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
+                        EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
+                        EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                    )
+                    == false
+                )
+                {
+                    spawn = spawn->Next;
+                    continue;
+                }
+            }
 
             EQ_DrawRectangle(screenX, screenY, g_healthBarsWidth, g_healthBarsHeight, g_healthBarsBackgroundColor, true);
             EQ_DrawRectangle(screenX + 1.0f, screenY + 1.0f, (g_healthBarsWidth - 2.0f) * hpPercent, g_healthBarsHeight - 2.0f, healthBarForegroundColor, true);
@@ -6583,31 +6752,66 @@ void EQMACHUD_DoMessageTextGainedExperience()
         return;
     }
 
+    g_playerLevelCurrent = charInfo->Level;
     g_playerExperienceCurrent = charInfo->Experience;
+
+    if (g_playerLevelPrevious == 0)
+    {
+        g_playerLevelPrevious = g_playerLevelCurrent;
+    }
 
     if (g_playerExperiencePrevious == 0)
     {
         g_playerExperiencePrevious = g_playerExperienceCurrent;
     }
 
-    unsigned int gainedExperience = 0;
+    unsigned int differenceExperience = 0;
 
-    if (g_playerExperienceCurrent > g_playerExperiencePrevious)
+    bool bLostExperience = false;
+
+    if ((g_playerExperienceCurrent > g_playerExperiencePrevious) || (g_playerExperienceCurrent > 0 && g_playerExperiencePrevious == 0))
     {
-        gainedExperience = g_playerExperienceCurrent - g_playerExperiencePrevious;
+        // gained experience
+        if (g_playerLevelCurrent == g_playerLevelPrevious)
+        {
+            differenceExperience = g_playerExperienceCurrent - g_playerExperiencePrevious;
+        }
+        // level down
+        else if (g_playerLevelCurrent < g_playerLevelPrevious)
+        {
+            differenceExperience = (EQ_EXPERIENCE_MAX - g_playerExperienceCurrent) + g_playerExperiencePrevious;
 
-        g_playerExperiencePrevious = g_playerExperienceCurrent;
+            bLostExperience = true;
+        }
     }
-    else if (g_playerExperiencePrevious > g_playerExperienceCurrent)
+    else if (g_playerExperienceCurrent < g_playerExperiencePrevious)
     {
-        g_playerExperiencePrevious = 0;
+        // lost experience
+        if (g_playerLevelCurrent == g_playerLevelPrevious)
+        {
+            differenceExperience = g_playerExperiencePrevious - g_playerExperienceCurrent;
+
+            bLostExperience = true;
+        }
+        // level up
+        else if (g_playerLevelCurrent > g_playerLevelPrevious)
+        {
+            differenceExperience = (EQ_EXPERIENCE_MAX - g_playerExperiencePrevious) + g_playerExperienceCurrent;
+        }
     }
 
-    if (gainedExperience > 0)
+    if (differenceExperience > 0)
     {
-        float gainedExperiencePercent = (float)((gainedExperience * 100.0f) / EQ_EXPERIENCE_MAX);
+        float differenceExperiencePercent = (float)((differenceExperience * 100.0f) / EQ_EXPERIENCE_MAX);
 
-        sprintf_s(g_messageText, "You gained %d experience! (%.0f%%)", gainedExperience, gainedExperiencePercent);
+        if (bLostExperience == false)
+        {
+            sprintf_s(g_messageText, "You gained %d experience! (%.0f%%)", differenceExperience, differenceExperiencePercent);
+        }
+        else
+        {
+            sprintf_s(g_messageText, "You lost %d experience! (%.0f%%)", differenceExperience, differenceExperiencePercent);
+        }
 
         g_messageTextColor = EQ_TEXT_COLOR_YELLOW;
 
@@ -6618,8 +6822,19 @@ void EQMACHUD_DoMessageTextGainedExperience()
         if (g_writeTextToChatWindowIsEnabled == true)
         {
             EQ_CLASS_CEverQuest->dsp_chat(g_messageText, EQ_TEXT_COLOR_YELLOW, true);
+
+            float experiencePercent = (float)((charInfo->Experience * 100.0f) / EQ_EXPERIENCE_MAX);
+
+            char experienceText[128];
+            sprintf_s(experienceText, "You have %d/%d experience. (%.0f%%)", charInfo->Experience, EQ_EXPERIENCE_MAX, experiencePercent);
+
+            EQ_CLASS_CEverQuest->dsp_chat(experienceText, EQ_TEXT_COLOR_YELLOW, true);
         }
     }
+
+    g_playerLevelPrevious = g_playerLevelCurrent;
+
+    g_playerExperiencePrevious = g_playerExperienceCurrent;
 }
 
 int __cdecl EQMACHUD_DETOUR_CEverQuest__LMouseDown(unsigned short a1, unsigned short a2)
@@ -6687,27 +6902,30 @@ int __cdecl EQMACHUD_DETOUR_HandleMouseWheel(int a1)
 
             if (mouseOverWindow == 0x00000000)
             {
-                WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-                WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
-
-                if
-                (
-                    EQMACHUD_IsPointInsideRectangle
-                    (
-                        mouseX, mouseY,
-                        (int)g_mapX,     (int)g_mapY,
-                        (int)g_mapWidth, (int)g_mapHeight
-                    )
-                    == true
-                )
+                if (g_mapMouseWheelZoomIsEnabled == true)
                 {
-                    if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_UP)
+                    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
+                    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+
+                    if
+                    (
+                        EQMACHUD_IsPointInsideRectangle
+                        (
+                            mouseX, mouseY,
+                            (int)g_mapX,     (int)g_mapY,
+                            (int)g_mapWidth, (int)g_mapHeight
+                        )
+                        == true
+                    )
                     {
-                        EQMACHUD_MapMouseWheelZoomIn();
-                    }
-                    else if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_DOWN)
-                    {
-                        EQMACHUD_MapMouseWheelZoomOut();
+                        if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_UP)
+                        {
+                            EQMACHUD_MapMouseWheelZoomIn();
+                        }
+                        else if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_DOWN)
+                        {
+                            EQMACHUD_MapMouseWheelZoomOut();
+                        }
                     }
                 }
             }
@@ -6719,6 +6937,11 @@ int __cdecl EQMACHUD_DETOUR_HandleMouseWheel(int a1)
 
 int __cdecl EQMACHUD_DETOUR_ProcessKeyDown(int a1)
 {
+    if (g_bExit == 1)
+    {
+        return EQMACHUD_REAL_ProcessKeyDown(a1);
+    }
+
     int key = a1;
 
     //char keyText[128];
@@ -6755,6 +6978,11 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyDown(int a1)
 
 int __cdecl EQMACHUD_DETOUR_ProcessKeyUp(int a1)
 {
+    if (g_bExit == 1)
+    {
+        return EQMACHUD_REAL_ProcessKeyUp(a1);
+    }
+
     int key = a1;
 
     //char keyText[128];
@@ -6813,9 +7041,16 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyUp(int a1)
 
 int __cdecl EQMACHUD_DETOUR_CEverQuest__dsp_chat(const char* a1, short a2, bool a3)
 {
-    //if (strcmp(a1, "You gain experience!!") == 0)
+    if (g_bExit == 1)
+    {
+        return EQMACHUD_REAL_CEverQuest__dsp_chat(a1, a2, a3);
+    }
+
+    // UNSTABLE
+
+    //if (strcmp(a1, "blah blah blah") == 0)
     //{
-        //EQ_CLASS_CEverQuest->dsp_chat("You have %d/%d experience!", EQ_TEXT_COLOR_YELLOW, true);
+        //
     //}
 
     return EQMACHUD_REAL_CEverQuest__dsp_chat(a1, a2, a3);

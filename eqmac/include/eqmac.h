@@ -38,7 +38,7 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_POINTER_GRAPHICS_DLL 0x007F9C50 // EQGfx_Dx8.DLL base address
 
-#define EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX 4000 // t3dDeferX
+#define EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX 4000 // t3dDefer...
 
 #define EQ_POINTER_StringTable 0x007F9490 // eqstr_xx.txt
 
@@ -46,7 +46,7 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_POINTER_CXWndManager 0x00809DB4
 
-#define EQ_POINTER_SPELL_MANAGER 0x805CB0
+#define EQ_POINTER_SPELL_MANAGER 0x00805CB0
 
 #define EQ_POINTER_EqSoundManager 0x0063DEA8
 
@@ -152,6 +152,9 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_ZONE_INFO_PLAYER_NAME_SIZE 0x40
 #define EQ_ZONE_INFO_SHORT_NAME_SIZE  0x20
 #define EQ_ZONE_INFO_LONG_NAME_SIZE   0x80
+
+// /viewport
+#define EQ_STRUCTURE_VIEWPORT 0x00798548 // STRUCT
 
 #define EQ_POINTER_WORLD_INFO 0x007F9494
 #define EQ_OFFSET_WORLD_INFO_HOUR   0x04 // BYTE
@@ -302,6 +305,8 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_UI_STATE 0x0063B918 // BYTE
 
+#define EQ_WINDOW_HWND 0x00798540 // HWND
+
 #define EQ_RESOLUTION_WIDTH  0x00798564 // DWORD
 #define EQ_RESOLUTION_HEIGHT 0x00798568 // DWORD
 
@@ -335,6 +340,18 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
 #define EQ_MOUSE_WHEEL_DELTA_UP   120
 #define EQ_MOUSE_WHEEL_DELTA_DOWN -120
+
+#define EQ_CAMERA_VIEW 0x0063BE68 // DWORD ; EQ_CAMERA_VIEW_x
+
+#define EQ_CAMERA_VIEW_FIRST_PERSON   0
+#define EQ_CAMERA_VIEW_THIRD_PERSON1 1
+#define EQ_CAMERA_VIEW_THIRD_PERSON2 2
+#define EQ_CAMERA_VIEW_THIRD_PERSON3 3
+#define EQ_CAMERA_VIEW_THIRD_PERSON4 4
+#define EQ_CAMERA_VIEW_THIRD_PERSON5 5
+
+#define EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM     0x007996C0 // FLOAT ; min is spawn model height offset, max is 200.0f
+#define EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM_MAX 0x005E8538 // FLOAT ; equals 200.0f
 
 #define EQ_RACE_UNKNOWN   0
 #define EQ_RACE_HUMAN     1
@@ -494,9 +511,55 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferRect "t3dDeferRect" // EQGfx_Dx8.t3dDeferRect
 #define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferQuad "t3dDeferQuad" // EQGfx_Dx8.t3dDeferQuad
 
-#define EQ_KEY_NULL    0
-#define EQ_KEY_M       50
-#define EQ_KEY_TILDE   41
+#define EQ_KEY_NULL 0
+
+#define EQ_KEY_ENTER     28
+#define EQ_KEY_TILDE     41
+#define EQ_KEY_BACKSPACE 14
+#define EQ_KEY_TAB       15
+#define EQ_KEY_SPACEBAR  57
+
+#define EQ_KEY_CONTROL 29
+#define EQ_KEY_ALT     56
+#define EQ_KEY_SHIFT   42
+
+#define EQ_KEY_NUM_LOCK    69
+#define EQ_KEY_CAPS_LOCK   58
+#define EQ_KEY_SCROLL_LOCK 70
+
+#define EQ_KEY_PRINT_SCREEN 188
+#define EQ_KEY_PAUSE_BREAK  197
+
+#define EQ_KEY_W 17
+#define EQ_KEY_A 30
+#define EQ_KEY_S 31
+#define EQ_KEY_D 32
+#define EQ_KEY_M 50
+
+#define EQ_KEY_F1  59
+#define EQ_KEY_F2  60
+#define EQ_KEY_F3  61
+#define EQ_KEY_F4  62
+#define EQ_KEY_F5  63
+#define EQ_KEY_F6  64
+#define EQ_KEY_F7  65
+#define EQ_KEY_F8  67
+#define EQ_KEY_F9  67
+#define EQ_KEY_F10 68
+#define EQ_KEY_F11 87
+#define EQ_KEY_F12 88
+
+#define EQ_KEY_1 2
+#define EQ_KEY_2 3
+#define EQ_KEY_3 4
+#define EQ_KEY_4 5
+#define EQ_KEY_5 6
+#define EQ_KEY_6 7
+#define EQ_KEY_7 8
+#define EQ_KEY_8 9
+#define EQ_KEY_9 10
+#define EQ_KEY_0 11
+
 #define EQ_KEY_NUMPAD0 82
 #define EQ_KEY_NUMPAD1 79
 #define EQ_KEY_NUMPAD2 80
@@ -504,6 +567,12 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_KEY_NUMPAD4 75
 #define EQ_KEY_NUMPAD5 76
 #define EQ_KEY_NUMPAD6 77
+
+#define EQ_KEY_NUMPAD_DIVIDE   181
+#define EQ_KEY_NUMPAD_MULTIPLY 55
+#define EQ_KEY_NUMPAD_SUBTRACT 74
+#define EQ_KEY_NUMPAD_ADD      78
+#define EQ_KEY_NUMPAD_ENTER    156
 
 size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
 
@@ -824,7 +893,7 @@ typedef struct _EQMAPPOINT
             BYTE R;
             BYTE RESERVED;
         };
-        DWORD RGB;
+        DWORD Color;
     };
     DWORD Size;
     CHAR Text[128];
@@ -842,7 +911,7 @@ typedef struct _EQARGBCOLOR
             BYTE R;
             BYTE A;
         };
-        DWORD ARGB;
+        DWORD Color;
     };
 } EQARGBCOLOR, *PEQARGBCOLOR;
 
@@ -1042,24 +1111,24 @@ typedef struct _EQSTRINGSPRITE
 } EQSTRINGSPRITE, *PEQSTRINGSPRITE;
 
 // model skeleton animation?
-typedef struct _EQTRACK
+typedef struct _EQTRACKINFO
 {
 /* 0x0000 */ DWORD Unknown0000;
 /* 0x0004 */ DWORD Unknown0004;
 /* 0x0008 */ PCHAR Name; // x_TRACK, x_POINT_TRACK, etc
 /* ...... */ 
-} EQTRACK, *PEQTRACK;
+} EQTRACKINFO, *PEQTRACKINFO;
 
 // model skeleton bones
-typedef struct _EQDAG
+typedef struct _EQDAGINFO
 {
 /* 0x0000 */ DWORD Unknown0000;
 /* 0x0004 */ PCHAR Name; // x_DAG, x_POINT_DAG, etc
 /* 0x0008 */ struct _EQSTRINGSPRITE* StringSprite;
-/* 0x000C */ struct _EQDAG* Parent;
+/* 0x000C */ struct _EQDAGINFO* Parent;
 /* 0x0010 */ struct _EQMODELINFO* ModelInfo;
-/* 0x0014 */ struct _EQTRACK* Track1;
-/* 0x0018 */ struct _EQTRACK* Track2;
+/* 0x0014 */ struct _EQTRACKINFO* Track1;
+/* 0x0018 */ struct _EQTRACKINFO* Track2;
 /* 0x001C */ BYTE Unknown001C[96];
 /* 0x007C */ FLOAT Y;
 /* 0x0080 */ FLOAT X;
@@ -1068,11 +1137,11 @@ typedef struct _EQDAG
 /* 0x00E8 */ DWORD NumChildren;
 /* 0x00EC */ struct _EQDAGCHILDREN* Children;
 /* ...... */ 
-} EQDAG, *PEQDAG;
+} EQDAGINFO, *PEQDAGINFO;
 
 typedef struct _EQDAGCHILDREN
 {
-/* 0x0000 */ struct _EQDAG* Child[4];
+/* 0x0000 */ struct _EQDAGINFO* Child[32];
 } EQDAGCHILDREN, *PEQDAGCHILDREN;
 
 typedef struct _EQMODELINFO
@@ -1086,7 +1155,7 @@ typedef struct _EQMODELINFO
 /* 0x0018 */ PVOID Unknown0018;
 /* 0x001C */ PVOID ActorInstance;
 /* 0x0020 */ DWORD NumDag; // includes Root
-/* 0x0024 */ struct _EQDAG* DagRoot; // first dag
+/* 0x0024 */ struct _EQDAGINFO* DagRoot; // first dag
 /* ...... */ 
 } EQMODELINFO, *PEQMODELINFO;
 
@@ -1140,12 +1209,12 @@ typedef struct _EQACTORINFO
 /* 0x0184 */ DWORD Animation;
 /* 0x0188 */ BYTE Unknown0188[252];
 /* 0x0284 */ struct _EQMODELINFO* ModelInfo;
-/* 0x0288 */ struct _EQDAG* DagHeadPoint;
-/* 0x028C */ struct _EQDAG* DagHead;
-/* 0x0290 */ struct _EQDAG* DagUnknown;
-/* 0x0294 */ struct _EQDAG* DagRightPoint;
-/* 0x0298 */ struct _EQDAG* DagLeftPoint;
-/* 0x029C */ struct _EQDAG* DagShieldPoint;
+/* 0x0288 */ struct _EQDAGINFO* DagHeadPoint;
+/* 0x028C */ struct _EQDAGINFO* DagHead;
+/* 0x0290 */ struct _EQDAGINFO* DagUnknown;
+/* 0x0294 */ struct _EQDAGINFO* DagRightPoint;
+/* 0x0298 */ struct _EQDAGINFO* DagLeftPoint;
+/* 0x029C */ struct _EQDAGINFO* DagShieldPoint;
 /* 0x02A0 */ BYTE Unknown02A0[128];
 /* 0x0320 */ BYTE MovementType; // 0 = None, 4 = Walking, 6 = Running, 7 = Swimming
 /* 0x0321 */ BYTE Unknown0321[12];
@@ -1291,6 +1360,15 @@ typedef struct _EQGUILDLIST
 {
     EQGUILDINFO Guild[512];
 } EQGUILDLIST, *PEQGUILDLIST;
+
+// /viewport
+typedef struct _EQVIEWPORT
+{
+/* 0x0000 */ WORD X1;
+/* 0x0002 */ WORD Y1;
+/* 0x0004 */ WORD X2;
+/* 0x0006 */ WORD Y2;
+} EQVIEWPORT, *PEQVIEWPORT;
 
 typedef struct _EQCEVERQUEST
 {

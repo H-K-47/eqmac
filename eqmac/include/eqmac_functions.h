@@ -41,6 +41,16 @@ void EQ_WRITE_MEMORY(DWORD address, T value)
     *buffer = value;
 }
 
+// structures
+
+EQVIEWPORT* EQ_OBJECT_pViewPort = (EQVIEWPORT*)EQ_STRUCTURE_VIEWPORT;
+#define EQ_OBJECT_ViewPort (*EQ_OBJECT_pViewPort)
+
+EQGUILDLIST* EQ_OBJECT_pGuildList = (EQGUILDLIST*)EQ_STRUCTURE_GUILD_LIST;
+#define EQ_OBJECT_GuildList (*EQ_OBJECT_pGuildList)
+
+// pointers
+
 EQSPELLLIST** EQ_OBJECT_ppSpellList = (EQSPELLLIST**)EQ_POINTER_SPELL_MANAGER;
 #define EQ_OBJECT_SpellList (*EQ_OBJECT_ppSpellList)
 
@@ -140,7 +150,7 @@ EQ_Character** EQ_CLASS_ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character
 class CHotButtonWnd : public CSidlScreenWnd
 {
 public:
-    void CHotButtonWnd::DoHotButton(uint16_t buttonIndex, int allowAutoRightClick);
+    void CHotButtonWnd::DoHotButton(uint16_t buttonIndex, bool allowAutoRightClick);
 };
 
 CHotButtonWnd** EQ_CLASS_ppCHotButtonWnd = (CHotButtonWnd**)EQ_POINTER_CHotButtonWnd;
@@ -262,7 +272,7 @@ EQ_FUNCTION_AT_ADDRESS(int CEverQuest::LootCorpse(class EQPlayer *, int), EQ_FUN
 
 #define EQ_FUNCTION_CHotButtonWnd__DoHotButton 0x004209BD
 #ifdef EQ_FUNCTION_CHotButtonWnd__DoHotButton
-EQ_FUNCTION_AT_ADDRESS(void CHotButtonWnd::DoHotButton(uint16_t, int), EQ_FUNCTION_CHotButtonWnd__DoHotButton);
+EQ_FUNCTION_AT_ADDRESS(void CHotButtonWnd::DoHotButton(uint16_t, bool), EQ_FUNCTION_CHotButtonWnd__DoHotButton);
 #endif
 
 /* CLootWnd */
@@ -317,17 +327,22 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsig
 
 #define EQ_FUNCTION_HandleMouseWheel 0x0055B2E0
 #ifdef EQ_FUNCTION_HandleMouseWheel
-typedef int (__cdecl* EQ_FUNCTION_TYPE_HandleMouseWheel)(int); // int mouseWheelDelta
+typedef int (__cdecl* EQ_FUNCTION_TYPE_HandleMouseWheel)(int mouseWheelDelta);
 #endif
 
 #define EQ_FUNCTION_ProcessKeyDown 0x005257FA
 #ifdef EQ_FUNCTION_ProcessKeyDown
-typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyDown)(int); // int key
+typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyDown)(int key);
 #endif
 
 #define EQ_FUNCTION_ProcessKeyUp 0x0052462A
 #ifdef EQ_FUNCTION_ProcessKeyUp
-typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyUp)(int); // int key
+typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyUp)(int key);
+#endif
+
+#define EQ_FUNCTION_CastRay 0x004F20DB
+#ifdef EQ_FUNCTION_CastRay
+EQ_FUNCTION_AT_ADDRESS(int __cdecl EQ_CastRay(class EQPlayer*, float y, float x, float z), EQ_FUNCTION_CastRay);
 #endif
 
 // world to screen function
@@ -335,15 +350,15 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)(in
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace EQGfx_Dx8__t3dWorldSpaceToScreenSpace;
 
 // draw line function
-typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine)(EQLINE*, int); // int color ; 0xAARRGGBB
+typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine)(EQLINE*, int argbColor);
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine EQGfx_Dx8__t3dDeferLine;
 
 // draw rectangle function
-typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferRect)(EQRECT*, int); // int color ; 0xAARRGGBB
+typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferRect)(EQRECT*, int argbColor);
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferRect EQGfx_Dx8__t3dDeferRect;
 
 // draw quad function
-typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad)(EQRECT*, int); // int color ; 0xAARRGGBB
+typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad)(EQRECT*, int argbColor);
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad EQGfx_Dx8__t3dDeferQuad;
 
 // EQWorldData::GetFullZoneName
@@ -374,9 +389,7 @@ char* EQ_GetGuildNameById(int guildId)
         return "Unknown Guild";
     }
 
-    EQGUILDLIST* guildList = (EQGUILDLIST*)EQ_STRUCTURE_GUILD_LIST;
-
-    return guildList->Guild[guildId].Name;
+    return EQ_OBJECT_GuildList.Guild[guildId].Name;
 }
 
 void EQ_DrawRectangle(float x, float y, float width, float height, int color, bool filled = false)

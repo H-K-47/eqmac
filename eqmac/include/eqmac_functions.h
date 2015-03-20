@@ -41,6 +41,35 @@ void EQ_WRITE_MEMORY(DWORD address, T value)
     *buffer = value;
 }
 
+void EQ_READ_MEMORY_STRING(DWORD address, size_t size, char result[])
+{
+    char *buffer = new char[size + 1];
+
+    for (size_t i = 0; i < size; i++)
+    {
+        buffer[i] = *(unsigned char*)(address + i);
+    }
+
+    result = buffer;
+
+    delete[] buffer;
+}
+
+void EQ_WRITE_MEMORY_STRING(DWORD address, const char* value)
+{
+    size_t length = strlen(value);
+
+    int j = 0;
+
+    for (size_t i = 0; i < length; i++)
+    {
+        *(unsigned char*)(address + j) = value[i];
+        j++;
+    }
+
+    *(unsigned char*)(address + j) = '\0';
+}
+
 // structures
 
 EQVIEWPORT* EQ_OBJECT_pViewPort = (EQVIEWPORT*)EQ_STRUCTURE_VIEWPORT;
@@ -123,6 +152,7 @@ CDisplay** EQ_CLASS_ppCDisplay = (CDisplay**)EQ_POINTER_CDisplay;
 class CEverQuest
 {
 public:
+    void CEverQuest::InterpretCmd(class EQPlayer*, char* text);
     void CEverQuest::dsp_chat(const char* text, uint16_t color, bool filtered);
     void CEverQuest::dsp_chat(const char* text);
     int __cdecl CEverQuest::LMouseDown(uint16_t x, uint16_t y);
@@ -210,9 +240,15 @@ EQ_FUNCTION_AT_ADDRESS(int CDisplay::WriteTextHD2(const char*, int, int, int, in
 
 /* CEverQuest */
 
+#define EQ_FUNCTION_CEverQuest__InterpretCmd 0x0054572F
+#ifdef EQ_FUNCTION_CEverQuest__InterpretCmd
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__InterpretCmd)(void* this_ptr, class EQPlayer* spawn, char* text);
+EQ_FUNCTION_AT_ADDRESS(void CEverQuest::InterpretCmd(class EQPlayer*, char*), EQ_FUNCTION_CEverQuest__InterpretCmd);
+#endif
+
 #define EQ_FUNCTION_CEverQuest__dsp_chat 0x00537F99
 #ifdef EQ_FUNCTION_CEverQuest__dsp_chat
-typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)(const char* text, uint16_t textColor, bool b);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)(void* this_ptr, const char* text, uint16_t textColor, bool b);
 EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*,uint16_t,bool), EQ_FUNCTION_CEverQuest__dsp_chat);
 #endif
 
@@ -223,25 +259,25 @@ EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*), EQ_FUNCTION_CEver
 
 #define EQ_FUNCTION_CEverQuest__LMouseDown 0x005465AA
 #ifdef EQ_FUNCTION_CEverQuest__LMouseDown
-typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__LMouseDown)(uint16_t x, uint16_t y);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LMouseDown)(void* this_ptr, uint16_t x, uint16_t y);
 EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::LMouseDown(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__LMouseDown);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__LMouseUp 0x00531614
 #ifdef EQ_FUNCTION_CEverQuest__LMouseUp
-typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__LMouseUp)(uint16_t x, uint16_t y);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LMouseUp)(void* this_ptr, uint16_t x, uint16_t y);
 EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::LMouseUp(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__LMouseUp);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__RMouseDown 0x0054699D
 #ifdef EQ_FUNCTION_CEverQuest__RMouseDown
-typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__RMouseDown)(uint16_t x, uint16_t y);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__RMouseDown)(void* this_ptr, uint16_t x, uint16_t y);
 EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::RMouseDown(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__RMouseDown);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__RMouseUp 0x00546B71
 #ifdef EQ_FUNCTION_CEverQuest__RMouseUp
-typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__RMouseUp)(uint16_t x, uint16_t y);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__RMouseUp)(void* this_ptr, uint16_t x, uint16_t y);
 EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::RMouseUp(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__RMouseUp);
 #endif
 
@@ -252,19 +288,19 @@ EQ_FUNCTION_AT_ADDRESS(char* CEverQuest::trimName(char*), EQ_FUNCTION_CEverQuest
 
 #define EQ_FUNCTION_CEverQuest__MoveToZone 0x005460B5
 #ifdef EQ_FUNCTION_CEverQuest__MoveToZone
-typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__MoveToZone)(char*, char*, int, int);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__MoveToZone)(void* this_ptr, char*, char*, int, int);
 EQ_FUNCTION_AT_ADDRESS(int CEverQuest::MoveToZone(char*, char*, int, int), EQ_FUNCTION_CEverQuest__MoveToZone);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__MoveToZone2 0x00546081
 #ifdef EQ_FUNCTION_CEverQuest__MoveToZone2
-typedef int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__MoveToZone2)(int, char*, int, int);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__MoveToZone2)(void* this_ptr, int, char*, int, int);
 EQ_FUNCTION_AT_ADDRESS(int CEverQuest::MoveToZone(int, char*, int, int), EQ_FUNCTION_CEverQuest__MoveToZone2);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__LootCorpse 0x00547808
 #ifdef EQ_FUNCTION_CEverQuest__LootCorpse
-typedef signed int (__cdecl* EQ_FUNCTION_TYPE_CEverQuest__LootCorpse)(class EQPlayer*, int);
+typedef signed int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LootCorpse)(void* this_ptr, class EQPlayer*, int);
 EQ_FUNCTION_AT_ADDRESS(int CEverQuest::LootCorpse(class EQPlayer *, int), EQ_FUNCTION_CEverQuest__LootCorpse);
 #endif
 

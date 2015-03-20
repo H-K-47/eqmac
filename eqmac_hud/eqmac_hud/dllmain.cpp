@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include <windows.h>
+#include <tlhelp32.h>
 
 #include <psapi.h>
 #pragma comment(lib, "psapi.lib")
@@ -38,13 +39,15 @@ EQ_FUNCTION_TYPE_CEverQuest__dsp_chat EQMACHUD_REAL_CEverQuest__dsp_chat = NULL;
 
 EQ_FUNCTION_TYPE_DrawNetStatus EQMACHUD_REAL_DrawNetStatus = NULL;
 
-float g_mathPi = 3.14159265358979f;
-
 int g_zoneId = 0;
 
 int g_numDeferred2dItems = 0;
 
-int g_fontHeight = 14;
+// based on font Arial 14 pointer
+int g_fontHeight                  = 14;
+int g_fontHeightPixels            = 10;
+int g_fontHeightEmptyPixelsTop    = 3;
+int g_fontHeightEmptyPixelsBottom = 1;
 
 float g_elementOffset = 5.0f;
 
@@ -52,6 +55,7 @@ DWORD g_eqProcesses[1024];
 unsigned int g_eqProcessesCount = 0;
 
 bool g_mouseWheelZoomIsEnabled = true;
+float g_mouseWheelZoomMultiplier = 1.0f;
 
 bool g_mouseIsDragging = false;
 
@@ -460,6 +464,15 @@ bool g_clientSwitcherSynchronizeMouseIsEnabled = true;
 
 bool g_clientSwitcherHotkeysIsEnabled = true;
 
+bool g_clientSwitcherHotkeyTildeIsEnabled = true;
+bool g_clientSwitcherHotkeyNumpad0IsEnabled = true;
+bool g_clientSwitcherHotkeyNumpad1IsEnabled = true;
+bool g_clientSwitcherHotkeyNumpad2IsEnabled = true;
+bool g_clientSwitcherHotkeyNumpad3IsEnabled = true;
+bool g_clientSwitcherHotkeyNumpad4IsEnabled = true;
+bool g_clientSwitcherHotkeyNumpad5IsEnabled = true;
+bool g_clientSwitcherHotkeyNumpad6IsEnabled = true;
+
 DWORD g_clientSwitcherUpdateProcessesTimer = 0;
 DWORD g_clientSwitcherUpdateProcessesDelay = 1000;
 
@@ -564,6 +577,8 @@ void EQMACHUD_UpdateEqProcesses()
                     {
                         g_eqProcesses[eqProcessIndex] = processes[i];
 
+                        AllowSetForegroundWindow(processes[i]);
+
                         eqProcessIndex++;
                     }
                 }
@@ -591,6 +606,37 @@ void EQMACHUD_UpdateEqProcesses()
     }
 }
 
+DWORD EQMACHUD_GetModuleBaseAddress(const wchar_t* moduleName)
+{
+    DWORD moduleBaseAddress = 0;
+
+    DWORD processId = GetCurrentProcessId();
+
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId);
+
+    if (snapshot != INVALID_HANDLE_VALUE)
+    {
+        MODULEENTRY32 ModuleEntry32 = {0};
+        ModuleEntry32.dwSize = sizeof(MODULEENTRY32);
+
+        if (Module32First(snapshot, &ModuleEntry32))
+        {
+            do
+            {
+                if (wcscmp(ModuleEntry32.szModule, moduleName) == 0)
+                {
+                    moduleBaseAddress = (DWORD)ModuleEntry32.modBaseAddr;
+                    break;
+                }
+            } while (Module32Next(snapshot, &ModuleEntry32));
+        }
+
+        CloseHandle(snapshot);
+    }
+
+    return moduleBaseAddress;
+}
+
 BOOL CALLBACK EQMACHUD_DoClientSwitchProc(HWND hwnd,LPARAM lparam)
 {
     if (lparam == 0)
@@ -605,10 +651,7 @@ BOOL CALLBACK EQMACHUD_DoClientSwitchProc(HWND hwnd,LPARAM lparam)
     {
         if (strstr(windowText, EQ_STRING_WINDOW_TITLE_EQW) == NULL)
         {
-            if (strstr(windowText, EQ_STRING_EQ) == NULL)
-            {
-                return TRUE;
-            }
+            return TRUE;
         }
     }
 
@@ -624,8 +667,11 @@ BOOL CALLBACK EQMACHUD_DoClientSwitchProc(HWND hwnd,LPARAM lparam)
 
             HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
 
-            WriteProcessMemory(processHandle, (LPVOID)EQ_MOUSE_X_REAL, &mouseX, sizeof(mouseX), 0);
-            WriteProcessMemory(processHandle, (LPVOID)EQ_MOUSE_Y_REAL, &mouseY, sizeof(mouseY), 0);
+            if (processHandle != NULL)
+            {
+                WriteProcessMemory(processHandle, (LPVOID)EQ_MOUSE_X_REAL, &mouseX, sizeof(mouseX), 0);
+                WriteProcessMemory(processHandle, (LPVOID)EQ_MOUSE_Y_REAL, &mouseY, sizeof(mouseY), 0);
+            }
 
             CloseHandle(processHandle);
         }
@@ -863,20 +909,6 @@ bool EQMACHUD_IsPointInsideRectangle(int pointX, int pointY, int rectX, int rect
     return true;
 }
 
-void EQMACHUD_Rotate2D(float cx, float cy, float& x, float& y, float angle)
-{
-    float radians = angle * (g_mathPi / 256.0f);
-
-    float c = cosf(radians);
-    float s = sinf(radians);
-
-    float nx = (c * (x - cx)) - (s * (y - cy)) + cx;
-    float ny = (s * (x - cx)) + (c * (y - cy)) + cy;
-
-    x = nx;
-    y = ny;
-}
-
 bool EQMACHUD_FileExists(const char* filename)
 {
     FILE* file;
@@ -930,6 +962,7 @@ bool EQMACHUD_LoadConfig(const char* filename)
     // HUD
 
     g_mouseWheelZoomIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bMouseWheelZoom", g_mouseWheelZoomIsEnabled);
+    g_mouseWheelZoomMultiplier = EQMACHUD_ConfigReadFloat(filename, "HUD", "fMouseWheelZoomMultiplier", g_mouseWheelZoomMultiplier);
 
     g_writeTextToChatWindowIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bWriteTextToChatWindow", g_writeTextToChatWindowIsEnabled);
 
@@ -954,6 +987,15 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_clientSwitcherSynchronizeMouseIsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bSynchronizeMouse", g_clientSwitcherSynchronizeMouseIsEnabled);
 
     g_clientSwitcherHotkeysIsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeys", g_clientSwitcherHotkeysIsEnabled);
+
+    g_clientSwitcherHotkeyTildeIsEnabled   = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyTilde",   g_clientSwitcherHotkeyTildeIsEnabled);
+    g_clientSwitcherHotkeyNumpad0IsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad0", g_clientSwitcherHotkeyNumpad0IsEnabled);
+    g_clientSwitcherHotkeyNumpad1IsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad1", g_clientSwitcherHotkeyNumpad1IsEnabled);
+    g_clientSwitcherHotkeyNumpad2IsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad2", g_clientSwitcherHotkeyNumpad2IsEnabled);
+    g_clientSwitcherHotkeyNumpad3IsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad3", g_clientSwitcherHotkeyNumpad3IsEnabled);
+    g_clientSwitcherHotkeyNumpad4IsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad4", g_clientSwitcherHotkeyNumpad4IsEnabled);
+    g_clientSwitcherHotkeyNumpad5IsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad5", g_clientSwitcherHotkeyNumpad5IsEnabled);
+    g_clientSwitcherHotkeyNumpad6IsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad6", g_clientSwitcherHotkeyNumpad6IsEnabled);
 
     // Map
 
@@ -4464,7 +4506,7 @@ void EQMACHUD_DoMap()
     (
         "Map",
         (int)g_mapX,
-        (int)(g_mapY - g_elementOffset) - (g_fontHeight - 4),
+        (int)(g_mapY - g_elementOffset) - g_fontHeightPixels,
         g_mapDefaultTextColor,
         fontArial14
     );
@@ -4792,8 +4834,8 @@ void EQMACHUD_DoMap()
 
             if (g_mapRotateIsEnabled == true)
             {
-                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
-                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
+                EQ_Rotate2d(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
+                EQ_Rotate2d(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
             }
 
             if
@@ -4897,8 +4939,8 @@ void EQMACHUD_DoMap()
 
             if (g_mapRotateIsEnabled == true)
             {
-                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
-                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
+                EQ_Rotate2d(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
+                EQ_Rotate2d(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
             }
 
             bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
@@ -4947,7 +4989,7 @@ void EQMACHUD_DoMap()
 
             if (g_mapRotateIsEnabled == true)
             {
-                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, pointX, pointY, playerSpawn->Heading);
+                EQ_Rotate2d(g_mapOriginX, g_mapOriginY, pointX, pointY, playerSpawn->Heading);
             }
 
             if
@@ -5102,7 +5144,7 @@ void EQMACHUD_DoMap()
 
             if (g_mapRotateIsEnabled == true)
             {
-                EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, mapSpawnX, mapSpawnY, playerSpawn->Heading);
+                EQ_Rotate2d(g_mapOriginX, g_mapOriginY, mapSpawnX, mapSpawnY, playerSpawn->Heading);
             }
 
             if
@@ -5216,8 +5258,8 @@ void EQMACHUD_DoMap()
 
                     if (g_mapRotateIsEnabled == true)
                     {
-                        EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
-                        EQMACHUD_Rotate2D(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
+                        EQ_Rotate2d(g_mapOriginX, g_mapOriginY, line.X1, line.Y1, playerSpawn->Heading);
+                        EQ_Rotate2d(g_mapOriginX, g_mapOriginY, line.X2, line.Y2, playerSpawn->Heading);
                     }
 
                     bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
@@ -5280,7 +5322,7 @@ void EQMACHUD_DoMap()
                 playerHeadingC = playerHeadingC + 512.0f;
             }
 
-            float playerHeadingRadiansC = playerHeadingC * (g_mathPi / 256.0f);
+            float playerHeadingRadiansC = playerHeadingC * (EQ_PI / 256.0f);
 
             float arrowAddCX = std::cosf(playerHeadingRadiansC);
             arrowAddCX = arrowAddCX * g_mapArrowRadius;
@@ -5300,7 +5342,7 @@ void EQMACHUD_DoMap()
                 playerHeadingB = playerHeadingB + 512.0f;
             }
 
-            float playerHeadingRadiansB = playerHeadingB * (g_mathPi / 256.0f);
+            float playerHeadingRadiansB = playerHeadingB * (EQ_PI / 256.0f);
 
             float arrowAddBX = std::cosf(playerHeadingRadiansB);
             arrowAddBX = arrowAddBX * (g_mapArrowRadius * 0.5f);
@@ -5320,7 +5362,7 @@ void EQMACHUD_DoMap()
                 playerHeadingA = playerHeadingA - 512.0f;
             }
 
-            float playerHeadingRadiansA = playerHeadingA * (g_mathPi / 256.0f);
+            float playerHeadingRadiansA = playerHeadingA * (EQ_PI / 256.0f);
 
             float arrowAddAX = std::cosf(playerHeadingRadiansA);
             arrowAddAX = arrowAddAX * (g_mapArrowRadius * 0.5f);
@@ -5378,7 +5420,7 @@ void EQMACHUD_DoMap()
         sprintf_s(zoneText, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
         EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
 
-        textY = textY + (g_fontHeight - 3);
+        textY = textY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
         if (g_mapIsMaximized == true)
         {
@@ -5386,7 +5428,7 @@ void EQMACHUD_DoMap()
             sprintf_s(locationText, "Location: %.2f, %.2f, %.2f", playerLocation.Y, playerLocation.X, playerLocation.Z);
             EQ_CLASS_CDisplay->WriteTextHD2(locationText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
 
-            textY = textY + (g_fontHeight - 3);
+            textY = textY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
         }
 
         if (g_mapRotateIsEnabled == true)
@@ -5395,7 +5437,7 @@ void EQMACHUD_DoMap()
             sprintf_s(headingText, "Heading: %s", EQ_GetCardinalDirectionByHeading(playerSpawn->Heading));
             EQ_CLASS_CDisplay->WriteTextHD2(headingText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
 
-            textY = textY + (g_fontHeight - 3);
+            textY = textY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
         }
     }
 }
@@ -5960,7 +6002,7 @@ void EQMACHUD_DoEsp()
 
                             EQ_CLASS_CDisplay->WriteTextHD2(hpText, screenX, playerTextY, EQ_TEXT_COLOR_RED, fontArial14);
 
-                            playerTextY = playerTextY + (g_fontHeight - 3);
+                            playerTextY = playerTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
                         }
                     }
                 }
@@ -5981,7 +6023,7 @@ void EQMACHUD_DoEsp()
 
                             EQ_CLASS_CDisplay->WriteTextHD2(manaText, screenX, playerTextY, EQ_TEXT_COLOR_CYAN, fontArial14);
 
-                            playerTextY = playerTextY + (g_fontHeight - 3);
+                            playerTextY = playerTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
                         }
                     }
                 }
@@ -6149,7 +6191,7 @@ void EQMACHUD_DoEsp()
                     {
                         if (spawn->GuildId != EQ_GUILD_ID_NULL)
                         {
-                            screenY = screenY + (g_fontHeight - 3);
+                            screenY = screenY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
                             char guildText[128];
                             sprintf_s(guildText, "<%s>", EQ_GetGuildNameById(spawn->GuildId));
@@ -6162,7 +6204,7 @@ void EQMACHUD_DoEsp()
                     {
                         if (spawn->HpCurrent < 100)
                         {
-                            screenY = screenY + (g_fontHeight - 3);
+                            screenY = screenY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
                             char hpText[128];
                             sprintf_s(hpText, "HP: %d%%", spawn->HpCurrent);
@@ -6185,7 +6227,7 @@ void EQMACHUD_DoEsp()
                             )
                         )
                         {
-                            screenY = screenY + (g_fontHeight - 3);
+                            screenY = screenY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
                             char classText[128];
                             sprintf_s(classText, "(%s)", EQ_STRING_CLASS_NAME[spawn->Class]);
@@ -6198,7 +6240,7 @@ void EQMACHUD_DoEsp()
                     {
                         if (spawn->HpCurrent < 100)
                         {
-                            screenY = screenY + (g_fontHeight - 3);
+                            screenY = screenY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
                             char hpText[128];
                             sprintf_s(hpText, "HP: %d%%", spawn->HpCurrent);
@@ -6233,7 +6275,7 @@ void EQMACHUD_DoBuffs()
 
     EQ_CLASS_CDisplay->WriteTextHD2("Buffs", (int)g_buffsX, (int)g_buffsY, g_buffsTextColor, fontArial14);
 
-    int buffY = (int)(g_buffsY) + (g_fontHeight - 3);
+    int buffY = (int)(g_buffsY) + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
     for (size_t i = 0; i < EQ_BUFFS_MAX; i++)
     {
@@ -6278,7 +6320,7 @@ void EQMACHUD_DoBuffs()
 
         EQ_CLASS_CDisplay->WriteTextHD2(buffText, (int)g_buffsX, (int)buffY, g_buffsTextColor, fontArial14);
 
-        buffY = buffY + (g_fontHeight - 3);
+        buffY = buffY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
     }
 }
 
@@ -6297,7 +6339,7 @@ void EQMACHUD_DoPlayerInfo()
 
     EQ_CLASS_CDisplay->WriteTextHD2("Player", (int)g_playerInfoX, (int)g_playerInfoY, g_playerInfoTextColor, fontArial14);
 
-    int playerTextY = (int)(g_playerInfoY) + (g_fontHeight - 3);
+    int playerTextY = (int)(g_playerInfoY) + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
     int hpCurrent = playerSpawn->HpCurrent;
     int hpMax = playerSpawn->HpMax;
@@ -6311,7 +6353,7 @@ void EQMACHUD_DoPlayerInfo()
 
         EQ_CLASS_CDisplay->WriteTextHD2(hpText, (int)g_playerInfoX, (int)playerTextY, g_playerInfoTextColor, fontArial14);
 
-        playerTextY = playerTextY + (g_fontHeight - 3);
+        playerTextY = playerTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
     }
 
     if (charInfo)
@@ -6328,7 +6370,7 @@ void EQMACHUD_DoPlayerInfo()
 
             EQ_CLASS_CDisplay->WriteTextHD2(manaText, (int)g_playerInfoX, (int)playerTextY, g_playerInfoTextColor, fontArial14);
 
-            playerTextY = playerTextY + (g_fontHeight - 3);
+            playerTextY = playerTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
         }
     }
 }
@@ -6383,7 +6425,7 @@ void EQMACHUD_DoTargetInfo()
 
     EQ_CLASS_CDisplay->WriteTextHD2(targetText, (int)g_targetInfoX, (int)g_targetInfoY, g_targetInfoTextColor, fontArial14);
 
-    int targetTextY = (int)(g_targetInfoY) + (g_fontHeight - 3);
+    int targetTextY = (int)(g_targetInfoY) + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
     const char* raceShortName = EQ_GetRaceShortName(targetSpawn->Race);
 
@@ -6394,7 +6436,7 @@ void EQMACHUD_DoTargetInfo()
 
     EQ_CLASS_CDisplay->WriteTextHD2(levelRaceClassText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
-    targetTextY = targetTextY + (g_fontHeight - 3);
+    targetTextY = targetTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
     if (targetSpawn->GuildId != EQ_GUILD_ID_NULL)
     {
@@ -6403,7 +6445,7 @@ void EQMACHUD_DoTargetInfo()
 
         EQ_CLASS_CDisplay->WriteTextHD2(guildText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
-        targetTextY = targetTextY + (g_fontHeight - 3);
+        targetTextY = targetTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
     }
 
     if (targetSpawn->HpCurrent < 100)
@@ -6434,7 +6476,7 @@ void EQMACHUD_DoTargetInfo()
 
         EQ_CLASS_CDisplay->WriteTextHD2(hpText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
-        targetTextY = targetTextY + (g_fontHeight - 3);
+        targetTextY = targetTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
     }
 
     if (targetSpawn == playerSpawn && charInfo)
@@ -6451,7 +6493,7 @@ void EQMACHUD_DoTargetInfo()
 
             EQ_CLASS_CDisplay->WriteTextHD2(manaText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
-            targetTextY = targetTextY + (g_fontHeight - 3);
+            targetTextY = targetTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
         }
 
         float experiencePercent = (float)((charInfo->Experience * 100.0f) / EQ_EXPERIENCE_MAX);
@@ -6461,7 +6503,7 @@ void EQMACHUD_DoTargetInfo()
 
         EQ_CLASS_CDisplay->WriteTextHD2(experienceText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
-        targetTextY = targetTextY + (g_fontHeight - 3);
+        targetTextY = targetTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
     }
 }
 
@@ -6781,24 +6823,24 @@ void EQMACHUD_DoMessageTextGainedExperience()
             differenceExperience = g_playerExperienceCurrent - g_playerExperiencePrevious;
         }
         // level down
-        else if (g_playerLevelCurrent < g_playerLevelPrevious)
-        {
-            differenceExperience = (EQ_EXPERIENCE_MAX - g_playerExperienceCurrent) + g_playerExperiencePrevious;
+        //else if (g_playerLevelCurrent < g_playerLevelPrevious)
+        //{
+            //differenceExperience = (EQ_EXPERIENCE_MAX - g_playerExperienceCurrent) + g_playerExperiencePrevious;
 
-            bLostExperience = true;
-        }
+            //bLostExperience = true;
+        //}
     }
     else if (g_playerExperienceCurrent < g_playerExperiencePrevious)
     {
         // lost experience
-        if (g_playerLevelCurrent == g_playerLevelPrevious)
-        {
-            differenceExperience = g_playerExperiencePrevious - g_playerExperienceCurrent;
+        //if (g_playerLevelCurrent == g_playerLevelPrevious)
+        //{
+            //differenceExperience = g_playerExperiencePrevious - g_playerExperienceCurrent;
 
-            bLostExperience = true;
-        }
+            //bLostExperience = true;
+        //}
         // level up
-        else if (g_playerLevelCurrent > g_playerLevelPrevious)
+        if (g_playerLevelCurrent > g_playerLevelPrevious)
         {
             differenceExperience = (EQ_EXPERIENCE_MAX - g_playerExperiencePrevious) + g_playerExperienceCurrent;
         }
@@ -6881,15 +6923,32 @@ void EQMACHUD_DoMouseWheelZoom(int mouseWheelDelta)
             cameraView == EQ_CAMERA_VIEW_THIRD_PERSON4
         )
         {
-            if (cameraThirdPersonZoom < EQ_OBJECT_PlayerSpawn->ModelHeightOffset)
+            if (cameraThirdPersonZoom <= EQ_OBJECT_PlayerSpawn->ModelHeightOffset)
             {
-                EQ_WRITE_MEMORY<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_FIRST_PERSON);
+                if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON2)
+                {
+                    EQ_WRITE_MEMORY<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_FIRST_PERSON);
+                }
+                else
+                {
+                    if (zoomAddress != NULL)
+                    {
+                        zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+
+                        EQ_WRITE_MEMORY<FLOAT>(zoomAddress, zoom);
+                    }
+                }
             }
             else
             {
                 if (zoomAddress != NULL)
                 {
-                    zoom = cameraThirdPersonZoom - EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+                    zoom = cameraThirdPersonZoom - (EQ_OBJECT_PlayerSpawn->ModelHeightOffset * g_mouseWheelZoomMultiplier);
+
+                    if (zoom < EQ_OBJECT_PlayerSpawn->ModelHeightOffset)
+                    {
+                        zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+                    }
 
                     EQ_WRITE_MEMORY<FLOAT>(zoomAddress, zoom);
                 }
@@ -6915,7 +6974,7 @@ void EQMACHUD_DoMouseWheelZoom(int mouseWheelDelta)
         {
             if (zoomAddress != NULL)
             {
-                zoom = cameraThirdPersonZoom + EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+                zoom = cameraThirdPersonZoom + (EQ_OBJECT_PlayerSpawn->ModelHeightOffset * g_mouseWheelZoomMultiplier);
 
                 if (zoom > cameraThirdPersonZoomMax)
                 {
@@ -6928,11 +6987,11 @@ void EQMACHUD_DoMouseWheelZoom(int mouseWheelDelta)
     }
 }
 
-int __cdecl EQMACHUD_DETOUR_CEverQuest__LMouseDown(unsigned short a1, unsigned short a2)
+int __fastcall EQMACHUD_DETOUR_CEverQuest__LMouseDown(void* this_ptr, void* not_used, unsigned short a1, unsigned short a2)
 {
     if (g_bExit == 1)
     {
-        return EQMACHUD_REAL_CEverQuest__LMouseDown(a1, a2);
+        return EQMACHUD_REAL_CEverQuest__LMouseDown(this_ptr, a1, a2);
     }
 
     if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
@@ -6943,19 +7002,19 @@ int __cdecl EQMACHUD_DETOUR_CEverQuest__LMouseDown(unsigned short a1, unsigned s
         {
             if (EQMACHUD_DoButtonMouseLeftDown() == true)
             {
-                return EQMACHUD_REAL_CEverQuest__LMouseDown(0xFFFF, 0xFFFF);
+                return EQMACHUD_REAL_CEverQuest__LMouseDown(this_ptr, 0xFFFF, 0xFFFF);
             }
         }
     }
 
-    return EQMACHUD_REAL_CEverQuest__LMouseDown(a1, a2);
+    return EQMACHUD_REAL_CEverQuest__LMouseDown(this_ptr, a1, a2);
 }
 
-int __cdecl EQMACHUD_DETOUR_CEverQuest__LMouseUp(unsigned short a1, unsigned short a2)
+int __fastcall EQMACHUD_DETOUR_CEverQuest__LMouseUp(void* this_ptr, void* not_used, unsigned short a1, unsigned short a2)
 {
     if (g_bExit == 1)
     {
-        return EQMACHUD_REAL_CEverQuest__LMouseUp(a1, a2);
+        return EQMACHUD_REAL_CEverQuest__LMouseUp(this_ptr, a1, a2);
     }
 
     if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
@@ -6966,12 +7025,12 @@ int __cdecl EQMACHUD_DETOUR_CEverQuest__LMouseUp(unsigned short a1, unsigned sho
         {
             if (EQMACHUD_DoButtonMouseLeftUp() == true)
             {
-                return EQMACHUD_REAL_CEverQuest__LMouseUp(0xFFFF, 0xFFFF);
+                return EQMACHUD_REAL_CEverQuest__LMouseUp(this_ptr, 0xFFFF, 0xFFFF);
             }
         }
     }
 
-    return EQMACHUD_REAL_CEverQuest__LMouseUp(a1, a2);
+    return EQMACHUD_REAL_CEverQuest__LMouseUp(this_ptr, a1, a2);
 }
 
 int __cdecl EQMACHUD_DETOUR_HandleMouseWheel(int a1)
@@ -7052,14 +7111,14 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyDown(int a1)
     {
         if
         (
-            key == EQ_KEY_TILDE   ||
-            key == EQ_KEY_NUMPAD0 ||
-            key == EQ_KEY_NUMPAD1 ||
-            key == EQ_KEY_NUMPAD2 ||
-            key == EQ_KEY_NUMPAD3 ||
-            key == EQ_KEY_NUMPAD4 ||
-            key == EQ_KEY_NUMPAD5 ||
-            key == EQ_KEY_NUMPAD6
+            (g_clientSwitcherHotkeyTildeIsEnabled   == true && key == EQ_KEY_TILDE)   ||
+            (g_clientSwitcherHotkeyNumpad0IsEnabled == true && key == EQ_KEY_NUMPAD0) ||
+            (g_clientSwitcherHotkeyNumpad1IsEnabled == true && key == EQ_KEY_NUMPAD1) ||
+            (g_clientSwitcherHotkeyNumpad2IsEnabled == true && key == EQ_KEY_NUMPAD2) ||
+            (g_clientSwitcherHotkeyNumpad3IsEnabled == true && key == EQ_KEY_NUMPAD3) ||
+            (g_clientSwitcherHotkeyNumpad4IsEnabled == true && key == EQ_KEY_NUMPAD4) ||
+            (g_clientSwitcherHotkeyNumpad5IsEnabled == true && key == EQ_KEY_NUMPAD5) ||
+            (g_clientSwitcherHotkeyNumpad6IsEnabled == true && key == EQ_KEY_NUMPAD6)
         )
         {
             bHotkey = true;
@@ -7091,37 +7150,56 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyUp(int a1)
 
     if (g_clientSwitcherIsEnabled == true && g_clientSwitcherHotkeysIsEnabled == true)
     {
-        if (key == EQ_KEY_NUMPAD0 || key == EQ_KEY_NUMPAD5)
+        if (g_clientSwitcherHotkeyTildeIsEnabled == true && key == EQ_KEY_TILDE)
+        {
+            EQMACHUD_DoClientSwitchNext();
+
+            bHotkey = true;
+        }
+
+        if (g_clientSwitcherHotkeyNumpad0IsEnabled == true && key == EQ_KEY_NUMPAD0)
         {
             EQMACHUD_UpdateEqProcesses();
 
             bHotkey = true;
         }
-        else if (key == EQ_KEY_NUMPAD1)
+
+        if (g_clientSwitcherHotkeyNumpad1IsEnabled == true && key == EQ_KEY_NUMPAD1)
         {
             EQMACHUD_DoClientSwitch(0);
 
             bHotkey = true;
         }
-        else if (key == EQ_KEY_NUMPAD2)
+
+        if (g_clientSwitcherHotkeyNumpad2IsEnabled == true && key == EQ_KEY_NUMPAD2)
         {
             EQMACHUD_DoClientSwitch(1);
 
             bHotkey = true;
         }
-        else if (key == EQ_KEY_NUMPAD3)
+
+        if (g_clientSwitcherHotkeyNumpad3IsEnabled == true && key == EQ_KEY_NUMPAD3)
         {
             EQMACHUD_DoClientSwitch(2);
 
             bHotkey = true;
         }
-        else if (key == EQ_KEY_NUMPAD4)
+
+        if (g_clientSwitcherHotkeyNumpad4IsEnabled == true && key == EQ_KEY_NUMPAD4)
         {
             EQMACHUD_DoClientSwitchPrevious();
 
             bHotkey = true;
         }
-        else if (key == EQ_KEY_NUMPAD6 || key == EQ_KEY_TILDE)
+
+        if (g_clientSwitcherHotkeyNumpad5IsEnabled == true && key == EQ_KEY_NUMPAD5)
+        {
+            EQMACHUD_UpdateEqProcesses();
+
+            bHotkey = true;
+        }
+
+        if (g_clientSwitcherHotkeyNumpad6IsEnabled == true && key == EQ_KEY_NUMPAD6)
         {
             EQMACHUD_DoClientSwitchNext();
 
@@ -7137,21 +7215,19 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyUp(int a1)
     return EQMACHUD_REAL_ProcessKeyUp(a1);
 }
 
-int __cdecl EQMACHUD_DETOUR_CEverQuest__dsp_chat(const char* a1, short a2, bool a3)
+int __fastcall EQMACHUD_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_used, const char* a1, short a2, bool a3)
 {
     if (g_bExit == 1)
     {
-        return EQMACHUD_REAL_CEverQuest__dsp_chat(a1, a2, a3);
+        return EQMACHUD_REAL_CEverQuest__dsp_chat(this_ptr, a1, a2, a3);
     }
 
-    // UNSTABLE
-
-    //if (strcmp(a1, "blah blah blah") == 0)
+    //if (strcmp(a1, "Your spell fizzled!") == 0)
     //{
         //
     //}
 
-    return EQMACHUD_REAL_CEverQuest__dsp_chat(a1, a2, a3);
+    return EQMACHUD_REAL_CEverQuest__dsp_chat(this_ptr, a1, a2, a3);
 }
 
 int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned short a3, unsigned short a4, unsigned short a5, int a6, unsigned short a7, unsigned long a8, long a9, unsigned long a10)
@@ -7159,6 +7235,11 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
     if (g_bExit == 1)
     {
         return EQMACHUD_REAL_DrawNetStatus(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    }
+
+    if (GetAsyncKeyState(VK_PAUSE))
+    {
+        g_bExit = 1;
     }
 
     if (g_bLoaded == false)

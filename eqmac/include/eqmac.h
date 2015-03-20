@@ -17,6 +17,11 @@ const char* EQ_STRING_PROCESS_NAME = "eqgame.exe";
 
 const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 
+const char* EQ_STRING_EQW_DLL_NAME = "eqw.dll";
+const wchar_t* EQ_WIDESTRING_EQW_DLL_NAME = L"eqw.dll";
+
+const float EQ_PI = 3.14159265358979f;
+
 #define EQ_TIMER 0x007989D4 // DWORD ; time elapsed in milliseconds
 
 #define EQ_IS_IN_GAME 0x00798550 // BYTE
@@ -67,6 +72,10 @@ const char* EQ_STRING_GRAPHICS_DLL_NAME = "EQGfx_Dx8.dll";
 #define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL15 0x00809450
 #define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL16 0x00809454
 #define EQ_POINTER_FONT_GLYPH_SIZES_ARIAL20 0x00809458
+
+// eqw.dll+offset
+#define EQ_OFFSET_EQW_IS_FOREGROUND_WINDOW 0x8000 // DWORD
+#define EQ_OFFSET_EQW_DONT_CAPTURE_MOUSE   0x97B0 // DWORD
 
 #define EQ_TOOLTIP_TEXT_BACKGROUND_COLOR 0xC8000080 // ARGB 0xAARRGGBB
 
@@ -729,7 +738,7 @@ size_t EQ_KEYVALUESTRINGLISTSIZE_DOOR_SPAWN_NAME_DESCRIPTION = 22;
 
 const char* EQ_KEYVALUESTRINGLIST_DOOR_SPAWN_NAME_DESCRIPTION[][2] =
 {
-    {"POKTELE500",    "Plane of Knowledge Portal"}, // POK Book
+    {"POKTELE500",    "Plane of Knowledge Portal"}, // POK book
 
     {"POKAAPORT500",  "Ak'Anon Portal"},
     {"POKCABPORT500", "Cabilis Portal"},
@@ -1434,6 +1443,25 @@ void EQ_ToggleBool(bool &b)
 float EQ_CalculateDistance(float x1, float y1, float x2, float y2)
 {
     return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+}
+
+float EQ_CalculateDistance3d(float x1, float y1, float z1, float x2, float y2, float z2)
+{
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2));
+}
+
+void EQ_Rotate2d(float cx, float cy, float& x, float& y, float angle)
+{
+    float radians = angle * (EQ_PI / 256.0f); // 512 / 2 = 256
+
+    float c = cosf(radians);
+    float s = sinf(radians);
+
+    float nx = (c * (x - cx)) - (s * (y - cy)) + cx;
+    float ny = (s * (x - cx)) + (c * (y - cy)) + cy;
+
+    x = nx;
+    y = ny;
 }
 
 const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], size_t listSize, char key[])

@@ -1,0 +1,17 @@
+﻿Build started 3/20/2015 7:41:45 AM.
+     1>Project "D:\Code\everquest\eqmac_server\eqmac_client\eqmac_client.vcxproj" on node 3 (Rebuild target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ID:\Code\_libraries\detours\include /ID:\Code\everquest\eqmac\include /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _USRDLL /D EQMAC_CLIENT_EXPORTS /D _WINDLL /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
+         main.cpp
+     1>main.cpp(110): warning C4996: 'gethostbyname': Use getaddrinfo() or GetAddrInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+                 C:\Program Files (x86)\Windows Kits\8.1\Include\um\winsock2.h(2238) : see declaration of 'gethostbyname'
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Code\everquest\eqmac_server\Release\eqmac_client.dll" /INCREMENTAL:NO /NOLOGO /LIBPATH:D:\Code\_libraries\detours\lib ws2_32.lib mswsock.lib advapi32.lib detours.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Code\everquest\eqmac_server\Release\eqmac_client.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Code\everquest\eqmac_server\Release\eqmac_client.lib" /MACHINE:X86 /SAFESEH /DLL Release\main.obj
+         Generating code
+         Finished generating code
+         eqmac_client.vcxproj -> D:\Code\everquest\eqmac_server\Release\eqmac_client.dll
+     1>Done Building Project "D:\Code\everquest\eqmac_server\eqmac_client\eqmac_client.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:03.63

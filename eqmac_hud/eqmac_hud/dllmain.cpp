@@ -43,6 +43,8 @@ int g_zoneId = 0;
 
 int g_numDeferred2dItems = 0;
 
+float g_maxDeferred2dItemsPercent = 0.75f; // use 3000/4000 max
+
 // based on font Arial 14 pointer
 int g_fontHeight                  = 14;
 int g_fontHeightPixels            = 10;
@@ -397,9 +399,13 @@ bool g_buffsIsEnabled = true;
 float g_buffsX = 768.0f;
 float g_buffsY = 32.0f;
 
-int g_buffsTextColor = EQ_TEXT_COLOR_YELLOW;
+int g_buffsTextColor            = EQ_TEXT_COLOR_YELLOW;
+int g_buffsBeneficialTextColor  = EQ_TEXT_COLOR_YELLOW;
+int g_buffsDetrimentalTextColor = EQ_TEXT_COLOR_RED;
 
 char g_buffsTextColor_string[32];
+char g_buffsBeneficialTextColor_string[32];
+char g_buffsDetrimentalTextColor_string[32];
 
 bool g_playerInfoIsEnabled = true;
 
@@ -423,7 +429,8 @@ bool g_messageTextIsEnabled = true;
 
 bool g_messageTextIsCentered = true;
 
-bool g_messageTextGainedExperienceIsEnabled = true;
+bool g_messageTextOnChatWindowIsEnabled       = true;
+bool g_messageTextOnGainedExperienceIsEnabled = true;
 
 char g_messageText[128];
 int g_messageTextColor = EQ_TEXT_COLOR_WHITE;
@@ -464,7 +471,7 @@ bool g_clientSwitcherSynchronizeMouseIsEnabled = true;
 
 bool g_clientSwitcherHotkeysIsEnabled = true;
 
-bool g_clientSwitcherHotkeyTildeIsEnabled = true;
+bool g_clientSwitcherHotkeyTildeIsEnabled = false;
 bool g_clientSwitcherHotkeyNumpad0IsEnabled = true;
 bool g_clientSwitcherHotkeyNumpad1IsEnabled = true;
 bool g_clientSwitcherHotkeyNumpad2IsEnabled = true;
@@ -909,6 +916,16 @@ bool EQMACHUD_IsPointInsideRectangle(int pointX, int pointY, int rectX, int rect
     return true;
 }
 
+bool EQMACHUD_IsDeferred2dItemsAtMax()
+{
+    if (g_numDeferred2dItems > (int)(EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX * g_maxDeferred2dItemsPercent))
+    {
+        return true;
+    }
+
+    return false;
+}
+
 bool EQMACHUD_FileExists(const char* filename)
 {
     FILE* file;
@@ -960,6 +977,8 @@ bool EQMACHUD_LoadConfig(const char* filename)
     }
 
     // HUD
+
+    g_maxDeferred2dItemsPercent = EQMACHUD_ConfigReadFloat(filename, "HUD", "fMaxDeferred2dItemsPercent", g_maxDeferred2dItemsPercent);
 
     g_mouseWheelZoomIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bMouseWheelZoom", g_mouseWheelZoomIsEnabled);
     g_mouseWheelZoomMultiplier = EQMACHUD_ConfigReadFloat(filename, "HUD", "fMouseWheelZoomMultiplier", g_mouseWheelZoomMultiplier);
@@ -1208,7 +1227,8 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     g_messageTextDelay = EQMACHUD_ConfigReadInt(filename, "MessageText", "iDelay", g_messageTextDelay);
 
-    g_messageTextGainedExperienceIsEnabled = EQMACHUD_ConfigReadBool(filename, "MessageText", "bGainedExperience", g_messageTextGainedExperienceIsEnabled);
+    g_messageTextOnChatWindowIsEnabled       = EQMACHUD_ConfigReadBool(filename, "MessageText", "bOnChatWindow",       g_messageTextOnChatWindowIsEnabled);
+    g_messageTextOnGainedExperienceIsEnabled = EQMACHUD_ConfigReadBool(filename, "MessageText", "bOnGainedExperience", g_messageTextOnGainedExperienceIsEnabled);
 
     // ItemDisplayText
 
@@ -1223,9 +1243,13 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_buffsX = EQMACHUD_ConfigReadFloat(filename, "Buffs", "fX", g_buffsX);
     g_buffsY = EQMACHUD_ConfigReadFloat(filename, "Buffs", "fY", g_buffsY);
 
-    EQMACHUD_ConfigReadString(filename, "Buffs", "sTextColor", "Yellow", g_buffsTextColor_string, sizeof(g_buffsTextColor_string));
-    g_buffsTextColor = EQ_GetTextColorIdByName(g_buffsTextColor_string);
-    
+    EQMACHUD_ConfigReadString(filename, "Buffs", "sTextColor",            "Yellow", g_buffsTextColor_string,            sizeof(g_buffsTextColor_string));
+    EQMACHUD_ConfigReadString(filename, "Buffs", "sBeneficialTextColor",  "Yellow", g_buffsBeneficialTextColor_string,  sizeof(g_buffsBeneficialTextColor_string));
+    EQMACHUD_ConfigReadString(filename, "Buffs", "sDetrimentalTextColor", "Red",    g_buffsDetrimentalTextColor_string, sizeof(g_buffsDetrimentalTextColor_string));
+    g_buffsTextColor            = EQ_GetTextColorIdByName(g_buffsTextColor_string);
+    g_buffsBeneficialTextColor  = EQ_GetTextColorIdByName(g_buffsBeneficialTextColor_string);
+    g_buffsDetrimentalTextColor = EQ_GetTextColorIdByName(g_buffsDetrimentalTextColor_string);
+
     // PlayerInfo
 
     g_playerInfoIsEnabled = EQMACHUD_ConfigReadBool(filename, "PlayerInfo", "bEnabled", g_playerInfoIsEnabled);
@@ -4866,10 +4890,9 @@ void EQMACHUD_DoMap()
             // clip the map lines to the rectangle
             bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
 
-            // only use 75% of the maximum allowed number of deferred 2D items
-            // the game needs to reserve some to draw stuff
-            // this application also needs to reserve some
-            if (g_numDeferred2dItems > (int)(EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX * 0.75f))
+            // only use a percentage of the maximum allowed number of deferred 2D items
+            // the game and this application need to reserve some to draw other stuff
+            if (EQMACHUD_IsDeferred2dItemsAtMax() == true)
             {
                 bDrawLine = false;
             }
@@ -4944,6 +4967,11 @@ void EQMACHUD_DoMap()
             }
 
             bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
+
+            if (EQMACHUD_IsDeferred2dItemsAtMax() == true)
+            {
+                bDrawLine = false;
+            }
 
             if (bDrawLine == true)
             {
@@ -5264,6 +5292,11 @@ void EQMACHUD_DoMap()
 
                     bool bDrawLine = EQMACHUD_DoClipLine(&line, g_mapMinX, g_mapMinY, g_mapMaxX, g_mapMaxY);
 
+                    if (EQMACHUD_IsDeferred2dItemsAtMax() == true)
+                    {
+                        bDrawLine = false;
+                    }
+
                     if (bDrawLine == true)
                     {
                         EQGfx_Dx8__t3dDeferLine(&line, g_mapCorpseLineColor);
@@ -5449,7 +5482,7 @@ void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
         return;
     }
 
-    if (g_numDeferred2dItems > (int)(EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX * 0.75f))
+    if (EQMACHUD_IsDeferred2dItemsAtMax() == true)
     {
         return;
     }
@@ -5496,9 +5529,10 @@ void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
     g_numDeferred2dItems++;
 }
 
-// recursive function
 void EQMACHUD_DoEspSkeletonDraw(PEQDAGINFO dag, int lineColor)
 {
+    // note: this is a recursive function
+
     if (dag == NULL)
     {
         return;
@@ -6315,10 +6349,23 @@ void EQMACHUD_DoBuffs()
             }
         }
 
+        int textColor = g_buffsTextColor;
+
+        int buffType = EQ_OBJECT_SpellList->Spell[spellId]->BuffType;
+
+        if (buffType == EQ_BUFF_TYPE_DETRIMENTAL)
+        {
+            textColor = g_buffsDetrimentalTextColor;
+        }
+        else
+        {
+            textColor = g_buffsBeneficialTextColor;
+        }
+
         char buffText[128];
         sprintf_s(buffText, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
 
-        EQ_CLASS_CDisplay->WriteTextHD2(buffText, (int)g_buffsX, (int)buffY, g_buffsTextColor, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2(buffText, (int)g_buffsX, (int)buffY, textColor, fontArial14);
 
         buffY = buffY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
     }
@@ -6673,7 +6720,7 @@ void EQMACHUD_DoItemDisplayText()
 
     PEQCITEMDISPLAYWND itemDisplayWnd = (PEQCITEMDISPLAYWND)EQ_OBJECT_CItemDisplayWnd;
 
-    if (itemDisplayWnd->IsVisible == 0)
+    if (itemDisplayWnd->CSidlWnd.EQWnd.IsVisible == 0)
     {
         return;
     }
@@ -6683,14 +6730,16 @@ void EQMACHUD_DoItemDisplayText()
     WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
     WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
 
+    EQCXRECT windowRect = itemDisplayWnd->CSidlWnd.EQWnd.Location;
+
     if
     (
         EQMACHUD_IsPointInsideRectangle
         (
             mouseX, mouseY,
-            itemDisplayWnd->X1, itemDisplayWnd->Y1,
-            itemDisplayWnd->X2 - itemDisplayWnd->X1,
-            itemDisplayWnd->Y2 - itemDisplayWnd->Y1
+            windowRect.X1, windowRect.Y1,
+            windowRect.X2 - windowRect.X1,
+            windowRect.Y2 - windowRect.Y1
         )
         == false
     )
@@ -6787,6 +6836,17 @@ void EQMACHUD_DoMessageText()
 
         EQ_CLASS_CDisplay->WriteTextHD2(g_messageText, (int)textX, (int)g_messageTextY, g_messageTextColor, fontArial16);
     }
+}
+
+void EQMACHUD_DoMessageTextGeneric(const char* text, int textColor)
+{
+    strcpy_s(g_messageText, text);
+
+    g_messageTextColor = textColor;
+
+    DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+    g_messageTextTimer = currentTime + g_messageTextDelay;
 }
 
 void EQMACHUD_DoMessageTextGainedExperience()
@@ -7217,15 +7277,25 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyUp(int a1)
 
 int __fastcall EQMACHUD_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_used, const char* a1, short a2, bool a3)
 {
+    // a1 = text
+    // a2 = textColor
+
     if (g_bExit == 1)
     {
         return EQMACHUD_REAL_CEverQuest__dsp_chat(this_ptr, a1, a2, a3);
     }
 
-    //if (strcmp(a1, "Your spell fizzled!") == 0)
-    //{
-        //
-    //}
+    if (g_messageTextOnChatWindowIsEnabled == true)
+    {
+        if
+        (
+            strcmp(a1, "Your spell fizzles!")                      == 0 ||
+            strcmp(a1, "Your target is out of range, get closer!") == 0
+        )
+        {
+            EQMACHUD_DoMessageTextGeneric(a1, a2);
+        }
+    }
 
     return EQMACHUD_REAL_CEverQuest__dsp_chat(this_ptr, a1, a2, a3);
 }
@@ -7315,7 +7385,7 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
         EQMACHUD_DoMessageText();
     }
 
-    if (g_messageTextGainedExperienceIsEnabled == true)
+    if (g_messageTextOnGainedExperienceIsEnabled == true)
     {
         EQMACHUD_DoMessageTextGainedExperience();
     }
@@ -7355,7 +7425,7 @@ DWORD WINAPI EQMACHUD_ThreadLoop(LPVOID param)
     DetourRemove((PBYTE)EQMACHUD_REAL_ProcessKeyDown, (PBYTE)EQMACHUD_DETOUR_ProcessKeyDown);
     DetourRemove((PBYTE)EQMACHUD_REAL_ProcessKeyUp,   (PBYTE)EQMACHUD_DETOUR_ProcessKeyUp);
 
-    //DetourRemove((PBYTE)EQMACHUD_REAL_CEverQuest__dsp_chat, (PBYTE)EQMACHUD_DETOUR_CEverQuest__dsp_chat);
+    DetourRemove((PBYTE)EQMACHUD_REAL_CEverQuest__dsp_chat, (PBYTE)EQMACHUD_DETOUR_CEverQuest__dsp_chat);
 
     DetourRemove((PBYTE)EQMACHUD_REAL_DrawNetStatus, (PBYTE)EQMACHUD_DETOUR_DrawNetStatus);
 
@@ -7426,7 +7496,7 @@ DWORD WINAPI EQMACHUD_ThreadLoad(LPVOID param)
     EQMACHUD_REAL_ProcessKeyDown = (EQ_FUNCTION_TYPE_ProcessKeyDown)DetourFunction((PBYTE)EQ_FUNCTION_ProcessKeyDown, (PBYTE)EQMACHUD_DETOUR_ProcessKeyDown);
     EQMACHUD_REAL_ProcessKeyUp   = (EQ_FUNCTION_TYPE_ProcessKeyUp)  DetourFunction((PBYTE)EQ_FUNCTION_ProcessKeyUp,   (PBYTE)EQMACHUD_DETOUR_ProcessKeyUp);
 
-    //EQMACHUD_REAL_CEverQuest__dsp_chat = (EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__dsp_chat, (PBYTE)EQMACHUD_DETOUR_CEverQuest__dsp_chat);
+    EQMACHUD_REAL_CEverQuest__dsp_chat = (EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__dsp_chat, (PBYTE)EQMACHUD_DETOUR_CEverQuest__dsp_chat);
 
     EQMACHUD_REAL_DrawNetStatus = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)EQMACHUD_DETOUR_DrawNetStatus);
 

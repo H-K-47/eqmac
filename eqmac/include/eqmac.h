@@ -882,7 +882,7 @@ typedef struct _EQMAPLINE
             BYTE B;
             BYTE G;
             BYTE R;
-            BYTE RESERVED;
+            BYTE Unused;
         };
         DWORD RGB;
     };
@@ -902,7 +902,7 @@ typedef struct _EQMAPPOINT
             BYTE B;
             BYTE G;
             BYTE R;
-            BYTE RESERVED;
+            BYTE Unused;
         };
         DWORD Color;
     };
@@ -960,7 +960,7 @@ typedef struct _EQZONEINFO
 /* ...... */ 
 } EQZONEINFO, *PEQZONEINFO;
 
-// sizeof EQBUFFINFO 0x0A
+// sizeof 0x0A
 typedef struct _EQBUFFINFO
 {
 /* 0x0000 */ BYTE Unknown0000;
@@ -970,6 +970,7 @@ typedef struct _EQBUFFINFO
 /* 0x0004 */ WORD SpellId;
 /* 0x0006 */ WORD Ticks; //  duration in ticks ; seconds = ticks * 3
 /* 0x0008 */ WORD Unknown0008;
+/* 0x000A */
 } EQBUFFINFO, *PEQBUFFINFO;
 
 typedef struct _EQITEMINFO {
@@ -1003,45 +1004,53 @@ typedef struct _EQITEMINFO {
 */
 } EQITEMINFO, *PEQITEMINFO;
 
+// class EQ_Spell
+// sizeof 0x110
+// reference eqemulator /common/sp.dat.h
 typedef struct _EQSPELLINFO
 {
-    DWORD Id;
-    FLOAT Range;
-    FLOAT AeRange;
-    FLOAT PushBack;
-    FLOAT PushUp;
-    DWORD CastTime;
-    DWORD RecoveryTime;
-    DWORD RecastTime;
-    DWORD DurationType;
-    DWORD DurationValue1;
-    DWORD DurationValue2;
-    WORD Mana;
-    short Base[12];
-    short Max[12];
-    WORD BookIcon;
-    WORD GemIcon;
-    short ReagentId[4];
-    short ReagentCount[4];
-    BYTE Unknown0146[8];
-    BYTE Calc[12];
-    BYTE Unknown0158[4];
-    BYTE Attribute[12];
-    BYTE TargetType;
-    BYTE FizzleAdjust;
-    BYTE Skill;
-    BYTE Location;
-    BYTE Unknown0174[3];
-    BYTE Level[15];
-    BYTE Unknown0192[36];
-    PCHAR Name; // [32];
-    PCHAR Target; //[16];
-    PCHAR Extra; //[32];
-    PCHAR Unknown0204; //[40];
-    PCHAR Unknown0208; //[40];
-    PCHAR CastOnYou; //[32];
-    PCHAR CastOnOther; //[40];
-    PCHAR WearOff; //[32];
+/* 0x0000 */ DWORD Id;
+/* 0x0004 */ FLOAT Range;
+/* 0x0008 */ FLOAT AoeRange;
+/* 0x000C */ FLOAT PushBack;
+/* 0x0010 */ FLOAT PushUp;
+/* 0x0014 */ DWORD CastTime;
+/* 0x0018 */ DWORD RecoveryTime;
+/* 0x001C */ DWORD RecastTime;
+/* 0x0020 */ DWORD DurationFormula;
+/* 0x0024 */ DWORD Duration;
+/* 0x0028 */ DWORD AoeDuration;
+/* 0x002C */ WORD Mana;
+/* 0x002E */ short Base[12];
+/* 0x0046 */ short Max[12];
+/* 0x005E */ WORD BookIcon;
+/* 0x0060 */ WORD GemIcon;
+/* 0x0062 */ short ReagentId[4];
+/* 0x006A */ short ReagentCount[4];
+/* 0x0072 */ BYTE Unknown0146[8];
+/* 0x007A */ BYTE Calc[12];
+/* 0x0086 */ BYTE LightType;
+/* 0x0087 */ BYTE BuffType; // 0x00 = Detrimental, 0x01 = Beneficial, 0x02 = Beneficial (Group Only)
+/* 0x0088 */ BYTE Activated; // unknown
+/* 0x0089 */ BYTE ResistType;
+/* 0x008A */ BYTE Attribute[12];
+/* 0x0096 */ BYTE TargetType;
+/* 0x0097 */ BYTE FizzleAdjustment;
+/* 0x0098 */ BYTE SkillType;
+/* 0x0099 */ BYTE ZoneType; // 0x01 = Outdoors, 0x02 = Dungeons, 0xFF = Any
+/* 0x009A */ BYTE ZoneType2;
+/* 0x009B */ BYTE EnvironmentType;
+/* 0x009C */ BYTE TimeOfDay;
+/* 0x009D */ BYTE Level[15]; // minimum level to cast for each class
+/* 0x00AC */ BYTE Unknown0192[36];
+/* 0x00D0 */ PCHAR Name;        // [32]
+/* 0x00D4 */ PCHAR Target;      // [16]
+/* 0x00D8 */ PCHAR Extra;       // [32] ; Teleport zone, pet name summoned or item summoned
+/* 0x00DC */ PCHAR YouCast;     // [40]
+/* 0x00E0 */ PCHAR OtherCasts;  // [40]
+/* 0x00E4 */ PCHAR CastOnYou;   // [32]
+/* 0x00E8 */ PCHAR CastOnOther; // [40]
+/* 0x00EC */ PCHAR WearOff;     // [32]
 /* ...... */ 
 } EQSPELLINFO, *PEQSPELLINFO;
 
@@ -1075,7 +1084,7 @@ typedef struct _EQCHARINFO
 /* 0x00AA */ WORD BaseAGI;
 /* 0x00AC */ WORD BaseWIS;
 /* 0x00AE */ BYTE Unknown00AE[438];
-/* 0x0264 */ EQBUFFINFO Buffs[15];
+/* 0x0264 */ struct _EQBUFFINFO Buffs[15];
 /* 0x02FA */ BYTE Unknown02FA[1080];
 /* 0x0732 */ WORD SpellBook[250];
 /* 0x0926 */ BYTE Unknown0926[524];
@@ -1117,7 +1126,7 @@ typedef struct _EQSTRINGSPRITE
 /* 0x003C */ DWORD Width; // how wide the text is stretched
 /* 0x0040 */ DWORD Height; // how tall the text is stretched
 /* 0x0044 */ FLOAT Unknown0044; // unknown multiplier
-/* 0x0048 */ EQARGBCOLOR Color; // s3dSetStringSpriteTint
+/* 0x0048 */ struct _EQARGBCOLOR Color; // s3dSetStringSpriteTint
 /* ...... */ 
 } EQSTRINGSPRITE, *PEQSTRINGSPRITE;
 
@@ -1236,7 +1245,7 @@ typedef struct _EQACTORINFO
 /* ...... */ 
 } EQACTORINFO, *PEQACTORINFO;
 
-// sizeof EQSPAWNINFO 0x168
+// sizeof 0x168
 typedef struct _EQSPAWNINFO
 {
 /* 0x0000 */ BYTE Unknown0000; // always equals 0x03
@@ -1312,6 +1321,7 @@ typedef struct _EQSPAWNINFO
 /* 0x015C */ DWORD Unknown015C;
 /* 0x0160 */ DWORD Unknown0160;
 /* 0x0164 */ DWORD Unknown0164;
+/* 0x0168 */
 } EQSPAWNINFO, *PEQSPAWNINFO;
 
 typedef struct _EQGROUNDSPAWNINFO
@@ -1360,7 +1370,7 @@ typedef struct _EQGROUPLIST
     struct _EQSPAWNINFO* GroupMember[5];
 } EQGROUPLIST, *PEQGROUPLIST;
 
-// sizeof EQGUILDINFO 0x96
+// sizeof 0x96
 typedef struct _EQGUILDINFO
 {
 /* 0x0000 */ CHAR Name[32];
@@ -1369,7 +1379,7 @@ typedef struct _EQGUILDINFO
 
 typedef struct _EQGUILDLIST
 {
-    EQGUILDINFO Guild[512];
+    struct _EQGUILDINFO Guild[512];
 } EQGUILDLIST, *PEQGUILDLIST;
 
 // /viewport
@@ -1401,7 +1411,7 @@ typedef struct _EQCXWNDMANGER
 /* 0x0024 */ DWORD Unknown0024;
 /* 0x0028 */ DWORD Unknown0028;
 /* 0x002C */ DWORD Unknown002C;
-/* 0x0030 */ DWORD FocusedWindow;
+/* 0x0030 */ DWORD FocusedWindow; // maybe last clicked window
 /* 0x0034 */ DWORD DraggedWindow; // mouse dragging
 /* 0x0038 */ DWORD Unknown0038;
 /* 0x003C */ DWORD HoveredWindow; // mouse hover over
@@ -1419,17 +1429,97 @@ typedef struct _EQCXWNDMANGER
 /* ...... */
 } EQCXWNDMANGER, *PEQCXWNDMANGER;
 
+typedef struct _EQCXRECT
+{
+    DWORD X1;
+    DWORD Y1;
+    DWORD X2;
+    DWORD Y2;
+} EQCXRECT, *PEQCXRECT;
+
+typedef struct _EQCXSTR
+{
+/* 0x0000*/ DWORD Font; // 1,6 = Window Title or Button Text, 8 = Hot Button Small Text
+/* 0x0004*/ DWORD MaxLength;
+/* 0x0008*/ DWORD Length;
+/* 0x000C*/ DWORD Encoding; // 0 = ASCII, 1 = Unicode
+/* 0x0010*/ PCRITICAL_SECTION Lock;
+/* 0x0014*/ CHAR Text[1]; // use Length and MaxLength
+} EQCXSTR, *PEQCXSTR;
+
+// CXWnd and CSidlWnd share these same properties
+// sizeof 0xAC
+typedef struct _EQWND
+{
+/* 0x0000 */ DWORD Unknown0000; // struct _CSIDLWNDVFTABLE *pvfTable; struct _CXWNDVFTABLE *pvfTable;
+/* 0x0004 */ DWORD MouseHoverTimer;
+/* 0x0008 */ DWORD Unknown0008; // usually equals 2000
+/* 0x000C */ DWORD Unknown000C; // usually equals 500
+/* 0x0010 */ BYTE Unknown0010;
+/* 0x0011 */ BYTE Unknown0011;
+/* 0x0012 */ BYTE IsLocked;
+/* 0x0013 */ BYTE Unknown0013;
+/* 0x0014 */ PVOID Unknown0014;
+/* 0x0018 */ DWORD Unknown0018;
+/* 0x001C */ struct _EQWND* ParentWnd;
+/* 0x0020 */ struct _EQWND* FirstChildWnd;
+/* 0x0024 */ struct _EQWND* NextSiblingWnd;
+/* 0x0028 */ BYTE HasChildren;
+/* 0x0029 */ BYTE HasSiblings;
+/* 0x002A */ BYTE Unknown0030[2];
+/* 0x002C */ DWORD Flags;
+/* 0x0030 */ struct _EQCXRECT Location;
+/* 0x0040 */ struct _EQCXRECT LocationPlaceholder; // used when minimizing the window
+/* 0x0050 */ BYTE IsVisible; // show
+/* 0x0051 */ BYTE IsEnabled;
+/* 0x0052 */ BYTE IsMinimized;
+/* 0x0053 */ BYTE Unknown0053;
+/* 0x0054 */ BYTE IsOpen;
+/* 0x0055 */ BYTE Unknown0055;
+/* 0x0056 */ BYTE IsMouseOver; // mouse is hovering over
+/* 0x0057 */ BYTE Unknown0057;
+/* 0x0058 */ DWORD WindowStyleFlags;
+/* 0x005C */ PVOID Unknown005C;
+/* 0x0060 */ struct _CXSTR* Text;
+/* 0x0064 */ struct _CXSTR* ToolTipText;
+/* 0x0068 */ BYTE Unknown0068[28];
+/* 0x0084 */ struct _CXSTR* XmlToolTipText;
+/* 0x0088 */ BYTE Unknown0088[22];
+/* 0x009E */ BYTE AlphaTransparency;
+/* 0x009F */ BYTE Unknown009F;
+/* 0x00A0 */ BYTE ZLayer;
+/* 0x00A1 */ BYTE Unknown00A1[7];
+/* 0x00A8 */ DWORD DrawTemplate;
+/* 0x00AC */
+} EQWND, *PEQWND;
+
+// the moveable resizable parent windows
+// sizeof 0x138
+typedef struct _EQCSIDLWND
+{
+/* 0x0000 */ struct _EQWND EQWnd;
+/* 0x00AC */ BYTE Unknown00AC[140]; // skips the rest
+/* 0x0138 */
+} EQCSIDLWND, *PEQCSIDLWND;
+
+// usually a child window like a button or label
+// sizeof 0x138
+typedef struct _EQCXWND
+{
+/* 0x0000 */ struct _EQWND EQWnd;
+/* 0x00AC */ BYTE Unknown00AC[140]; // skips the rest
+/* 0x0138 */
+} EQCXWND, *PEQCXWND;
+
 typedef struct _EQCITEMDISPLAYWND
 {
-/* 0x0000 */ BYTE Unknown0000[48];
-/* 0x0030 */ DWORD X1;
-/* 0x0034 */ DWORD Y1;
-/* 0x0038 */ DWORD X2; // determines width,  X2 - X1
-/* 0x003C */ DWORD Y2; // determines height, Y2 - Y1
-/* 0x0040 */ BYTE Unknown0040[16];
-/* 0x0050 */ BYTE IsVisible;
-/* 0x0051 */ BYTE Unknown0051[251];
-/* 0x014C */ EQITEMINFO Item;
+/* 0x0000 */ struct _EQCSIDLWND CSidlWnd;
+/* 0x0138 */ BYTE Unknown0138[4];
+/* 0x013C */ struct _CSIDLWND* DisplayWnd; // the item stats text window
+/* 0x0140 */ BYTE Unknown0140[4];
+/* 0x0144 */ struct _CXSTR* WindowTitle; // the item name is the title text
+/* 0x0148 */ struct _CXSTR* DisplayText; // the item stats text
+/* 0x014C */ struct _EQITEMINFO Item;
 /* ...... */
 } EQCITEMDISPLAYWND, *PEQCITEMDISPLAYWND;
 

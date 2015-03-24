@@ -31,7 +31,7 @@ bool EQMACKEYS_IsForegroundWindowCurrentProcessId()
 
 DWORD WINAPI EQMACKEYS_ThreadLoop(LPVOID param)
 {
-    while (true)
+    while (TRUE)
     {
         if (EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
         {

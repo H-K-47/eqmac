@@ -382,7 +382,7 @@ EQ_FUNCTION_AT_ADDRESS(int __cdecl EQ_CastRay(class EQPlayer*, float y, float x,
 #endif
 
 // world to screen function
-typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)(int, EQLOCATION*, float*, float*);
+typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)(int cameraDataPointer, EQLOCATION*, float* resultX, float* resultY);
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace EQGfx_Dx8__t3dWorldSpaceToScreenSpace;
 
 // draw line function
@@ -393,7 +393,7 @@ EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferLine EQGfx_Dx8__t3dDeferLine;
 typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferRect)(EQRECT*, int argbColor);
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferRect EQGfx_Dx8__t3dDeferRect;
 
-// draw quad function
+// draw quad function (filled rectangle)
 typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad)(EQRECT*, int argbColor);
 EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad EQGfx_Dx8__t3dDeferQuad;
 

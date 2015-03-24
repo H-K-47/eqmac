@@ -1,4 +1,4 @@
-﻿Build started 3/1/2015 9:46:36 PM.
+﻿Build started 3/12/2015 2:27:50 AM.
      1>Project "D:\Code\everquest\eqgame_inject_dll\eqgame_inject_dll\eqgame_inject_dll.vcxproj" on node 2 (Rebuild target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MT /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
@@ -14,4 +14,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.80
+Time Elapsed 00:00:01.48

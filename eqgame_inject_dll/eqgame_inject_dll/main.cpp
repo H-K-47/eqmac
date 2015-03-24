@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 
     DWORD num_processes = needed / sizeof(DWORD);
 
-    unsigned int i;
+    size_t i = 0;
     for (i = 0; i < num_processes; i++)
     {
         if (processes[i] != 0)
@@ -143,19 +143,48 @@ int main(int argc, char *argv[])
             if (process_handle != NULL)
             {
                 HMODULE module;
-                DWORD needed_ex;
-                if (EnumProcessModules(process_handle, &module, sizeof(module), &needed_ex))
+                DWORD needed2;
+                if (EnumProcessModules(process_handle, &module, sizeof(module), &needed2))
                 {
-                    char process_name[MAX_PATH] = {0};
+                    char module_name[1024] = {0};
+                    GetModuleBaseNameA(process_handle, module, module_name, sizeof(module_name));
 
-                    GetModuleBaseNameA(process_handle, module, process_name, sizeof(process_name));
-
-                    if (strcmp(process_name, EQ_PROCESS_NAME) == 0)
+                    if (strcmp(module_name, EQ_PROCESS_NAME) == 0)
                     {
-                        printf("EverQuest process found. (Name: %s, ID: %d | 0x%08X)\nInjecting DLL...\n", process_name, (int)processes[i], (int)processes[i]);
+                        int is_dll_already_injected = 0;
 
-                        char dll_path_name[MAX_PATH] = {0};
-                        GetFullPathNameA(dll_name, MAX_PATH, dll_path_name, NULL);
+                        HMODULE modules[1024];
+                        DWORD needed3;
+                        if (EnumProcessModules(process_handle, modules, sizeof(modules), &needed3))
+                        {
+                            DWORD num_modules = needed3 / sizeof(HMODULE);
+
+                            size_t j = 0;
+                            for (j = 0; j < num_modules; j++)
+                            {
+                                char module_name[1024] = {0};
+                                GetModuleBaseNameA(process_handle, modules[j], module_name, sizeof(module_name));
+
+                                //printf("Module Name: %s\n", module_name);
+
+                                if (strcmp(module_name, dll_name) == 0)
+                                {
+                                    printf("DLL is already injected in EverQuest. (Name: %s, ID: %d | 0x%08X)\nSkipping...\n", module_name, (int)processes[i], (int)processes[i]);
+
+                                    is_dll_already_injected = 1;
+
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (is_dll_already_injected == 0)
+                        {
+
+                        printf("EverQuest process found. (Name: %s, ID: %d | 0x%08X)\nInjecting DLL...\n", module_name, (int)processes[i], (int)processes[i]);
+
+                        char dll_path_name[1024] = {0};
+                        GetFullPathNameA(dll_name, 1024, dll_path_name, NULL);
 
                         LPVOID remote_memory = VirtualAllocEx(process_handle, NULL, strlen(dll_path_name), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
@@ -168,6 +197,8 @@ int main(int argc, char *argv[])
                         VirtualFreeEx(process_handle, remote_memory, strlen(dll_path_name), MEM_RELEASE);
 
                         CloseHandle(remote_thread);
+
+                        }
                     }
                 }
             }

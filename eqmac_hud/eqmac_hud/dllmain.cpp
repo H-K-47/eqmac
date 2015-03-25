@@ -39,6 +39,11 @@ EQ_FUNCTION_TYPE_CEverQuest__dsp_chat EQMACHUD_REAL_CEverQuest__dsp_chat = NULL;
 
 EQ_FUNCTION_TYPE_DrawNetStatus EQMACHUD_REAL_DrawNetStatus = NULL;
 
+EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem  EQMACHUD_REAL_CItemDisplayWnd__SetItem  = NULL;
+EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell EQMACHUD_REAL_CItemDisplayWnd__SetSpell = NULL;
+
+EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay  EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay = NULL;
+
 int g_zoneId = 0;
 
 int g_numDeferred2dItems = 0;
@@ -439,11 +444,14 @@ float g_messageTextX = 512.0f;
 float g_messageTextY = 256.0f;
 
 unsigned int g_messageTextTimer = 0;
-unsigned int g_messageTextDelay = 10000; // delay in milliseconds
+unsigned int g_messageTextDelay = 5000; // delay in milliseconds
 
-bool g_itemDisplayTextIsEnabled = true;
+bool g_itemDisplayWindowTextIsEnabled = true;
 
-bool g_itemDisplayTextItemValueIsEnabled = true;
+bool g_itemDisplayWindowTextItemsIsEnabled  = true;
+bool g_itemDisplayWindowTextSpellsIsEnabled = true;
+
+bool g_buffWindowTimersIsEnabled = true;
 
 bool g_healthBarsIsEnabled = true;
 
@@ -1230,11 +1238,16 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_messageTextOnChatWindowIsEnabled       = EQMACHUD_ConfigReadBool(filename, "MessageText", "bOnChatWindow",       g_messageTextOnChatWindowIsEnabled);
     g_messageTextOnGainedExperienceIsEnabled = EQMACHUD_ConfigReadBool(filename, "MessageText", "bOnGainedExperience", g_messageTextOnGainedExperienceIsEnabled);
 
-    // ItemDisplayText
+    // ItemDisplayWindowText
 
-    g_itemDisplayTextIsEnabled = EQMACHUD_ConfigReadBool(filename, "ItemDisplayText", "bEnabled", g_itemDisplayTextIsEnabled);
+    g_itemDisplayWindowTextIsEnabled = EQMACHUD_ConfigReadBool(filename, "ItemDisplayWindowText", "bEnabled", g_itemDisplayWindowTextIsEnabled);
 
-    g_itemDisplayTextItemValueIsEnabled = EQMACHUD_ConfigReadBool(filename, "ItemDisplayText", "bItemValue", g_itemDisplayTextItemValueIsEnabled);
+    g_itemDisplayWindowTextItemsIsEnabled  = EQMACHUD_ConfigReadBool(filename, "ItemDisplayWindowText", "bItems",  g_itemDisplayWindowTextItemsIsEnabled);
+    g_itemDisplayWindowTextSpellsIsEnabled = EQMACHUD_ConfigReadBool(filename, "ItemDisplayWindowText", "bSpells", g_itemDisplayWindowTextSpellsIsEnabled);
+
+    // BuffWindowTimers
+
+    g_buffWindowTimersIsEnabled = EQMACHUD_ConfigReadBool(filename, "BuffWindowTimers", "bEnabled", g_buffWindowTimersIsEnabled);
 
     // Buffs
 
@@ -6333,21 +6346,7 @@ void EQMACHUD_DoBuffs()
         int buffMinutes = 0;
         int buffSeconds = 0;
 
-        buffSeconds = buffTicks * 3;
-
-        if (buffSeconds > 0)
-        {
-            buffHours = buffSeconds / (60 * 60);
-
-            buffSeconds = buffSeconds - buffHours * (60 * 60);
-
-            if (buffSeconds > 0)
-            {
-                buffMinutes = buffSeconds / 60;
-
-                buffSeconds = buffSeconds - buffMinutes * 60;
-            }
-        }
+        EQ_CalculateTickTime(buffTicks, buffHours, buffMinutes, buffSeconds);
 
         int textColor = g_buffsTextColor;
 
@@ -6706,109 +6705,6 @@ void EQMACHUD_DoHealthBars()
 
         spawn = spawn->Next;
         continue;
-    }
-}
-    
-void EQMACHUD_DoItemDisplayText()
-{
-    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
-
-    if (mouseOverWindow == 0x00000000)
-    {
-        return;
-    }
-
-    PEQCITEMDISPLAYWND itemDisplayWnd = (PEQCITEMDISPLAYWND)EQ_OBJECT_CItemDisplayWnd;
-
-    if (itemDisplayWnd->CSidlWnd.EQWnd.IsVisible == 0)
-    {
-        return;
-    }
-
-    //DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
-
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
-
-    EQCXRECT windowRect = itemDisplayWnd->CSidlWnd.EQWnd.Location;
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            windowRect.X1, windowRect.Y1,
-            windowRect.X2 - windowRect.X1,
-            windowRect.Y2 - windowRect.Y1
-        )
-        == false
-    )
-    {
-        return;
-    }
-
-    if (g_itemDisplayTextItemValueIsEnabled == true && itemDisplayWnd->Item.Cost > 0)
-    {
-        int itemCost = itemDisplayWnd->Item.Cost;
-
-        int itemCostPlatinum;
-        int itemCostGold;
-        int itemCostSilver;
-        int itemCostCopper;
-
-        if (itemCost > 0)
-        {
-            itemCostPlatinum = itemCost / 1000;
-
-            itemCost = itemCost % 1000;
-
-            itemCostGold = itemCost / 100;
-
-            itemCost = itemCost % 100;
-
-            itemCostSilver = itemCost / 10;
-
-            itemCost = itemCost % 10;
-
-            itemCostCopper = itemCost;
-        }
-
-        char itemCostText[128];
-        strcpy_s(itemCostText, " Item Value: ");
-
-        if (itemCostPlatinum > 0)
-        {
-            char platinumText[128];
-            sprintf_s(platinumText, "%dp ", itemCostPlatinum);
-
-            strcat_s(itemCostText, platinumText);
-        }
-
-        if (itemCostGold > 0)
-        {
-            char goldText[128];
-            sprintf_s(goldText, "%dg ", itemCostGold);
-
-            strcat_s(itemCostText, goldText);
-        }
-
-        if (itemCostSilver > 0)
-        {
-            char silverText[128];
-            sprintf_s(silverText, "%ds ", itemCostSilver);
-
-            strcat_s(itemCostText, silverText);
-        }
-
-        if (itemCostCopper > 0)
-        {
-            char copperText[128];
-            sprintf_s(copperText, "%dc ", itemCostCopper);
-
-            strcat_s(itemCostText, copperText);
-        }
-
-        EQ_DrawTooltipText(itemCostText, mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, mouseY, EQ_POINTER_FONT_ARIAL14);
     }
 }
 
@@ -7275,6 +7171,236 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyUp(int a1)
     return EQMACHUD_REAL_ProcessKeyUp(a1);
 }
 
+int __fastcall EQMACHUD_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* not_used, EQ_Item* a1, bool a2)
+{
+    int result = EQMACHUD_REAL_CItemDisplayWnd__SetItem(this_ptr, a1, a2);
+
+    if (g_itemDisplayWindowTextIsEnabled == false || g_itemDisplayWindowTextItemsIsEnabled == false)
+    {
+        return result;
+    }
+
+    if (a1 == NULL)
+    {
+        return result;
+    }
+
+    PEQITEMINFO item = (PEQITEMINFO)a1;
+
+    if (item && EQ_OBJECT_CItemDisplayWnd->DisplayText)
+    {
+        EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR><c \"#FF00FF\">");
+
+        char itemIdText[128];
+        sprintf_s(itemIdText, "ID: %d (0x%08X)<BR>", item->Id, item->Id);
+
+        EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, itemIdText);
+
+        if (item->Cost > 0)
+        {
+            int itemCost = item->Cost;
+
+            int itemCostPlatinum;
+            int itemCostGold;
+            int itemCostSilver;
+            int itemCostCopper;
+
+            EQ_CalculateItemCost(itemCost, itemCostPlatinum, itemCostGold, itemCostSilver, itemCostCopper);
+
+            char itemCostText[128];
+            strcpy_s(itemCostText, "Sells to merchants for: ");
+
+            if (itemCostPlatinum > 0)
+            {
+                char platinumText[128];
+                sprintf_s(platinumText, "%dp ", itemCostPlatinum);
+
+                strcat_s(itemCostText, platinumText);
+            }
+
+            if (itemCostGold > 0)
+            {
+                char goldText[128];
+                sprintf_s(goldText, "%dg ", itemCostGold);
+
+                strcat_s(itemCostText, goldText);
+            }
+
+            if (itemCostSilver > 0)
+            {
+                char silverText[128];
+                sprintf_s(silverText, "%ds ", itemCostSilver);
+
+                strcat_s(itemCostText, silverText);
+            }
+
+            if (itemCostCopper > 0)
+            {
+                char copperText[128];
+                sprintf_s(copperText, "%dc ", itemCostCopper);
+
+                strcat_s(itemCostText, copperText);
+            }
+
+            strcat_s(itemCostText, "<BR>");
+
+            EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, itemCostText);
+        }
+
+        EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "</c>");
+    }
+
+    return result;
+}
+
+
+int __fastcall EQMACHUD_DETOUR_CItemDisplayWnd__SetSpell(void* this_ptr, void* not_used, short a1, bool a2, int a3)
+{
+    // a1 = spellId
+
+    int result = EQMACHUD_REAL_CItemDisplayWnd__SetSpell(this_ptr, a1, a2, a3);
+
+    if (g_itemDisplayWindowTextIsEnabled == false || g_itemDisplayWindowTextSpellsIsEnabled == false)
+    {
+        return result;
+    }
+
+    if (a1 == NULL)
+    {
+        return result;
+    }
+
+    PEQSPELLINFO spell = EQ_OBJECT_SpellList->Spell[a1];
+
+    if (spell && EQ_OBJECT_CItemDisplayWnd->DisplayText)
+    {
+        char spellText[128];
+
+        if (spell->RecastTime > 0)
+        {
+            float spellRecastTime = (float)(spell->RecastTime / 1000);
+
+            memset(spellText, 0, sizeof(spellText));
+            sprintf_s(spellText, "Recast Time: %.1f<BR>", spellRecastTime);
+            EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
+        }
+
+        if (spell->RecoveryTime > 0)
+        {
+            float spellRecoveryTime = (float)(spell->RecoveryTime / 1000);
+
+            memset(spellText, 0, sizeof(spellText));
+            sprintf_s(spellText, "Recovery Time: %.1f<BR>", spellRecoveryTime);
+            EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
+        }
+
+        if (spell->Range > 0.0f)
+        {
+            memset(spellText, 0, sizeof(spellText));
+            sprintf_s(spellText, "Range: %.1f<BR>", spell->Range);
+            EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
+        }
+
+        if (spell->AoeRange > 0.0f)
+        {
+            memset(spellText, 0, sizeof(spellText));
+            sprintf_s(spellText, "AOE Range: %.1f<BR>", spell->AoeRange);
+            EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
+        }
+
+        if (spell->Duration > 0)
+        {
+            char spellDurationTimeText[128];
+            EQ_GetTickTimeString(spell->Duration, spellDurationTimeText, sizeof(spellDurationTimeText));
+
+            memset(spellText, 0, sizeof(spellText));
+            sprintf_s(spellText, "Duration: %s<BR>", spellDurationTimeText);
+            EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
+        }
+
+        if (spell->AoeDuration > 0)
+        {
+            char spellAoeDurationTimeText[128];
+            EQ_GetTickTimeString(spell->AoeDuration, spellAoeDurationTimeText, sizeof(spellAoeDurationTimeText));
+
+            memset(spellText, 0, sizeof(spellText));
+            sprintf_s(spellText, "AOE Duration: %s<BR>", spellAoeDurationTimeText);
+            EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
+        }
+
+        if (spell->DurationFormula > 0)
+        {
+            memset(spellText, 0, sizeof(spellText));
+            sprintf_s(spellText, "Duration Formula: %d<BR>", spell->DurationFormula);
+            EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
+        }
+
+        EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR><c \"#FF00FF\">");
+
+        memset(spellText, 0, sizeof(spellText));
+        sprintf_s(spellText, "ID: %d (0x%08X)<BR>", spell->Id, spell->Id);
+        EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
+
+        EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "</c>");
+    }
+
+    return result;
+};
+
+int __fastcall EQMACHUD_DETOUR_CBuffWindow__RefreshBuffDisplay(void* this_ptr, void* not_used)
+{
+    int result = EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay(this_ptr);
+
+    if (g_buffWindowTimersIsEnabled == false)
+    {
+        return result;
+    }
+
+    PEQCBUFFWINDOW buffWindow = (PEQCBUFFWINDOW)this_ptr;
+
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+    if (charInfo == NULL)
+    {
+        return result;
+    }
+
+    for (size_t i = 0; i < EQ_BUFFS_MAX; i++)
+    {
+        int spellId = charInfo->Buffs[i].SpellId;
+
+        if (spellId == EQ_SPELL_ID_NULL)
+        {
+            continue;
+        }
+
+        int buffTicks = charInfo->Buffs[i].Ticks;
+
+        if (buffTicks == 0)
+        {
+            continue;
+        }
+
+        char buffTickTimeText[128];
+        EQ_GetTickTimeString(buffTicks, buffTickTimeText, sizeof(buffTickTimeText));
+
+        char buffTimeText[128];
+        sprintf_s(buffTimeText, " (%s)", buffTickTimeText);
+
+        PEQCSIDLWND buffButtonWnd = (PEQCSIDLWND)buffWindow->BuffButtonWnd[i];
+
+        if (buffButtonWnd)
+        {
+            if (buffButtonWnd->EQWnd.ToolTipText)
+            {
+                EQ_CXStr_Append(&buffButtonWnd->EQWnd.ToolTipText, buffTimeText);
+            }
+        }
+    }
+
+    return result;
+};
+
 int __fastcall EQMACHUD_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_used, const char* a1, short a2, bool a3)
 {
     // a1 = text
@@ -7290,10 +7416,14 @@ int __fastcall EQMACHUD_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_us
         if
         (
             strcmp(a1, "Your spell fizzles!")                      == 0 ||
-            strcmp(a1, "Your target is out of range, get closer!") == 0
+            strcmp(a1, "Your spell did not take hold.")            == 0 ||
+            strcmp(a1, "Your target is out of range, get closer!") == 0 ||
+            strcmp(a1, "You are too fatigued to jump!")            == 0 ||
+            strcmp(a1, "YOU were injured by falling!")             == 0 ||
+            strcmp(a1, "You can't reach that, get closer.")        == 0
         )
         {
-            EQMACHUD_DoMessageTextGeneric(a1, a2);
+            EQMACHUD_DoMessageTextGeneric(a1, EQ_TEXT_COLOR_RED);
         }
     }
 
@@ -7375,11 +7505,6 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
         EQMACHUD_DoMap();
     }
 
-    if (g_itemDisplayTextIsEnabled == true)
-    {
-        EQMACHUD_DoItemDisplayText();
-    }
-
     if (g_messageTextIsEnabled == true)
     {
         EQMACHUD_DoMessageText();
@@ -7428,6 +7553,11 @@ DWORD WINAPI EQMACHUD_ThreadLoop(LPVOID param)
     DetourRemove((PBYTE)EQMACHUD_REAL_CEverQuest__dsp_chat, (PBYTE)EQMACHUD_DETOUR_CEverQuest__dsp_chat);
 
     DetourRemove((PBYTE)EQMACHUD_REAL_DrawNetStatus, (PBYTE)EQMACHUD_DETOUR_DrawNetStatus);
+
+    DetourRemove((PBYTE)EQMACHUD_REAL_CItemDisplayWnd__SetItem,  (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetItem);
+    DetourRemove((PBYTE)EQMACHUD_REAL_CItemDisplayWnd__SetSpell, (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetSpell);
+
+    DetourRemove((PBYTE)EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACHUD_DETOUR_CBuffWindow__RefreshBuffDisplay);
 
     FreeLibraryAndExitThread(g_module, 0);
     return 0;
@@ -7499,6 +7629,12 @@ DWORD WINAPI EQMACHUD_ThreadLoad(LPVOID param)
     EQMACHUD_REAL_CEverQuest__dsp_chat = (EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__dsp_chat, (PBYTE)EQMACHUD_DETOUR_CEverQuest__dsp_chat);
 
     EQMACHUD_REAL_DrawNetStatus = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)EQMACHUD_DETOUR_DrawNetStatus);
+
+    EQMACHUD_REAL_CItemDisplayWnd__SetItem  = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem) DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetItem,  (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetItem);
+    EQMACHUD_REAL_CItemDisplayWnd__SetSpell = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell)DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetSpell, (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetSpell);
+
+    EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay = (EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)DetourFunction((PBYTE)EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACHUD_DETOUR_CBuffWindow__RefreshBuffDisplay);
+
 
     return 0;
 }

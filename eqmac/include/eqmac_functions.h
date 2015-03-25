@@ -113,15 +113,33 @@ EQCXWNDMANGER** EQ_OBJECT_ppCXWndManager = (EQCXWNDMANGER**)EQ_POINTER_CXWndMana
 EQCITEMDISPLAYWND** EQ_OBJECT_ppCItemDisplayWnd = (EQCITEMDISPLAYWND**)EQ_POINTER_CItemDisplayWnd;
 #define EQ_OBJECT_CItemDisplayWnd (*EQ_OBJECT_ppCItemDisplayWnd)
 
+EQCBUFFWINDOW** EQ_OBJECT_ppCBuffWindow = (EQCBUFFWINDOW**)EQ_POINTER_CBuffWindow;
+#define EQ_OBJECT_CBuffWindow (*EQ_OBJECT_ppCBuffWindow)
+
+class CXStr;
 class CXWndManager;
 class CSidlScreenWnd;
+class CXWnd;
 class CDisplay;
 class CEverQuest;
+class EQPlayer;
 class EQ_Character;
+class EQ_Item;
+class EQ_Spell;
 class CHotButtonWnd;
 class CLootWnd;
 class CTradeWnd;
-class EQPlayer;
+class CItemDisplayWnd;
+class CBuffWindow;
+
+class CXStr
+{
+public:
+    CXStr::~CXStr(void);
+    CXStr::CXStr(char const *);
+    void CXStr::operator+=(char const *);
+    void CXStr::operator=(char const *);
+};
 
 class CXWndManager
 {
@@ -134,6 +152,12 @@ CXWndManager** EQ_CLASS_ppCXWndManager = (CXWndManager**)EQ_POINTER_CXWndManager
 #define EQ_CLASS_CXWndManager (*EQ_CLASS_ppCXWndManager)
 
 class CSidlScreenWnd
+{
+public:
+    //
+};
+
+class CXWnd
 {
 public:
     //
@@ -152,26 +176,46 @@ CDisplay** EQ_CLASS_ppCDisplay = (CDisplay**)EQ_POINTER_CDisplay;
 class CEverQuest
 {
 public:
-    void CEverQuest::InterpretCmd(class EQPlayer*, char* text);
-    void CEverQuest::dsp_chat(const char* text, uint16_t color, bool filtered);
+    void CEverQuest::InterpretCmd(class EQPlayer* spawn, char* text);
+    void CEverQuest::dsp_chat(const char* text, short color, bool filtered);
     void CEverQuest::dsp_chat(const char* text);
-    int __cdecl CEverQuest::LMouseDown(uint16_t x, uint16_t y);
-    int __cdecl CEverQuest::LMouseUp(uint16_t x, uint16_t y);
-    int __cdecl CEverQuest::RMouseDown(uint16_t x, uint16_t y);
-    int __cdecl CEverQuest::RMouseUp(uint16_t x, uint16_t y);
-    char* CEverQuest::trimName(char*);
+    int __cdecl CEverQuest::LMouseDown(unsigned short x, unsigned short y);
+    int __cdecl CEverQuest::LMouseUp(unsigned short x, unsigned short y);
+    int __cdecl CEverQuest::RMouseDown(unsigned short x, unsigned short y);
+    int __cdecl CEverQuest::RMouseUp(unsigned short x, unsigned short y);
+    char* CEverQuest::trimName(char* spawnName);
     int CEverQuest::MoveToZone(char* zoneShortName, char* text, int destinationType, int zoneRequestReason);
     int CEverQuest::MoveToZone(int zoneId, char* text, int destinationType, int zoneRequestReason);
-    int CEverQuest::LootCorpse(class EQPlayer*, int unknown);
+    int CEverQuest::LootCorpse(class EQPlayer* spawn, int unknown);
 };
 
 CEverQuest** EQ_CLASS_ppCEverQuest = (CEverQuest**)EQ_POINTER_CEverQuest;
 #define EQ_CLASS_CEverQuest (*EQ_CLASS_ppCEverQuest)
 
+class EQPlayer
+{
+public:
+    void EQPlayer::ChangeHeight(float height);
+    void EQPlayer::ChangePosition(uint8_t standingState);
+    void EQPlayer::FacePlayer(class EQPlayer* spawn);
+};
+
 class EQ_Character
 {
 public:
-    uint16_t EQ_Character::Max_Mana(void);
+    unsigned short EQ_Character::Max_Mana(void);
+};
+
+class EQ_Item
+{
+public:
+    //
+};
+
+class EQ_Spell
+{
+public:
+    //
 };
 
 EQ_Character** EQ_CLASS_ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character;
@@ -180,7 +224,7 @@ EQ_Character** EQ_CLASS_ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character
 class CHotButtonWnd : public CSidlScreenWnd
 {
 public:
-    void CHotButtonWnd::DoHotButton(uint16_t buttonIndex, bool allowAutoRightClick);
+    void CHotButtonWnd::DoHotButton(unsigned short buttonIndex, bool allowAutoRightClick);
 };
 
 CHotButtonWnd** EQ_CLASS_ppCHotButtonWnd = (CHotButtonWnd**)EQ_POINTER_CHotButtonWnd;
@@ -199,19 +243,50 @@ CLootWnd** EQ_CLASS_ppCLootWnd = (CLootWnd**)EQ_POINTER_CLootWnd;
 class CTradeWnd : public CSidlScreenWnd
 {
 public:
-    void CTradeWnd::Activate(class EQPlayer*, bool isTargetNpc); // if isTargetNpc == true, show Give Window
+    void CTradeWnd::Activate(class EQPlayer* spawn, bool isTargetNpc); // if (isTargetNpc == true) show Give Window
 };
 
 CTradeWnd** EQ_CLASS_ppCTradeWnd = (CTradeWnd**)EQ_POINTER_CTradeWnd;
 #define EQ_CLASS_CTradeWnd (*EQ_CLASS_ppCTradeWnd)
 
-class EQPlayer
+class CItemDisplayWnd : public CSidlScreenWnd
 {
 public:
-    void EQPlayer::ChangeHeight(float height);
-    void EQPlayer::ChangePosition(uint8_t);
-    void EQPlayer::FacePlayer(class EQPlayer*);
+    void CItemDisplayWnd::SetItem(class EQ_Item* item, bool unknown);
+    void CItemDisplayWnd::SetSpell(short spellId, bool hasDescription, int unknown);
 };
+
+CItemDisplayWnd** EQ_CLASS_ppCItemDisplayWnd = (CItemDisplayWnd**)EQ_POINTER_CItemDisplayWnd;
+#define EQ_CLASS_CItemDisplayWnd (*EQ_CLASS_ppCItemDisplayWnd)
+
+class CBuffWindow : public CSidlScreenWnd
+{
+public:
+    void CBuffWindow::RefreshBuffDisplay(void);
+};
+
+CBuffWindow** EQ_CLASS_ppCBuffWindow = (CBuffWindow**)EQ_POINTER_CBuffWindow;
+#define EQ_CLASS_CBuffWindow (*EQ_CLASS_ppCBuffWindow)
+
+/* CXStr */
+
+// constructor
+#define EQ_FUNCTION_CXStr__CXStr_char_const 0x00575F30
+#ifdef EQ_FUNCTION_CXStr__CXStr_char_const
+EQ_FUNCTION_AT_ADDRESS(CXStr::CXStr(char const *), EQ_FUNCTION_CXStr__CXStr_char_const);
+#endif
+
+// append
+#define EQ_FUNCTION_CXStr__operator_plus_equal_char_const 0x00577310
+#ifdef EQ_FUNCTION_CXStr__operator_plus_equal_char_const
+EQ_FUNCTION_AT_ADDRESS(void CXStr::operator+=(char const *), EQ_FUNCTION_CXStr__operator_plus_equal_char_const);
+#endif
+
+// set
+#define EQ_FUNCTION_CXStr__operator_equal_char_const 0x00576190
+#ifdef EQ_FUNCTION_CXStr__operator_equal_char_const
+EQ_FUNCTION_AT_ADDRESS(void CXStr::operator=(char const *), EQ_FUNCTION_CXStr__operator_equal_char_const);
+#endif
 
 /* CXWndManager */
 
@@ -248,8 +323,8 @@ EQ_FUNCTION_AT_ADDRESS(void CEverQuest::InterpretCmd(class EQPlayer*, char*), EQ
 
 #define EQ_FUNCTION_CEverQuest__dsp_chat 0x00537F99
 #ifdef EQ_FUNCTION_CEverQuest__dsp_chat
-typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)(void* this_ptr, const char* text, uint16_t textColor, bool b);
-EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*,uint16_t,bool), EQ_FUNCTION_CEverQuest__dsp_chat);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)(void* this_ptr, const char* text, short textColor, bool b);
+EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*, short, bool), EQ_FUNCTION_CEverQuest__dsp_chat);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__dsp_chat2 0x005380FD
@@ -259,26 +334,26 @@ EQ_FUNCTION_AT_ADDRESS(void CEverQuest::dsp_chat(const char*), EQ_FUNCTION_CEver
 
 #define EQ_FUNCTION_CEverQuest__LMouseDown 0x005465AA
 #ifdef EQ_FUNCTION_CEverQuest__LMouseDown
-typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LMouseDown)(void* this_ptr, uint16_t x, uint16_t y);
-EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::LMouseDown(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__LMouseDown);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LMouseDown)(void* this_ptr, unsigned short x, unsigned short y);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::LMouseDown(unsigned short, unsigned short), EQ_FUNCTION_CEverQuest__LMouseDown);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__LMouseUp 0x00531614
 #ifdef EQ_FUNCTION_CEverQuest__LMouseUp
-typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LMouseUp)(void* this_ptr, uint16_t x, uint16_t y);
-EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::LMouseUp(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__LMouseUp);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LMouseUp)(void* this_ptr, unsigned short x, unsigned short y);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::LMouseUp(unsigned short, unsigned short), EQ_FUNCTION_CEverQuest__LMouseUp);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__RMouseDown 0x0054699D
 #ifdef EQ_FUNCTION_CEverQuest__RMouseDown
-typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__RMouseDown)(void* this_ptr, uint16_t x, uint16_t y);
-EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::RMouseDown(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__RMouseDown);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__RMouseDown)(void* this_ptr, unsigned short x, unsigned short y);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::RMouseDown(unsigned short, unsigned short), EQ_FUNCTION_CEverQuest__RMouseDown);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__RMouseUp 0x00546B71
 #ifdef EQ_FUNCTION_CEverQuest__RMouseUp
-typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__RMouseUp)(void* this_ptr, uint16_t x, uint16_t y);
-EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::RMouseUp(uint16_t, uint16_t), EQ_FUNCTION_CEverQuest__RMouseUp);
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__RMouseUp)(void* this_ptr, unsigned short x, unsigned short y);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl CEverQuest::RMouseUp(unsigned short, unsigned short), EQ_FUNCTION_CEverQuest__RMouseUp);
 #endif
 
 #define EQ_FUNCTION_CEverQuest__trimName 0x00537D39
@@ -301,33 +376,7 @@ EQ_FUNCTION_AT_ADDRESS(int CEverQuest::MoveToZone(int, char*, int, int), EQ_FUNC
 #define EQ_FUNCTION_CEverQuest__LootCorpse 0x00547808
 #ifdef EQ_FUNCTION_CEverQuest__LootCorpse
 typedef signed int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LootCorpse)(void* this_ptr, class EQPlayer*, int);
-EQ_FUNCTION_AT_ADDRESS(int CEverQuest::LootCorpse(class EQPlayer *, int), EQ_FUNCTION_CEverQuest__LootCorpse);
-#endif
-
-/* CHotButtonWnd */
-
-#define EQ_FUNCTION_CHotButtonWnd__DoHotButton 0x004209BD
-#ifdef EQ_FUNCTION_CHotButtonWnd__DoHotButton
-EQ_FUNCTION_AT_ADDRESS(void CHotButtonWnd::DoHotButton(uint16_t, bool), EQ_FUNCTION_CHotButtonWnd__DoHotButton);
-#endif
-
-/* CLootWnd */
-
-#define EQ_FUNCTION_CLootWnd__Deactivate 0x0042651F
-#ifdef EQ_FUNCTION_CLootWnd__Deactivate
-EQ_FUNCTION_AT_ADDRESS(void CLootWnd::Deactivate(void), EQ_FUNCTION_CLootWnd__Deactivate);
-#endif
-
-#define EQ_FUNCTION_CLootWnd__RequestLootSlot 0x00426B02
-#ifdef EQ_FUNCTION_CLootWnd__RequestLootSlot
-EQ_FUNCTION_AT_ADDRESS(void CLootWnd::RequestLootSlot(int, bool), EQ_FUNCTION_CLootWnd__RequestLootSlot);
-#endif
-
-/* CTradeWnd */
-
-#define EQ_FUNCTION_CTradeWnd__Activate 0x004392C9
-#ifdef EQ_FUNCTION_CTradeWnd__Activate
-EQ_FUNCTION_AT_ADDRESS(void CTradeWnd::Activate(class EQPlayer*, bool), EQ_FUNCTION_CTradeWnd__Activate);
+EQ_FUNCTION_AT_ADDRESS(int CEverQuest::LootCorpse(class EQPlayer*, int), EQ_FUNCTION_CEverQuest__LootCorpse);
 #endif
 
 /* EQPlayer */
@@ -354,6 +403,56 @@ EQ_FUNCTION_AT_ADDRESS(void EQPlayer::FacePlayer(class EQPlayer*), EQ_FUNCTION_E
 EQ_FUNCTION_AT_ADDRESS(unsigned short EQ_Character::Max_Mana(void), EQ_FUNCTION_EQ_Character__Max_Mana);
 #endif
 
+/* CHotButtonWnd */
+
+#define EQ_FUNCTION_CHotButtonWnd__DoHotButton 0x004209BD
+#ifdef EQ_FUNCTION_CHotButtonWnd__DoHotButton
+EQ_FUNCTION_AT_ADDRESS(void CHotButtonWnd::DoHotButton(unsigned short, bool), EQ_FUNCTION_CHotButtonWnd__DoHotButton);
+#endif
+
+/* CLootWnd */
+
+#define EQ_FUNCTION_CLootWnd__Deactivate 0x0042651F
+#ifdef EQ_FUNCTION_CLootWnd__Deactivate
+EQ_FUNCTION_AT_ADDRESS(void CLootWnd::Deactivate(void), EQ_FUNCTION_CLootWnd__Deactivate);
+#endif
+
+#define EQ_FUNCTION_CLootWnd__RequestLootSlot 0x00426B02
+#ifdef EQ_FUNCTION_CLootWnd__RequestLootSlot
+EQ_FUNCTION_AT_ADDRESS(void CLootWnd::RequestLootSlot(int, bool), EQ_FUNCTION_CLootWnd__RequestLootSlot);
+#endif
+
+/* CTradeWnd */
+
+#define EQ_FUNCTION_CTradeWnd__Activate 0x004392C9
+#ifdef EQ_FUNCTION_CTradeWnd__Activate
+EQ_FUNCTION_AT_ADDRESS(void CTradeWnd::Activate(class EQPlayer*, bool), EQ_FUNCTION_CTradeWnd__Activate);
+#endif
+
+/* CItemDisplayWnd */
+
+#define EQ_FUNCTION_CItemDisplayWnd__SetItem 0x00423640
+#ifdef EQ_FUNCTION_CItemDisplayWnd__SetItem
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem)(void* this_ptr, class EQ_Item* item, bool unknown);
+EQ_FUNCTION_AT_ADDRESS(void CItemDisplayWnd::SetItem(class EQ_Item*, bool), EQ_FUNCTION_CItemDisplayWnd__SetItem);
+#endif
+
+#define EQ_FUNCTION_CItemDisplayWnd__SetSpell 0x00425957
+#ifdef EQ_FUNCTION_CItemDisplayWnd__SetSpell
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell)(void* this_ptr, int spellId, bool hasDescription, int unknown);
+EQ_FUNCTION_AT_ADDRESS(void CItemDisplayWnd::SetSpell(short, bool, int), EQ_FUNCTION_CItemDisplayWnd__SetSpell);
+#endif
+
+/* CBuffWindow */
+
+#define EQ_FUNCTION_CBuffWindow__SetBuffIcon 0x00409520
+
+#define EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay 0x00409334
+#ifdef EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(void CBuffWindow::RefreshBuffDisplay(void), EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay);
+#endif
+
 /* OTHER */
 
 #define EQ_FUNCTION_DrawNetStatus 0x0054D3AE
@@ -378,8 +477,10 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyUp)(int key);
 
 #define EQ_FUNCTION_CastRay 0x004F20DB
 #ifdef EQ_FUNCTION_CastRay
-EQ_FUNCTION_AT_ADDRESS(int __cdecl EQ_CastRay(class EQPlayer*, float y, float x, float z), EQ_FUNCTION_CastRay);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl EQ_CastRay(class EQPlayer* spawn, float y, float x, float z), EQ_FUNCTION_CastRay);
 #endif
+
+/* EQGfx_Dx8.DLL */
 
 // world to screen function
 typedef int (__cdecl* EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dWorldSpaceToScreenSpace)(int cameraDataPointer, EQLOCATION*, float* resultX, float* resultY);
@@ -417,6 +518,24 @@ typedef void (__stdcall *_everquest_function_EQ_Character__CastSpell)(unsigned c
 _everquest_function_EQ_Character__CastSpell everquest_function_EQ_Character__CastSpell = (_everquest_function_EQ_Character__CastSpell)EQ_FUNCTION_EQ_Character__CastSpell;
 #endif
 */
+
+void EQ_CXStr_Append(PEQCXSTR* cxstr, PCHAR text)
+{
+    CXStr *temp = (CXStr*)cxstr;
+
+    (*temp) += text;
+
+    cxstr = (PEQCXSTR*)temp;
+}
+
+void EQ_CXStr_Set(PEQCXSTR* cxstr, PCHAR text) 
+{ 
+    CXStr *temp = (CXStr*)cxstr;
+
+    (*temp) = text;
+
+    cxstr = (PEQCXSTR*)temp;
+}
 
 char* EQ_GetGuildNameById(int guildId)
 {

@@ -87,8 +87,6 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_OFFSET_CDisplay_IS_CURSOR_HOTKEY 0x042 // BYTE ; when you pick up and hold a hotkey button on your mouse cursor
 #define EQ_OFFSET_CDisplay_TIMER            0x0C8 // DWORD ; global timer in milliseconds, 1000 milliseconds = 1 second
 
-#define EQ_POINTER_CHotButtonWnd 0x0063D628
-
 #define EQ_POINTER_CLootWnd 0x0063D65C
 #define EQ_OFFSET_CLootWnd_IS_OPEN            0x134 // BYTE
 #define EQ_OFFSET_CLootWnd_POINTER_FIRST_ITEM 0x1B8
@@ -97,11 +95,11 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_CLootWnd_ITEMS_MAX 30
 
-#define EQ_POINTER_CTradeWnd 0x0063D668
-
-#define EQ_POINTER_CGiveWnd 0x0063D678
-
+#define EQ_POINTER_CBuffWindow     0x0063D638
+#define EQ_POINTER_CGiveWnd        0x0063D678
+#define EQ_POINTER_CHotButtonWnd   0x0063D628
 #define EQ_POINTER_CItemDisplayWnd 0x0063D5E0
+#define EQ_POINTER_CTradeWnd       0x0063D668
 
 #define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
 #define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
@@ -952,6 +950,36 @@ typedef struct _EQCAMERAINFO
 /* ...... */ 
 } EQCAMERAINFO, *PEQCAMERAINFO;
 
+typedef struct _EQLIGHTINSTANCEINFO
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD Unknown0004;
+/* 0x0008 */ DWORD Unknown0008;
+/* 0x000C */ DWORD Unknown000C;
+/* 0x0010 */ DWORD Unknown0010;
+/* 0x0014 */ DWORD CurrentFrame;
+/* 0x0018 */ DWORD UpdateInterval;
+/* 0x001C */ DWORD SkipFrames;
+/* ...... */ 
+} EQLIGHTINSTANCEINFO, *PEQLIGHTINSTANCEINFO;
+
+typedef struct _EQLIGHTINFO
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD Unknown0004;
+/* 0x0008 */ DWORD Tag;
+/* 0x000C */ DWORD Type;
+/* 0x0010 */ struct _EQLIGHTINSTANCEINFO* LightInstance;
+/* 0x0014 */ FLOAT Y;
+/* 0x0018 */ FLOAT X;
+/* 0x001C */ FLOAT Z;
+/* 0x0020 */ FLOAT RadiusOfInfluence;
+/* 0x0024 */ DWORD Unknown0024;
+/* 0x0028 */ DWORD Unknown0028;
+/* 0x002C */ PVOID Unknown002C;
+/* ...... */ 
+} EQLIGHTINFO, *PEQLIGHTINFO;
+
 typedef struct _EQZONEINFO
 {
 /* 0x0000 */ CHAR PlayerName[64]; // [0x40]
@@ -1056,7 +1084,7 @@ typedef struct _EQSPELLINFO
 
 typedef struct _EQSPELLLIST
 {
-    struct _EQSPELLINFO* Spell[4096];
+    struct _EQSPELLINFO* Spell[4096]; // 4000 spells
 } EQSPELLLIST, *PEQSPELLLIST;
 
 // class EQ_Character
@@ -1182,7 +1210,7 @@ typedef struct _EQMODELINFO
 typedef struct _EQACTORINFO
 {
 /* 0x0000 */ PVOID ActorInstance; // TODO
-/* 0x0004 */ PVOID Unknown0004;
+/* 0x0004 */ struct _EQLIGHTINFO* LightInfo; // PointLight
 /* 0x0008 */ char ActorDef[64]; // xxx_ACTORDEF string (HUM_ACTORDEF, ELM_ACTORDEF, etc)
 /* 0x0048 */ FLOAT Z;
 /* 0x004C */ FLOAT ZCeiling; // Z axis of the ceiling or first collision above player
@@ -1447,7 +1475,7 @@ typedef struct _EQCXSTR
 /* 0x0014*/ CHAR Text[1]; // use Length and MaxLength
 } EQCXSTR, *PEQCXSTR;
 
-// CXWnd and CSidlWnd share these same properties
+// CXWnd and CSidlScreenWnd share these same properties
 // sizeof 0xAC
 typedef struct _EQWND
 {
@@ -1480,10 +1508,10 @@ typedef struct _EQWND
 /* 0x0057 */ BYTE Unknown0057;
 /* 0x0058 */ DWORD WindowStyleFlags;
 /* 0x005C */ PVOID Unknown005C;
-/* 0x0060 */ struct _CXSTR* Text;
-/* 0x0064 */ struct _CXSTR* ToolTipText;
+/* 0x0060 */ PEQCXSTR Text;
+/* 0x0064 */ PEQCXSTR ToolTipText;
 /* 0x0068 */ BYTE Unknown0068[28];
-/* 0x0084 */ struct _CXSTR* XmlToolTipText;
+/* 0x0084 */ PEQCXSTR XmlToolTipText;
 /* 0x0088 */ BYTE Unknown0088[22];
 /* 0x009E */ BYTE AlphaTransparency;
 /* 0x009F */ BYTE Unknown009F;
@@ -1494,6 +1522,7 @@ typedef struct _EQWND
 } EQWND, *PEQWND;
 
 // the moveable resizable parent windows
+// class CSidlScreenWnd
 // sizeof 0x138
 typedef struct _EQCSIDLWND
 {
@@ -1515,13 +1544,22 @@ typedef struct _EQCITEMDISPLAYWND
 {
 /* 0x0000 */ struct _EQCSIDLWND CSidlWnd;
 /* 0x0138 */ BYTE Unknown0138[4];
-/* 0x013C */ struct _CSIDLWND* DisplayWnd; // the item stats text window
+/* 0x013C */ struct _EQCSIDLWND* DisplayWnd; // the item stats text window
 /* 0x0140 */ BYTE Unknown0140[4];
-/* 0x0144 */ struct _CXSTR* WindowTitle; // the item name is the title text
-/* 0x0148 */ struct _CXSTR* DisplayText; // the item stats text
+/* 0x0144 */ PEQCXSTR DisplayText; // the item name is the title text
+/* 0x0148 */ PEQCXSTR WindowTitle; // the item stats text
 /* 0x014C */ struct _EQITEMINFO Item;
 /* ...... */
 } EQCITEMDISPLAYWND, *PEQCITEMDISPLAYWND;
+
+typedef struct _EQCBUFFWINDOW
+{
+/* 0x0000 */ struct _EQCSIDLWND CSidlWnd;
+/* 0x0138 */ BYTE Unknown0138[68];
+/* 0x017C */ struct _EQCSIDLWND* BuffButtonWnd[15]; // CButtonWnd
+/* 0x01B8 */
+/* ...... */
+} EQCBUFFWINDOW, *PEQCBUFFWINDOW;
 
 /****************************************************************************************************/
 
@@ -1552,6 +1590,97 @@ void EQ_Rotate2d(float cx, float cy, float& x, float& y, float angle)
 
     x = nx;
     y = ny;
+}
+
+void EQ_CalculateItemCost(int cost, int& platinum, int& gold, int& silver, int& copper)
+{
+    // cost is in total copper value of item
+
+    if (cost > 0)
+    {
+        platinum = cost / 1000;
+
+        cost = cost % 1000;
+
+        gold = cost / 100;
+
+        cost = cost % 100;
+
+        silver = cost / 10;
+
+        cost = cost % 10;
+
+        copper = cost;
+    }
+}
+
+void EQ_CalculateTickTime(int ticks, int& hours, int& minutes, int& seconds)
+{
+    if (ticks > 0)
+    {
+        seconds = ticks * 3;
+
+        if (seconds > 0)
+        {
+            hours = seconds / (60 * 60);
+
+            seconds = seconds - hours * (60 * 60);
+
+            if (seconds > 0)
+            {
+                minutes = seconds / 60;
+
+                seconds = seconds - minutes * 60;
+            }
+        }
+    }
+}
+
+void EQ_GetTickTimeString(int ticks, char result[], size_t resultSize)
+{
+    int hours   = 0;
+    int minutes = 0;
+    int seconds = 0;
+
+    EQ_CalculateTickTime(ticks, hours, minutes, seconds);
+
+    char timeText[128] = {0};
+
+    if (hours > 0)
+    {
+        char hoursText[128];
+        sprintf_s(hoursText, "%dh", hours);
+
+        strcat_s(timeText, hoursText);
+    }
+
+    if (minutes > 0)
+    {
+        if (hours > 0)
+        {
+            strcat_s(timeText, " ");
+        }
+
+        char minutesText[128];
+        sprintf_s(minutesText, "%dm", minutes);
+
+        strcat_s(timeText, minutesText);
+    }
+
+    if (seconds > 0)
+    {
+        if (minutes > 0)
+        {
+            strcat_s(timeText, " ");
+        }
+
+        char secondsText[128];
+        sprintf_s(secondsText, "%ds", seconds);
+
+        strcat_s(timeText, secondsText);
+    }
+
+    strcpy_s(result, resultSize, timeText);
 }
 
 const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], size_t listSize, char key[])

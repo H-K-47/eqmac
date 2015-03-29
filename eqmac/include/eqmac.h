@@ -160,8 +160,21 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_ZONE_INFO_SHORT_NAME_SIZE  0x20
 #define EQ_ZONE_INFO_LONG_NAME_SIZE   0x80
 
+#define EQ_STRUCTURE_COMMAND_LIST 0x00609AF8 // STRUCT
+
+#define EQ_COMMANDS_MAX 278
+
 // /viewport
 #define EQ_STRUCTURE_VIEWPORT 0x00798548 // STRUCT
+
+#define EQ_VIEWPORT_CLASSIC_UI_WIDTH  400
+#define EQ_VIEWPORT_CLASSIC_UI_HEIGHT 320
+
+#define EQ_VIEWPORT_CLASSIC_UI_OFFSET_X 119 // pixels of the Classic UI where the OPTIONS and HELP buttons are located, 3D viewport is to the right
+#define EQ_VIEWPORT_CLASSIC_UI_OFFSET_Y 0
+
+#define EQ_CLASSIC_UI_WIDTH  640
+#define EQ_CLASSIC_UI_HEIGHT 480
 
 #define EQ_POINTER_WORLD_INFO 0x007F9494
 #define EQ_OFFSET_WORLD_INFO_HOUR   0x04 // BYTE
@@ -186,8 +199,8 @@ const float EQ_PI = 3.14159265358979f;
 //#define EQ_DOORS_INFO_POINTER 0x007F94B8
 
 // class EQ_Character
-#define EQ_POINTER_CHAR_INFO 0x007F94E8
-#define EQ_POINTER_EQ_Character EQ_POINTER_CHAR_INFO
+#define EQ_POINTER_EQ_Character 0x007F94E8
+#define EQ_POINTER_CHAR_INFO EQ_POINTER_EQ_Character
 #define EQ_OFFSET_CHAR_INFO_NAME               0x0002 // STRING [0x40]
 #define EQ_OFFSET_CHAR_INFO_MANA               0x009A // WORD
 #define EQ_OFFSET_CHAR_INFO_STUNNED_STATE      0x009E // BYTE ; EQ_STUNNED_STATE_x
@@ -305,10 +318,10 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_CASTING_SPELL_GEM_NUMBER_SINGING 255
 
 // class EQ_Main
-#define EQ_POINTER_OLD_UI_INFO 0x007F9574
-#define EQ_POINTER_EQ_Main EQ_POINTER_OLD_UI_INFO
-#define EQ_OFFSET_OLD_UI_INFO_STATE               0x00E88 // BYTE ; EQ_OLD_UI_STATE_x
-#define EQ_OFFSET_OLD_UI_INFO_IS_SIDE_WINDOW_OPEN 0x5F314 // DWORD ; trade window, loot window, bank window, merchant window
+#define EQ_POINTER_EQ_Main 0x007F9574
+#define EQ_POINTER_CLASSIC_UI_INFO EQ_POINTER_EQ_Main
+#define EQ_OFFSET_CLASSIC_UI_INFO_STATE               0x00E88 // BYTE ; EQ_CLASSIC_UI_STATE_x
+#define EQ_OFFSET_CLASSIC_UI_INFO_IS_SIDE_WINDOW_OPEN 0x5F314 // DWORD ; trade window, loot window, bank window, merchant window
 
 #define EQ_UI_STATE 0x0063B918 // BYTE
 
@@ -1001,7 +1014,8 @@ typedef struct _EQBUFFINFO
 /* 0x000A */
 } EQBUFFINFO, *PEQBUFFINFO;
 
-typedef struct _EQITEMINFO {
+typedef struct _EQITEMINFO
+{
 /* 0x0000 */ CHAR Name[64]; // [0x40]
 /* 0x0040 */ CHAR LoreName[80]; // [0x50]
 /* 0x0090 */ CHAR IdFile[6]; // [0x06]
@@ -1407,8 +1421,28 @@ typedef struct _EQGUILDINFO
 
 typedef struct _EQGUILDLIST
 {
-    struct _EQGUILDINFO Guild[512];
+    struct _EQGUILDINFO Guild[EQ_GUILDS_MAX];
 } EQGUILDLIST, *PEQGUILDLIST;
+
+// sizeof 0x14
+typedef struct _EQCOMMANDINFO
+{
+/* 0x0000 */ DWORD Id;
+/* 0x0004 */ PCHAR Name;
+/* 0x0008 */ PCHAR Name2;
+/* 0x000C */ union
+             {
+                 VOID (__stdcall* Function)(PEQSPAWNINFO, PCHAR);
+                 DWORD FunctionAddress;
+             };
+/* 0x0010 */ WORD Restriction;
+/* 0x0012 */ WORD Category;
+} EQCOMMANDINFO, *PEQCOMMANDINFO;
+
+typedef struct _EQCOMMANDLIST
+{
+    struct _EQCOMMANDINFO Command[EQ_COMMANDS_MAX];
+} EQCOMMANDLIST, *PEQCOMMANDLIST;
 
 // /viewport
 typedef struct _EQVIEWPORT
@@ -1614,6 +1648,67 @@ void EQ_CalculateItemCost(int cost, int& platinum, int& gold, int& silver, int& 
     }
 }
 
+void EQ_GetItemCostString(int cost, char result[], size_t resultSize)
+{
+    int platinum = 0;
+    int gold     = 0;
+    int silver   = 0;
+    int copper   = 0;
+
+    EQ_CalculateItemCost(cost, platinum, gold, silver, copper);
+
+    char costText[128] = {0};
+
+    if (platinum > 0)
+    {
+        char platinumText[128];
+        sprintf_s(platinumText, "%dp", platinum);
+
+        strcat_s(costText, platinumText);
+    }
+
+    if (gold > 0)
+    {
+        if (platinum > 0)
+        {
+            strcat_s(costText, " ");
+        }
+
+        char goldText[128];
+        sprintf_s(goldText, "%dg", gold);
+
+        strcat_s(costText, goldText);
+    }
+
+    if (silver > 0)
+    {
+        if (platinum > 0 || gold > 0)
+        {
+            strcat_s(costText, " ");
+        }
+
+        char silverText[128];
+        sprintf_s(silverText, "%ds", silver);
+
+        strcat_s(costText, silverText);
+    }
+
+    if (copper > 0)
+    {
+        if (platinum > 0 || gold > 0 || silver > 0)
+        {
+            strcat_s(costText, " ");
+        }
+
+        char copperText[128];
+        sprintf_s(copperText, "%dc", copper);
+
+        strcat_s(costText, copperText);
+    }
+
+    strcpy_s(result, resultSize, costText);
+}
+
 void EQ_CalculateTickTime(int ticks, int& hours, int& minutes, int& seconds)
 {
     if (ticks > 0)
@@ -1669,7 +1764,7 @@ void EQ_GetTickTimeString(int ticks, char result[], size_t resultSize)
 
     if (seconds > 0)
     {
-        if (minutes > 0)
+        if (hours > 0 || minutes > 0)
         {
             strcat_s(timeText, " ");
         }

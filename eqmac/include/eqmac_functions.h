@@ -59,7 +59,7 @@ void EQ_WRITE_MEMORY_STRING(DWORD address, const char* value)
 {
     size_t length = strlen(value);
 
-    int j = 0;
+    size_t j = 0;
 
     for (size_t i = 0; i < length; i++)
     {
@@ -77,6 +77,9 @@ EQVIEWPORT* EQ_OBJECT_pViewPort = (EQVIEWPORT*)EQ_STRUCTURE_VIEWPORT;
 
 EQGUILDLIST* EQ_OBJECT_pGuildList = (EQGUILDLIST*)EQ_STRUCTURE_GUILD_LIST;
 #define EQ_OBJECT_GuildList (*EQ_OBJECT_pGuildList)
+
+EQCOMMANDLIST* EQ_OBJECT_pCommandList = (EQCOMMANDLIST*)EQ_STRUCTURE_COMMAND_LIST;
+#define EQ_OBJECT_CommandList (*EQ_OBJECT_pCommandList)
 
 // pointers
 
@@ -457,7 +460,7 @@ EQ_FUNCTION_AT_ADDRESS(void CBuffWindow::RefreshBuffDisplay(void), EQ_FUNCTION_C
 
 #define EQ_FUNCTION_DrawNetStatus 0x0054D3AE
 #ifdef EQ_FUNCTION_DrawNetStatus
-typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsigned short, unsigned short, unsigned short, int, unsigned short, unsigned long, long, unsigned long);
+typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsigned short, unsigned short x, unsigned short y, int, unsigned short, unsigned long, long, unsigned long);
 #endif
 
 #define EQ_FUNCTION_HandleMouseWheel 0x0055B2E0
@@ -689,13 +692,33 @@ void EQ_DrawTooltipText(char text[], int x, int y, DWORD fontPointer)
         return;
     }
 
-    int textX = x - 1;
-
     textWidth = textWidth + 1;
+
+    int textX = x - 1;
 
     EQ_DrawRectangle((float)textX, (float)y, (float)textWidth, (float)fontHeight, EQ_TOOLTIP_TEXT_BACKGROUND_COLOR, true);
 
     EQ_CLASS_CDisplay->WriteTextHD2(text, x, y, EQ_TEXT_COLOR_WHITE, font);
+}
+
+void EQ_ApplyClassicUiDrawOffset(int& x, int& y)
+{
+    BYTE uiState = EQ_READ_MEMORY<BYTE>(EQ_UI_STATE);
+
+    if (uiState == EQ_UI_STATE_CLASSIC)
+    {
+        DWORD resolutionWidth  = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_WIDTH);
+        DWORD resolutionHeight = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_HEIGHT);
+
+        if (resolutionWidth > EQ_CLASSIC_UI_WIDTH || resolutionHeight > EQ_CLASSIC_UI_HEIGHT)
+        {
+            int offsetX = (int)((resolutionWidth  - EQ_CLASSIC_UI_WIDTH)  * 0.5f);
+            int offsetY = (int)((resolutionHeight - EQ_CLASSIC_UI_HEIGHT) * 0.5f);
+
+            x = x + offsetX;
+            y = y + offsetY;
+        }
+    }
 }
 
 /*

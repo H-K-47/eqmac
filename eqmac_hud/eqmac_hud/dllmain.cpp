@@ -35,6 +35,8 @@ EQ_FUNCTION_TYPE_HandleMouseWheel EQMACHUD_REAL_HandleMouseWheel = NULL;
 EQ_FUNCTION_TYPE_ProcessKeyDown EQMACHUD_REAL_ProcessKeyDown = NULL;
 EQ_FUNCTION_TYPE_ProcessKeyUp   EQMACHUD_REAL_ProcessKeyUp   = NULL;
 
+EQ_FUNCTION_TYPE_CEverQuest__InterpretCmd EQMACHUD_REAL_CEverQuest__InterpretCmd = NULL;
+
 EQ_FUNCTION_TYPE_CEverQuest__dsp_chat EQMACHUD_REAL_CEverQuest__dsp_chat = NULL;
 
 EQ_FUNCTION_TYPE_DrawNetStatus EQMACHUD_REAL_DrawNetStatus = NULL;
@@ -43,6 +45,16 @@ EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem  EQMACHUD_REAL_CItemDisplayWnd__SetIte
 EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell EQMACHUD_REAL_CItemDisplayWnd__SetSpell = NULL;
 
 EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay  EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay = NULL;
+
+// ignore keys fixes a bug with EQW and keys getting stuck or randomly pressed when switching clients
+// ProcessKeyDown is ignored for a specific time after switching to another client
+bool g_ignoreKeysIsEnabled = false;
+
+unsigned int g_ignoreKeysTimer = 0;
+unsigned int g_ignoreKeysDelay = 100;
+
+// support for the Classic UI from 1999
+bool g_classicUiIsEnabled = false;
 
 int g_zoneId = 0;
 
@@ -127,8 +139,8 @@ float g_buttonToggleEspFilterNpcY;
 float g_buttonToggleHealthBarsX;
 float g_buttonToggleHealthBarsY;
 
-float g_buttonToggleBuffsX;
-float g_buttonToggleBuffsY;
+float g_buttonToggleBuffInfoX;
+float g_buttonToggleBuffInfoY;
 
 float g_buttonTogglePlayerInfoX;
 float g_buttonTogglePlayerInfoY;
@@ -399,18 +411,18 @@ char g_espGameMasterTextColor_string[32];
 char g_espGroundSpawnTextColor_string[32];
 char g_espDoorSpawnTextColor_string[32];
 
-bool g_buffsIsEnabled = true;
+bool g_buffInfoIsEnabled = true;
 
-float g_buffsX = 768.0f;
-float g_buffsY = 32.0f;
+float g_buffInfoX = 768.0f;
+float g_buffInfoY = 32.0f;
 
-int g_buffsTextColor            = EQ_TEXT_COLOR_YELLOW;
-int g_buffsBeneficialTextColor  = EQ_TEXT_COLOR_YELLOW;
-int g_buffsDetrimentalTextColor = EQ_TEXT_COLOR_RED;
+int g_buffInfoTextColor            = EQ_TEXT_COLOR_YELLOW;
+int g_buffInfoBeneficialTextColor  = EQ_TEXT_COLOR_YELLOW;
+int g_buffInfoDetrimentalTextColor = EQ_TEXT_COLOR_RED;
 
-char g_buffsTextColor_string[32];
-char g_buffsBeneficialTextColor_string[32];
-char g_buffsDetrimentalTextColor_string[32];
+char g_buffInfoTextColor_string[32];
+char g_buffInfoBeneficialTextColor_string[32];
+char g_buffInfoDetrimentalTextColor_string[32];
 
 bool g_playerInfoIsEnabled = true;
 
@@ -464,11 +476,13 @@ float g_healthBarsHeight = 10.0f;
 
 #define EQMACHUD_HEALTH_BAR_DEFAULT_BACKGROUND_COLOR 0xC8000000
 #define EQMACHUD_HEALTH_BAR_DEFAULT_FOREGROUND_COLOR 0xC8FF0000
+#define EQMACHUD_HEALTH_BAR_DEFAULT_MANA_COLOR       0xC800FFFF
 
 DWORD g_healthBarsBackgroundColor       = 0xC8000000;
 DWORD g_healthBarsForegroundPlayerColor = 0xC800FF00;
 DWORD g_healthBarsForegroundNpcColor    = 0xC8FF0000;
 DWORD g_healthBarsForegroundTargetColor = 0xC8FF00FF;
+DWORD g_healthBarsManaColor             = 0xC800FFFF;
 
 bool g_healthBarsDistanceIsEnabled = true;
 float g_healthBarsDistance = 400.0f;
@@ -558,6 +572,16 @@ void EQMACHUD_EnableDebugPrivileges()
     }
 
     CloseHandle(token);
+}
+
+bool EQMACHUD_IsForegroundWindowCurrentProcessId()
+{
+    HWND foregroundHwnd = GetForegroundWindow();
+
+    DWORD foregroundProcessId;
+    GetWindowThreadProcessId(foregroundHwnd, &foregroundProcessId);
+
+    return (foregroundProcessId == GetCurrentProcessId());
 }
 
 void EQMACHUD_UpdateEqProcesses()
@@ -984,14 +1008,13 @@ bool EQMACHUD_LoadConfig(const char* filename)
         return false;
     }
 
+    // Options
+
+    g_maxDeferred2dItemsPercent = EQMACHUD_ConfigReadFloat(filename, "Options", "fMaxDeferred2dItemsPercent", g_maxDeferred2dItemsPercent);
+
+    g_writeTextToChatWindowIsEnabled = EQMACHUD_ConfigReadBool(filename, "Options", "bWriteTextToChatWindow", g_writeTextToChatWindowIsEnabled);
+
     // HUD
-
-    g_maxDeferred2dItemsPercent = EQMACHUD_ConfigReadFloat(filename, "HUD", "fMaxDeferred2dItemsPercent", g_maxDeferred2dItemsPercent);
-
-    g_mouseWheelZoomIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bMouseWheelZoom", g_mouseWheelZoomIsEnabled);
-    g_mouseWheelZoomMultiplier = EQMACHUD_ConfigReadFloat(filename, "HUD", "fMouseWheelZoomMultiplier", g_mouseWheelZoomMultiplier);
-
-    g_writeTextToChatWindowIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bWriteTextToChatWindow", g_writeTextToChatWindowIsEnabled);
 
     g_buttonExitX = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonExitX", g_buttonExitX);
     g_buttonExitY = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonExitY", g_buttonExitY);
@@ -1006,6 +1029,12 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_buttonTextColorEnabled     = EQ_GetTextColorIdByName(g_buttonTextColorEnabled_string);
     g_buttonTextColorDisabled    = EQ_GetTextColorIdByName(g_buttonTextColorDisabled_string);
     g_buttonTextColorMinMaxClose = EQ_GetTextColorIdByName(g_buttonTextColorMinMaxClose_string);
+
+    // MouseWheelZoom
+
+    g_mouseWheelZoomIsEnabled = EQMACHUD_ConfigReadBool(filename, "MouseWheelZoom", "bEnabled", g_mouseWheelZoomIsEnabled);
+
+    g_mouseWheelZoomMultiplier = EQMACHUD_ConfigReadFloat(filename, "MouseWheelZoom", "fMultiplier", g_mouseWheelZoomMultiplier);
 
     // ClientSwitcher
 
@@ -1220,6 +1249,7 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_healthBarsForegroundPlayerColor = EQMACHUD_ConfigReadInt(filename, "HealthBars", "argbForegroundPlayerColor", g_healthBarsForegroundPlayerColor);
     g_healthBarsForegroundNpcColor    = EQMACHUD_ConfigReadInt(filename, "HealthBars", "argbForegroundNpcColor",    g_healthBarsForegroundNpcColor);
     g_healthBarsForegroundTargetColor = EQMACHUD_ConfigReadInt(filename, "HealthBars", "argbForegroundTargetColor", g_healthBarsForegroundTargetColor);
+    g_healthBarsManaColor             = EQMACHUD_ConfigReadInt(filename, "HealthBars", "argbManaColor",             g_healthBarsManaColor);
 
     g_healthBarsDistanceIsEnabled = EQMACHUD_ConfigReadBool(filename, "HealthBars", "bDistance", g_healthBarsDistanceIsEnabled);
     g_healthBarsDistance = EQMACHUD_ConfigReadFloat(filename, "HealthBars", "fDistance", g_healthBarsDistance);
@@ -1249,19 +1279,19 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     g_buffWindowTimersIsEnabled = EQMACHUD_ConfigReadBool(filename, "BuffWindowTimers", "bEnabled", g_buffWindowTimersIsEnabled);
 
-    // Buffs
+    // BuffInfo
 
-    g_buffsIsEnabled = EQMACHUD_ConfigReadBool(filename, "Buffs", "bEnabled", g_buffsIsEnabled);
+    g_buffInfoIsEnabled = EQMACHUD_ConfigReadBool(filename, "BuffInfo", "bEnabled", g_buffInfoIsEnabled);
 
-    g_buffsX = EQMACHUD_ConfigReadFloat(filename, "Buffs", "fX", g_buffsX);
-    g_buffsY = EQMACHUD_ConfigReadFloat(filename, "Buffs", "fY", g_buffsY);
+    g_buffInfoX = EQMACHUD_ConfigReadFloat(filename, "BuffInfo", "fX", g_buffInfoX);
+    g_buffInfoY = EQMACHUD_ConfigReadFloat(filename, "BuffInfo", "fY", g_buffInfoY);
 
-    EQMACHUD_ConfigReadString(filename, "Buffs", "sTextColor",            "Yellow", g_buffsTextColor_string,            sizeof(g_buffsTextColor_string));
-    EQMACHUD_ConfigReadString(filename, "Buffs", "sBeneficialTextColor",  "Yellow", g_buffsBeneficialTextColor_string,  sizeof(g_buffsBeneficialTextColor_string));
-    EQMACHUD_ConfigReadString(filename, "Buffs", "sDetrimentalTextColor", "Red",    g_buffsDetrimentalTextColor_string, sizeof(g_buffsDetrimentalTextColor_string));
-    g_buffsTextColor            = EQ_GetTextColorIdByName(g_buffsTextColor_string);
-    g_buffsBeneficialTextColor  = EQ_GetTextColorIdByName(g_buffsBeneficialTextColor_string);
-    g_buffsDetrimentalTextColor = EQ_GetTextColorIdByName(g_buffsDetrimentalTextColor_string);
+    EQMACHUD_ConfigReadString(filename, "BuffInfo", "sTextColor",            "Yellow", g_buffInfoTextColor_string,            sizeof(g_buffInfoTextColor_string));
+    EQMACHUD_ConfigReadString(filename, "BuffInfo", "sBeneficialTextColor",  "Yellow", g_buffInfoBeneficialTextColor_string,  sizeof(g_buffInfoBeneficialTextColor_string));
+    EQMACHUD_ConfigReadString(filename, "BuffInfo", "sDetrimentalTextColor", "Red",    g_buffInfoDetrimentalTextColor_string, sizeof(g_buffInfoDetrimentalTextColor_string));
+    g_buffInfoTextColor            = EQ_GetTextColorIdByName(g_buffInfoTextColor_string);
+    g_buffInfoBeneficialTextColor  = EQ_GetTextColorIdByName(g_buffInfoBeneficialTextColor_string);
+    g_buffInfoDetrimentalTextColor = EQ_GetTextColorIdByName(g_buffInfoDetrimentalTextColor_string);
 
     // PlayerInfo
 
@@ -1689,8 +1719,8 @@ void EQMACHUD_GuiRecalculateCoordinates()
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleBuffsX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleBuffsY = g_buttonExitY;
+    g_buttonToggleBuffInfoX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_buttonToggleBuffInfoY = g_buttonExitY;
 
     buttonIndex += 1.0f;
 
@@ -2019,9 +2049,9 @@ void EQMACHUD_ToggleHealthBars()
     EQ_ToggleBool(g_healthBarsIsEnabled);
 }
 
-void EQMACHUD_ToggleBuffs()
+void EQMACHUD_ToggleBuffInfo()
 {
-    EQ_ToggleBool(g_buffsIsEnabled);
+    EQ_ToggleBool(g_buffInfoIsEnabled);
 }
 
 void EQMACHUD_TogglePlayerInfo()
@@ -2152,7 +2182,10 @@ bool EQMACHUD_DoButtonMouseLeftHeldDown()
         {
             if (g_mapRotateIsEnabled == false)
             {
-                EQ_OBJECT_CXWndManager->MouseIcon = EQ_MOUSE_ICON_SIZE_ALL;
+                if (g_classicUiIsEnabled == false)
+                {
+                    EQ_OBJECT_CXWndManager->MouseIcon = EQ_MOUSE_ICON_SIZE_ALL;
+                }
 
                 if (g_mouseIsDragging == true)
                 {
@@ -2644,23 +2677,23 @@ bool EQMACHUD_DoButtonMouseLeftUp()
         EQMACHUD_IsPointInsideRectangle
         (
             mouseX, mouseY,
-            (int)g_buttonToggleBuffsX, (int)g_buttonToggleBuffsY,
+            (int)g_buttonToggleBuffInfoX, (int)g_buttonToggleBuffInfoY,
             (int)g_buttonWidth, (int)g_buttonHeight
         )
         == true
     )
     {
-        EQMACHUD_ToggleBuffs();
+        EQMACHUD_ToggleBuffInfo();
 
         if (g_writeTextToChatWindowIsEnabled == true)
         {
-            if (g_buffsIsEnabled == true)
+            if (g_buffInfoIsEnabled == true)
             {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Buffs enabled.");
+                EQ_CLASS_CEverQuest->dsp_chat("-> Buff Info enabled.");
             }
             else
             {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Buffs disabled.");
+                EQ_CLASS_CEverQuest->dsp_chat("-> Buff Info disabled.");
             }
         }
 
@@ -3617,7 +3650,7 @@ bool EQMACHUD_DoButtonToolTipText()
         EQMACHUD_IsPointInsideRectangle
         (
             mouseX, mouseY,
-            (int)g_buttonToggleBuffsX, (int)g_buttonToggleBuffsY,
+            (int)g_buttonToggleBuffInfoX, (int)g_buttonToggleBuffInfoY,
             (int)g_buttonWidth, (int)g_buttonHeight
         )
         == true
@@ -3625,9 +3658,9 @@ bool EQMACHUD_DoButtonToolTipText()
     {
         EQ_DrawTooltipText
         (
-            "Buffs",
-            (int)(g_buttonToggleBuffsX),
-            (int)(g_buttonToggleBuffsY + g_buttonHeight + g_elementOffset),
+            "Buff Info",
+            (int)(g_buttonToggleBuffInfoX),
+            (int)(g_buttonToggleBuffInfoY + g_buttonHeight + g_elementOffset),
             EQ_POINTER_FONT_ARIAL14
         );
 
@@ -4397,14 +4430,14 @@ void EQMACHUD_DoExitRowButtons()
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
 
-    if (g_buffsIsEnabled == false)
+    if (g_buffInfoIsEnabled == false)
     {
         buttonColor = g_buttonColorDisabled;
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleBuffsX, g_buttonToggleBuffsY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_buttonToggleBuffsX + 3.0f), (int)(g_buttonToggleBuffsY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_buttonToggleBuffInfoX, g_buttonToggleBuffInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_buttonToggleBuffInfoX + 3.0f), (int)(g_buttonToggleBuffInfoY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -5261,7 +5294,13 @@ void EQMACHUD_DoMap()
                         char spawnText[128];
                         sprintf_s(spawnText, "%s", spawnName);
 
-                        EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, (int)mouseY, textColor, fontArial14);
+                        int textWidth = EQ_GetFontTextWidth(EQ_POINTER_FONT_ARIAL14, spawnText);
+
+                        textWidth = textWidth + 1;
+
+                        EQ_DrawRectangle((float)(mouseX + EQ_MOUSE_CURSOR_WIDTH + 1), (float)mouseY, (float)textWidth, (float)g_fontHeight, 0x80000000, true);
+
+                        EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)(mouseX + EQ_MOUSE_CURSOR_WIDTH + 1), (int)mouseY, textColor, fontArial14);
                     }
                 }
             }
@@ -5500,6 +5539,17 @@ void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
         return;
     }
 
+    int viewPortX1 = EQ_OBJECT_ViewPort.X1;
+    int viewPortY1 = EQ_OBJECT_ViewPort.Y1;
+    int viewPortX2 = EQ_OBJECT_ViewPort.X2;
+    int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
+
+    if (g_classicUiIsEnabled == true)
+    {
+        EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
+        EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
+    }
+
     DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
     EQLOCATION location1 = {dag1->Y, dag1->X, dag1->Z};
@@ -5514,8 +5564,23 @@ void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
         return;
     }
 
-    result1X += EQ_OBJECT_ViewPort.X1;
-    result1Y += EQ_OBJECT_ViewPort.Y1;
+    int screen1X = (int)(result1X + viewPortX1);
+    int screen1Y = (int)(result1Y + viewPortY1);
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            screen1X, screen1Y,
+            viewPortX1,  viewPortY1,
+            viewPortX2 - viewPortX1,
+            viewPortY2 - viewPortY1
+        )
+        == false
+    )
+    {
+        return;
+    }
 
     float result2X = 0.0f;
     float result2Y = 0.0f;
@@ -5526,15 +5591,30 @@ void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
         return;
     }
 
-    result2X += EQ_OBJECT_ViewPort.X1;
-    result2Y += EQ_OBJECT_ViewPort.Y1;
+    int screen2X = (int)(result2X + viewPortX1);
+    int screen2Y = (int)(result2Y + viewPortY1);
+
+    if
+    (
+        EQMACHUD_IsPointInsideRectangle
+        (
+            screen2X, screen2Y,
+            viewPortX1,  viewPortY1,
+            viewPortX2 - viewPortX1,
+            viewPortY2 - viewPortY1
+        )
+        == false
+    )
+    {
+        return;
+    }
 
     EQLINE line;
-    line.X1 = result1X;
-    line.Y1 = result1Y;
+    line.X1 = (float)screen1X;
+    line.Y1 = (float)screen1Y;
     line.Z1 = 1.0f;
-    line.X2 = result2X;
-    line.Y2 = result2Y;
+    line.X2 = (float)screen2X;
+    line.Y2 = (float)screen2Y;
     line.Z2 = 1.0f;
 
     EQGfx_Dx8__t3dDeferLine(&line, lineColor);
@@ -5632,23 +5712,34 @@ void EQMACHUD_DoEsp()
 
             if (g_espClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
             {
+                int viewPortX1 = EQ_OBJECT_ViewPort.X1;
+                int viewPortY1 = EQ_OBJECT_ViewPort.Y1;
+                int viewPortX2 = EQ_OBJECT_ViewPort.X2;
+                int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
+
+                if (g_classicUiIsEnabled == true)
+                {
+                    EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
+                    EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
+                }
+
                 float resultX = 0.0f;
                 float resultY = 0.0f;
                 int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &spawnLocation, &resultX, &resultY);
 
                 if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
                 {
-                    int screenX = (int)(resultX + EQ_OBJECT_ViewPort.X1);
-                    int screenY = (int)(resultY + EQ_OBJECT_ViewPort.Y1);
+                    int screenX = (int)(resultX + viewPortX1);
+                    int screenY = (int)(resultY + viewPortY1);
 
                     if
                     (
                         EQMACHUD_IsPointInsideRectangle
                         (
                             screenX, screenY,
-                            EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
-                            EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
-                            EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                            viewPortX1,  viewPortY1,
+                            viewPortX2 - viewPortX1,
+                            viewPortY2 - viewPortY1
                         )
                         == false
                     )
@@ -5741,8 +5832,19 @@ void EQMACHUD_DoEsp()
 
         if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
-            int screenX = (int)(resultX + EQ_OBJECT_ViewPort.X1);
-            int screenY = (int)(resultY + EQ_OBJECT_ViewPort.Y1);
+            int viewPortX1 = EQ_OBJECT_ViewPort.X1;
+            int viewPortY1 = EQ_OBJECT_ViewPort.Y1;
+            int viewPortX2 = EQ_OBJECT_ViewPort.X2;
+            int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
+
+            if (g_classicUiIsEnabled == true)
+            {
+                EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
+                EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
+            }
+
+            int screenX = (int)(resultX + viewPortX1);
+            int screenY = (int)(resultY + viewPortY1);
 
             if (g_espClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
             {
@@ -5751,9 +5853,9 @@ void EQMACHUD_DoEsp()
                     EQMACHUD_IsPointInsideRectangle
                     (
                         screenX, screenY,
-                        EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
-                        EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
-                        EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                        viewPortX1,  viewPortY1,
+                        viewPortX2 - viewPortX1,
+                        viewPortY2 - viewPortY1
                     )
                     == false
                 )
@@ -5822,7 +5924,19 @@ void EQMACHUD_DoEsp()
                 {
                     if (mouseOverWindow == 0x00000000)
                     {
-                        EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, (int)mouseY, g_espDoorSpawnTextColor, fontArial14);
+                        // remove the "+ "
+                        if (strlen(spawnText) > 2)
+                        {
+                            memmove(spawnText, spawnText + 2, strlen(spawnText));
+                        }
+
+                        int textWidth = EQ_GetFontTextWidth(EQ_POINTER_FONT_ARIAL14, spawnText);
+
+                        textWidth = textWidth + 1;
+
+                        EQ_DrawRectangle((float)(mouseX + EQ_MOUSE_CURSOR_WIDTH + 1), (float)mouseY, (float)textWidth, (float)g_fontHeight, 0x80000000, true);
+
+                        EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)(mouseX + EQ_MOUSE_CURSOR_WIDTH + 1), (int)mouseY, g_espDoorSpawnTextColor, fontArial14);
                     }
                 }
             }
@@ -5854,8 +5968,19 @@ void EQMACHUD_DoEsp()
 
         if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
-            int screenX = (int)(resultX + EQ_OBJECT_ViewPort.X1);
-            int screenY = (int)(resultY + EQ_OBJECT_ViewPort.Y1);
+            int viewPortX1 = EQ_OBJECT_ViewPort.X1;
+            int viewPortY1 = EQ_OBJECT_ViewPort.Y1;
+            int viewPortX2 = EQ_OBJECT_ViewPort.X2;
+            int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
+
+            if (g_classicUiIsEnabled == true)
+            {
+                EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
+                EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
+            }
+
+            int screenX = (int)(resultX + viewPortX1);
+            int screenY = (int)(resultY + viewPortY1);
 
             if (g_espClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
             {
@@ -5864,9 +5989,9 @@ void EQMACHUD_DoEsp()
                     EQMACHUD_IsPointInsideRectangle
                     (
                         screenX, screenY,
-                        EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
-                        EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
-                        EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                        viewPortX1,  viewPortY1,
+                        viewPortX2 - viewPortX1,
+                        viewPortY2 - viewPortY1
                     )
                     == false
                 )
@@ -5914,6 +6039,18 @@ void EQMACHUD_DoEsp()
                 {
                     if (mouseOverWindow == 0x00000000)
                     {
+                        // remove the "+ "
+                        if (strlen(spawnText) > 2)
+                        {
+                            memmove(spawnText, spawnText + 2, strlen(spawnText));
+                        }
+
+                        int textWidth = EQ_GetFontTextWidth(EQ_POINTER_FONT_ARIAL14, spawnText);
+
+                        textWidth = textWidth + 1;
+
+                        EQ_DrawRectangle((float)(mouseX + EQ_MOUSE_CURSOR_WIDTH + 1), (float)mouseY, (float)textWidth, (float)g_fontHeight, 0x80000000, true);
+
                         EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, (int)mouseY, g_espGroundSpawnTextColor, fontArial14);
                     }
                 }
@@ -6007,8 +6144,19 @@ void EQMACHUD_DoEsp()
 
         if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
-            int screenX = (int)(resultX + EQ_OBJECT_ViewPort.X1);
-            int screenY = (int)(resultY + EQ_OBJECT_ViewPort.Y1);
+            int viewPortX1 = EQ_OBJECT_ViewPort.X1;
+            int viewPortY1 = EQ_OBJECT_ViewPort.Y1;
+            int viewPortX2 = EQ_OBJECT_ViewPort.X2;
+            int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
+
+            if (g_classicUiIsEnabled == true)
+            {
+                EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
+                EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
+            }
+
+            int screenX = (int)(resultX + viewPortX1);
+            int screenY = (int)(resultY + viewPortY1);
 
             if (g_espClipToViewPortIsEnabled == true && (EQ_OBJECT_ViewPort.X1 != 0 || EQ_OBJECT_ViewPort.Y1 != 0))
             {
@@ -6017,9 +6165,9 @@ void EQMACHUD_DoEsp()
                     EQMACHUD_IsPointInsideRectangle
                     (
                         screenX, screenY,
-                        EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
-                        EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
-                        EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                        viewPortX1,  viewPortY1,
+                        viewPortX2 - viewPortX1,
+                        viewPortY2 - viewPortY1
                     )
                     == false
                 )
@@ -6304,6 +6452,18 @@ void EQMACHUD_DoEsp()
                 {
                     if (mouseOverWindow == 0x00000000)
                     {
+                        // remove the "+ "
+                        if (strlen(spawnText) > 2)
+                        {
+                            memmove(spawnText, spawnText + 2, strlen(spawnText));
+                        }
+
+                        int textWidth = EQ_GetFontTextWidth(EQ_POINTER_FONT_ARIAL14, spawnText);
+
+                        textWidth = textWidth + 1;
+
+                        EQ_DrawRectangle((float)(mouseX + EQ_MOUSE_CURSOR_WIDTH + 1), (float)mouseY, (float)textWidth, (float)g_fontHeight, 0x80000000, true);
+
                         EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mouseX + EQ_MOUSE_CURSOR_WIDTH + 1, (int)mouseY, textColor, fontArial14);
                     }
                 }
@@ -6314,15 +6474,15 @@ void EQMACHUD_DoEsp()
     }
 }
 
-void EQMACHUD_DoBuffs()
+void EQMACHUD_DoBuffInfo()
 {
     DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
-    EQ_CLASS_CDisplay->WriteTextHD2("Buffs", (int)g_buffsX, (int)g_buffsY, g_buffsTextColor, fontArial14);
+    EQ_CLASS_CDisplay->WriteTextHD2("Buffs", (int)g_buffInfoX, (int)g_buffInfoY, g_buffInfoTextColor, fontArial14);
 
-    int buffY = (int)(g_buffsY) + (g_fontHeight - g_fontHeightEmptyPixelsTop);
+    int buffY = (int)(g_buffInfoY) + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
     for (size_t i = 0; i < EQ_BUFFS_MAX; i++)
     {
@@ -6334,6 +6494,11 @@ void EQMACHUD_DoBuffs()
         }
 
         const char* spellName = EQ_OBJECT_SpellList->Spell[spellId]->Name;
+
+        if (strlen(spellName) == 0 || spellName == NULL)
+        {
+            continue;
+        }
 
         int buffTicks = charInfo->Buffs[i].Ticks;
 
@@ -6348,23 +6513,23 @@ void EQMACHUD_DoBuffs()
 
         EQ_CalculateTickTime(buffTicks, buffHours, buffMinutes, buffSeconds);
 
-        int textColor = g_buffsTextColor;
+        int textColor = g_buffInfoTextColor;
 
         int buffType = EQ_OBJECT_SpellList->Spell[spellId]->BuffType;
 
         if (buffType == EQ_BUFF_TYPE_DETRIMENTAL)
         {
-            textColor = g_buffsDetrimentalTextColor;
+            textColor = g_buffInfoDetrimentalTextColor;
         }
         else
         {
-            textColor = g_buffsBeneficialTextColor;
+            textColor = g_buffInfoBeneficialTextColor;
         }
 
         char buffText[128];
         sprintf_s(buffText, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
 
-        EQ_CLASS_CDisplay->WriteTextHD2(buffText, (int)g_buffsX, (int)buffY, textColor, fontArial14);
+        EQ_CLASS_CDisplay->WriteTextHD2(buffText, (int)g_buffInfoX, (int)buffY, textColor, fontArial14);
 
         buffY = buffY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
     }
@@ -6564,6 +6729,8 @@ void EQMACHUD_DoHealthBars()
 
     DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
     PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
 
     PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
@@ -6609,10 +6776,23 @@ void EQMACHUD_DoHealthBars()
             hpPercent = (float)hpCurrent / (float)hpMax;
         }
 
-        if (hpPercent == 0.0 || hpPercent == 1.0)
+        if (hpPercent == 0.0f || hpPercent == 1.0f)
         {
             spawn = spawn->Next;
             continue;
+        }
+
+        float manaPercent = 0.0f;
+
+        if (charInfo)
+        {
+            int manaCurrent = charInfo->Mana;
+            int manaMax     = EQ_CLASS_EQ_Character->Max_Mana();
+
+            if (manaCurrent > 0 && manaMax > 0 && manaCurrent < manaMax)
+            {
+                manaPercent = (float)manaCurrent / (float)manaMax;
+            }
         }
 
         float spawnZOffset = 0.0f;
@@ -6655,14 +6835,32 @@ void EQMACHUD_DoHealthBars()
             healthBarForegroundColor = g_healthBarsForegroundTargetColor;
         }
 
+        DWORD healthBarManaColor = EQMACHUD_HEALTH_BAR_DEFAULT_MANA_COLOR;
+
+        if (spawn == playerSpawn)
+        {
+            healthBarManaColor = g_healthBarsManaColor;
+        }
+
         float resultX = 0.0f;
         float resultY = 0.0f;
         int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &healthBarLocation, &resultX, &resultY);
 
         if (result != EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
         {
-            float screenX = (float)(resultX + EQ_OBJECT_ViewPort.X1);
-            float screenY = (float)(resultY + EQ_OBJECT_ViewPort.Y1);
+            int viewPortX1 = EQ_OBJECT_ViewPort.X1;
+            int viewPortY1 = EQ_OBJECT_ViewPort.Y1;
+            int viewPortX2 = EQ_OBJECT_ViewPort.X2;
+            int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
+
+            if (g_classicUiIsEnabled == true)
+            {
+                EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
+                EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
+            }
+
+            float screenX = (float)(resultX + viewPortX1);
+            float screenY = (float)(resultY + viewPortY1);
 
             screenX = screenX - g_healthBarsWidth * 0.5f;
 
@@ -6673,9 +6871,9 @@ void EQMACHUD_DoHealthBars()
                     EQMACHUD_IsPointInsideRectangle
                     (
                         (int)screenX, (int)screenY,
-                        EQ_OBJECT_ViewPort.X1,  EQ_OBJECT_ViewPort.Y1,
-                        EQ_OBJECT_ViewPort.X2 - EQ_OBJECT_ViewPort.X1,
-                        EQ_OBJECT_ViewPort.Y2 - EQ_OBJECT_ViewPort.Y1
+                        viewPortX1,  viewPortY1,
+                        viewPortX2 - viewPortX1,
+                        viewPortY2 - viewPortY1
                     )
                     == false
                 )
@@ -6687,6 +6885,15 @@ void EQMACHUD_DoHealthBars()
 
             EQ_DrawRectangle(screenX, screenY, g_healthBarsWidth, g_healthBarsHeight, g_healthBarsBackgroundColor, true);
             EQ_DrawRectangle(screenX + 1.0f, screenY + 1.0f, (g_healthBarsWidth - 2.0f) * hpPercent, g_healthBarsHeight - 2.0f, healthBarForegroundColor, true);
+
+            if (spawn == playerSpawn)
+            {
+                if (manaPercent > 0.0f)
+                {
+                    EQ_DrawRectangle(screenX, screenY + g_healthBarsHeight, g_healthBarsWidth, g_healthBarsHeight * 0.5f, g_healthBarsBackgroundColor, true);
+                    EQ_DrawRectangle(screenX + 1.0f, screenY + 1.0f + g_healthBarsHeight, (g_healthBarsWidth - 2.0f) * manaPercent, (g_healthBarsHeight * 0.5f) - 2.0f, healthBarManaColor, true);
+                 }
+             }
 
             if (g_healthBarsClickToTargetIsEnabled == true)
             {
@@ -6945,6 +7152,8 @@ void EQMACHUD_DoMouseWheelZoom(int mouseWheelDelta)
 
 int __fastcall EQMACHUD_DETOUR_CEverQuest__LMouseDown(void* this_ptr, void* not_used, unsigned short a1, unsigned short a2)
 {
+    g_ignoreKeysIsEnabled = false;
+
     if (g_bExit == 1)
     {
         return EQMACHUD_REAL_CEverQuest__LMouseDown(this_ptr, a1, a2);
@@ -6968,6 +7177,8 @@ int __fastcall EQMACHUD_DETOUR_CEverQuest__LMouseDown(void* this_ptr, void* not_
 
 int __fastcall EQMACHUD_DETOUR_CEverQuest__LMouseUp(void* this_ptr, void* not_used, unsigned short a1, unsigned short a2)
 {
+    g_ignoreKeysIsEnabled = false;
+
     if (g_bExit == 1)
     {
         return EQMACHUD_REAL_CEverQuest__LMouseUp(this_ptr, a1, a2);
@@ -7053,6 +7264,22 @@ int __cdecl EQMACHUD_DETOUR_ProcessKeyDown(int a1)
     if (g_bExit == 1)
     {
         return EQMACHUD_REAL_ProcessKeyDown(a1);
+    }
+
+    DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+    if ((g_ignoreKeysTimer > 0) && (currentTime > (g_ignoreKeysTimer + g_ignoreKeysDelay)))
+    {
+        g_ignoreKeysIsEnabled = false;
+
+        g_ignoreKeysTimer = 0;
+    }
+
+    if (g_ignoreKeysIsEnabled == true)
+    {
+        g_ignoreKeysIsEnabled = false;
+
+        return EQMACHUD_REAL_ProcessKeyDown(EQ_KEY_NULL);
     }
 
     int key = a1;
@@ -7198,51 +7425,11 @@ int __fastcall EQMACHUD_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* no
 
         if (item->Cost > 0)
         {
-            int itemCost = item->Cost;
-
-            int itemCostPlatinum;
-            int itemCostGold;
-            int itemCostSilver;
-            int itemCostCopper;
-
-            EQ_CalculateItemCost(itemCost, itemCostPlatinum, itemCostGold, itemCostSilver, itemCostCopper);
+            char itemCostString[128];
+            EQ_GetItemCostString(item->Cost, itemCostString, sizeof(itemCostString));
 
             char itemCostText[128];
-            strcpy_s(itemCostText, "Sells to merchants for: ");
-
-            if (itemCostPlatinum > 0)
-            {
-                char platinumText[128];
-                sprintf_s(platinumText, "%dp ", itemCostPlatinum);
-
-                strcat_s(itemCostText, platinumText);
-            }
-
-            if (itemCostGold > 0)
-            {
-                char goldText[128];
-                sprintf_s(goldText, "%dg ", itemCostGold);
-
-                strcat_s(itemCostText, goldText);
-            }
-
-            if (itemCostSilver > 0)
-            {
-                char silverText[128];
-                sprintf_s(silverText, "%ds ", itemCostSilver);
-
-                strcat_s(itemCostText, silverText);
-            }
-
-            if (itemCostCopper > 0)
-            {
-                char copperText[128];
-                sprintf_s(copperText, "%dc ", itemCostCopper);
-
-                strcat_s(itemCostText, copperText);
-            }
-
-            strcat_s(itemCostText, "<BR>");
+            sprintf_s(itemCostText, "Sells to merchants for: %s<BR>", itemCostString);
 
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, itemCostText);
         }
@@ -7401,6 +7588,87 @@ int __fastcall EQMACHUD_DETOUR_CBuffWindow__RefreshBuffDisplay(void* this_ptr, v
     return result;
 };
 
+int __fastcall EQMACHUD_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not_used, class EQPlayer* a1, char* a2)
+{
+    //FILE* file = fopen("eqmac_hud-debug-CEverQuest__InterpretCmd.txt", "a");
+    //fprintf(file, "CEverQuest::InterpretCmd: %s\n", a2);
+    //fclose(file);
+
+/*
+    FILE* file = fopen("eqmac_hud-Command-List.txt", "a");
+
+    for (size_t i = 0; i < EQ_COMMANDS_MAX; i++)
+    {
+        if (EQ_OBJECT_CommandList.Command[i].Name != NULL && strlen(EQ_OBJECT_CommandList.Command[i].Name) > 0)
+        {
+            fprintf
+            (
+                file, "%d: %s (Function Address: 0x%08X, Restriction: %d, Category: %d)\n",
+                    i,
+                    EQ_OBJECT_CommandList.Command[i].Name,
+                    EQ_OBJECT_CommandList.Command[i].FunctionAddress,
+                    EQ_OBJECT_CommandList.Command[i].Restriction,
+                    EQ_OBJECT_CommandList.Command[i].Category
+            );
+        }
+    }
+
+    fclose(file);
+*/
+
+    if (a1 == NULL || a2 == NULL)
+    {
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, a1, a2);
+    }
+
+    if (g_bExit == 1)
+    {
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, a1, a2);
+    }
+
+/*
+    if (strlen(a2) > 0)
+    {
+        for (size_t i = 0; i < EQMACCLIENT_COMMANDS_MAX; i++)
+        {
+            if (strlen(g_sendCommandList[i]) == 0)
+            {
+                strcpy_s(g_sendCommandList[i], a2);
+                break;
+            }
+        }
+    }
+*/
+
+    // map
+
+    if (strncmp(a2, "/map", 4) == 0)
+    {
+        if (strncmp(a2, "/map on", 7) == 0)
+        {
+            if (g_mapIsEnabled == false)
+            {
+                EQMACHUD_ToggleMap();
+            }
+        }
+        else if (strncmp(a2, "/map off", 8) == 0)
+        {
+            if (g_mapIsEnabled == true)
+            {
+                EQMACHUD_ToggleMap();
+            }
+        }
+        else
+        {
+            EQMACHUD_ToggleMap();
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, a1, a2);
+}
+
 int __fastcall EQMACHUD_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_used, const char* a1, short a2, bool a3)
 {
     // a1 = text
@@ -7420,7 +7688,8 @@ int __fastcall EQMACHUD_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_us
             strcmp(a1, "Your target is out of range, get closer!") == 0 ||
             strcmp(a1, "You are too fatigued to jump!")            == 0 ||
             strcmp(a1, "YOU were injured by falling!")             == 0 ||
-            strcmp(a1, "You can't reach that, get closer.")        == 0
+            strcmp(a1, "You can't reach that, get closer.")        == 0 ||
+            strncmp(a1, "Your target resisted", 20)                == 0
         )
         {
             EQMACHUD_DoMessageTextGeneric(a1, EQ_TEXT_COLOR_RED);
@@ -7432,6 +7701,55 @@ int __fastcall EQMACHUD_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_us
 
 int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned short a3, unsigned short a4, unsigned short a5, int a6, unsigned short a7, unsigned long a8, long a9, unsigned long a10)
 {
+    // a4 = x
+    // a5 = y
+
+/*
+        FILE* file = fopen("eqmac_hud-debug-DrawNetStatus.txt", "a");
+        fprintf(file, "a1: 0x%X\n", a1);
+        fprintf(file, "a2: %d\n", a2);
+        fprintf(file, "a3: %d\n", a3);
+        fprintf(file, "a4 x: %d\n", a4);
+        fprintf(file, "a5 y: %d\n", a5);
+        fprintf(file, "a6: 0x%X\n", a6);
+        fprintf(file, "a7: %d\n", a7);
+        fprintf(file, "a8: 0x%X\n", a8);
+        fprintf(file, "a9: 0x%X\n", a9);
+        fprintf(file, "a10: 0x%X\n", a10);
+        fprintf(file, "\n\n");
+        fclose(file);
+*/
+
+    if (EQMACHUD_IsForegroundWindowCurrentProcessId() == false)
+    {
+        g_ignoreKeysIsEnabled = true;
+
+        g_ignoreKeysTimer = 0;
+    }
+    else
+    {
+        DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+
+        if (g_ignoreKeysTimer == 0)
+        {
+            g_ignoreKeysTimer = currentTime;
+        }
+    }
+
+    // fix a bug in the game where the net status text is drawn in the wrong location
+    // when using the classic UI with a resolution higher than 640x480 and not using
+    // the fullscreen transparent screen mode (the stone UI)
+    if (g_classicUiIsEnabled == true)
+    {
+        int x = a4;
+        int y = a5;
+
+        EQ_ApplyClassicUiDrawOffset(x, y);
+
+        a4 = x;
+        a5 = y;
+    }
+
     if (g_bExit == 1)
     {
         return EQMACHUD_REAL_DrawNetStatus(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
@@ -7462,6 +7780,24 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
         }
     }
 
+    bool bClassicUi640x480 = false;
+
+    if (g_classicUiIsEnabled == true)
+    {
+        BYTE uiState = EQ_READ_MEMORY<BYTE>(EQ_UI_STATE);
+
+        if (uiState == EQ_UI_STATE_CLASSIC)
+        {
+            DWORD resolutionWidth  = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_WIDTH);
+            DWORD resolutionHeight = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_HEIGHT);
+
+            if (resolutionWidth == EQ_CLASSIC_UI_WIDTH && resolutionHeight == EQ_CLASSIC_UI_HEIGHT)
+            {
+                bClassicUi640x480 = true;
+            }
+        }
+    }
+
     g_numDeferred2dItems = 0;
 
     BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
@@ -7485,24 +7821,27 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
         EQMACHUD_DoEsp();
     }
 
-    if (g_playerInfoIsEnabled == true)
+    if (bClassicUi640x480 == false)
     {
-        EQMACHUD_DoPlayerInfo();
-    }
+        if (g_playerInfoIsEnabled == true)
+        {
+            EQMACHUD_DoPlayerInfo();
+        }
 
-    if (g_targetInfoIsEnabled == true)
-    {
-        EQMACHUD_DoTargetInfo();
-    }
+        if (g_targetInfoIsEnabled == true)
+        {
+            EQMACHUD_DoTargetInfo();
+        }
 
-    if (g_buffsIsEnabled == true)
-    {
-        EQMACHUD_DoBuffs();
-    }
+        if (g_buffInfoIsEnabled == true)
+        {
+            EQMACHUD_DoBuffInfo();
+        }
 
-    if (g_mapIsEnabled == true)
-    {
-        EQMACHUD_DoMap();
+        if (g_mapIsEnabled == true)
+        {
+            EQMACHUD_DoMap();
+        }
     }
 
     if (g_messageTextIsEnabled == true)
@@ -7515,22 +7854,31 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
         EQMACHUD_DoMessageTextGainedExperience();
     }
 
-    if (g_clientSwitcherIsEnabled == true)
+    if (bClassicUi640x480 == false)
     {
-        EQMACHUD_DoClientSwitcherButtons();
+        if (g_clientSwitcherIsEnabled == true)
+        {
+            EQMACHUD_DoClientSwitcherButtons();
+        }
+
+        EQMACHUD_DoExitRowButtons();
     }
 
-    EQMACHUD_DoExitRowButtons();
-
-    // redraw the cursor so that the HUD is underneath it
-    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
-
-    if (mouseClickState != EQ_MOUSE_CLICK_STATE_RIGHT) // hide the cursor while mouse looking
+    if (g_classicUiIsEnabled == false)
     {
-        EQ_CLASS_CXWndManager->DrawCursor();
+        // redraw the cursor so that the HUD is underneath it
+        DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+
+        if (mouseClickState != EQ_MOUSE_CLICK_STATE_RIGHT) // hide the cursor while mouse looking
+        {
+            EQ_CLASS_CXWndManager->DrawCursor();
+        }
     }
 
-    EQMACHUD_DoButtonToolTipText();
+    if (bClassicUi640x480 == false)
+    {
+        EQMACHUD_DoButtonToolTipText();
+    }
 
     return EQMACHUD_REAL_DrawNetStatus(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 }
@@ -7550,14 +7898,19 @@ DWORD WINAPI EQMACHUD_ThreadLoop(LPVOID param)
     DetourRemove((PBYTE)EQMACHUD_REAL_ProcessKeyDown, (PBYTE)EQMACHUD_DETOUR_ProcessKeyDown);
     DetourRemove((PBYTE)EQMACHUD_REAL_ProcessKeyUp,   (PBYTE)EQMACHUD_DETOUR_ProcessKeyUp);
 
+    DetourRemove((PBYTE)EQMACHUD_REAL_CEverQuest__InterpretCmd, (PBYTE)EQMACHUD_DETOUR_CEverQuest__InterpretCmd);
+
     DetourRemove((PBYTE)EQMACHUD_REAL_CEverQuest__dsp_chat, (PBYTE)EQMACHUD_DETOUR_CEverQuest__dsp_chat);
 
     DetourRemove((PBYTE)EQMACHUD_REAL_DrawNetStatus, (PBYTE)EQMACHUD_DETOUR_DrawNetStatus);
 
-    DetourRemove((PBYTE)EQMACHUD_REAL_CItemDisplayWnd__SetItem,  (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetItem);
-    DetourRemove((PBYTE)EQMACHUD_REAL_CItemDisplayWnd__SetSpell, (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetSpell);
+    if (g_classicUiIsEnabled == false)
+    {
+        DetourRemove((PBYTE)EQMACHUD_REAL_CItemDisplayWnd__SetItem,  (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetItem);
+        DetourRemove((PBYTE)EQMACHUD_REAL_CItemDisplayWnd__SetSpell, (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetSpell);
 
-    DetourRemove((PBYTE)EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACHUD_DETOUR_CBuffWindow__RefreshBuffDisplay);
+        DetourRemove((PBYTE)EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACHUD_DETOUR_CBuffWindow__RefreshBuffDisplay);
+    }
 
     FreeLibraryAndExitThread(g_module, 0);
     return 0;
@@ -7612,6 +7965,14 @@ DWORD WINAPI EQMACHUD_ThreadLoad(LPVOID param)
         return 0;
     }
 
+    char eqClientIniNewUi[128];
+    EQMACHUD_ConfigReadString("eqclient.ini", "Defaults", "NewUI", "FALSE", eqClientIniNewUi, sizeof(eqClientIniNewUi));
+
+    if (strcmp(eqClientIniNewUi, "FALSE") == 0 || strcmp(eqClientIniNewUi, "false") == 0 || strcmp(eqClientIniNewUi, "0") == 0)
+    {
+        g_classicUiIsEnabled = true;
+    }
+
     EQMACHUD_DoLoadConfig();
 
     EQMACHUD_GuiRecalculateCoordinates();
@@ -7626,15 +7987,19 @@ DWORD WINAPI EQMACHUD_ThreadLoad(LPVOID param)
     EQMACHUD_REAL_ProcessKeyDown = (EQ_FUNCTION_TYPE_ProcessKeyDown)DetourFunction((PBYTE)EQ_FUNCTION_ProcessKeyDown, (PBYTE)EQMACHUD_DETOUR_ProcessKeyDown);
     EQMACHUD_REAL_ProcessKeyUp   = (EQ_FUNCTION_TYPE_ProcessKeyUp)  DetourFunction((PBYTE)EQ_FUNCTION_ProcessKeyUp,   (PBYTE)EQMACHUD_DETOUR_ProcessKeyUp);
 
+    EQMACHUD_REAL_CEverQuest__InterpretCmd = (EQ_FUNCTION_TYPE_CEverQuest__InterpretCmd)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__InterpretCmd, (PBYTE)EQMACHUD_DETOUR_CEverQuest__InterpretCmd);
+
     EQMACHUD_REAL_CEverQuest__dsp_chat = (EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__dsp_chat, (PBYTE)EQMACHUD_DETOUR_CEverQuest__dsp_chat);
 
     EQMACHUD_REAL_DrawNetStatus = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)EQMACHUD_DETOUR_DrawNetStatus);
 
-    EQMACHUD_REAL_CItemDisplayWnd__SetItem  = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem) DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetItem,  (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetItem);
-    EQMACHUD_REAL_CItemDisplayWnd__SetSpell = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell)DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetSpell, (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetSpell);
+    if (g_classicUiIsEnabled == false)
+    {
+        EQMACHUD_REAL_CItemDisplayWnd__SetItem  = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem) DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetItem,  (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetItem);
+        EQMACHUD_REAL_CItemDisplayWnd__SetSpell = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell)DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetSpell, (PBYTE)EQMACHUD_DETOUR_CItemDisplayWnd__SetSpell);
 
-    EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay = (EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)DetourFunction((PBYTE)EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACHUD_DETOUR_CBuffWindow__RefreshBuffDisplay);
-
+        EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay = (EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)DetourFunction((PBYTE)EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACHUD_DETOUR_CBuffWindow__RefreshBuffDisplay);
+    }
 
     return 0;
 }

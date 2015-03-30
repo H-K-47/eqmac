@@ -46,6 +46,8 @@ EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell EQMACHUD_REAL_CItemDisplayWnd__SetSpe
 
 EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay  EQMACHUD_REAL_CBuffWindow__RefreshBuffDisplay = NULL;
 
+bool g_killSwitchIsEnabled = true;
+
 // ignore keys fixes a bug with EQW and keys getting stuck or randomly pressed when switching clients
 // ProcessKeyDown is ignored for a specific time after switching to another client
 bool g_ignoreKeysIsEnabled = false;
@@ -72,6 +74,8 @@ float g_elementOffset = 5.0f;
 
 DWORD g_eqProcesses[1024];
 unsigned int g_eqProcessesCount = 0;
+
+bool g_slashCommandsIsEnabled = true;
 
 bool g_mouseWheelZoomIsEnabled = true;
 float g_mouseWheelZoomMultiplier = 1.0f;
@@ -103,50 +107,55 @@ char g_buttonTextColorEnabled_string[32];
 char g_buttonTextColorDisabled_string[32];
 char g_buttonTextColorMinMaxClose_string[32];
 
-float g_buttonExitX = 138.0;
-float g_buttonExitY = 5.0f;
+bool g_hudButtonsIsEnabled = true;
 
-float g_buttonReloadConfigX;
-float g_buttonReloadConfigY;
+float g_hudButtonsX = 138.0;
+float g_hudButtonsY = 5.0f;
 
-float g_buttonToggleClientSwitcherX;
-float g_buttonToggleClientSwitcherY;
+float g_hudButtonExitX;
+float g_hudButtonExitY;
 
-float g_buttonToggleMapX;
-float g_buttonToggleMapY;
+float g_hudButtonReloadConfigX;
+float g_hudButtonReloadConfigY;
 
-float g_buttonToggleEspX;
-float g_buttonToggleEspY;
+float g_hudButtonToggleClientSwitcherX;
+float g_hudButtonToggleClientSwitcherY;
 
-float g_buttonToggleEspTextX;
-float g_buttonToggleEspTextY;
+float g_hudButtonToggleMapX;
+float g_hudButtonToggleMapY;
 
-float g_buttonToggleEspSkeletonX;
-float g_buttonToggleEspSkeletonY;
+float g_hudButtonToggleEspX;
+float g_hudButtonToggleEspY;
 
-float g_buttonToggleEspGroundSpawnX;
-float g_buttonToggleEspGroundSpawnY;
+float g_hudButtonToggleEspTextX;
+float g_hudButtonToggleEspTextY;
 
-float g_buttonToggleEspDoorSpawnX;
-float g_buttonToggleEspDoorSpawnY;
+float g_hudButtonToggleEspSkeletonsX;
+float g_hudButtonToggleEspSkeletonsY;
 
-float g_buttonToggleEspDistanceX;
-float g_buttonToggleEspDistanceY;
+float g_hudButtonToggleEspGroundSpawnsX;
+float g_hudButtonToggleEspGroundSpawnsY;
 
-float g_buttonToggleEspFilterNpcX;
-float g_buttonToggleEspFilterNpcY;
+float g_hudButtonToggleEspDoorSpawnsX;
+float g_hudButtonToggleEspDoorSpawnsY;
 
-float g_buttonToggleHealthBarsX;
-float g_buttonToggleHealthBarsY;
+float g_hudButtonToggleEspDistanceX;
+float g_hudButtonToggleEspDistanceY;
 
-float g_buttonToggleBuffInfoX;
-float g_buttonToggleBuffInfoY;
+float g_hudButtonToggleEspFilterNpcX;
+float g_hudButtonToggleEspFilterNpcY;
 
-float g_buttonTogglePlayerInfoX;
-float g_buttonTogglePlayerInfoY;
+float g_hudButtonToggleHealthBarsX;
+float g_hudButtonToggleHealthBarsY;
 
-float g_buttonToggleTargetInfoX;
-float g_buttonToggleTargetInfoY;
+float g_hudButtonToggleBuffInfoX;
+float g_hudButtonToggleBuffInfoY;
+
+float g_hudButtonTogglePlayerInfoX;
+float g_hudButtonTogglePlayerInfoY;
+
+float g_hudButtonToggleTargetInfoX;
+float g_hudButtonToggleTargetInfoY;
 
 bool g_mapIsEnabled = true;
 
@@ -161,10 +170,11 @@ bool g_mapLayer3IsEnabled = true;
 
 bool g_mapSpawnClickToTargetIsEnabled = false;
 
-bool g_mapArrowIsEnabled        = true;
-bool g_mapZoneInfoIsEnabled     = true;
-bool g_mapHeightFilterIsEnabled = false;
-bool g_mapRotateIsEnabled       = false;
+bool g_mapArrowIsEnabled              = true;
+bool g_mapZoneInfoIsEnabled           = true;
+bool g_mapHeightFilterIsEnabled       = false;
+bool g_mapHeightFilterSpawnsIsEnabled = false;
+bool g_mapRotateIsEnabled             = false;
 
 bool g_mapSpawnsIsEnabled = true;
 bool g_mapPointsIsEnabled = true;
@@ -266,6 +276,8 @@ char g_mapGroupMemberTextColor_string[32];
 char g_mapTargetTextColor_string[32];
 char g_mapGameMasterTextColor_string[32];
 
+bool g_mapButtonsIsEnabled = true;
+
 float g_mapButtonReloadMapX;
 float g_mapButtonReloadMapY;
 
@@ -333,34 +345,34 @@ bool g_espIsEnabled = true;
 
 bool g_espClipToViewPortIsEnabled = true;
 
-bool g_espSkeletonIsEnabled = false; // like StickFigures=1 in eqclient.ini
+bool g_espSkeletonsIsEnabled = false; // like StickFigures=1 in eqclient.ini
 
-bool g_espSkeletonLineOfSightIsEnabled = false; // require the spawn to be out of line of sight to be drawn
+bool g_espSkeletonsLineOfSightIsEnabled = false; // require the spawn to be out of line of sight to be drawn
 
-bool g_espSkeletonDistanceIsEnabled = true;
-float g_espSkeletonDistance = 200.0f;
+bool g_espSkeletonsDistanceIsEnabled = true;
+float g_espSkeletonsDistance = 200.0f;
 
-int g_espSkeletonDefaultLineColor     = 0xFFFF8000;
-int g_espSkeletonPlayerLineColor      = 0xFF800000;
-int g_espSkeletonPlayerCorpseLineColor= 0xFF808000;
-int g_espSkeletonNpcLineColor         = 0xFF008080;
-int g_espSkeletonNpcCorpseLineColor   = 0xFF808000;
-int g_espSkeletonGroupMemberLineColor = 0xFF008000;
-int g_espSkeletonTargetLineColor      = 0xFF800080;
-int g_espSkeletonGameMasterLineColor  = 0xFF800080;
+int g_espSkeletonsDefaultLineColor     = 0xFFFF8000;
+int g_espSkeletonsPlayerLineColor      = 0xFF800000;
+int g_espSkeletonsPlayerCorpseLineColor= 0xFF808000;
+int g_espSkeletonsNpcLineColor         = 0xFF008080;
+int g_espSkeletonsNpcCorpseLineColor   = 0xFF808000;
+int g_espSkeletonsGroupMemberLineColor = 0xFF008000;
+int g_espSkeletonsTargetLineColor      = 0xFF800080;
+int g_espSkeletonsGameMasterLineColor  = 0xFF800080;
 
-bool g_espShowYourselfIsEnabled          = true;
-bool g_espShowPlayerIsEnabled            = true;
-bool g_espShowPlayerCorpseIsEnabled      = true;
-bool g_espShowNpcIsEnabled               = true;
-bool g_espShowNpcCorpseIsEnabled         = true;
-bool g_espShowGroundSpawnIsEnabled       = true;
-bool g_espShowDoorSpawnIsEnabled         = false;
-bool g_espShowDoorUniqueSpawnIsEnabled   = true; // POK books, POK portals, etc
+bool g_espShowYourselfIsEnabled         = true;
+bool g_espShowPlayerIsEnabled           = true;
+bool g_espShowPlayerCorpseIsEnabled     = true;
+bool g_espShowNpcIsEnabled              = true;
+bool g_espShowNpcCorpseIsEnabled        = true;
+bool g_espShowGroundSpawnsIsEnabled     = true;
+bool g_espShowDoorSpawnsIsEnabled       = false;
+bool g_espShowUniqueDoorSpawnsIsEnabled = true; // POK books, POK portals, etc
 
 bool g_espShowTextIsEnabled = true; // show/hide all ESP text
 
-bool g_espShowTextOnMouseHover = true;
+bool g_espShowTextOnMouseHoverIsEnabled = true;
 
 bool g_espShowTextDistanceIsEnabled           = true;
 bool g_espShowTextLevelIsEnabled              = true;
@@ -489,11 +501,13 @@ float g_healthBarsDistance = 400.0f;
 
 bool g_clientSwitcherIsEnabled = true;
 
-bool g_clientSwitcherSynchronizeMouseIsEnabled = true;
+bool g_clientSwitcherSyncMouseIsEnabled = true;
+
+bool g_clientSwitcherButtonsIsEnabled = true;
 
 bool g_clientSwitcherHotkeysIsEnabled = true;
 
-bool g_clientSwitcherHotkeyTildeIsEnabled = false;
+bool g_clientSwitcherHotkeyTildeIsEnabled   = false;
 bool g_clientSwitcherHotkeyNumpad0IsEnabled = true;
 bool g_clientSwitcherHotkeyNumpad1IsEnabled = true;
 bool g_clientSwitcherHotkeyNumpad2IsEnabled = true;
@@ -525,6 +539,18 @@ float g_clientSwitcherButton3Y;
 #define EQMACHUD_LINECLIP_RIGHT  2 // 0010
 #define EQMACHUD_LINECLIP_BOTTOM 4 // 0100
 #define EQMACHUD_LINECLIP_TOP    8 // 1000
+
+// function prototypes
+
+void EQMACHUD_EnableDebugPrivileges();
+bool EQMACHUD_IsForegroundWindowCurrentProcessId();
+
+void EQMACHUD_DoUnload();
+
+void EQMACHUD_ReloadConfig();
+void EQMACHUD_ReloadMap();
+void EQMACHUD_DoLoadConfig();
+void EQMACHUD_DoLoadMap();
 
 void EQMACHUD_EnableDebugPrivileges()
 {
@@ -699,7 +725,7 @@ BOOL CALLBACK EQMACHUD_DoClientSwitchProc(HWND hwnd,LPARAM lparam)
 
     if (processId == lparam)
     {
-        if (g_clientSwitcherSynchronizeMouseIsEnabled == true)
+        if (g_clientSwitcherSyncMouseIsEnabled == true)
         {
             WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
             WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
@@ -1012,12 +1038,17 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     g_maxDeferred2dItemsPercent = EQMACHUD_ConfigReadFloat(filename, "Options", "fMaxDeferred2dItemsPercent", g_maxDeferred2dItemsPercent);
 
+    g_killSwitchIsEnabled = EQMACHUD_ConfigReadBool(filename, "Options", "bKillSwitch", g_killSwitchIsEnabled);
+
+    g_slashCommandsIsEnabled = EQMACHUD_ConfigReadBool(filename, "Options", "bSlashCommands", g_slashCommandsIsEnabled);
+
     g_writeTextToChatWindowIsEnabled = EQMACHUD_ConfigReadBool(filename, "Options", "bWriteTextToChatWindow", g_writeTextToChatWindowIsEnabled);
 
     // HUD
+    g_hudButtonsIsEnabled = EQMACHUD_ConfigReadBool(filename, "HUD", "bButtons", g_hudButtonsIsEnabled);
 
-    g_buttonExitX = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonExitX", g_buttonExitX);
-    g_buttonExitY = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonExitY", g_buttonExitY);
+    g_hudButtonsX = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonsX", g_hudButtonsX);
+    g_hudButtonsY = EQMACHUD_ConfigReadFloat(filename, "HUD", "fButtonsY", g_hudButtonsY);
 
     g_buttonColorEnabled     = EQMACHUD_ConfigReadInt(filename, "HUD", "argbButtonColorEnabled",     g_buttonColorEnabled);
     g_buttonColorDisabled    = EQMACHUD_ConfigReadInt(filename, "HUD", "argbButtonColorDisabled",    g_buttonColorDisabled);
@@ -1040,7 +1071,9 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     g_clientSwitcherIsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bEnabled", g_clientSwitcherIsEnabled);
 
-    g_clientSwitcherSynchronizeMouseIsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bSynchronizeMouse", g_clientSwitcherSynchronizeMouseIsEnabled);
+    g_clientSwitcherSyncMouseIsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bSyncMouse", g_clientSwitcherSyncMouseIsEnabled);
+
+    g_clientSwitcherButtonsIsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bButtons", g_clientSwitcherButtonsIsEnabled);
 
     g_clientSwitcherHotkeysIsEnabled = EQMACHUD_ConfigReadBool(filename, "ClientSwitcher", "bHotkeys", g_clientSwitcherHotkeysIsEnabled);
 
@@ -1058,6 +1091,8 @@ bool EQMACHUD_LoadConfig(const char* filename)
     g_mapIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bEnabled", g_mapIsEnabled);
 
     g_mapIsMaximized = EQMACHUD_ConfigReadBool(filename, "Map", "bIsMaximized", g_mapIsMaximized);
+
+    g_mapButtonsIsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bButtons", g_mapButtonsIsEnabled);
 
     g_mapLayer0IsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bLayer0", g_mapLayer0IsEnabled);
     g_mapLayer1IsEnabled = EQMACHUD_ConfigReadBool(filename, "Map", "bLayer1", g_mapLayer1IsEnabled);
@@ -1157,34 +1192,34 @@ bool EQMACHUD_LoadConfig(const char* filename)
 
     g_espClipToViewPortIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bClipToViewPort", g_espClipToViewPortIsEnabled);
 
-    g_espSkeletonIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeleton", g_espSkeletonIsEnabled);
+    g_espSkeletonsIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeletons", g_espSkeletonsIsEnabled);
 
-    g_espSkeletonLineOfSightIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeletonLineOfSight", g_espSkeletonLineOfSightIsEnabled);
+    g_espSkeletonsLineOfSightIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeletonsLineOfSight", g_espSkeletonsLineOfSightIsEnabled);
 
-    g_espSkeletonDistanceIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeletonDistance", g_espSkeletonDistanceIsEnabled);
-    g_espSkeletonDistance = EQMACHUD_ConfigReadFloat(filename, "ESP", "fSkeletonDistance", g_espSkeletonDistance);
+    g_espSkeletonsDistanceIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bSkeletonsDistance", g_espSkeletonsDistanceIsEnabled);
+    g_espSkeletonsDistance = EQMACHUD_ConfigReadFloat(filename, "ESP", "fSkeletonsDistance", g_espSkeletonsDistance);
 
-    g_espSkeletonDefaultLineColor      = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonDefaultLineColor",      g_espSkeletonDefaultLineColor);
-    g_espSkeletonPlayerLineColor       = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonPlayerLineColor",       g_espSkeletonPlayerLineColor);
-    g_espSkeletonPlayerCorpseLineColor = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonPlayerCorpseLineColor", g_espSkeletonPlayerCorpseLineColor);
-    g_espSkeletonNpcLineColor          = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonNpcLineColor",          g_espSkeletonNpcLineColor);
-    g_espSkeletonNpcCorpseLineColor    = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonNpcCorpseLineColor",    g_espSkeletonNpcCorpseLineColor);
-    g_espSkeletonGroupMemberLineColor  = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonGroupMemberLineColor",  g_espSkeletonGroupMemberLineColor);
-    g_espSkeletonTargetLineColor       = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonTargetLineColor",       g_espSkeletonTargetLineColor);
-    g_espSkeletonGameMasterLineColor   = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonGameMasterLineColor",   g_espSkeletonGameMasterLineColor);
+    g_espSkeletonsDefaultLineColor      = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonsDefaultLineColor",      g_espSkeletonsDefaultLineColor);
+    g_espSkeletonsPlayerLineColor       = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonsPlayerLineColor",       g_espSkeletonsPlayerLineColor);
+    g_espSkeletonsPlayerCorpseLineColor = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonsPlayerCorpseLineColor", g_espSkeletonsPlayerCorpseLineColor);
+    g_espSkeletonsNpcLineColor          = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonsNpcLineColor",          g_espSkeletonsNpcLineColor);
+    g_espSkeletonsNpcCorpseLineColor    = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonsNpcCorpseLineColor",    g_espSkeletonsNpcCorpseLineColor);
+    g_espSkeletonsGroupMemberLineColor  = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonsGroupMemberLineColor",  g_espSkeletonsGroupMemberLineColor);
+    g_espSkeletonsTargetLineColor       = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonsTargetLineColor",       g_espSkeletonsTargetLineColor);
+    g_espSkeletonsGameMasterLineColor   = EQMACHUD_ConfigReadInt(filename, "ESP", "argbSkeletonsGameMasterLineColor",   g_espSkeletonsGameMasterLineColor);
 
-    g_espShowYourselfIsEnabled        = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowYourself",        g_espShowYourselfIsEnabled);
-    g_espShowPlayerIsEnabled          = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowPlayer",          g_espShowPlayerIsEnabled);
-    g_espShowPlayerCorpseIsEnabled    = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowPlayerCorpse",    g_espShowPlayerCorpseIsEnabled);
-    g_espShowNpcIsEnabled             = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowNpc",             g_espShowNpcIsEnabled);
-    g_espShowNpcCorpseIsEnabled       = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowNpcCorpse",       g_espShowNpcCorpseIsEnabled);
-    g_espShowGroundSpawnIsEnabled     = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowGroundSpawn",     g_espShowGroundSpawnIsEnabled);
-    g_espShowDoorSpawnIsEnabled       = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowDoorSpawn",       g_espShowDoorSpawnIsEnabled);
-    g_espShowDoorUniqueSpawnIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowDoorUniqueSpawn", g_espShowDoorUniqueSpawnIsEnabled);
+    g_espShowYourselfIsEnabled         = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowYourself",         g_espShowYourselfIsEnabled);
+    g_espShowPlayerIsEnabled           = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowPlayer",           g_espShowPlayerIsEnabled);
+    g_espShowPlayerCorpseIsEnabled     = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowPlayerCorpse",     g_espShowPlayerCorpseIsEnabled);
+    g_espShowNpcIsEnabled              = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowNpc",              g_espShowNpcIsEnabled);
+    g_espShowNpcCorpseIsEnabled        = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowNpcCorpse",        g_espShowNpcCorpseIsEnabled);
+    g_espShowGroundSpawnsIsEnabled     = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowGroundSpawns",     g_espShowGroundSpawnsIsEnabled);
+    g_espShowDoorSpawnsIsEnabled       = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowDoorSpawns",       g_espShowDoorSpawnsIsEnabled);
+    g_espShowUniqueDoorSpawnsIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowUniqueDoorSpawns", g_espShowUniqueDoorSpawnsIsEnabled);
 
     g_espShowTextIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowText", g_espShowTextIsEnabled);
 
-    g_espShowTextOnMouseHover = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowTextOnMouseHover", g_espShowTextOnMouseHover);
+    g_espShowTextOnMouseHoverIsEnabled = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowTextOnMouseHover", g_espShowTextOnMouseHoverIsEnabled);
 
     g_espShowTextDistanceIsEnabled           = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowTextDistance",           g_espShowTextDistanceIsEnabled);
     g_espShowTextLevelIsEnabled              = EQMACHUD_ConfigReadBool(filename, "ESP", "bShowTextLevel",              g_espShowTextLevelIsEnabled);
@@ -1320,30 +1355,37 @@ void EQMACHUD_CopyTargetMapLocationToClipboard()
 {
     PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
 
-    if (targetSpawn)
+    if (targetSpawn == NULL)
     {
-        char locationText[256];
-        sprintf_s
-        (
-            locationText,
-            "P %.4f, %.4f, %.4f, %d, %d, %d, %d, %s",
-            -targetSpawn->X, -targetSpawn->Y, targetSpawn->Z,
-            0, 0, 0,
-            2,
-            targetSpawn->Name
-        );
+        return;
+    }
 
-        const size_t len = sizeof(locationText);
+    char locationText[256];
+    sprintf_s
+    (
+        locationText,
+        "P %.4f, %.4f, %.4f, %d, %d, %d, %d, %s",
+        -targetSpawn->X, -targetSpawn->Y, targetSpawn->Z,
+        0, 0, 0,
+        2,
+        targetSpawn->Name
+    );
 
-        HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, len);
-        memcpy(GlobalLock(mem), locationText, len);
+    const size_t len = sizeof(locationText);
 
-        GlobalUnlock(mem);
+    HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, len);
+    memcpy(GlobalLock(mem), locationText, len);
 
-        OpenClipboard(0);
-        EmptyClipboard();
-        SetClipboardData(CF_TEXT, mem);
-        CloseClipboard();
+    GlobalUnlock(mem);
+
+    OpenClipboard(0);
+    EmptyClipboard();
+    SetClipboardData(CF_TEXT, mem);
+    CloseClipboard();
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_CLASS_CEverQuest->dsp_chat("Target's map location copied to clipboard.");
     }
 }
 
@@ -1660,77 +1702,80 @@ void EQMACHUD_GuiRecalculateCoordinates()
 
     float buttonIndex;
 
-    // exit row buttons
+    // hud buttons
 
     buttonIndex = 1.0f;
 
-    g_buttonReloadConfigX = g_buttonExitX + g_buttonWidth + g_elementOffset;
-    g_buttonReloadConfigY = g_buttonExitY;
+    g_hudButtonExitX = g_hudButtonsX;
+    g_hudButtonExitY = g_hudButtonsY;
+
+    g_hudButtonReloadConfigX = g_hudButtonExitX + g_buttonWidth + g_elementOffset;
+    g_hudButtonReloadConfigY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleClientSwitcherX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleClientSwitcherY = g_buttonExitY;
+    g_hudButtonToggleClientSwitcherX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleClientSwitcherY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleMapX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleMapY = g_buttonExitY;
+    g_hudButtonToggleMapX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleMapY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleEspX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleEspY = g_buttonExitY;
+    g_hudButtonToggleEspX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleEspY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleEspTextX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleEspTextY = g_buttonExitY;
+    g_hudButtonToggleEspTextX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleEspTextY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleEspSkeletonX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleEspSkeletonY = g_buttonExitY;
+    g_hudButtonToggleEspSkeletonsX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleEspSkeletonsY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleEspGroundSpawnX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleEspGroundSpawnY = g_buttonExitY;
+    g_hudButtonToggleEspGroundSpawnsX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleEspGroundSpawnsY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleEspDoorSpawnX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleEspDoorSpawnY = g_buttonExitY;
+    g_hudButtonToggleEspDoorSpawnsX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleEspDoorSpawnsY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleEspDistanceX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleEspDistanceY = g_buttonExitY;
+    g_hudButtonToggleEspDistanceX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleEspDistanceY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleEspFilterNpcX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleEspFilterNpcY = g_buttonExitY;
+    g_hudButtonToggleEspFilterNpcX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleEspFilterNpcY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleHealthBarsX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleHealthBarsY = g_buttonExitY;
+    g_hudButtonToggleHealthBarsX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleHealthBarsY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleBuffInfoX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleBuffInfoY = g_buttonExitY;
+    g_hudButtonToggleBuffInfoX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleBuffInfoY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonTogglePlayerInfoX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonTogglePlayerInfoY = g_buttonExitY;
+    g_hudButtonTogglePlayerInfoX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonTogglePlayerInfoY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
-    g_buttonToggleTargetInfoX = g_buttonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
-    g_buttonToggleTargetInfoY = g_buttonExitY;
+    g_hudButtonToggleTargetInfoX = g_hudButtonExitX + ((g_buttonWidth + g_elementOffset) * buttonIndex);
+    g_hudButtonToggleTargetInfoY = g_hudButtonExitY;
 
     buttonIndex += 1.0f;
 
@@ -1839,6 +1884,55 @@ void EQMACHUD_GuiRecalculateCoordinates()
     buttonIndex += 1.0f;
 }
 
+void EQMACHUD_ReloadConfig()
+{
+    EQMACHUD_DoLoadConfig();
+
+    EQMACHUD_GuiRecalculateCoordinates();
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_CLASS_CEverQuest->dsp_chat("Config reloaded.");
+    }
+}
+
+void EQMACHUD_ReloadMap()
+{
+    EQMACHUD_DoLoadMap();
+
+    EQMACHUD_GuiRecalculateCoordinates();
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_CLASS_CEverQuest->dsp_chat("Map reloaded.");
+    }
+}
+
+void EQMACHUD_ClientSwitcherRefresh()
+{
+    EQMACHUD_UpdateEqProcesses();
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_CLASS_CEverQuest->dsp_chat("Client Switcher refreshed.");
+
+        if (g_eqProcesses[0] > 0)
+        {
+            EQ_CLASS_CEverQuest->dsp_chat("Client 1 found.");
+        }
+
+        if (g_eqProcesses[1] > 0)
+        {
+            EQ_CLASS_CEverQuest->dsp_chat("Client 2 found.");
+        }
+
+        if (g_eqProcesses[2] > 0)
+        {
+            EQ_CLASS_CEverQuest->dsp_chat("Client 3 found.");
+        }
+    }
+}
+
 void EQMACHUD_MapZoomOut()
 {
     g_mapZoom -= g_mapZoom * g_mapZoomMultiplier;
@@ -1884,82 +1978,294 @@ void EQMACHUD_MapSetZoom(float zoom)
     g_mapZoom = zoom;
 }
 
-void EQMACHUD_MapToggleMaximized()
+void EQMACHUD_MapResetZoom()
+{
+    g_mapZoom = 1.0f;
+}
+
+void EQMACHUD_MapCenter()
+{
+    g_mapOffsetX = 0.0f;
+    g_mapOffsetY = 0.0f;
+}
+
+void EQMACHUD_ToggleHudButtons()
+{
+    EQ_ToggleBool(g_hudButtonsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("HUD Buttons", g_hudButtonsIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapButtons()
+{
+    EQ_ToggleBool(g_mapButtonsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Buttons", g_mapButtonsIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapMaximized()
 {
     EQ_ToggleBool(g_mapIsMaximized);
 
     EQMACHUD_GuiRecalculateCoordinates();
 }
 
-void EQMACHUD_MapToggleLayer0()
+void EQMACHUD_ToggleMapLayer0()
 {
     EQ_ToggleBool(g_mapLayer0IsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Base Layer", g_mapLayer0IsEnabled);
+    }
 }
 
-void EQMACHUD_MapToggleLayer1()
+void EQMACHUD_ToggleMapLayer1()
 {
     EQ_ToggleBool(g_mapLayer1IsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Layer 1", g_mapLayer1IsEnabled);
+    }
 }
 
-void EQMACHUD_MapToggleLayer2()
+void EQMACHUD_ToggleMapLayer2()
 {
     EQ_ToggleBool(g_mapLayer2IsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Layer 2", g_mapLayer2IsEnabled);
+    }
 }
 
-void EQMACHUD_MapToggleLayer3()
+void EQMACHUD_ToggleMapLayer3()
 {
     EQ_ToggleBool(g_mapLayer3IsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Layer 3", g_mapLayer3IsEnabled);
+    }
 }
 
-void EQMACHUD_MapToggleArrow()
+void EQMACHUD_ToggleMapArrow()
 {
     EQ_ToggleBool(g_mapArrowIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Arrow", g_mapArrowIsEnabled);
+    }
 }
 
-void EQMACHUD_MapToggleHeightFilter()
+void EQMACHUD_ToggleMapHeightFilter()
 {
     EQ_ToggleBool(g_mapHeightFilterIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Height Filter", g_mapHeightFilterIsEnabled);
+
+        if (g_mapHeightFilterIsEnabled == true)
+        {
+            EQ_WriteFloatVarToChat("Low",  g_mapHeightFilterLow);
+            EQ_WriteFloatVarToChat("High", g_mapHeightFilterHigh);
+        }
+    }
 }
 
-void EQMACHUD_MapToggleRotate()
+void EQMACHUD_ToggleMapHeightFilterSpawns()
+{
+    EQ_ToggleBool(g_mapHeightFilterSpawnsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Height Filter Spawns", g_mapHeightFilterSpawnsIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapRotate()
 {
     EQ_ToggleBool(g_mapRotateIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Rotate", g_mapRotateIsEnabled);
+    }
 
     g_mapOffsetX = 0.0f;
     g_mapOffsetY = 0.0f;
 }
 
-void EQMACHUD_MapToggleZoneInfo()
+void EQMACHUD_ToggleMapZoneInfo()
 {
     EQ_ToggleBool(g_mapZoneInfoIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Zone Info", g_mapZoneInfoIsEnabled);
+    }
 }
 
-void EQMACHUD_MapToggleSpawns()
+void EQMACHUD_ToggleMapSpawnClickToTarget()
+{
+    EQ_ToggleBool(g_mapSpawnClickToTargetIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Spawn Click To Target", g_mapSpawnClickToTargetIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapMouseWheelZoom()
+{
+    EQ_ToggleBool(g_mapMouseWheelZoomIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Mouse Wheel Zoom", g_mapMouseWheelZoomIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapSpawns()
 {
     EQ_ToggleBool(g_mapSpawnsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Spawns", g_mapSpawnsIsEnabled);
+    }
 }
 
-void EQMACHUD_MapTogglePoints()
+void EQMACHUD_ToggleMapPoints()
 {
     EQ_ToggleBool(g_mapPointsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Points", g_mapPointsIsEnabled);
+    }
 }
 
-void EQMACHUD_MapToggleLines()
+void EQMACHUD_ToggleMapLines()
 {
     EQ_ToggleBool(g_mapLinesIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Lines", g_mapLinesIsEnabled);
+    }
 }
 
-void EQMACHUD_MapToggleSpawnDistance()
+void EQMACHUD_ToggleMapTargetLine()
+{
+    EQ_ToggleBool(g_mapTargetLineIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Target Line", g_mapTargetLineIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapYourselfCorpseLine()
+{
+    EQ_ToggleBool(g_mapYourselfCorpseLineIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Yourself Corpse Line", g_mapYourselfCorpseLineIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapReplaceBlackLinesWithWhiteLines()
+{
+    EQ_ToggleBool(g_mapReplaceBlackLinesWithWhiteLinesIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Replace Black Lines With White Lines", g_mapReplaceBlackLinesWithWhiteLinesIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapShowPlayer()
+{
+    EQ_ToggleBool(g_mapShowPlayerIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Show Player", g_mapShowPlayerIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapShowPlayerCorpse()
+{
+    EQ_ToggleBool(g_mapShowPlayerCorpseIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Show Player Corpse", g_mapShowPlayerCorpseIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapShowNpc()
+{
+    EQ_ToggleBool(g_mapShowNpcIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Show NPC", g_mapShowNpcIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapShowNpcCorpse()
+{
+    EQ_ToggleBool(g_mapShowNpcCorpseIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Show NPC Corpse", g_mapShowNpcCorpseIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMapSpawnDistance()
 {
     EQ_ToggleBool(g_mapSpawnDistanceIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Spawn Distance", g_mapSpawnDistanceIsEnabled);
+
+        if (g_mapSpawnDistanceIsEnabled == true)
+        {
+            EQ_WriteFloatVarToChat("Distance", g_mapSpawnDistance);
+        }
+    }
 }
 
-void EQMACHUD_MapToggleSpawnFilterNpc()
+void EQMACHUD_ToggleMapSpawnFilterNpc()
 {
     EQ_ToggleBool(g_mapSpawnFilterNpcIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map Spawn Filter NPC", g_mapSpawnFilterNpcIsEnabled);
+
+        if (g_mapSpawnFilterNpcIsEnabled == true)
+        {
+            EQ_WriteStringVarToChat("Filter", g_mapSpawnFilterNpc);
+        }
+    }
 }
 
-void EQMACHUD_MapToggleLineColor()
+void EQMACHUD_ToggleMapLineColor()
 {
     if (g_mapLineColor == 0xDEADBEEF)
     {
@@ -2002,66 +2308,357 @@ void EQMACHUD_MapToggleLineColor()
 void EQMACHUD_ToggleClientSwitcher()
 {
     EQ_ToggleBool(g_clientSwitcherIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Client Switcher", g_clientSwitcherIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleClientSwitcherSyncMouse()
+{
+    EQ_ToggleBool(g_clientSwitcherSyncMouseIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Client Switcher Sync Mouse", g_clientSwitcherSyncMouseIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleClientSwitcherButtons()
+{
+    EQ_ToggleBool(g_clientSwitcherButtonsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Client Switcher Buttons", g_clientSwitcherButtonsIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleClientSwitcherHotkeys()
+{
+    EQ_ToggleBool(g_clientSwitcherHotkeysIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Client Switcher Hotkeys", g_clientSwitcherHotkeysIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMouseWheelZoom()
+{
+    EQ_ToggleBool(g_mouseWheelZoomIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Mouse Wheel Zoom", g_mouseWheelZoomIsEnabled);
+    }
 }
 
 void EQMACHUD_ToggleMap()
 {
     EQ_ToggleBool(g_mapIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Map", g_mapIsEnabled);
+    }
 }
 
 void EQMACHUD_ToggleEsp()
 {
     EQ_ToggleBool(g_espIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP", g_espIsEnabled);
+    }
 }
 
-void EQMACHUD_ToggleEspSkeleton()
+void EQMACHUD_ToggleEspClipToViewPort()
 {
-    EQ_ToggleBool(g_espSkeletonIsEnabled);
+    EQ_ToggleBool(g_espClipToViewPortIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Clip To Viewport", g_espClipToViewPortIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleEspSkeletons()
+{
+    EQ_ToggleBool(g_espSkeletonsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Skeletons", g_espSkeletonsIsEnabled);
+
+        if (g_espSkeletonsIsEnabled == true && g_espSkeletonsDistanceIsEnabled == true)
+        {
+            EQ_WriteFloatVarToChat("Distance", g_espSkeletonsDistance);
+        }
+    }
+}
+
+void EQMACHUD_ToggleEspSkeletonsDistance()
+{
+    EQ_ToggleBool(g_espSkeletonsDistanceIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Skeletons Distance", g_espSkeletonsDistanceIsEnabled);
+
+        if (g_espSkeletonsIsEnabled == true && g_espSkeletonsDistanceIsEnabled == true)
+        {
+            EQ_WriteFloatVarToChat("Distance", g_espSkeletonsDistance);
+        }
+    }
+}
+
+void EQMACHUD_ToggleEspSkeletonsLineOfSight()
+{
+    EQ_ToggleBool(g_espSkeletonsLineOfSightIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Skeletons Line Of Sight", g_espSkeletonsLineOfSightIsEnabled);
+    }
 }
 
 void EQMACHUD_ToggleEspShowText()
 {
     EQ_ToggleBool(g_espShowTextIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show Text", g_espShowTextIsEnabled);
+    }
 }
 
-void EQMACHUD_ToggleEspShowGroundSpawn()
+void EQMACHUD_ToggleEspShowTextOnMouseHover()
 {
-    EQ_ToggleBool(g_espShowGroundSpawnIsEnabled);
+    EQ_ToggleBool(g_espShowTextOnMouseHoverIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show Text On Mouse Hover", g_espShowTextIsEnabled);
+    }
 }
 
-void EQMACHUD_ToggleEspShowDoorSpawn()
+void EQMACHUD_ToggleEspShowYourself()
 {
-    EQ_ToggleBool(g_espShowDoorSpawnIsEnabled);
+    EQ_ToggleBool(g_espShowYourselfIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show Yourself", g_espShowYourselfIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleEspShowPlayer()
+{
+    EQ_ToggleBool(g_espShowPlayerIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show Player", g_espShowPlayerIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleEspShowPlayerCorpse()
+{
+    EQ_ToggleBool(g_espShowPlayerCorpseIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show Player Corpse", g_espShowPlayerCorpseIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleEspShowNpc()
+{
+    EQ_ToggleBool(g_espShowNpcIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show NPC", g_espShowNpcIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleEspShowNpcCorpse()
+{
+    EQ_ToggleBool(g_espShowNpcCorpseIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show NPC Corpse", g_espShowNpcCorpseIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleEspShowGroundSpawns()
+{
+    EQ_ToggleBool(g_espShowGroundSpawnsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show Ground Spawns", g_espShowGroundSpawnsIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleEspShowDoorSpawns()
+{
+    EQ_ToggleBool(g_espShowDoorSpawnsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show Door Spawns", g_espShowDoorSpawnsIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleEspShowUniqueDoorSpawns()
+{
+    EQ_ToggleBool(g_espShowUniqueDoorSpawnsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Show Unique Door Spawns", g_espShowUniqueDoorSpawnsIsEnabled);
+    }
 }
 
 void EQMACHUD_ToggleEspDistance()
 {
     EQ_ToggleBool(g_espDistanceIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Distance", g_espDistanceIsEnabled);
+
+        if (g_espIsEnabled == true && g_espDistanceIsEnabled == true)
+        {
+            EQ_WriteFloatVarToChat("Distance", g_espDistance);
+        }
+    }
 }
 
 void EQMACHUD_ToggleEspFilterNpc()
 {
     EQ_ToggleBool(g_espFilterNpcIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Filter NPC", g_espFilterNpcIsEnabled);
+
+        if (g_espFilterNpcIsEnabled == true)
+        {
+            EQ_WriteStringVarToChat("Filter", g_espFilterNpc);
+        }
+    }
 }
 
 void EQMACHUD_ToggleHealthBars()
 {
     EQ_ToggleBool(g_healthBarsIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Health Bars", g_healthBarsIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleHealthBarsClipToViewPort()
+{
+    EQ_ToggleBool(g_healthBarsClipToViewPortIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Health Bars Clip To Viewport", g_healthBarsClipToViewPortIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleHealthBarsDistance()
+{
+    EQ_ToggleBool(g_healthBarsDistanceIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Health Bars Distance", g_healthBarsDistanceIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleHealthBarsClickToTarget()
+{
+    EQ_ToggleBool(g_healthBarsClickToTargetIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Health Bars Click To Target", g_healthBarsClickToTargetIsEnabled);
+    }
 }
 
 void EQMACHUD_ToggleBuffInfo()
 {
     EQ_ToggleBool(g_buffInfoIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Buff Info", g_buffInfoIsEnabled);
+    }
 }
 
 void EQMACHUD_TogglePlayerInfo()
 {
     EQ_ToggleBool(g_playerInfoIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Player Info", g_playerInfoIsEnabled);
+    }
 }
 
 void EQMACHUD_ToggleTargetInfo()
 {
     EQ_ToggleBool(g_targetInfoIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Target Info", g_targetInfoIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleMessageText()
+{
+    EQ_ToggleBool(g_messageTextIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Message Text", g_messageTextIsEnabled);
+    }
+}
+
+void EQMACHUD_ToggleBuffWindowTimers()
+{
+    EQ_ToggleBool(g_buffWindowTimersIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Buff Window Timers", g_buffWindowTimersIsEnabled);
+    }
+}
+
+void EQMACHUD_DoUnload()
+{
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+        {
+            char unloadedText[128];
+            sprintf_s(unloadedText, "%s unloaded.", g_applicationName);
+
+            EQ_CLASS_CEverQuest->dsp_chat(unloadedText);
+        }
+    }
+
+    g_bExit = 1;
 }
 
 void EQMACHUD_DoLoadMap()
@@ -2169,75 +2766,81 @@ bool EQMACHUD_DoButtonMouseLeftHeldDown()
 
     if (isKeyPressedControl == 1)
     {
+        if (g_mapIsEnabled == true && g_mapButtonsIsEnabled == true)
+        {
+            if
+            (
+                EQMACHUD_IsPointInsideRectangle
+                (
+                    mouseX, mouseY,
+                    (int)g_mapX, (int)g_mapY,
+                    (int)g_mapWidth, (int)g_mapHeight
+                )
+                == true
+            )
+            {
+                if (g_mapRotateIsEnabled == false)
+                {
+                    if (g_classicUiIsEnabled == false)
+                    {
+                        EQ_OBJECT_CXWndManager->MouseIcon = EQ_MOUSE_ICON_SIZE_ALL;
+                    }
+
+                    if (g_mouseIsDragging == true)
+                    {
+                        float addX = ((float)mouseX - g_mouseDraggingBeginX);
+                        float addY = ((float)mouseY - g_mouseDraggingBeginY);
+
+                        if (g_mapZoom > 0.0f)
+                        {
+                            addX = addX / g_mapZoom;
+                            addY = addY / g_mapZoom;
+                        }
+
+                        g_mapOffsetX += addX;
+                        g_mapOffsetY += addY;
+
+                        g_mouseDraggingBeginX = mouseX;
+                        g_mouseDraggingBeginY = mouseY;
+                    }
+                }
+
+                return true;
+            }
+        }
+    }
+
+    if (g_mapIsEnabled == true && g_mapButtonsIsEnabled == true)
+    {
         if
         (
             EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
-                (int)g_mapX, (int)g_mapY,
-                (int)g_mapWidth, (int)g_mapHeight
+                (int)g_mapButtonZoomInX, (int)g_mapButtonZoomInY,
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
         {
-            if (g_mapRotateIsEnabled == false)
-            {
-                if (g_classicUiIsEnabled == false)
-                {
-                    EQ_OBJECT_CXWndManager->MouseIcon = EQ_MOUSE_ICON_SIZE_ALL;
-                }
-
-                if (g_mouseIsDragging == true)
-                {
-                    float addX = ((float)mouseX - g_mouseDraggingBeginX);
-                    float addY = ((float)mouseY - g_mouseDraggingBeginY);
-
-                    if (g_mapZoom > 0.0f)
-                    {
-                        addX = addX / g_mapZoom;
-                        addY = addY / g_mapZoom;
-                    }
-
-                    g_mapOffsetX += addX;
-                    g_mapOffsetY += addY;
-
-                    g_mouseDraggingBeginX = mouseX;
-                    g_mouseDraggingBeginY = mouseY;
-                }
-            }
-
+            EQMACHUD_MapZoomIn();
             return true;
         }
-    }
 
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
+        if
         (
-            mouseX, mouseY,
-            (int)g_mapButtonZoomInX, (int)g_mapButtonZoomInY,
-            (int)g_buttonWidth, (int)g_buttonHeight
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapButtonZoomOutX, (int)g_mapButtonZoomOutY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
         )
-        == true
-    )
-    {
-        EQMACHUD_MapZoomIn();
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_mapButtonZoomOutX, (int)g_mapButtonZoomOutY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_MapZoomOut();
-        return true;
+        {
+            EQMACHUD_MapZoomOut();
+            return true;
+        }
     }
 
     return false;
@@ -2261,32 +2864,35 @@ bool EQMACHUD_DoButtonMouseLeftDown()
     g_mouseDraggingBeginX = mouseX;
     g_mouseDraggingBeginY = mouseY;
 
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_mapButtonZoomInX, (int)g_mapButtonZoomInY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
+    if (g_mapIsEnabled == true && g_mapButtonsIsEnabled == true)
     {
-        return true;
-    }
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapButtonZoomInX, (int)g_mapButtonZoomInY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            return true;
+        }
 
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
+        if
         (
-            mouseX, mouseY,
-            (int)g_mapButtonZoomOutX, (int)g_mapButtonZoomOutY,
-            (int)g_buttonWidth, (int)g_buttonHeight
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapButtonZoomOutX, (int)g_mapButtonZoomOutY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
         )
-        == true
-    )
-    {
-        return true;
+        {
+            return true;
+        }
     }
 
     return false;
@@ -2310,453 +2916,253 @@ bool EQMACHUD_DoButtonMouseLeftUp()
 
     if (isKeyPressedControl == 1)
     {
+        if (g_mapIsEnabled == true && g_mapButtonsIsEnabled == true)
+        {
+            if
+            (
+                EQMACHUD_IsPointInsideRectangle
+                (
+                    mouseX, mouseY,
+                    (int)g_mapX, (int)g_mapY,
+                    (int)g_mapWidth, (int)g_mapHeight
+                )
+                == true
+            )
+            {
+                return true;
+            }
+        }
+    }
+
+    if (g_hudButtonsIsEnabled == true)
+    {
         if
         (
             EQMACHUD_IsPointInsideRectangle
             (
                 mouseX, mouseY,
-                (int)g_mapX, (int)g_mapY,
-                (int)g_mapWidth, (int)g_mapHeight
+                (int)g_hudButtonExitX, (int)g_hudButtonExitY,
+                (int)g_buttonWidth, (int)g_buttonHeight
             )
             == true
         )
         {
+            EQMACHUD_DoUnload();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonReloadConfigX, (int)g_hudButtonReloadConfigY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ReloadConfig();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleClientSwitcherX, (int)g_hudButtonToggleClientSwitcherY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleClientSwitcher();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleMapX, (int)g_hudButtonToggleMapY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleMap();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspX, (int)g_hudButtonToggleEspY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleEsp();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspTextX, (int)g_hudButtonToggleEspTextY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleEspShowText();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspSkeletonsX, (int)g_hudButtonToggleEspSkeletonsY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleEspSkeletons();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspGroundSpawnsX, (int)g_hudButtonToggleEspGroundSpawnsY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleEspShowGroundSpawns();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspDoorSpawnsX, (int)g_hudButtonToggleEspDoorSpawnsY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleEspShowDoorSpawns();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspDistanceX, (int)g_hudButtonToggleEspDistanceY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleEspDistance();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspFilterNpcX, (int)g_hudButtonToggleEspFilterNpcY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleEspFilterNpc();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleHealthBarsX, (int)g_hudButtonToggleHealthBarsY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleHealthBars();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleBuffInfoX, (int)g_hudButtonToggleBuffInfoY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleBuffInfo();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonTogglePlayerInfoX, (int)g_hudButtonTogglePlayerInfoY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_TogglePlayerInfo();
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleTargetInfoX, (int)g_hudButtonToggleTargetInfoY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQMACHUD_ToggleTargetInfo();
             return true;
         }
     }
 
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonExitX, (int)g_buttonExitY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
-            {
-                char unloadedText[128];
-                sprintf_s(unloadedText, "%s exiting...", g_applicationName);
-
-                EQ_CLASS_CEverQuest->dsp_chat(unloadedText);
-            }
-        }
-
-        g_bExit = 1;
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonReloadConfigX, (int)g_buttonReloadConfigY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_DoLoadConfig();
-
-        EQMACHUD_GuiRecalculateCoordinates();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            EQ_CLASS_CEverQuest->dsp_chat("-> Config reloaded.");
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleClientSwitcherX, (int)g_buttonToggleClientSwitcherY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleClientSwitcher();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_clientSwitcherIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Client Switcher enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Client Switcher disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleMapX, (int)g_buttonToggleMapY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleMap();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_mapIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Map enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Map disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspX, (int)g_buttonToggleEspY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleEsp();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_espIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspTextX, (int)g_buttonToggleEspTextY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleEspShowText();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_espShowTextIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Text enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Text disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspSkeletonX, (int)g_buttonToggleEspSkeletonY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleEspSkeleton();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_espSkeletonIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Skeletons enabled.");
-
-                if (g_espSkeletonDistanceIsEnabled == true)
-                {
-                    char distanceText[128];
-                    sprintf_s(distanceText, "Distance: %.1f", g_espSkeletonDistance);
-
-                    EQ_CLASS_CEverQuest->dsp_chat(distanceText);
-                }
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Skeletons disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspGroundSpawnX, (int)g_buttonToggleEspGroundSpawnY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleEspShowGroundSpawn();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_espShowGroundSpawnIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Ground Spawns enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Ground Spawns disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspDoorSpawnX, (int)g_buttonToggleEspDoorSpawnY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleEspShowDoorSpawn();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_espShowDoorSpawnIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Door Spawns enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Door Spawns disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspDistanceX, (int)g_buttonToggleEspDistanceY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleEspDistance();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_espDistanceIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Distance enabled.");
-
-                char distanceText[128];
-                sprintf_s(distanceText, "Distance: %.1f", g_espDistance);
-
-                EQ_CLASS_CEverQuest->dsp_chat(distanceText);
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Distance disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspFilterNpcX, (int)g_buttonToggleEspFilterNpcY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleEspFilterNpc();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_espFilterNpcIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Filter NPC enabled.");
-
-                if (strlen(g_espFilterNpc) < 128)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat(g_espFilterNpc);
-                }
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> ESP Filter NPC disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleHealthBarsX, (int)g_buttonToggleHealthBarsY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleHealthBars();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_healthBarsIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Health Bars enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Health Bars disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleBuffInfoX, (int)g_buttonToggleBuffInfoY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleBuffInfo();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_buffInfoIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Buff Info enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Buff Info disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonTogglePlayerInfoX, (int)g_buttonTogglePlayerInfoY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_TogglePlayerInfo();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_playerInfoIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Player Info enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Player Info disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleTargetInfoX, (int)g_buttonToggleTargetInfoY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQMACHUD_ToggleTargetInfo();
-
-        if (g_writeTextToChatWindowIsEnabled == true)
-        {
-            if (g_targetInfoIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Target Info enabled.");
-            }
-            else
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Target Info disabled.");
-            }
-        }
-
-        return true;
-    }
-
-    if (g_mapIsEnabled == true)
+    if (g_mapIsEnabled == true && g_mapButtonsIsEnabled == true)
     {
         if
         (
@@ -2799,12 +3205,8 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-
-            EQMACHUD_MapSetZoom(1.0f);
-
-            g_mapOffsetX = 0.0f;
-            g_mapOffsetY = 0.0f;
-
+            EQMACHUD_MapResetZoom();
+            EQMACHUD_MapCenter();
             return true;
         }
 
@@ -2819,20 +3221,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleArrow();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapArrowIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Arrow enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Arrow disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapArrow();
             return true;
         }
 
@@ -2847,30 +3236,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleHeightFilter();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapHeightFilterIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Height Filter enabled.");
-
-                    char heightFilterText[128];
-
-                    sprintf_s(heightFilterText, "Low: %.1f", g_mapHeightFilterLow);
-
-                    EQ_CLASS_CEverQuest->dsp_chat(heightFilterText);
-
-                    sprintf_s(heightFilterText, "High: %.1f", g_mapHeightFilterHigh);
-
-                    EQ_CLASS_CEverQuest->dsp_chat(heightFilterText);
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Height Filter disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapHeightFilter();
             return true;
         }
 
@@ -2885,20 +3251,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleRotate();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapRotateIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Rotate enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Rotate disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapRotate();
             return true;
         }
 
@@ -2913,7 +3266,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleLineColor();
+            EQMACHUD_ToggleMapLineColor();
             return true;
         }
 
@@ -2928,20 +3281,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleZoneInfo();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapZoneInfoIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Zone Info enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Zone Info disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapZoneInfo();
             return true;
         }
 
@@ -2956,20 +3296,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleSpawns();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapSpawnsIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawns enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawns disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapSpawns();
             return true;
         }
 
@@ -2984,20 +3311,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapTogglePoints();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapPointsIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Points enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Points disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapPoints();
             return true;
         }
 
@@ -3012,20 +3326,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleLines();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapLinesIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Lines enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Lines disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapLines();
             return true;
         }
 
@@ -3040,25 +3341,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleSpawnDistance();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapSpawnDistanceIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawn Distance enabled.");
-
-                    char distanceText[128];
-                    sprintf_s(distanceText, "Distance: %.1f", g_mapSpawnDistance);
-
-                    EQ_CLASS_CEverQuest->dsp_chat(distanceText);
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawn Distance disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapSpawnDistance();
             return true;
         }
 
@@ -3073,25 +3356,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleSpawnFilterNpc();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapSpawnFilterNpcIsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawn Filter NPC enabled.");
-
-                    if (strlen(g_mapSpawnFilterNpc) < 128)
-                    {
-                        EQ_CLASS_CEverQuest->dsp_chat(g_mapSpawnFilterNpc);
-                    }
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Spawn Filter NPC disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapSpawnFilterNpc();
             return true;
         }
 
@@ -3106,15 +3371,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_DoLoadMap();
-
-            EQMACHUD_GuiRecalculateCoordinates();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Map reloaded.");
-            }
-
+            EQMACHUD_ReloadMap();
             return true;
         }
 
@@ -3130,12 +3387,6 @@ bool EQMACHUD_DoButtonMouseLeftUp()
         )
         {
             EQMACHUD_CopyTargetMapLocationToClipboard();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Target's map location copied to clipboard.");
-            }
-
             return true;
         }
 
@@ -3150,20 +3401,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleLayer0();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapLayer0IsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Base Layer enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Base Layer disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapLayer0();
             return true;
         }
 
@@ -3178,20 +3416,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleLayer1();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapLayer1IsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Layer 1 enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Layer 1 disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapLayer1();
             return true;
         }
 
@@ -3206,20 +3431,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleLayer2();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapLayer2IsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Layer 2 enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Layer 2 disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapLayer2();
             return true;
         }
 
@@ -3234,20 +3446,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleLayer3();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                if (g_mapLayer3IsEnabled == true)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Layer 3 enabled.");
-                }
-                else
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Map Layer 3 disabled.");
-                }
-            }
-
+            EQMACHUD_ToggleMapLayer3();
             return true;
         }
 
@@ -3262,12 +3461,12 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_MapToggleMaximized();
+            EQMACHUD_ToggleMapMaximized();
             return true;
         }
     }
 
-    if (g_clientSwitcherIsEnabled == true)
+    if (g_clientSwitcherIsEnabled == true && g_clientSwitcherButtonsIsEnabled == true)
     {
         if
         (
@@ -3280,28 +3479,7 @@ bool EQMACHUD_DoButtonMouseLeftUp()
             == true
         )
         {
-            EQMACHUD_UpdateEqProcesses();
-
-            if (g_writeTextToChatWindowIsEnabled == true)
-            {
-                EQ_CLASS_CEverQuest->dsp_chat("-> Client Switcher refreshed.");
-
-                if (g_eqProcesses[0] > 0)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Client 1 found.");
-                }
-
-                if (g_eqProcesses[1] > 0)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Client 2 found.");
-                }
-
-                if (g_eqProcesses[2] > 0)
-                {
-                    EQ_CLASS_CEverQuest->dsp_chat("-> Client 3 found.");
-                }
-            }
-
+            EQMACHUD_ClientSwitcherRefresh();
             return true;
         }
 
@@ -3378,340 +3556,343 @@ bool EQMACHUD_DoButtonToolTipText()
     WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
     WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
 
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonExitX, (int)g_buttonExitY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
+    if (g_hudButtonsIsEnabled == true)
     {
-        char buttonText[128];
-        sprintf_s(buttonText, "Exit %s", g_applicationName);
-
-        EQ_DrawTooltipText
+        if
         (
-            buttonText,
-            (int)(g_buttonExitX),
-            (int)(g_buttonExitY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonExitX, (int)g_hudButtonExitY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            char buttonText[128];
+            sprintf_s(buttonText, "Exit %s", g_applicationName);
 
-        return true;
+            EQ_DrawTooltipText
+            (
+                buttonText,
+                (int)(g_hudButtonExitX),
+                (int)(g_hudButtonExitY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonReloadConfigX, (int)g_hudButtonReloadConfigY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "Reload Config",
+                (int)(g_hudButtonReloadConfigX),
+                (int)(g_hudButtonReloadConfigY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleClientSwitcherX, (int)g_hudButtonToggleClientSwitcherY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "Client Switcher",
+                (int)(g_hudButtonToggleClientSwitcherX),
+                (int)(g_hudButtonToggleClientSwitcherY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleMapX, (int)g_hudButtonToggleMapY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "Map",
+                (int)(g_hudButtonToggleMapX),
+                (int)(g_hudButtonToggleMapY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspX, (int)g_hudButtonToggleEspY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "ESP",
+                (int)(g_hudButtonToggleEspX),
+                (int)(g_hudButtonToggleEspY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspTextX, (int)g_hudButtonToggleEspTextY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "ESP Text",
+                (int)(g_hudButtonToggleEspTextX),
+                (int)(g_hudButtonToggleEspTextY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspSkeletonsX, (int)g_hudButtonToggleEspSkeletonsY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "ESP Skeletons",
+                (int)(g_hudButtonToggleEspSkeletonsX),
+                (int)(g_hudButtonToggleEspSkeletonsY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspGroundSpawnsX, (int)g_hudButtonToggleEspGroundSpawnsY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "ESP Ground Spawns",
+                (int)(g_hudButtonToggleEspGroundSpawnsX),
+                (int)(g_hudButtonToggleEspGroundSpawnsY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspDoorSpawnsX, (int)g_hudButtonToggleEspDoorSpawnsY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "ESP Door Spawns",
+                (int)(g_hudButtonToggleEspDoorSpawnsX),
+                (int)(g_hudButtonToggleEspDoorSpawnsY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspDistanceX, (int)g_hudButtonToggleEspDistanceY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "ESP Distance",
+                (int)(g_hudButtonToggleEspDistanceX),
+                (int)(g_hudButtonToggleEspDistanceY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleEspFilterNpcX, (int)g_hudButtonToggleEspFilterNpcY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "ESP Filter NPC",
+                (int)(g_hudButtonToggleEspFilterNpcX),
+                (int)(g_hudButtonToggleEspFilterNpcY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleHealthBarsX, (int)g_hudButtonToggleHealthBarsY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "Health Bars",
+                (int)(g_hudButtonToggleHealthBarsX),
+                (int)(g_hudButtonToggleHealthBarsY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleBuffInfoX, (int)g_hudButtonToggleBuffInfoY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "Buff Info",
+                (int)(g_hudButtonToggleBuffInfoX),
+                (int)(g_hudButtonToggleBuffInfoY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonTogglePlayerInfoX, (int)g_hudButtonTogglePlayerInfoY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "Player Info",
+                (int)(g_hudButtonTogglePlayerInfoX),
+                (int)(g_hudButtonTogglePlayerInfoY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
+
+        if
+        (
+            EQMACHUD_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_hudButtonToggleTargetInfoX, (int)g_hudButtonToggleTargetInfoY,
+                (int)g_buttonWidth, (int)g_buttonHeight
+            )
+            == true
+        )
+        {
+            EQ_DrawTooltipText
+            (
+                "Target Info",
+                (int)(g_hudButtonToggleTargetInfoX),
+                (int)(g_hudButtonToggleTargetInfoY + g_buttonHeight + g_elementOffset),
+                EQ_POINTER_FONT_ARIAL14
+            );
+
+            return true;
+        }
     }
 
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonReloadConfigX, (int)g_buttonReloadConfigY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "Reload Config",
-            (int)(g_buttonReloadConfigX),
-            (int)(g_buttonReloadConfigY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleClientSwitcherX, (int)g_buttonToggleClientSwitcherY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "Client Switcher",
-            (int)(g_buttonToggleClientSwitcherX),
-            (int)(g_buttonToggleClientSwitcherY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleMapX, (int)g_buttonToggleMapY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "Map",
-            (int)(g_buttonToggleMapX),
-            (int)(g_buttonToggleMapY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspX, (int)g_buttonToggleEspY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "ESP",
-            (int)(g_buttonToggleEspX),
-            (int)(g_buttonToggleEspY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspTextX, (int)g_buttonToggleEspTextY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "ESP Text",
-            (int)(g_buttonToggleEspTextX),
-            (int)(g_buttonToggleEspTextY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspSkeletonX, (int)g_buttonToggleEspSkeletonY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "ESP Skeletons",
-            (int)(g_buttonToggleEspSkeletonX),
-            (int)(g_buttonToggleEspSkeletonY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspGroundSpawnX, (int)g_buttonToggleEspGroundSpawnY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "ESP Ground Spawns",
-            (int)(g_buttonToggleEspGroundSpawnX),
-            (int)(g_buttonToggleEspGroundSpawnY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspDoorSpawnX, (int)g_buttonToggleEspDoorSpawnY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "ESP Door Spawns",
-            (int)(g_buttonToggleEspDoorSpawnX),
-            (int)(g_buttonToggleEspDoorSpawnY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspDistanceX, (int)g_buttonToggleEspDistanceY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "ESP Distance",
-            (int)(g_buttonToggleEspDistanceX),
-            (int)(g_buttonToggleEspDistanceY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleEspFilterNpcX, (int)g_buttonToggleEspFilterNpcY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "ESP Filter NPC",
-            (int)(g_buttonToggleEspFilterNpcX),
-            (int)(g_buttonToggleEspFilterNpcY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleHealthBarsX, (int)g_buttonToggleHealthBarsY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "Health Bars",
-            (int)(g_buttonToggleHealthBarsX),
-            (int)(g_buttonToggleHealthBarsY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleBuffInfoX, (int)g_buttonToggleBuffInfoY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "Buff Info",
-            (int)(g_buttonToggleBuffInfoX),
-            (int)(g_buttonToggleBuffInfoY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonTogglePlayerInfoX, (int)g_buttonTogglePlayerInfoY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "Player Info",
-            (int)(g_buttonTogglePlayerInfoX),
-            (int)(g_buttonTogglePlayerInfoY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if
-    (
-        EQMACHUD_IsPointInsideRectangle
-        (
-            mouseX, mouseY,
-            (int)g_buttonToggleTargetInfoX, (int)g_buttonToggleTargetInfoY,
-            (int)g_buttonWidth, (int)g_buttonHeight
-        )
-        == true
-    )
-    {
-        EQ_DrawTooltipText
-        (
-            "Target Info",
-            (int)(g_buttonToggleTargetInfoX),
-            (int)(g_buttonToggleTargetInfoY + g_buttonHeight + g_elementOffset),
-            EQ_POINTER_FONT_ARIAL14
-        );
-
-        return true;
-    }
-
-    if (g_mapIsEnabled == true)
+    if (g_mapIsEnabled == true && g_mapButtonsIsEnabled == true)
     {
         if
         (
@@ -4164,7 +4345,7 @@ bool EQMACHUD_DoButtonToolTipText()
         }
     }
 
-    if (g_clientSwitcherIsEnabled == true)
+    if (g_clientSwitcherIsEnabled == true && g_clientSwitcherButtonsIsEnabled == true)
     {
         if
         (
@@ -4267,23 +4448,23 @@ bool EQMACHUD_DoButtonToolTipText()
     return false;
 }
 
-void EQMACHUD_DoExitRowButtons()
+void EQMACHUD_DoHudButtons()
 {
     DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
     int buttonColor = g_buttonColorMinMaxClose;
     int buttonTextColor = g_buttonTextColorMinMaxClose;
 
-    EQ_DrawRectangle(g_buttonExitX, g_buttonExitY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("x", (int)(g_buttonExitX + 3.0f), (int)(g_buttonExitY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonExitX, g_hudButtonExitY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("x", (int)(g_hudButtonExitX + 3.0f), (int)(g_hudButtonExitY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
 
-    EQ_DrawRectangle(g_buttonReloadConfigX, g_buttonReloadConfigY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_buttonReloadConfigX + 4.0f), (int)(g_buttonReloadConfigY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonReloadConfigX, g_hudButtonReloadConfigY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_hudButtonReloadConfigX + 4.0f), (int)(g_hudButtonReloadConfigY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4296,8 +4477,8 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleClientSwitcherX, g_buttonToggleClientSwitcherY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_buttonToggleClientSwitcherX + 3.0f), (int)(g_buttonToggleClientSwitcherY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleClientSwitcherX, g_hudButtonToggleClientSwitcherY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_hudButtonToggleClientSwitcherX + 3.0f), (int)(g_hudButtonToggleClientSwitcherY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4310,8 +4491,8 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleMapX, g_buttonToggleMapY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("m", (int)(g_buttonToggleMapX + 2.0f), (int)(g_buttonToggleMapY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleMapX, g_hudButtonToggleMapY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("m", (int)(g_hudButtonToggleMapX + 2.0f), (int)(g_hudButtonToggleMapY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4324,8 +4505,8 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleEspX, g_buttonToggleEspY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("e", (int)(g_buttonToggleEspX + 3.0f), (int)(g_buttonToggleEspY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleEspX, g_hudButtonToggleEspY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("e", (int)(g_hudButtonToggleEspX + 3.0f), (int)(g_hudButtonToggleEspY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4338,22 +4519,22 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleEspTextX, g_buttonToggleEspTextY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_buttonToggleEspTextX + 3.0f), (int)(g_buttonToggleEspTextY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleEspTextX, g_hudButtonToggleEspTextY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_hudButtonToggleEspTextX + 3.0f), (int)(g_hudButtonToggleEspTextY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
 
-    if (g_espSkeletonIsEnabled == false)
+    if (g_espSkeletonsIsEnabled == false)
     {
         buttonColor = g_buttonColorDisabled;
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleEspSkeletonX, g_buttonToggleEspSkeletonY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("k", (int)(g_buttonToggleEspSkeletonX + 4.0f), (int)(g_buttonToggleEspSkeletonY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleEspSkeletonsX, g_hudButtonToggleEspSkeletonsY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("k", (int)(g_hudButtonToggleEspSkeletonsX + 4.0f), (int)(g_hudButtonToggleEspSkeletonsY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4366,8 +4547,8 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleEspDistanceX, g_buttonToggleEspDistanceY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_buttonToggleEspDistanceX + 3.0f), (int)(g_buttonToggleEspDistanceY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleEspDistanceX, g_hudButtonToggleEspDistanceY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_hudButtonToggleEspDistanceX + 3.0f), (int)(g_hudButtonToggleEspDistanceY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4380,36 +4561,36 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleEspFilterNpcX, g_buttonToggleEspFilterNpcY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("f", (int)(g_buttonToggleEspFilterNpcX + 4.0f), (int)(g_buttonToggleEspFilterNpcY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleEspFilterNpcX, g_hudButtonToggleEspFilterNpcY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("f", (int)(g_hudButtonToggleEspFilterNpcX + 4.0f), (int)(g_hudButtonToggleEspFilterNpcY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
 
-    if (g_espShowGroundSpawnIsEnabled == false)
+    if (g_espShowGroundSpawnsIsEnabled == false)
     {
         buttonColor = g_buttonColorDisabled;
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleEspGroundSpawnX, g_buttonToggleEspGroundSpawnY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("g", (int)(g_buttonToggleEspGroundSpawnX + 3.0f), (int)(g_buttonToggleEspGroundSpawnY - 3.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleEspGroundSpawnsX, g_hudButtonToggleEspGroundSpawnsY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("g", (int)(g_hudButtonToggleEspGroundSpawnsX + 3.0f), (int)(g_hudButtonToggleEspGroundSpawnsY - 3.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
     buttonColor = g_buttonColorEnabled;
     buttonTextColor = g_buttonTextColorEnabled;
 
-    if (g_espShowDoorSpawnIsEnabled == false)
+    if (g_espShowDoorSpawnsIsEnabled == false)
     {
         buttonColor = g_buttonColorDisabled;
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleEspDoorSpawnX, g_buttonToggleEspDoorSpawnY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("o", (int)(g_buttonToggleEspDoorSpawnX + 3.0f), (int)(g_buttonToggleEspDoorSpawnY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleEspDoorSpawnsX, g_hudButtonToggleEspDoorSpawnsY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("o", (int)(g_hudButtonToggleEspDoorSpawnsX + 3.0f), (int)(g_hudButtonToggleEspDoorSpawnsY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4422,8 +4603,8 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleHealthBarsX, g_buttonToggleHealthBarsY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("h", (int)(g_buttonToggleHealthBarsX + 3.0f), (int)(g_buttonToggleHealthBarsY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleHealthBarsX, g_hudButtonToggleHealthBarsY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("h", (int)(g_hudButtonToggleHealthBarsX + 3.0f), (int)(g_hudButtonToggleHealthBarsY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4436,8 +4617,8 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleBuffInfoX, g_buttonToggleBuffInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_buttonToggleBuffInfoX + 3.0f), (int)(g_buttonToggleBuffInfoY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleBuffInfoX, g_hudButtonToggleBuffInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_hudButtonToggleBuffInfoX + 3.0f), (int)(g_hudButtonToggleBuffInfoY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4450,8 +4631,8 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonTogglePlayerInfoX, g_buttonTogglePlayerInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_buttonTogglePlayerInfoX + 3.0f), (int)(g_buttonTogglePlayerInfoY - 3.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonTogglePlayerInfoX, g_hudButtonTogglePlayerInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_hudButtonTogglePlayerInfoX + 3.0f), (int)(g_hudButtonTogglePlayerInfoY - 3.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 
@@ -4464,8 +4645,8 @@ void EQMACHUD_DoExitRowButtons()
         buttonTextColor = g_buttonTextColorDisabled;
     }
 
-    EQ_DrawRectangle(g_buttonToggleTargetInfoX, g_buttonToggleTargetInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("t", (int)(g_buttonToggleTargetInfoX + 5.0f), (int)(g_buttonToggleTargetInfoY - 2.0f), buttonTextColor, fontArial14);
+    EQ_DrawRectangle(g_hudButtonToggleTargetInfoX, g_hudButtonToggleTargetInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
+    EQ_CLASS_CDisplay->WriteTextHD2("t", (int)(g_hudButtonToggleTargetInfoX + 5.0f), (int)(g_hudButtonToggleTargetInfoY - 2.0f), buttonTextColor, fontArial14);
 
     g_numDeferred2dItems += 4;
 }
@@ -4590,250 +4771,254 @@ void EQMACHUD_DoMap()
 
     g_numDeferred2dItems += 4;
 
-    int buttonColor = g_buttonColorEnabled;
-    int buttonTextColor = g_buttonTextColorEnabled;
-
-    EQ_DrawRectangle(g_mapButtonZoomInX, g_mapButtonZoomInY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonZoomInX + 3.0f), (int)(g_mapButtonZoomInY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    EQ_DrawRectangle(g_mapButtonZoomOutX, g_mapButtonZoomOutY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonZoomOutX + 4.0f), (int)(g_mapButtonZoomOutY - 3.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    EQ_DrawRectangle(g_mapButtonResetZoomAndCenterX, g_mapButtonResetZoomAndCenterY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("*", (int)(g_mapButtonResetZoomAndCenterX + 4.0f), (int)(g_mapButtonResetZoomAndCenterY - 0.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    EQ_DrawRectangle(g_mapButtonToggleLineColorX, g_mapButtonToggleLineColorY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonToggleLineColorX + 3.0f), (int)(g_mapButtonToggleLineColorY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapArrowIsEnabled == false)
+    if (g_mapButtonsIsEnabled == true)
     {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
+        int buttonColor = g_buttonColorEnabled;
+        int buttonTextColor = g_buttonTextColorEnabled;
+
+        EQ_DrawRectangle(g_mapButtonZoomInX, g_mapButtonZoomInY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("+", (int)(g_mapButtonZoomInX + 3.0f), (int)(g_mapButtonZoomInY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        EQ_DrawRectangle(g_mapButtonZoomOutX, g_mapButtonZoomOutY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("-", (int)(g_mapButtonZoomOutX + 4.0f), (int)(g_mapButtonZoomOutY - 3.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        EQ_DrawRectangle(g_mapButtonResetZoomAndCenterX, g_mapButtonResetZoomAndCenterY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("*", (int)(g_mapButtonResetZoomAndCenterX + 4.0f), (int)(g_mapButtonResetZoomAndCenterY - 0.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        EQ_DrawRectangle(g_mapButtonToggleLineColorX, g_mapButtonToggleLineColorY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonToggleLineColorX + 3.0f), (int)(g_mapButtonToggleLineColorY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapArrowIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleArrowX, g_mapButtonToggleArrowY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("a", (int)(g_mapButtonToggleArrowX + 3.0f), (int)(g_mapButtonToggleArrowY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapHeightFilterIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleHeightFilterX, g_mapButtonToggleHeightFilterY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("h", (int)(g_mapButtonToggleHeightFilterX + 3.0f), (int)(g_mapButtonToggleHeightFilterY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapRotateIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleRotateX, g_mapButtonToggleRotateY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_mapButtonToggleRotateX + 4.0f), (int)(g_mapButtonToggleRotateY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapZoneInfoIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleZoneInfoX, g_mapButtonToggleZoneInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("z", (int)(g_mapButtonToggleZoneInfoX + 3.0f), (int)(g_mapButtonToggleZoneInfoY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapSpawnsIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleSpawnsX, g_mapButtonToggleSpawnsY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_mapButtonToggleSpawnsX + 3.0f), (int)(g_mapButtonToggleSpawnsY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapPointsIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonTogglePointsX, g_mapButtonTogglePointsY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_mapButtonTogglePointsX + 3.0f), (int)(g_mapButtonTogglePointsY - 3.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapLinesIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleLinesX, g_mapButtonToggleLinesY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("l", (int)(g_mapButtonToggleLinesX + 5.0f), (int)(g_mapButtonToggleLinesY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapSpawnDistanceIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleSpawnDistanceX, g_mapButtonToggleSpawnDistanceY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_mapButtonToggleSpawnDistanceX + 3.0f), (int)(g_mapButtonToggleSpawnDistanceY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapSpawnFilterNpcIsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleSpawnFilterNpcX, g_mapButtonToggleSpawnFilterNpcY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("f", (int)(g_mapButtonToggleSpawnFilterNpcX + 4.0f), (int)(g_mapButtonToggleSpawnFilterNpcY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        EQ_DrawRectangle(g_mapButtonReloadMapX, g_mapButtonReloadMapY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_mapButtonReloadMapX + 4.0f), (int)(g_mapButtonReloadMapY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        EQ_DrawRectangle(g_mapButtonCopyTargetMapLocationToClipboardX, g_mapButtonCopyTargetMapLocationToClipboardY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonCopyTargetMapLocationToClipboardX + 3.0f), (int)(g_mapButtonCopyTargetMapLocationToClipboardY - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapLayer0IsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleLayer0X, g_mapButtonToggleLayer0Y, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_mapButtonToggleLayer0X + 3.0f), (int)(g_mapButtonToggleLayer0Y - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapLayer1IsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleLayer1X, g_mapButtonToggleLayer1Y, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonToggleLayer1X + 3.0f), (int)(g_mapButtonToggleLayer1Y - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapLayer2IsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleLayer2X, g_mapButtonToggleLayer2Y, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("2", (int)(g_mapButtonToggleLayer2X + 3.0f), (int)(g_mapButtonToggleLayer2Y - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorEnabled;
+        buttonTextColor = g_buttonTextColorEnabled;
+
+        if (g_mapLayer3IsEnabled == false)
+        {
+            buttonColor = g_buttonColorDisabled;
+            buttonTextColor = g_buttonTextColorDisabled;
+        }
+
+        EQ_DrawRectangle(g_mapButtonToggleLayer3X, g_mapButtonToggleLayer3Y, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2("3", (int)(g_mapButtonToggleLayer3X + 3.0f), (int)(g_mapButtonToggleLayer3Y - 2.0f), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
+
+        buttonColor = g_buttonColorMinMaxClose;
+        buttonTextColor = g_buttonTextColorMinMaxClose;
+
+        char mapButtonMaximizeText[8];
+        float mapButtonMaximizeTextOffsetX;
+        float mapButtonMaximizeTextOffsetY;
+
+        if (g_mapIsMaximized == false)
+        {
+            strcpy_s(mapButtonMaximizeText, "+");
+            mapButtonMaximizeTextOffsetX = 3.0;
+            mapButtonMaximizeTextOffsetY = 2.0;
+        }
+        else
+        {
+            strcpy_s(mapButtonMaximizeText, "-");
+            mapButtonMaximizeTextOffsetX = 4.0;
+            mapButtonMaximizeTextOffsetY = 2.0;
+        }
+
+        EQ_DrawRectangle(g_mapButtonMaximizeX, g_mapButtonMaximizeY, g_buttonWidth, g_buttonHeight, buttonColor);
+        EQ_CLASS_CDisplay->WriteTextHD2(mapButtonMaximizeText, (int)(g_mapButtonMaximizeX + mapButtonMaximizeTextOffsetX), (int)(g_mapButtonMaximizeY - mapButtonMaximizeTextOffsetY), buttonTextColor, fontArial14);
+
+        g_numDeferred2dItems += 4;
     }
-
-    EQ_DrawRectangle(g_mapButtonToggleArrowX, g_mapButtonToggleArrowY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("a", (int)(g_mapButtonToggleArrowX + 3.0f), (int)(g_mapButtonToggleArrowY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapHeightFilterIsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleHeightFilterX, g_mapButtonToggleHeightFilterY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("h", (int)(g_mapButtonToggleHeightFilterX + 3.0f), (int)(g_mapButtonToggleHeightFilterY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapRotateIsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleRotateX, g_mapButtonToggleRotateY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_mapButtonToggleRotateX + 4.0f), (int)(g_mapButtonToggleRotateY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapZoneInfoIsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleZoneInfoX, g_mapButtonToggleZoneInfoY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("z", (int)(g_mapButtonToggleZoneInfoX + 3.0f), (int)(g_mapButtonToggleZoneInfoY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapSpawnsIsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleSpawnsX, g_mapButtonToggleSpawnsY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("s", (int)(g_mapButtonToggleSpawnsX + 3.0f), (int)(g_mapButtonToggleSpawnsY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapPointsIsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonTogglePointsX, g_mapButtonTogglePointsY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("p", (int)(g_mapButtonTogglePointsX + 3.0f), (int)(g_mapButtonTogglePointsY - 3.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapLinesIsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleLinesX, g_mapButtonToggleLinesY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("l", (int)(g_mapButtonToggleLinesX + 5.0f), (int)(g_mapButtonToggleLinesY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapSpawnDistanceIsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleSpawnDistanceX, g_mapButtonToggleSpawnDistanceY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("d", (int)(g_mapButtonToggleSpawnDistanceX + 3.0f), (int)(g_mapButtonToggleSpawnDistanceY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapSpawnFilterNpcIsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleSpawnFilterNpcX, g_mapButtonToggleSpawnFilterNpcY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("f", (int)(g_mapButtonToggleSpawnFilterNpcX + 4.0f), (int)(g_mapButtonToggleSpawnFilterNpcY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    EQ_DrawRectangle(g_mapButtonReloadMapX, g_mapButtonReloadMapY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("r", (int)(g_mapButtonReloadMapX + 4.0f), (int)(g_mapButtonReloadMapY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    EQ_DrawRectangle(g_mapButtonCopyTargetMapLocationToClipboardX, g_mapButtonCopyTargetMapLocationToClipboardY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("c", (int)(g_mapButtonCopyTargetMapLocationToClipboardX + 3.0f), (int)(g_mapButtonCopyTargetMapLocationToClipboardY - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapLayer0IsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleLayer0X, g_mapButtonToggleLayer0Y, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("b", (int)(g_mapButtonToggleLayer0X + 3.0f), (int)(g_mapButtonToggleLayer0Y - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapLayer1IsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleLayer1X, g_mapButtonToggleLayer1Y, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("1", (int)(g_mapButtonToggleLayer1X + 3.0f), (int)(g_mapButtonToggleLayer1Y - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapLayer2IsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleLayer2X, g_mapButtonToggleLayer2Y, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("2", (int)(g_mapButtonToggleLayer2X + 3.0f), (int)(g_mapButtonToggleLayer2Y - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorEnabled;
-    buttonTextColor = g_buttonTextColorEnabled;
-
-    if (g_mapLayer3IsEnabled == false)
-    {
-        buttonColor = g_buttonColorDisabled;
-        buttonTextColor = g_buttonTextColorDisabled;
-    }
-
-    EQ_DrawRectangle(g_mapButtonToggleLayer3X, g_mapButtonToggleLayer3Y, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2("3", (int)(g_mapButtonToggleLayer3X + 3.0f), (int)(g_mapButtonToggleLayer3Y - 2.0f), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
-
-    buttonColor = g_buttonColorMinMaxClose;
-    buttonTextColor = g_buttonTextColorMinMaxClose;
-
-    char mapButtonMaximizeText[8];
-    float mapButtonMaximizeTextOffsetX;
-    float mapButtonMaximizeTextOffsetY;
-    if (g_mapIsMaximized == false)
-    {
-        strcpy_s(mapButtonMaximizeText, "+");
-        mapButtonMaximizeTextOffsetX = 3.0;
-        mapButtonMaximizeTextOffsetY = 2.0;
-    }
-    else
-    {
-        strcpy_s(mapButtonMaximizeText, "-");
-        mapButtonMaximizeTextOffsetX = 4.0;
-        mapButtonMaximizeTextOffsetY = 2.0;
-    }
-
-    EQ_DrawRectangle(g_mapButtonMaximizeX, g_mapButtonMaximizeY, g_buttonWidth, g_buttonHeight, buttonColor);
-    EQ_CLASS_CDisplay->WriteTextHD2(mapButtonMaximizeText, (int)(g_mapButtonMaximizeX + mapButtonMaximizeTextOffsetX), (int)(g_mapButtonMaximizeY - mapButtonMaximizeTextOffsetY), buttonTextColor, fontArial14);
-
-    g_numDeferred2dItems += 4;
 
     if (g_mapLinesIsEnabled == true)
     {
@@ -5126,6 +5311,27 @@ void EQMACHUD_DoMap()
                 }
             }
 
+            if (g_mapHeightFilterIsEnabled == true && g_mapHeightFilterSpawnsIsEnabled == true)
+            {
+                if (g_mapHeightFilterLow > 0.0f)
+                {
+                    if (spawn->Z < (playerSpawn->Z - g_mapHeightFilterLow))
+                    {
+                        spawn = spawn->Next;
+                        continue;
+                    }
+                }
+
+                if (g_mapHeightFilterHigh > 0.0f)
+                {
+                    if (spawn->Z > (playerSpawn->Z + g_mapHeightFilterLow))
+                    {
+                        spawn = spawn->Next;
+                        continue;
+                    }
+                }
+            }
+
             EQLOCATION spawnLocation = {spawn->Y, spawn->X, spawn->Z};
 
             float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
@@ -5326,7 +5532,7 @@ void EQMACHUD_DoMap()
                     continue;
                 }
 
-                if (std::strstr(spawn->Name, playerSpawn->Name) != NULL)
+                if (strstr(spawn->Name, playerSpawn->Name) != NULL)
                 {
                     EQLINE line;
                     line.X1 = mapPlayerX;
@@ -5360,7 +5566,7 @@ void EQMACHUD_DoMap()
                 spawn = spawn->Next;
             }
         }
-    } // if (g_mapSpawnsIsEnabled == true)
+    }
 
     bool bDrawCenterAndArrow = true;
 
@@ -5527,7 +5733,7 @@ void EQMACHUD_DoMap()
     }
 }
 
-void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, int lineColor)
+void EQMACHUD_DoEspSkeletonsDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, int lineColor)
 {
     if (dag1 == NULL || dag2 == NULL)
     {
@@ -5622,7 +5828,7 @@ void EQMACHUD_DoEspSkeletonDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
     g_numDeferred2dItems++;
 }
 
-void EQMACHUD_DoEspSkeletonDraw(PEQDAGINFO dag, int lineColor)
+void EQMACHUD_DoEspSkeletonsDraw(PEQDAGINFO dag, int lineColor)
 {
     // note: this is a recursive function
 
@@ -5637,10 +5843,10 @@ void EQMACHUD_DoEspSkeletonDraw(PEQDAGINFO dag, int lineColor)
         {
             if (strstr(dag->Children->Child[i]->Name, "POINT") == NULL)
             {
-                EQMACHUD_DoEspSkeletonDrawLineBetweenDag(dag, dag->Children->Child[i], lineColor);
+                EQMACHUD_DoEspSkeletonsDrawLineBetweenDag(dag, dag->Children->Child[i], lineColor);
             }
 
-            EQMACHUD_DoEspSkeletonDraw(dag->Children->Child[i], lineColor);
+            EQMACHUD_DoEspSkeletonsDraw(dag->Children->Child[i], lineColor);
         }
     }
 }
@@ -5676,7 +5882,7 @@ void EQMACHUD_DoEsp()
 
     EQLOCATION targetLocation = {EQ_OBJECT_TargetSpawn->Y, EQ_OBJECT_TargetSpawn->X, EQ_OBJECT_TargetSpawn->Z};
 
-    if (g_espSkeletonIsEnabled == true)
+    if (g_espSkeletonsIsEnabled == true)
     {
         spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
 
@@ -5692,16 +5898,16 @@ void EQMACHUD_DoEsp()
 
             float spawnDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, spawnLocation.X, spawnLocation.Y);
 
-            if (g_espSkeletonDistanceIsEnabled == true)
+            if (g_espSkeletonsDistanceIsEnabled == true)
             {
-                if (spawnDistance > g_espSkeletonDistance)
+                if (spawnDistance > g_espSkeletonsDistance)
                 {
                     spawn = spawn->Next;
                     continue;
                 }
             }
 
-            if (g_espSkeletonLineOfSightIsEnabled == true)
+            if (g_espSkeletonsLineOfSightIsEnabled == true)
             {
                 if (EQ_CastRay((EQPlayer*)playerSpawn, spawn->Y, spawn->X, spawn->Z) == 1)
                 {
@@ -5762,24 +5968,24 @@ void EQMACHUD_DoEsp()
                     continue;
                 }
 
-                int lineColor = g_espSkeletonDefaultLineColor;
+                int lineColor = g_espSkeletonsDefaultLineColor;
 
                 switch (spawn->Type)
                 {
                     case EQ_SPAWN_TYPE_PLAYER:
-                        lineColor = g_espSkeletonPlayerLineColor;
+                        lineColor = g_espSkeletonsPlayerLineColor;
                         break;
 
                     case EQ_SPAWN_TYPE_PLAYER_CORPSE:
-                        lineColor = g_espSkeletonPlayerCorpseLineColor;
+                        lineColor = g_espSkeletonsPlayerCorpseLineColor;
                         break;
 
                     case EQ_SPAWN_TYPE_NPC:
-                        lineColor = g_espSkeletonNpcLineColor;
+                        lineColor = g_espSkeletonsNpcLineColor;
                         break;
 
                     case EQ_SPAWN_TYPE_NPC_CORPSE:
-                        lineColor = g_espSkeletonNpcCorpseLineColor;
+                        lineColor = g_espSkeletonsNpcCorpseLineColor;
                         break;
                 }
 
@@ -5787,22 +5993,22 @@ void EQMACHUD_DoEsp()
                 {
                     if (spawn == groupList->GroupMember[i])
                     {
-                        lineColor = g_espSkeletonGroupMemberLineColor;
+                        lineColor = g_espSkeletonsGroupMemberLineColor;
                         break;
                     }
                 }
 
                 if (spawn == targetSpawn)
                 {
-                    lineColor = g_espSkeletonTargetLineColor;
+                    lineColor = g_espSkeletonsTargetLineColor;
                 }
 
                 if (spawn->IsGameMaster == 1)
                 {
-                    lineColor = g_espSkeletonGameMasterLineColor;;
+                    lineColor = g_espSkeletonsGameMasterLineColor;;
                 }
 
-                EQMACHUD_DoEspSkeletonDraw(dagFirst, lineColor);
+                EQMACHUD_DoEspSkeletonsDraw(dagFirst, lineColor);
             }
 
             spawn = spawn->Next;
@@ -5879,7 +6085,7 @@ void EQMACHUD_DoEsp()
 
             if (doorDescription != NULL)
             {
-                if (g_espShowDoorUniqueSpawnIsEnabled == true)
+                if (g_espShowUniqueDoorSpawnsIsEnabled == true)
                 {
                     sprintf_s(spawnText, "+ %s", doorDescription);
                 }
@@ -5891,7 +6097,7 @@ void EQMACHUD_DoEsp()
             }
             else
             {
-                if (g_espShowDoorSpawnIsEnabled == true)
+                if (g_espShowDoorSpawnsIsEnabled == true)
                 {
                     sprintf_s(spawnText, "+ Door: %s", spawnName);
                 }
@@ -5918,7 +6124,7 @@ void EQMACHUD_DoEsp()
                 EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, g_espDoorSpawnTextColor, fontArial14);
             }
 
-            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHover == true)
+            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHoverIsEnabled == true)
             {
                 if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
@@ -5947,7 +6153,7 @@ void EQMACHUD_DoEsp()
 
     groundSpawn = (PEQGROUNDSPAWNINFO)EQ_OBJECT_FirstGroundSpawn;
 
-    while (g_espShowGroundSpawnIsEnabled == true && groundSpawn)
+    while (g_espShowGroundSpawnsIsEnabled == true && groundSpawn)
     {
         EQLOCATION spawnLocation = {groundSpawn->Y, groundSpawn->X, groundSpawn->Z};
 
@@ -6033,7 +6239,7 @@ void EQMACHUD_DoEsp()
                 EQ_CLASS_CDisplay->WriteTextHD2(spawnText, screenX, screenY, g_espGroundSpawnTextColor, fontArial14);
             }
 
-            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHover == true)
+            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHoverIsEnabled == true)
             {
                 if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
@@ -6446,7 +6652,7 @@ void EQMACHUD_DoEsp()
                 }
             }
 
-            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHover == true)
+            if (g_espShowTextIsEnabled == false && g_espShowTextOnMouseHoverIsEnabled == true)
             {
                 if (EQMACHUD_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
@@ -7231,6 +7437,8 @@ int __cdecl EQMACHUD_DETOUR_HandleMouseWheel(int a1)
                         (int)g_mapWidth, (int)g_mapHeight
                     )
                     == true
+                    &&
+                    g_mapIsEnabled == true
                 )
                 {
                     if (g_mapMouseWheelZoomIsEnabled == true)
@@ -7626,6 +7834,11 @@ int __fastcall EQMACHUD_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* no
         return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, a1, a2);
     }
 
+    if (g_slashCommandsIsEnabled == false)
+    {
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, a1, a2);
+    }
+
 /*
     if (strlen(a2) > 0)
     {
@@ -7640,27 +7853,1035 @@ int __fastcall EQMACHUD_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* no
     }
 */
 
+    // unload
+
+    if (strcmp(a2, "/unload") == 0)
+    {
+        EQMACHUD_DoUnload();
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // config
+
+    if (strncmp(a2, "/config", 7) == 0)
+    {
+        if (strcmp(a2, "/configreload") == 0)
+        {
+            EQMACHUD_ReloadConfig();
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // hud
+
+    if (strncmp(a2, "/hud", 4) == 0)
+    {
+        if (strcmp(a2, "/hudbuttons") == 0)
+        {
+            EQMACHUD_ToggleHudButtons();
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // mousewheelzoom
+
+    if (strncmp(a2, "/mousewheelzoom", 15) == 0)
+    {
+        if (strcmp(a2, "/mousewheelzoom") == 0)
+        {
+            EQMACHUD_ToggleMouseWheelZoom();
+        }
+        else
+        {
+            char command[128];
+
+            float zoomMultiplier = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &zoomMultiplier);
+
+            if (result == 2)
+            {
+                g_mouseWheelZoomMultiplier = zoomMultiplier;
+
+                EQ_WriteFloatVarToChat("Mouse Wheel Zoom Multiplier", g_mouseWheelZoomMultiplier);
+            }
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // clientswitcher
+
+    if (strncmp(a2, "/clientswitcher", 15) == 0)
+    {
+        if (strcmp(a2, "/clientswitcher on") == 0)
+        {
+            if (g_clientSwitcherIsEnabled == false)
+            {
+                EQMACHUD_ToggleClientSwitcher();
+            }
+        }
+        else if (strcmp(a2, "/clientswitcher off") == 0)
+        {
+            if (g_clientSwitcherIsEnabled == true)
+            {
+                EQMACHUD_ToggleClientSwitcher();
+            }
+        }
+        else if (strcmp(a2, "/clientswitcher 1") == 0)
+        {
+            EQMACHUD_DoClientSwitch(0);
+        }
+        else if (strcmp(a2, "/clientswitcher 2") == 0)
+        {
+            EQMACHUD_DoClientSwitch(1);
+        }
+        else if (strcmp(a2, "/clientswitcher 3") == 0)
+        {
+            EQMACHUD_DoClientSwitch(2);
+        }
+        else if (strcmp(a2, "/clientswitchernext") == 0)
+        {
+            EQMACHUD_DoClientSwitchNext();
+        }
+        else if (strcmp(a2, "/clientswitcherprevious") == 0 || strcmp(a2, "/clientswitcherprev") == 0)
+        {
+            EQMACHUD_DoClientSwitchPrevious();
+        }
+        else if (strcmp(a2, "/clientswitcherrefresh") == 0)
+        {
+            EQMACHUD_ClientSwitcherRefresh();
+        }
+        else if (strcmp(a2, "/clientswitchersyncmouse") == 0)
+        {
+            EQMACHUD_ToggleClientSwitcherSyncMouse();
+        }
+        else if (strcmp(a2, "/clientswitcherbuttons") == 0)
+        {
+            EQMACHUD_ToggleClientSwitcherButtons();
+        }
+        else if (strcmp(a2, "/clientswitcherhotkeys") == 0)
+        {
+            EQMACHUD_ToggleClientSwitcherHotkeys();
+        }
+        else
+        {
+            EQMACHUD_ToggleClientSwitcher();
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
     // map
 
     if (strncmp(a2, "/map", 4) == 0)
     {
-        if (strncmp(a2, "/map on", 7) == 0)
+        if (strcmp(a2, "/map") == 0)
+        {
+            EQMACHUD_ToggleMap();
+        }
+        else if (strcmp(a2, "/map on") == 0)
         {
             if (g_mapIsEnabled == false)
             {
                 EQMACHUD_ToggleMap();
             }
         }
-        else if (strncmp(a2, "/map off", 8) == 0)
+        else if (strcmp(a2, "/map off") == 0)
         {
             if (g_mapIsEnabled == true)
             {
                 EQMACHUD_ToggleMap();
             }
         }
+        else if (strcmp(a2, "/mapreload") == 0)
+        {
+            EQMACHUD_ReloadMap();
+        }
+        else if (strcmp(a2, "/mapbuttons") == 0)
+        {
+            EQMACHUD_ToggleMapButtons();
+        }
+        else if (strcmp(a2, "/mapmaximized") == 0 || strcmp(a2, "/mapmaximize") == 0)
+        {
+            EQMACHUD_ToggleMapMaximized();
+        }
+        else if (strncmp(a2, "/mapmaximized ", 14) == 0)
+        {
+            char command[128];
+
+            float x = 0.0f;
+            float y = 0.0f;
+
+            float width  = 0.0f;
+            float height = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f %f %f %f", command, sizeof(command), &x, &y, &width, &height);
+
+            if (result > 2)
+            {
+                g_mapMaximizedX = x;
+                g_mapMaximizedY = y;
+
+                EQ_WriteFloatVarToChat("Map Maximized X", g_mapMaximizedX);
+                EQ_WriteFloatVarToChat("Map Maximized Y", g_mapMaximizedY);
+
+                if (result > 4)
+                {
+                    g_mapMaximizedWidth  = width;
+                    g_mapMaximizedHeight = height;
+
+                    EQ_WriteFloatVarToChat("Map Maximized Width",  g_mapMaximizedWidth);
+                    EQ_WriteFloatVarToChat("Map Maximized Height", g_mapMaximizedHeight);
+                }
+
+                EQMACHUD_GuiRecalculateCoordinates();
+            }
+        }
+        else if (strcmp(a2, "/maplayer 0") == 0 || strcmp(a2, "/maplayerbase") == 0)
+        {
+            EQMACHUD_ToggleMapLayer0();
+        }
+        else if (strcmp(a2, "/maplayer 1") == 0)
+        {
+            EQMACHUD_ToggleMapLayer1();
+        }
+        else if (strcmp(a2, "/maplayer 2") == 0)
+        {
+            EQMACHUD_ToggleMapLayer2();
+        }
+        else if (strcmp(a2, "/maplayer 3") == 0)
+        {
+            EQMACHUD_ToggleMapLayer3();
+        }
+        else if (strcmp(a2, "/mapspawnclicktotarget") == 0)
+        {
+            EQMACHUD_ToggleMapSpawnClickToTarget();
+        }
+        else if (strcmp(a2, "/maparrow") == 0)
+        {
+            EQMACHUD_ToggleMapArrow();
+        }
+        else if (strcmp(a2, "/mapzoneinfo") == 0)
+        {
+            EQMACHUD_ToggleMapZoneInfo();
+        }
+        else if (strcmp(a2, "/mapheightfilter") == 0)
+        {
+            EQMACHUD_ToggleMapHeightFilter();
+        }
+        else if (strncmp(a2, "/mapheightfilter ", 17) == 0)
+        {
+            char command[128];
+
+            float low  = 0.0f;
+            float high = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f %f", command, sizeof(command), &low, &high);
+
+            if (result == 3)
+            {
+                g_mapHeightFilterLow  = low;
+                g_mapHeightFilterHigh = high;
+
+                EQ_WriteFloatVarToChat("Map Height Filter Low",  g_mapHeightFilterLow);
+                EQ_WriteFloatVarToChat("Map Height Filter High", g_mapHeightFilterHigh);
+            }
+        }
+        else if (strcmp(a2, "/mapheightfilterspawns") == 0)
+        {
+            EQMACHUD_ToggleMapHeightFilterSpawns();
+        }
+        else if (strcmp(a2, "/maprotate") == 0)
+        {
+            EQMACHUD_ToggleMapRotate();
+        }
+        else if (strcmp(a2, "/mapspawns") == 0)
+        {
+            EQMACHUD_ToggleMapSpawns();
+        }
+        else if (strcmp(a2, "/mappoints") == 0)
+        {
+            EQMACHUD_ToggleMapPoints();
+        }
+        else if (strcmp(a2, "/maplines") == 0)
+        {
+            EQMACHUD_ToggleMapLines();
+        }
+        else if (strcmp(a2, "/maptargetline") == 0)
+        {
+            EQMACHUD_ToggleMapTargetLine();
+        }
+        else if (strcmp(a2, "/mapyourselfcorpseline") == 0)
+        {
+            EQMACHUD_ToggleMapYourselfCorpseLine();
+        }
+        else if (strcmp(a2, "/mapreplaceblacklineswithwhitelines") == 0)
+        {
+            EQMACHUD_ToggleMapReplaceBlackLinesWithWhiteLines();
+        }
+        else if (strcmp(a2, "/mapshowplayer") == 0 || strcmp(a2, "/mapshowpc") == 0)
+        {
+            EQMACHUD_ToggleMapShowPlayer();
+        }
+        else if (strcmp(a2, "/mapshowplayercorpse") == 0 || strcmp(a2, "/mapshowpccorpse") == 0)
+        {
+            EQMACHUD_ToggleMapShowPlayerCorpse();
+        }
+        else if (strcmp(a2, "/mapshownpc") == 0)
+        {
+            EQMACHUD_ToggleMapShowNpc();
+        }
+        else if (strcmp(a2, "/mapshownpccorpse") == 0)
+        {
+            EQMACHUD_ToggleMapShowNpcCorpse();
+        }
+        else if (strcmp(a2, "/mapspawndistance") == 0)
+        {
+            EQMACHUD_ToggleMapSpawnDistance();
+        }
+        else if (strncmp(a2, "/mapspawndistance ", 18) == 0)
+        {
+            char command[128];
+
+            float distance = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &distance);
+
+            if (result == 2)
+            {
+                g_mapSpawnDistance = distance;
+
+                EQ_WriteFloatVarToChat("Map Spawn Distance", g_mapSpawnDistance);
+            }
+        }
+        else if (strcmp(a2, "/mapspawnfilternpc") == 0)
+        {
+            EQMACHUD_ToggleMapSpawnFilterNpc();
+        }
+        else if (strncmp(a2, "/mapspawnfilternpc ", 19) == 0)
+        {
+            char command[128];
+
+            char filter[4096];
+
+            int result = sscanf_s(a2, "%s %s", command, sizeof(command), filter, sizeof(filter));
+
+            if (result == 2)
+            {
+                strcpy_s(g_mapSpawnFilterNpc, filter);
+
+                EQ_WriteStringVarToChat("Map Spawn Filter NPC", g_mapSpawnFilterNpc);
+            }
+        }
+        else if (strcmp(a2, "/mapzoomresetandcenter") == 0)
+        {
+            EQMACHUD_MapResetZoom();
+            EQMACHUD_MapCenter();
+
+            EQ_CLASS_CEverQuest->dsp_chat("Map Zoom Reset and Centered.");
+        }
+        else if (strcmp(a2, "/mapzoomreset") == 0)
+        {
+            EQMACHUD_MapResetZoom();
+
+            EQ_CLASS_CEverQuest->dsp_chat("Map Zoom Reset.");
+        }
+        else if (strcmp(a2, "/mapcenter") == 0)
+        {
+            EQMACHUD_MapCenter();
+
+            EQ_CLASS_CEverQuest->dsp_chat("Map Centered.");
+        }
+        else if (strncmp(a2, "/mapzoom ", 9) == 0)
+        {
+            char command[128];
+
+            float zoom = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &zoom);
+
+            if (result == 2)
+            {
+                g_mapZoom = zoom;
+
+                EQ_WriteFloatVarToChat("Map Zoom", g_mapZoom);
+            }
+        }
+        else if (strcmp(a2, "/mapmousewheelzoom") == 0)
+        {
+            EQMACHUD_ToggleMapMouseWheelZoom();
+        }
+        else if (strncmp(a2, "/mapmousewheelzoom ", 19) == 0 || strncmp(a2, "/mapmousewheelzoommultiplier ", 29) == 0)
+        {
+            char command[128];
+
+            float zoomMultiplier = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &zoomMultiplier);
+
+            if (result == 2)
+            {
+                g_mapMouseWheelZoomMultiplier = zoomMultiplier;
+
+                EQ_WriteFloatVarToChat("Map Mouse Wheel Zoom Multiplier", g_mapMouseWheelZoomMultiplier);
+            }
+        }
+        else if (strncmp(a2, "/maparrowradius ", 16) == 0 || strncmp(a2, "/maparrow ", 10) == 0)
+        {
+            char command[128];
+
+            float radius = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &radius);
+
+            if (result == 2)
+            {
+                g_mapArrowRadius = radius;
+
+                EQ_WriteFloatVarToChat("Map Arrow Radius", g_mapArrowRadius);
+            }
+        }
+        else if (strncmp(a2, "/mapcenterlinesize ", 19) == 0 || strncmp(a2, "/mapcenterline ", 15) == 0)
+        {
+            char command[128];
+
+            float size = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &size);
+
+            if (result == 2)
+            {
+                g_mapCenterLineSize = size;
+
+                EQ_WriteFloatVarToChat("Map Center Line Size", g_mapCenterLineSize);
+            }
+        }
         else
         {
-            EQMACHUD_ToggleMap();
+            if (strncmp(a2, "/map ", 5) == 0)
+            {
+                char command[128];
+
+                float x = 0.0f;
+                float y = 0.0f;
+
+                float width  = 0.0f;
+                float height = 0.0f;
+
+                int result = sscanf_s(a2, "%s %f %f %f %f", command, sizeof(command), &x, &y, &width, &height);
+
+                if (result > 2)
+                {
+                    g_mapDefaultX = x;
+                    g_mapDefaultY = y;
+
+                    EQ_WriteFloatVarToChat("Map X", g_mapDefaultX);
+                    EQ_WriteFloatVarToChat("Map Y", g_mapDefaultY);
+
+                    if (result > 4)
+                    {
+                        g_mapDefaultWidth  = width;
+                        g_mapDefaultHeight = height;
+
+                    EQ_WriteFloatVarToChat("Map Width",  g_mapDefaultWidth);
+                    EQ_WriteFloatVarToChat("Map Height", g_mapDefaultHeight);
+                    }
+
+                    EQMACHUD_GuiRecalculateCoordinates();
+                }
+            }
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // esp
+
+    if (strncmp(a2, "/esp", 4) == 0)
+    {
+        if (strcmp(a2, "/esp on") == 0)
+        {
+            if (g_espIsEnabled == false)
+            {
+                EQMACHUD_ToggleEsp();
+            }
+        }
+        else if (strcmp(a2, "/esp off") == 0)
+        {
+            if (g_espIsEnabled == true)
+            {
+                EQMACHUD_ToggleEsp();
+            }
+        }
+        else if (strcmp(a2, "/espcliptoviewport") == 0)
+        {
+            EQMACHUD_ToggleEspClipToViewPort();
+        }
+        else if (strcmp(a2, "/espshowyourself") == 0)
+        {
+            EQMACHUD_ToggleEspShowYourself();
+        }
+        else if (strcmp(a2, "/espshowplayer") == 0 || strcmp(a2, "/espshowpc") == 0)
+        {
+            EQMACHUD_ToggleEspShowPlayer();
+        }
+        else if (strcmp(a2, "/espshowplayercorpse") == 0 || strcmp(a2, "/espshowpccorpse") == 0)
+        {
+            EQMACHUD_ToggleEspShowPlayerCorpse();
+        }
+        else if (strcmp(a2, "/espshownpc") == 0)
+        {
+            EQMACHUD_ToggleEspShowNpc();
+        }
+        else if (strcmp(a2, "/espshownpccorpse") == 0)
+        {
+            EQMACHUD_ToggleEspShowNpcCorpse();
+        }
+        else if (strcmp(a2, "/espshowgroundspawns") == 0)
+        {
+            EQMACHUD_ToggleEspShowGroundSpawns();
+        }
+        else if (strcmp(a2, "/espshowdoorspawns") == 0)
+        {
+            EQMACHUD_ToggleEspShowDoorSpawns();
+        }
+        else if (strcmp(a2, "/espshowuniquedoorspawns") == 0)
+        {
+            EQMACHUD_ToggleEspShowUniqueDoorSpawns();
+        }
+        else if (strcmp(a2, "/espshowtext") == 0)
+        {
+            EQMACHUD_ToggleEspShowText();
+        }
+        else if (strcmp(a2, "/espshowtextonmousehover") == 0)
+        {
+            EQMACHUD_ToggleEspShowTextOnMouseHover();
+        }
+        else if (strcmp(a2, "/espdistance") == 0)
+        {
+            EQMACHUD_ToggleEspDistance();
+        }
+        else if (strncmp(a2, "/espdistance ", 13) == 0)
+        {
+            char command[128];
+
+            float distance = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &distance);
+
+            if (result == 2)
+            {
+                g_espDistance = distance;
+
+                EQ_WriteFloatVarToChat("ESP Distance", g_espDistance);
+            }
+        }
+        else if (strcmp(a2, "/espfilternpc") == 0)
+        {
+            EQMACHUD_ToggleEspFilterNpc();
+        }
+        else if (strncmp(a2, "/espfilternpc ", 14) == 0)
+        {
+            char command[128];
+
+            char filter[4096];
+
+            int result = sscanf_s(a2, "%s %s", command, sizeof(command), filter, sizeof(filter));
+
+            if (result == 2)
+            {
+                strcpy_s(g_espFilterNpc, filter);
+
+                EQ_WriteStringVarToChat("ESP Filter NPC", g_espFilterNpc);
+            }
+        }
+        else if (strcmp(a2, "/espskeletons") == 0)
+        {
+            EQMACHUD_ToggleEspSkeletons();
+        }
+        else if (strcmp(a2, "/espskeletonslineofsight") == 0 || strcmp(a2, "/espskeletonslos") == 0)
+        {
+            EQMACHUD_ToggleEspSkeletonsLineOfSight();
+        }
+        else if (strcmp(a2, "/espskeletonsdistance") == 0)
+        {
+            EQMACHUD_ToggleEspSkeletonsDistance();
+        }
+        else if (strncmp(a2, "/espskeletonsdistance ", 22) == 0)
+        {
+            char command[128];
+
+            float distance = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &distance);
+
+            if (result == 2)
+            {
+                g_espSkeletonsDistance = distance;
+
+                EQ_WriteFloatVarToChat("ESP Skeletons Distance", g_espSkeletonsDistance);
+            }
+        }
+        else
+        {
+            EQMACHUD_ToggleEsp();
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // healthbars
+
+    if (strncmp(a2, "/healthbars", 11) == 0)
+    {
+        if (strcmp(a2, "/healthbars") == 0)
+        {
+            EQMACHUD_ToggleHealthBars();
+        }
+        else if (strcmp(a2, "/healthbars on") == 0)
+        {
+            if (g_healthBarsIsEnabled == false)
+            {
+                EQMACHUD_ToggleHealthBars();
+            }
+        }
+        else if (strcmp(a2, "/healthbars off") == 0)
+        {
+            if (g_healthBarsIsEnabled == true)
+            {
+                EQMACHUD_ToggleHealthBars();
+            }
+        }
+        else if (strcmp(a2, "/healthbarscliptoviewport") == 0)
+        {
+            EQMACHUD_ToggleHealthBarsClipToViewPort();
+        }
+        else if (strcmp(a2, "/healthbarsdistance") == 0)
+        {
+            EQMACHUD_ToggleHealthBarsDistance();
+        }
+        else if (strncmp(a2, "/healthbarsdistance ", 20) == 0)
+        {
+            char command[128];
+
+            float distance = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &distance);
+
+            if (result == 2)
+            {
+                g_healthBarsDistance = distance;
+
+                EQ_WriteFloatVarToChat("Health Bars Distance", g_healthBarsDistance);
+            }
+        }
+        else if (strcmp(a2, "/healthbarsclicktotarget") == 0)
+        {
+            EQMACHUD_ToggleHealthBarsClickToTarget();
+        }
+        else
+        {
+            if (strncmp(a2, "/healthbars ", 12) == 0)
+            {
+                char command[128];
+
+                float width  = 0.0f;
+                float height = 0.0f;
+
+                int result = sscanf_s(a2, "%s %f %f", command, sizeof(command), &width, &height);
+
+                if (result == 3)
+                {
+                    g_healthBarsWidth  = width;
+                    g_healthBarsHeight = height;
+
+                    EQ_WriteFloatVarToChat("Health Bars Width",  g_healthBarsWidth);
+                    EQ_WriteFloatVarToChat("Health Bars Height", g_healthBarsHeight);
+                }
+            }
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // buffinfo
+
+    if (strncmp(a2, "/buffinfo", 9) == 0)
+    {
+        if (strcmp(a2, "/buffinfo") == 0)
+        {
+            EQMACHUD_ToggleBuffInfo();
+        }
+        else if (strcmp(a2, "/buffinfo on") == 0)
+        {
+            if (g_buffInfoIsEnabled == false)
+            {
+                EQMACHUD_ToggleBuffInfo();
+            }
+        }
+        else if (strcmp(a2, "/buffinfo off") == 0)
+        {
+            if (g_buffInfoIsEnabled == true)
+            {
+                EQMACHUD_ToggleBuffInfo();
+            }
+        }
+        else
+        {
+            if (strncmp(a2, "/buffinfo ", 10) == 0)
+            {
+                char command[128];
+
+                float x = 0.0f;
+                float y = 0.0f;
+
+                int result = sscanf_s(a2, "%s %f %f", command, sizeof(command), &x, &y);
+
+                if (result == 3)
+                {
+                    g_buffInfoX = x;
+                    g_buffInfoY = y;
+
+                    EQ_WriteFloatVarToChat("Buff Info X", g_buffInfoX);
+                    EQ_WriteFloatVarToChat("Buff Info Y", g_buffInfoY);
+                }
+            }
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // playerinfo
+
+    if (strncmp(a2, "/playerinfo", 11) == 0)
+    {
+        if (strcmp(a2, "/playerinfo") == 0)
+        {
+            EQMACHUD_TogglePlayerInfo();
+        }
+        else if (strcmp(a2, "/playerinfo on") == 0)
+        {
+            if (g_playerInfoIsEnabled == false)
+            {
+                EQMACHUD_TogglePlayerInfo();
+            }
+        }
+        else if (strcmp(a2, "/playerinfo off") == 0)
+        {
+            if (g_playerInfoIsEnabled == true)
+            {
+                EQMACHUD_TogglePlayerInfo();
+            }
+        }
+        else
+        {
+            if (strncmp(a2, "/playerinfo ", 12) == 0)
+            {
+                char command[128];
+
+                float x = 0.0f;
+                float y = 0.0f;
+
+                int result = sscanf_s(a2, "%s %f %f", command, sizeof(command), &x, &y);
+
+                if (result == 3)
+                {
+                    g_playerInfoX = x;
+                    g_playerInfoY = y;
+
+                    EQ_WriteFloatVarToChat("Player Info X", g_playerInfoX);
+                    EQ_WriteFloatVarToChat("Player Info Y", g_playerInfoY);
+                }
+            }
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // targetinfo
+
+    if (strncmp(a2, "/targetinfo", 11) == 0)
+    {
+        if (strcmp(a2, "/targetinfo") == 0)
+        {
+            EQMACHUD_ToggleTargetInfo();
+        }
+        else if (strcmp(a2, "/targetinfo on") == 0)
+        {
+            if (g_targetInfoIsEnabled == false)
+            {
+                EQMACHUD_ToggleTargetInfo();
+            }
+        }
+        else if (strcmp(a2, "/targetinfo off") == 0)
+        {
+            if (g_targetInfoIsEnabled == true)
+            {
+                EQMACHUD_ToggleTargetInfo();
+            }
+        }
+        else
+        {
+            if (strncmp(a2, "/targetinfo ", 12) == 0)
+            {
+                char command[128];
+
+                float x = 0.0f;
+                float y = 0.0f;
+
+                int result = sscanf_s(a2, "%s %f %f", command, sizeof(command), &x, &y);
+
+                if (result == 3)
+                {
+                    g_targetInfoX = x;
+                    g_targetInfoY = y;
+
+                    EQ_WriteFloatVarToChat("Target Info X", g_targetInfoX);
+                    EQ_WriteFloatVarToChat("Target Info Y", g_targetInfoY);
+                }
+            }
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // messagetext
+    if (strncmp(a2, "/messagetext", 12) == 0)
+    {
+        if (strcmp(a2, "/messagetext") == 0)
+        {
+            EQMACHUD_ToggleMessageText();
+        }
+        else
+        {
+            char command[128];
+
+            float x = 0.0f;
+            float y = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f %f", command, sizeof(command), &x, &y);
+
+            if (result == 3)
+            {
+                g_messageTextX = x;
+                g_messageTextY = y;
+
+                EQ_WriteFloatVarToChat("Message Text X", g_messageTextX);
+                EQ_WriteFloatVarToChat("Message Text Y", g_messageTextY);
+            }
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // buffwindowtimers
+    if (strcmp(a2, "/buffwindowtimers") == 0)
+    {
+        EQMACHUD_ToggleBuffWindowTimers();
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // target
+    if (strcmp(a2, "/target myself") == 0)
+    {
+        PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+        EQ_TargetSpawn(playerSpawn);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/target player") == 0 || strcmp(a2, "/target pc") == 0)
+    {
+        PEQSPAWNINFO nearestSpawn = EQ_GetNearestSpawn(EQ_SPAWN_TYPE_PLAYER);
+
+        EQ_TargetSpawn(nearestSpawn);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/target npc") == 0)
+    {
+        PEQSPAWNINFO nearestSpawn = EQ_GetNearestSpawn(EQ_SPAWN_TYPE_NPC);
+
+        EQ_TargetSpawn(nearestSpawn);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/target corpse") == 0)
+    {
+        PEQSPAWNINFO nearestSpawn = EQ_GetNearestSpawn(EQ_SPAWN_TYPE_ANY_CORPSE);
+
+        EQ_TargetSpawn(nearestSpawn);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/target npccorpse") == 0)
+    {
+        PEQSPAWNINFO nearestSpawn = EQ_GetNearestSpawn(EQ_SPAWN_TYPE_NPC_CORPSE);
+
+        EQ_TargetSpawn(nearestSpawn);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/target playercorpse") == 0 || strcmp(a2, "/target pccorpse") == 0)
+    {
+        PEQSPAWNINFO nearestSpawn = EQ_GetNearestSpawn(EQ_SPAWN_TYPE_PLAYER_CORPSE);
+
+        EQ_TargetSpawn(nearestSpawn);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/target mycorpse") == 0)
+    {
+        PEQSPAWNINFO myCorpse = EQ_GetMyCorpse();
+
+        EQ_TargetSpawn(myCorpse);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strncmp(a2, "/targetheight", 13) == 0)
+    {
+        if (strcmp(a2, "/targetheight") == 0)
+        {
+            PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+            if (targetSpawn)
+            {
+                ((EQPlayer*)targetSpawn)->ChangeHeight(5.0f);
+
+                EQ_WriteFloatVarToChat("Target Height", 5.0f);
+            }
+        }
+        else if (strncmp(a2, "/targetheight", 14) == 0)
+        {
+            PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+            if (targetSpawn)
+            {
+                char command[128];
+
+                float height = 0.0f;
+
+                int result = sscanf_s(a2, "%s %f", command, sizeof(command), &height);
+
+                if (result == 2)
+                {
+                    if (height > 0.0f)
+                    {
+                        ((EQPlayer*)targetSpawn)->ChangeHeight(height);
+
+                        EQ_WriteFloatVarToChat("Target Height", height);
+                    }
+                }
+            }
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/spiritofwolf") == 0 || strcmp(a2, "/sow") == 0)
+    {
+        PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+        if (playerSpawn)
+        {
+            playerSpawn->ActorInfo->MovementSpeedModifier = EQ_MOVEMENT_SPEED_MODIFIER_SPIRIT_OF_WOLF;
+        }
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/bank") == 0)
+    {
+        PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+        char bankText[128];
+        sprintf_s
+        (
+            bankText,
+            "You have %dp %dg %ds %dc in the bank.",
+            charInfo->BankPlatinum,
+            charInfo->BankGold,
+            charInfo->BankSilver,
+            charInfo->BankCopper
+        );
+
+        EQ_CLASS_CEverQuest->dsp_chat(bankText);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/mana") == 0)
+    {
+        PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+        int manaCurrent = charInfo->Mana;
+        int manaMax     = EQ_CLASS_EQ_Character->Max_Mana();
+
+        char manaText[128];
+        sprintf_s
+        (
+            manaText,
+            "You have %d / %d mana.",
+            manaCurrent,
+            manaMax
+        );
+
+        EQ_CLASS_CEverQuest->dsp_chat(manaText);
+
+        return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/buffs") == 0)
+    {
+        EQ_CLASS_CEverQuest->dsp_chat("Buffs:");
+
+        PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+        for (size_t i = 0; i < EQ_BUFFS_MAX; i++)
+        {
+            int spellId = charInfo->Buffs[i].SpellId;
+
+            if (spellId == EQ_SPELL_ID_NULL)
+            {
+                continue;
+            }
+
+            const char* spellName = EQ_OBJECT_SpellList->Spell[spellId]->Name;
+
+            if (strlen(spellName) == 0 || spellName == NULL)
+            {
+                continue;
+            }
+
+            int buffTicks = charInfo->Buffs[i].Ticks;
+
+            if (buffTicks == 0)
+            {
+                continue;
+            }
+
+            int buffHours   = 0;
+            int buffMinutes = 0;
+            int buffSeconds = 0;
+
+            EQ_CalculateTickTime(buffTicks, buffHours, buffMinutes, buffSeconds);
+
+            char buffText[128];
+            sprintf_s(buffText, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
+
+            EQ_CLASS_CEverQuest->dsp_chat(buffText);
         }
 
         return EQMACHUD_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
@@ -7755,9 +8976,13 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
         return EQMACHUD_REAL_DrawNetStatus(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
+    // kill switch
     if (GetAsyncKeyState(VK_PAUSE))
     {
-        g_bExit = 1;
+        if (g_killSwitchIsEnabled == true)
+        {
+            EQMACHUD_DoUnload();
+        }
     }
 
     if (g_bLoaded == false)
@@ -7856,12 +9081,15 @@ int __cdecl EQMACHUD_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sh
 
     if (bClassicUi640x480 == false)
     {
-        if (g_clientSwitcherIsEnabled == true)
+        if (g_clientSwitcherIsEnabled == true && g_clientSwitcherButtonsIsEnabled == true)
         {
             EQMACHUD_DoClientSwitcherButtons();
         }
 
-        EQMACHUD_DoExitRowButtons();
+        if (g_hudButtonsIsEnabled == true)
+        {
+            EQMACHUD_DoHudButtons();
+        }
     }
 
     if (g_classicUiIsEnabled == false)

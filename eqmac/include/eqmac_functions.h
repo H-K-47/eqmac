@@ -522,6 +522,376 @@ _everquest_function_EQ_Character__CastSpell everquest_function_EQ_Character__Cas
 #endif
 */
 
+void EQ_ToggleBool(bool& b)
+{
+    b = !b;
+}
+
+float EQ_CalculateDistance(float x1, float y1, float x2, float y2)
+{
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+}
+
+float EQ_CalculateDistance3d(float x1, float y1, float z1, float x2, float y2, float z2)
+{
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) + pow(z2 - z1, 2));
+}
+
+void EQ_Rotate2d(float cx, float cy, float& x, float& y, float angle)
+{
+    float radians = angle * (EQ_PI / 256.0f); // 512 / 2 = 256
+
+    float c = cosf(radians);
+    float s = sinf(radians);
+
+    float nx = (c * (x - cx)) - (s * (y - cy)) + cx;
+    float ny = (s * (x - cx)) + (c * (y - cy)) + cy;
+
+    x = nx;
+    y = ny;
+}
+
+void EQ_CalculateItemCost(int cost, int& platinum, int& gold, int& silver, int& copper)
+{
+    // cost is in total copper value of item
+
+    if (cost > 0)
+    {
+        platinum = cost / 1000;
+
+        cost = cost % 1000;
+
+        gold = cost / 100;
+
+        cost = cost % 100;
+
+        silver = cost / 10;
+
+        cost = cost % 10;
+
+        copper = cost;
+    }
+}
+
+void EQ_GetItemCostString(int cost, char result[], size_t resultSize)
+{
+    int platinum = 0;
+    int gold     = 0;
+    int silver   = 0;
+    int copper   = 0;
+
+    EQ_CalculateItemCost(cost, platinum, gold, silver, copper);
+
+    char costText[128] = {0};
+
+    if (platinum > 0)
+    {
+        char platinumText[128];
+        sprintf_s(platinumText, "%dp", platinum);
+
+        strcat_s(costText, platinumText);
+    }
+
+    if (gold > 0)
+    {
+        if (platinum > 0)
+        {
+            strcat_s(costText, " ");
+        }
+
+        char goldText[128];
+        sprintf_s(goldText, "%dg", gold);
+
+        strcat_s(costText, goldText);
+    }
+
+    if (silver > 0)
+    {
+        if (platinum > 0 || gold > 0)
+        {
+            strcat_s(costText, " ");
+        }
+
+        char silverText[128];
+        sprintf_s(silverText, "%ds", silver);
+
+        strcat_s(costText, silverText);
+    }
+
+    if (copper > 0)
+    {
+        if (platinum > 0 || gold > 0 || silver > 0)
+        {
+            strcat_s(costText, " ");
+        }
+
+        char copperText[128];
+        sprintf_s(copperText, "%dc", copper);
+
+        strcat_s(costText, copperText);
+    }
+
+    strcpy_s(result, resultSize, costText);
+}
+
+void EQ_CalculateTickTime(int ticks, int& hours, int& minutes, int& seconds)
+{
+    if (ticks > 0)
+    {
+        seconds = ticks * 3;
+
+        if (seconds > 0)
+        {
+            hours = seconds / (60 * 60);
+
+            seconds = seconds - hours * (60 * 60);
+
+            if (seconds > 0)
+            {
+                minutes = seconds / 60;
+
+                seconds = seconds - minutes * 60;
+            }
+        }
+    }
+}
+
+void EQ_GetTickTimeString(int ticks, char result[], size_t resultSize)
+{
+    int hours   = 0;
+    int minutes = 0;
+    int seconds = 0;
+
+    EQ_CalculateTickTime(ticks, hours, minutes, seconds);
+
+    char timeText[128] = {0};
+
+    if (hours > 0)
+    {
+        char hoursText[128];
+        sprintf_s(hoursText, "%dh", hours);
+
+        strcat_s(timeText, hoursText);
+    }
+
+    if (minutes > 0)
+    {
+        if (hours > 0)
+        {
+            strcat_s(timeText, " ");
+        }
+
+        char minutesText[128];
+        sprintf_s(minutesText, "%dm", minutes);
+
+        strcat_s(timeText, minutesText);
+    }
+
+    if (seconds > 0)
+    {
+        if (hours > 0 || minutes > 0)
+        {
+            strcat_s(timeText, " ");
+        }
+
+        char secondsText[128];
+        sprintf_s(secondsText, "%ds", seconds);
+
+        strcat_s(timeText, secondsText);
+    }
+
+    strcpy_s(result, resultSize, timeText);
+}
+
+const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], size_t listSize, char key[])
+{
+    for (size_t i = 0; i < listSize; i++)
+    {
+        if (strcmp(list[i][0], key) == 0)
+        {
+            return list[i][1]; // return Value if Key is found
+        }
+    }
+
+    return NULL;
+}
+
+int EQ_GetTextColorIdByName(const char* name)
+{
+    for (size_t i = 0; i < EQ_STRINGSIZE_TEXT_COLOR_NAME; i++)
+    {
+        if (strcmp(EQ_STRING_TEXT_COLOR_NAME[i], name) == 0)
+        {
+            return i;
+        }
+    }
+
+    return EQ_TEXT_COLOR_WHITE;
+}
+
+const char* EQ_GetRaceName(int race)
+{
+    const char* name = NULL;
+
+    switch (race)
+    {
+        case EQ_RACE_IKSAR:
+            name = "Iksar";
+            break;
+
+        case EQ_RACE_VAH_SHIR:
+            name = "Vah Shir";
+            break;
+
+        case EQ_RACE_FROGLOK:
+            name = "Froglok";
+            break;
+    }
+
+    if (race < (int)EQ_STRINGSIZE_RACE_NAME)
+    {
+        name = EQ_STRING_RACE_NAME[race];
+    }
+
+    if (name == NULL)
+    {
+        return "Unknown";
+    }
+
+    return name;
+}
+
+const char* EQ_GetRaceShortName(int race)
+{
+    const char* name = NULL;
+
+    switch (race)
+    {
+        case EQ_RACE_IKSAR:
+            name = "IKS";
+            break;
+
+        case EQ_RACE_VAH_SHIR:
+            name = "VAH";
+            break;
+
+        case EQ_RACE_FROGLOK:
+            name = "FRG";
+            break;
+    }
+
+    if (race < (int)EQ_STRINGSIZE_RACE_SHORT_NAME)
+    {
+        name = EQ_STRING_RACE_SHORT_NAME[race];
+    }
+
+    if (name == NULL)
+    {
+        return "UNK";
+    }
+
+    return name;
+}
+
+const char* EQ_GetClassName(int _class)
+{
+    return EQ_STRING_CLASS_NAME[_class];
+}
+
+const char* EQ_GetClassShortName(int _class)
+{
+    return EQ_STRING_CLASS_SHORT_NAME[_class];
+}
+
+const char* EQ_GetStandingStateString(int standingState)
+{
+    const char* standingStateString = NULL;
+
+    switch (standingState)
+    {
+        case EQ_STANDING_STATE_STANDING:
+            standingStateString = "Standing";
+            break;
+
+        case EQ_STANDING_STATE_FROZEN:
+            standingStateString = "Mesmerized / Feared";
+            break;
+
+        case EQ_STANDING_STATE_LOOTING:
+            standingStateString = "Looting / Binding Wounds";
+            break;
+
+        case EQ_STANDING_STATE_SITTING:
+            standingStateString = "Sitting";
+            break;
+
+        case EQ_STANDING_STATE_DUCKING:
+            standingStateString = "Ducking";
+            break;
+
+        case EQ_STANDING_STATE_FEIGNED:
+            standingStateString = "Feigning Death";
+            break;
+
+        case EQ_STANDING_STATE_DEAD:
+            standingStateString = "Dead";
+            break;
+    }
+
+    if (standingStateString == NULL)
+    {
+        return "Unknown";
+    }
+
+    return standingStateString;
+}
+
+const char* EQ_GetCardinalDirectionByHeading(float heading)
+{
+    const char* direction = NULL;
+
+    heading = roundf(heading);
+
+    if (heading >= 0.0f && heading <= 31.0f)
+    {
+        direction = "North";
+    }
+    else if (heading >= 32.0f && heading <= 95.0f)
+    {
+        direction = "North West";
+    }
+    else if (heading >= 96.0f && heading <= 159.0f)
+    {
+        direction = "West";
+    }
+    else if (heading >= 160.0f && heading <= 223.0f)
+    {
+        direction = "South West";
+    }
+    else if (heading >= 224.0f && heading <= 287.0f)
+    {
+        direction = "South";
+    }
+    else if (heading >= 288.0f && heading <= 351.0f)
+    {
+        direction = "South East";
+    }
+    else if (heading >= 352.0f && heading <= 415.0f)
+    {
+        direction = "East";
+    }
+    else if (heading >= 416.0f && heading <= 479.0f)
+    {
+        direction = "North East";
+    }
+    else if (heading >= 480.0f && heading <= 512.0f)
+    {
+        direction = "North";
+    }
+
+    return direction;
+}
+
 void EQ_CXStr_Append(PEQCXSTR* cxstr, PCHAR text)
 {
     CXStr *temp = (CXStr*)cxstr;
@@ -548,6 +918,46 @@ char* EQ_GetGuildNameById(int guildId)
     }
 
     return EQ_OBJECT_GuildList.Guild[guildId].Name;
+}
+
+void EQ_WriteIntVarToChat(const char* name, int value)
+{
+    char text[128];
+    sprintf_s(text, _TRUNCATE, "%s: %d", name, value);
+
+    EQ_CLASS_CEverQuest->dsp_chat(text);
+}
+
+void EQ_WriteHexVarToChat(const char* name, int value)
+{
+    char text[128];
+    sprintf_s(text, _TRUNCATE, "%s: 0x%08X", value);
+
+    EQ_CLASS_CEverQuest->dsp_chat(text);
+}
+
+void EQ_WriteFloatVarToChat(const char* name, float value)
+{
+    char text[128];
+    sprintf_s(text, _TRUNCATE, "%s: %.1f", name, value);
+
+    EQ_CLASS_CEverQuest->dsp_chat(text);
+}
+
+void EQ_WriteBoolVarToChat(const char* name, bool& b)
+{
+    char text[128];
+    sprintf_s(text, _TRUNCATE, "%s: %s", name, b ? "On" : "Off");
+
+    EQ_CLASS_CEverQuest->dsp_chat(text);
+}
+
+void EQ_WriteStringVarToChat(const char* name, char value[])
+{
+    char text[128];
+    sprintf_s(text, _TRUNCATE, "%s: %s", name, value);
+
+    EQ_CLASS_CEverQuest->dsp_chat(text);
 }
 
 void EQ_DrawRectangle(float x, float y, float width, float height, int color, bool filled = false)
@@ -719,6 +1129,114 @@ void EQ_ApplyClassicUiDrawOffset(int& x, int& y)
             y = y + offsetY;
         }
     }
+}
+
+void EQ_TargetSpawn(PEQSPAWNINFO spawn)
+{
+    if (spawn)
+    {
+        EQ_WRITE_MEMORY<PEQSPAWNINFO>(EQ_POINTER_TARGET_SPAWN_INFO, spawn);
+    }
+}
+
+PEQSPAWNINFO EQ_GetMyCorpse()
+{
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    while (spawn)
+    {
+        if (spawn->Type != EQ_SPAWN_TYPE_PLAYER_CORPSE)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+
+        if (strstr(spawn->Name, playerSpawn->Name) != NULL)
+        {
+            return spawn;
+        }
+
+        spawn = spawn->Next;
+    }
+
+    return NULL;
+}
+
+PEQSPAWNINFO EQ_GetNearestSpawn(int spawnType)
+{
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    //PEQSPAWNINFO nearestSpawn = (PEQSPAWNINFO)malloc(sizeof(EQSPAWNINFO));
+
+    int spawnId = 0;
+
+    float shortestDistance = 0.0f;
+
+    while (spawn)
+    {
+        if (spawn->Type != spawnType && spawnType != EQ_SPAWN_TYPE_ANY_CORPSE)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+
+        if (spawnType == EQ_SPAWN_TYPE_ANY_CORPSE)
+        {
+            if (spawn->Type != EQ_SPAWN_TYPE_NPC_CORPSE && spawn->Type != EQ_SPAWN_TYPE_PLAYER_CORPSE)
+            {
+                spawn = spawn->Next;
+                continue;
+            }
+        }
+
+        if (spawn == playerSpawn)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+
+        float spawnDistance = EQ_CalculateDistance(playerSpawn->X, playerSpawn->Y, spawn->X, spawn->Y);
+
+/*
+        if (spawnDistance > 400.0f)
+        {
+            spawn = spawn->Next;
+            continue;
+        }
+*/
+
+        if (shortestDistance == 0.0f)
+        {
+            shortestDistance = spawnDistance;
+        }
+
+        if (spawnDistance <= shortestDistance)
+        {
+            shortestDistance = spawnDistance;
+
+            spawnId = spawn->SpawnId;
+        }
+
+        spawn = spawn->Next;
+    }
+
+    spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+    while (spawn)
+    {
+        if (spawn->SpawnId == spawnId)
+        {
+            return spawn;
+        }
+
+        spawn = spawn->Next;
+    }
+
+    return NULL;
 }
 
 /*

@@ -1,0 +1,2 @@
+eqgame_inject_dll.exe eqmac_mq.dll
+pause

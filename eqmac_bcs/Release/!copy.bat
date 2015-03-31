@@ -1,0 +1,1 @@
+xcopy /y D:\Code\everquest\eqmac_bcs\Release\eqmac_bcs.exe D:\EQMac

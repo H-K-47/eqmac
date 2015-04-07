@@ -41,6 +41,10 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_IS_CAPSLOCK_ENABLED 0x00809324 // DWORD
 #define EQ_IS_NUMLOCK_ENABLED  0x00809328 // DWORD
 
+#define EQ_IS_SHOW_NPC_NAMES_ENABLED 0x0063D6CC // BYTE ; Options -> Display -> Show NPC Names
+
+#define EQ_BASE_ADDRESS 0x00400000 // eqgame.exe base address
+
 #define EQ_POINTER_GRAPHICS_DLL 0x007F9C50 // EQGfx_Dx8.DLL base address
 
 #define EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX 4000 // t3dDefer...
@@ -83,9 +87,10 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_OFFSET_CEverQuest_GAME_STATE 0x5AC // DWORD
 
 #define EQ_POINTER_CDisplay 0x007F9510
-#define EQ_OFFSET_CDisplay_IS_CURSOR_ITEM   0x040 // BYTE ; when you pick up and hold an item on your mouse cursor
-#define EQ_OFFSET_CDisplay_IS_CURSOR_HOTKEY 0x042 // BYTE ; when you pick up and hold a hotkey button on your mouse cursor
-#define EQ_OFFSET_CDisplay_TIMER            0x0C8 // DWORD ; global timer in milliseconds, 1000 milliseconds = 1 second
+#define EQ_OFFSET_CDisplay_IS_CURSOR_ITEM                     0x0040 // BYTE ; when you pick up and hold an item on your mouse cursor
+#define EQ_OFFSET_CDisplay_IS_CURSOR_HOTKEY                   0x0042 // BYTE ; when you pick up and hold a hotkey button on your mouse cursor
+#define EQ_OFFSET_CDisplay_TIMER                              0x00C8 // DWORD ; global timer in milliseconds, 1000 milliseconds = 1 second
+#define EQ_OFFSET_CDisplay_STRING_SPRITE_FONT_TEXTURE_POINTER 0x2E08 // S3D_FONTTEXTURE* for CDisplay::ChangeDagStringSprite
 
 #define EQ_POINTER_CLootWnd 0x0063D65C
 #define EQ_OFFSET_CLootWnd_IS_OPEN            0x134 // BYTE
@@ -162,7 +167,7 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_STRUCTURE_COMMAND_LIST 0x00609AF8 // STRUCT
 
-#define EQ_COMMANDS_MAX 278
+#define EQ_COMMANDS_MAX 277 // 0-276
 
 // /viewport
 #define EQ_STRUCTURE_VIEWPORT 0x00798548 // STRUCT
@@ -944,6 +949,13 @@ typedef struct _EQARGBCOLOR
     };
 } EQARGBCOLOR, *PEQARGBCOLOR;
 
+typedef struct _EQRGBCOLOR
+{
+    BYTE B;
+    BYTE G;
+    BYTE R;
+} EQRGBCOLOR, *PEQRGBCOLOR;
+
 typedef struct _EQCAMERAINFO
 {
 /* 0x0000 */ DWORD Unknown0000;
@@ -1175,7 +1187,7 @@ typedef struct _EQSTRINGSPRITE
 /* 0x003C */ DWORD Width; // how wide the text is stretched
 /* 0x0040 */ DWORD Height; // how tall the text is stretched
 /* 0x0044 */ FLOAT Unknown0044; // unknown multiplier
-/* 0x0048 */ struct _EQARGBCOLOR Color; // s3dSetStringSpriteTint
+/* 0x0048 */ struct _EQRGBCOLOR Color; // s3dSetStringSpriteTint
 /* ...... */ 
 } EQSTRINGSPRITE, *PEQSTRINGSPRITE;
 

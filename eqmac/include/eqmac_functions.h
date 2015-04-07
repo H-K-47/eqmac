@@ -28,20 +28,20 @@
 }
 
 template <class T>
-T EQ_READ_MEMORY(DWORD address)
+T EQ_ReadMemory(DWORD address)
 {
     T* buffer = (T*)address;
     return (*buffer);
 }
 
 template <class T>
-void EQ_WRITE_MEMORY(DWORD address, T value)
+void EQ_WriteMemory(DWORD address, T value)
 {
     T* buffer = (T*)address;
     *buffer = value;
 }
 
-void EQ_READ_MEMORY_STRING(DWORD address, size_t size, char result[])
+void EQ_ReadMemoryString(DWORD address, size_t size, char result[])
 {
     char *buffer = new char[size + 1];
 
@@ -55,7 +55,7 @@ void EQ_READ_MEMORY_STRING(DWORD address, size_t size, char result[])
     delete[] buffer;
 }
 
-void EQ_WRITE_MEMORY_STRING(DWORD address, const char* value)
+void EQ_WriteMemoryString(DWORD address, const char* value)
 {
     size_t length = strlen(value);
 
@@ -171,6 +171,9 @@ class CDisplay
 public:
     void CDisplay::MoveLocalPlayerToSafeCoords(void);
     static int __cdecl CDisplay::WriteTextHD2(const char* text, int x, int y, int color, int font);
+    PEQSTRINGSPRITE CDisplay::ChangeDagStringSprite(PEQDAGINFO dag, int fontTexture, char* text);
+    int __cdecl CDisplay::SetNameSpriteState(class EQPlayer* spawn, bool show);
+    int __cdecl CDisplay::SetNameSpriteTint(class EQPlayer* spawn);
 };
 
 CDisplay** EQ_CLASS_ppCDisplay = (CDisplay**)EQ_POINTER_CDisplay;
@@ -314,6 +317,24 @@ EQ_FUNCTION_AT_ADDRESS(void CDisplay::MoveLocalPlayerToSafeCoords(void), EQ_FUNC
 #ifdef EQ_FUNCTION_CDisplay__WriteTextHD2
 typedef int (__cdecl* EQ_FUNCTION_TYPE_CDisplay__WriteTextHD2)(const char* text, int x, int y, int color, int font);
 EQ_FUNCTION_AT_ADDRESS(int CDisplay::WriteTextHD2(const char*, int, int, int, int), EQ_FUNCTION_CDisplay__WriteTextHD2);
+#endif
+
+#define EQ_FUNCTION_CDisplay__ChangeDagStringSprite 0x004B0AA8
+#ifdef EQ_FUNCTION_CDisplay__ChangeDagStringSprite
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CDisplay__ChangeDagStringSprite)(void* this_ptr, PEQDAGINFO dag, int fontTexture, char* text);
+EQ_FUNCTION_AT_ADDRESS(PEQSTRINGSPRITE CDisplay::ChangeDagStringSprite(PEQDAGINFO, int, char*), EQ_FUNCTION_CDisplay__ChangeDagStringSprite);
+#endif
+
+#define EQ_FUNCTION_CDisplay__SetNameSpriteState 0x004B0BD9
+#ifdef EQ_FUNCTION_CDisplay__SetNameSpriteState
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteState)(void* this_ptr, class EQPlayer* spawn, bool show);
+EQ_FUNCTION_AT_ADDRESS(int CDisplay::SetNameSpriteState(class EQPlayer*, bool), EQ_FUNCTION_CDisplay__SetNameSpriteState);
+#endif
+
+#define EQ_FUNCTION_CDisplay__SetNameSpriteTint 0x004B114D
+#ifdef EQ_FUNCTION_CDisplay__SetNameSpriteTint
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteTint)(void* this_ptr, class EQPlayer* spawn);
+EQ_FUNCTION_AT_ADDRESS(int CDisplay::SetNameSpriteTint(class EQPlayer*), EQ_FUNCTION_CDisplay__SetNameSpriteTint);
 #endif
 
 /* CEverQuest */
@@ -549,6 +570,17 @@ void EQ_Rotate2d(float cx, float cy, float& x, float& y, float angle)
 
     x = nx;
     y = ny;
+}
+
+struct _EQRGBCOLOR EQ_GetRgbColorFromInt(int value)
+{
+    struct _EQRGBCOLOR rgb;
+
+    rgb.R = (LOBYTE((value) >> 16));
+    rgb.G = (LOBYTE(((WORD)(value)) >> 8));
+    rgb.B = (LOBYTE(value));
+
+    return rgb;
 }
 
 void EQ_CalculateItemCost(int cost, int& platinum, int& gold, int& silver, int& copper)
@@ -1061,7 +1093,7 @@ void EQ_DrawTooltipText(char text[], int x, int y, DWORD fontPointer)
         return;
     }
 
-    DWORD font = EQ_READ_MEMORY<DWORD>(fontPointer);
+    DWORD font = EQ_ReadMemory<DWORD>(fontPointer);
 
     int fontHeight = 0;
 
@@ -1113,12 +1145,12 @@ void EQ_DrawTooltipText(char text[], int x, int y, DWORD fontPointer)
 
 void EQ_ApplyClassicUiDrawOffset(int& x, int& y)
 {
-    BYTE uiState = EQ_READ_MEMORY<BYTE>(EQ_UI_STATE);
+    BYTE uiState = EQ_ReadMemory<BYTE>(EQ_UI_STATE);
 
     if (uiState == EQ_UI_STATE_CLASSIC)
     {
-        DWORD resolutionWidth  = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_WIDTH);
-        DWORD resolutionHeight = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_HEIGHT);
+        DWORD resolutionWidth  = EQ_ReadMemory<DWORD>(EQ_RESOLUTION_WIDTH);
+        DWORD resolutionHeight = EQ_ReadMemory<DWORD>(EQ_RESOLUTION_HEIGHT);
 
         if (resolutionWidth > EQ_CLASSIC_UI_WIDTH || resolutionHeight > EQ_CLASSIC_UI_HEIGHT)
         {
@@ -1135,7 +1167,7 @@ void EQ_TargetSpawn(PEQSPAWNINFO spawn)
 {
     if (spawn)
     {
-        EQ_WRITE_MEMORY<PEQSPAWNINFO>(EQ_POINTER_TARGET_SPAWN_INFO, spawn);
+        EQ_WriteMemory<PEQSPAWNINFO>(EQ_POINTER_TARGET_SPAWN_INFO, spawn);
     }
 }
 
@@ -1237,6 +1269,15 @@ PEQSPAWNINFO EQ_GetNearestSpawn(int spawnType)
     }
 
     return NULL;
+}
+
+int EQ_GetStringSpriteFontTexture()
+{
+    DWORD display = EQ_ReadMemory<DWORD>(EQ_POINTER_CDisplay);
+
+    DWORD fontTexture = EQ_ReadMemory<DWORD>(display + EQ_OFFSET_CDisplay_STRING_SPRITE_FONT_TEXTURE_POINTER);
+
+    return fontTexture;
 }
 
 /*

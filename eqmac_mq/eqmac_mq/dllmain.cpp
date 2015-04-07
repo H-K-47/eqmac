@@ -31,18 +31,36 @@ bool g_bLoaded = false;
 
 volatile int g_bExit = 0;
 
-volatile int g_bBoxChatThreadIsFinished = 0;
-
 HMODULE g_module;
 
 HANDLE g_handleThreadLoad;
 HANDLE g_handleThreadLoop;
 
-HANDLE g_handleThreadBoxChat;
-
 WSADATA g_wsaData;
 SOCKET g_connectSocket;
 fd_set g_fdSetRead;
+
+EQ_FUNCTION_TYPE_CEverQuest__LMouseDown EQMACMQ_REAL_CEverQuest__LMouseDown = NULL;
+EQ_FUNCTION_TYPE_CEverQuest__LMouseUp   EQMACMQ_REAL_CEverQuest__LMouseUp   = NULL;
+
+EQ_FUNCTION_TYPE_HandleMouseWheel EQMACMQ_REAL_HandleMouseWheel = NULL;
+
+EQ_FUNCTION_TYPE_ProcessKeyDown EQMACMQ_REAL_ProcessKeyDown = NULL;
+EQ_FUNCTION_TYPE_ProcessKeyUp   EQMACMQ_REAL_ProcessKeyUp   = NULL;
+
+EQ_FUNCTION_TYPE_CEverQuest__InterpretCmd EQMACMQ_REAL_CEverQuest__InterpretCmd = NULL;
+
+EQ_FUNCTION_TYPE_CEverQuest__dsp_chat EQMACMQ_REAL_CEverQuest__dsp_chat = NULL;
+
+EQ_FUNCTION_TYPE_DrawNetStatus EQMACMQ_REAL_DrawNetStatus = NULL;
+
+EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem  EQMACMQ_REAL_CItemDisplayWnd__SetItem  = NULL;
+EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell EQMACMQ_REAL_CItemDisplayWnd__SetSpell = NULL;
+
+EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay  EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay = NULL;
+
+EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteState EQMACMQ_REAL_CDisplay__SetNameSpriteState = NULL;
+EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteTint  EQMACMQ_REAL_CDisplay__SetNameSpriteTint  = NULL;
 
 bool g_boxChatIsEnabled = true;
 
@@ -77,25 +95,6 @@ char g_boxChatSendCommandList[EQMACMQ_BOX_CHAT_COMMANDS_MAX][EQMACMQ_BOX_CHAT_TE
 char g_boxChatInterpretCommandList[EQMACMQ_BOX_CHAT_COMMANDS_MAX][EQMACMQ_BOX_CHAT_TEXT_MAX] = {0};
 
 char g_boxChatInterpretCommandListEx[EQMACMQ_BOX_CHAT_COMMANDS_MAX][EQMACMQ_BOX_CHAT_TEXT_MAX] = {0};
-
-EQ_FUNCTION_TYPE_CEverQuest__LMouseDown EQMACMQ_REAL_CEverQuest__LMouseDown = NULL;
-EQ_FUNCTION_TYPE_CEverQuest__LMouseUp   EQMACMQ_REAL_CEverQuest__LMouseUp   = NULL;
-
-EQ_FUNCTION_TYPE_HandleMouseWheel EQMACMQ_REAL_HandleMouseWheel = NULL;
-
-EQ_FUNCTION_TYPE_ProcessKeyDown EQMACMQ_REAL_ProcessKeyDown = NULL;
-EQ_FUNCTION_TYPE_ProcessKeyUp   EQMACMQ_REAL_ProcessKeyUp   = NULL;
-
-EQ_FUNCTION_TYPE_CEverQuest__InterpretCmd EQMACMQ_REAL_CEverQuest__InterpretCmd = NULL;
-
-EQ_FUNCTION_TYPE_CEverQuest__dsp_chat EQMACMQ_REAL_CEverQuest__dsp_chat = NULL;
-
-EQ_FUNCTION_TYPE_DrawNetStatus EQMACMQ_REAL_DrawNetStatus = NULL;
-
-EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem  EQMACMQ_REAL_CItemDisplayWnd__SetItem  = NULL;
-EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell EQMACMQ_REAL_CItemDisplayWnd__SetSpell = NULL;
-
-EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay  EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay = NULL;
 
 bool g_killSwitchIsEnabled = true;
 
@@ -582,6 +581,40 @@ float g_clientSwitcherButton2Y;
 float g_clientSwitcherButton3X;
 float g_clientSwitcherButton3Y;
 
+bool g_hacksIsEnabled = true;
+
+#define EQMACMQ_HACKS_MAX 256
+
+typedef struct _EQMACMQHACK
+{
+    struct _EQMACMQHACK* Next;
+    DWORD Index;
+    CHAR Name[128];
+    CHAR Filename[1024];
+    CHAR Description[1024];
+    BOOL IsEnabled;
+} EQMACMQHACK, *PEQMACMQHACK;
+
+struct _EQMACMQHACK* g_hackListBegin = NULL;
+
+bool g_nameTextIsEnabled = true;
+
+bool g_nameTextNpcLevelAndClassIsEnabled = true;
+
+bool g_nameColorsIsEnabled = true;
+
+bool g_nameColorsBankerIsEnabled       = true;
+bool g_nameColorsMerchantIsEnabled     = true;
+bool g_nameColorsGuildmasterIsEnabled  = true;
+bool g_nameColorsPlayerCorpseIsEnabled = false;
+bool g_nameColorsNpcCorpseIsEnabled    = false;
+
+int g_nameColorsBanker       = 0xFF0080;
+int g_nameColorsMerchant     = 0xFFFF00;
+int g_nameColorsGuildmaster  = 0xFF8000;
+int g_nameColorsPlayerCorpse = 0x808080;
+int g_nameColorsNpcCorpse    = 0x808080;
+
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
 // need this to clip lines within the map window rectangle
@@ -602,6 +635,23 @@ void EQMACMQ_ReloadConfig();
 void EQMACMQ_ReloadMap();
 void EQMACMQ_DoLoadConfig();
 void EQMACMQ_DoLoadMap();
+
+void EQMACMQ_DoHacksLoad(bool load);
+
+int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void* not_used, class EQPlayer* a1, bool a2);
+int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(void* this_ptr, void* not_used, class EQPlayer* a1);
+
+void EQMACMQ_Log(const char* text)
+{
+    FILE* file;
+    errno_t fileErrorNumber = fopen_s(&file, "eqmac_mq.log", "a");
+
+    if (file)
+    {
+        fprintf(file, "[%s] %s\n", __TIME__, text);
+        fclose(file);
+    }
+}
 
 void EQMACMQ_EnableDebugPrivileges()
 {
@@ -849,8 +899,8 @@ BOOL CALLBACK EQMACMQ_DoClientSwitchProc(HWND hwnd,LPARAM lparam)
     {
         if (g_clientSwitcherSyncMouseIsEnabled == true)
         {
-            WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-            WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+            WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+            WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
             HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, false, processId);
 
@@ -1177,6 +1227,28 @@ bool EQMACMQ_LoadConfig(const char* filename)
 
     g_boxChatKeepAliveDelay = EQMACMQ_ConfigReadInt(filename, "BoxChat", "iKeepAliveDelay", g_boxChatKeepAliveDelay);
 
+    // NameText
+
+    g_nameTextIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bEnabled", g_nameTextIsEnabled);
+
+    g_nameTextNpcLevelAndClassIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bNpcLevelAndClass", g_nameTextNpcLevelAndClassIsEnabled);
+
+    // NameColors
+
+    g_nameColorsIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameColors", "bEnabled", g_nameColorsIsEnabled);
+
+    g_nameColorsBankerIsEnabled       = EQMACMQ_ConfigReadBool(filename, "NameColors", "bBanker",       g_nameColorsBankerIsEnabled);
+    g_nameColorsMerchantIsEnabled     = EQMACMQ_ConfigReadBool(filename, "NameColors", "bMerchant",     g_nameColorsMerchantIsEnabled);
+    g_nameColorsGuildmasterIsEnabled  = EQMACMQ_ConfigReadBool(filename, "NameColors", "bGuildmaster",  g_nameColorsGuildmasterIsEnabled);
+    g_nameColorsPlayerCorpseIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameColors", "bPlayerCorpse", g_nameColorsGuildmasterIsEnabled);
+    g_nameColorsNpcCorpseIsEnabled    = EQMACMQ_ConfigReadBool(filename, "NameColors", "bNpcCorpse",    g_nameColorsGuildmasterIsEnabled);
+
+    g_nameColorsBanker       = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbBanker",       g_nameColorsBanker);
+    g_nameColorsMerchant     = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbMerchant",     g_nameColorsMerchant);
+    g_nameColorsGuildmaster  = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbGuildmaster",  g_nameColorsGuildmaster);
+    g_nameColorsPlayerCorpse = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbPlayerCorpse", g_nameColorsPlayerCorpse);
+    g_nameColorsNpcCorpse    = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbNpcCorpse",    g_nameColorsNpcCorpse);
+
     // HUD
 
     g_hudButtonsIsEnabled = EQMACMQ_ConfigReadBool(filename, "HUD", "bButtons", g_hudButtonsIsEnabled);
@@ -1482,6 +1554,10 @@ bool EQMACMQ_LoadConfig(const char* filename)
     EQMACMQ_ConfigReadString(filename, "TargetInfo", "sTextColor", "Pink", g_targetInfoTextColor_string, sizeof(g_targetInfoTextColor_string));
     g_targetInfoTextColor = EQ_GetTextColorIdByName(g_targetInfoTextColor_string);
 
+    // Hacks
+
+    g_hacksIsEnabled = EQMACMQ_ConfigReadBool(filename, "Hacks", "bEnabled", g_hacksIsEnabled);
+
     return true;
 }
 
@@ -1521,6 +1597,82 @@ void EQMACMQ_CopyTargetMapLocationToClipboard()
     {
         EQ_CLASS_CEverQuest->dsp_chat("Target's map location copied to clipboard.");
     }
+}
+
+struct _EQMACMQHACK* EQMACMQ_HackList_Create(EQMACMQHACK* hack)
+{
+    g_hackListBegin = (struct _EQMACMQHACK*)malloc(sizeof(struct _EQMACMQHACK));
+
+    if (g_hackListBegin == NULL)
+    {
+        return NULL;
+    }
+
+    g_hackListBegin->Next = NULL;
+
+    g_hackListBegin->Index = hack->Index;
+
+    strcpy_s(g_hackListBegin->Name,        hack->Name);
+    strcpy_s(g_hackListBegin->Filename,    hack->Filename);
+    strcpy_s(g_hackListBegin->Description, hack->Description);
+
+    g_hackListBegin->IsEnabled = hack->IsEnabled;
+
+    return g_hackListBegin;
+}
+
+struct _EQMACMQHACK* EQMACMQ_HackList_Add(EQMACMQHACK* hack)
+{
+    if (g_hackListBegin == NULL)
+    {
+        return (EQMACMQ_HackList_Create(hack));
+    }
+
+    struct _EQMACMQHACK *node = g_hackListBegin;
+
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    while (node->Next != NULL)
+    {
+        node = node->Next;
+    }
+
+    node->Next = (struct _EQMACMQHACK*)malloc(sizeof(struct _EQMACMQHACK));
+    node->Next->Next = NULL;
+
+    node->Next->Index = hack->Index;
+
+    strcpy_s(node->Next->Name,        hack->Name);
+    strcpy_s(node->Next->Filename,    hack->Filename);
+    strcpy_s(node->Next->Description, hack->Description);
+
+    node->Next->IsEnabled = hack->IsEnabled;
+
+    return node;
+}
+
+void EQMACMQ_HackList_Destroy()
+{
+    struct _EQMACMQHACK *node = g_hackListBegin;
+
+    if (node == NULL)
+    {
+        return;
+    }
+
+    struct _EQMACMQHACK *next;
+
+    while (node->Next != NULL)
+    {
+        next = node->Next;
+        free(node);
+        node = next;
+    }
+
+    g_hackListBegin = NULL;
 }
 
 struct _EQMAPLINE* EQMACMQ_MapLineList_Create(EQMAPLINE* mapLine)
@@ -2789,6 +2941,18 @@ void EQMACMQ_ToggleBuffWindowTimers()
     }
 }
 
+void EQMACMQ_ToggleHacks()
+{
+    EQ_ToggleBool(g_hacksIsEnabled);
+
+    EQMACMQ_DoHacksLoad(g_hacksIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Hacks", g_hacksIsEnabled);
+    }
+}
+
 void EQMACMQ_DoUnload()
 {
     if (g_writeTextToChatWindowIsEnabled == true)
@@ -2807,7 +2971,7 @@ void EQMACMQ_DoUnload()
 
 void EQMACMQ_DoLoadMap()
 {
-    DWORD zoneId = EQ_READ_MEMORY<DWORD>(EQ_ZONE_ID);
+    DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
 
     EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
 
@@ -2836,7 +3000,7 @@ void EQMACMQ_DoLoadConfig()
 {
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
-    DWORD zoneId = EQ_READ_MEMORY<DWORD>(EQ_ZONE_ID);
+    DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
 
     EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
 
@@ -2850,7 +3014,7 @@ void EQMACMQ_DoLoadConfig()
     if (charInfo)
     {
         char charConfigFilename[128];
-        sprintf_s(charConfigFilename, ".\\%s-%s.ini", g_applicationExeName, charInfo->Name);
+        sprintf_s(charConfigFilename, ".\\charconfigs\\%s.ini", charInfo->Name);
 
         EQMACMQ_LoadConfig(charConfigFilename);
     }
@@ -2859,7 +3023,7 @@ void EQMACMQ_DoLoadConfig()
     if (zoneId != 0)
     {
         char zoneConfigFilename[128];
-        sprintf_s(zoneConfigFilename, ".\\maps\\%s.ini", zoneInfo->ShortName);
+        sprintf_s(zoneConfigFilename, ".\\zoneconfigs\\%s.ini", zoneInfo->ShortName);
 
         EQMACMQ_LoadConfig(zoneConfigFilename);
     }
@@ -2867,7 +3031,7 @@ void EQMACMQ_DoLoadConfig()
 
 void EQMACMQ_DoUpdateZone()
 {
-    DWORD zoneId = EQ_READ_MEMORY<DWORD>(EQ_ZONE_ID);
+    DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
 
     EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
 
@@ -2887,26 +3051,197 @@ void EQMACMQ_DoUpdateZone()
     }
 }
 
+void EQMACMQ_DoHackEnable(const char* filename, bool enable)
+{
+    for (size_t i = 0; i < EQMACMQ_HACKS_MAX; i++)
+    {
+        char addressKey[128];
+        sprintf_s(addressKey, "Address%d", i);
+
+        char addressString[128];
+        EQMACMQ_ConfigReadString(filename, "Hack", addressKey, "", addressString, sizeof(addressString));
+
+        if (strlen(addressString) == 0)
+        {
+            continue;
+        }
+
+        DWORD baseAddress = 0;
+
+        if (strstr(addressString, "eqgame.exe") != NULL)
+        {
+            baseAddress = EQ_BASE_ADDRESS;
+        }
+        else if (strstr(addressString, "eqgfx_dx8.dll") != NULL)
+        {
+            baseAddress = EQ_ReadMemory<DWORD>(EQ_POINTER_GRAPHICS_DLL);
+        }
+
+        if (baseAddress != 0)
+        {
+            char* token     = NULL;
+            char* tokenNext = NULL;
+
+            token = strtok_s(addressString, "+", &tokenNext);
+
+            if (token != NULL)
+            {
+                token = strtok_s(NULL, "+", &tokenNext);
+            }
+
+            DWORD offset = strtoul(token, NULL, 16);
+
+            sprintf_s(addressString, "0x%08X", baseAddress + offset);
+        }
+
+        DWORD address = strtoul(addressString, NULL, 16);
+
+        if (address == 0)
+        {
+            continue;
+        }
+
+        char valueKey[128];
+
+        if (enable == true)
+        {
+            sprintf_s(valueKey, "Enable%d", i);
+        }
+        else
+        {
+            sprintf_s(valueKey, "Disable%d", i);
+        }
+
+        char valueString[128];
+        EQMACMQ_ConfigReadString(filename, "Hack", valueKey, "", valueString, sizeof(valueString));
+
+        if (strlen(valueString) == 0)
+        {
+            continue;
+        }
+
+        BYTE value[256];
+
+        size_t valueSize = 0;
+
+        char* token     = NULL;
+        char* tokenNext = NULL;
+
+        token = strtok_s(valueString, " ", &tokenNext);
+
+        while (token != NULL)
+        {
+            value[valueSize] = (BYTE)strtoul(token, NULL, 16);
+
+            valueSize++;
+
+            token = strtok_s(NULL, " ", &tokenNext);
+        }
+
+        WriteProcessMemory(GetCurrentProcess(), (LPVOID)address, value, valueSize, 0);
+
+        char logText[128];
+        sprintf_s(logText, "WriteProcessMemory, Address: 0x%08X, First Value: 0x%X, Size: %d", address, *value, valueSize);
+
+        EQMACMQ_Log(logText);
+
+        free(value);
+
+        struct _EQMACMQHACK* hack = g_hackListBegin;
+
+        while (hack)
+        {
+            if (strcmp(hack->Filename, filename) == 0)
+            {
+                hack->IsEnabled = enable;
+                break;
+            }
+
+            hack = hack->Next;
+        }
+    }
+}
+
+void EQMACMQ_DoHacksLoad(bool load)
+{
+    EQMACMQ_HackList_Destroy();
+
+    char configFilename[128];
+    sprintf_s(configFilename, ".\\%s.ini", g_applicationExeName);
+
+    for (size_t i = 0; i < EQMACMQ_HACKS_MAX; i++)
+    {
+        char enabledKey[128];
+        sprintf_s(enabledKey, "bEnabled%d", i);
+
+        bool enabled = EQMACMQ_ConfigReadBool(configFilename, "Hacks", enabledKey, false);
+
+        char nameKey[128];
+        sprintf_s(nameKey, "sName%d", i);
+
+        char name[128];
+        EQMACMQ_ConfigReadString(configFilename, "Hacks", nameKey, "", name, sizeof(name));
+
+        if (strlen(name) == 0)
+        {
+            continue;
+        }
+
+        char hackFilename[1024];
+        sprintf_s(hackFilename, ".\\hacks\\%s.ini", name);
+
+        char hackName[1024];
+        EQMACMQ_ConfigReadString(hackFilename, "Hack", "Name", "No name", hackName, sizeof(hackName));
+
+        char hackDescription[1024];
+        EQMACMQ_ConfigReadString(hackFilename, "Hack", "Description", "No description", hackDescription, sizeof(hackDescription));
+
+        if (load == true)
+        {
+            EQMACMQHACK hack;
+
+            hack.Index = i + 1;
+
+            strcpy_s(hack.Name,        hackName);
+            strcpy_s(hack.Filename,    hackFilename);
+            strcpy_s(hack.Description, hackDescription);
+
+            hack.IsEnabled = enabled;
+
+            EQMACMQ_HackList_Add(&hack);
+
+            if (hack.IsEnabled == TRUE)
+            {
+                EQMACMQ_DoHackEnable(hackFilename, true);
+            }
+        }
+        else
+        {
+            EQMACMQ_DoHackEnable(hackFilename, false);
+        }
+    }
+}
+
 bool EQMACMQ_DoButtonMouseLeftHeldDown()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
     if (mouseOverWindow != 0x00000000)
     {
         return true;
     }
 
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+    WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
-    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+    DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
 
     if (mouseClickState != EQ_MOUSE_CLICK_STATE_LEFT)
     {
         return true;
     }
 
-    DWORD isKeyPressedControl = EQ_READ_MEMORY<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
+    DWORD isKeyPressedControl = EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
 
     if (isKeyPressedControl == 1)
     {
@@ -2993,7 +3328,7 @@ bool EQMACMQ_DoButtonMouseLeftHeldDown()
 bool EQMACMQ_DoButtonMouseLeftDown()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
     if (mouseOverWindow != 0x00000000)
     {
         g_mouseIsDragging = false;
@@ -3001,8 +3336,8 @@ bool EQMACMQ_DoButtonMouseLeftDown()
         return true;
     }
 
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+    WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
     g_mouseIsDragging = true;
     g_mouseDraggingBeginX = mouseX;
@@ -3047,16 +3382,16 @@ bool EQMACMQ_DoButtonMouseLeftUp()
     g_mouseIsDragging = false;
 
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
     if (mouseOverWindow != 0x00000000)
     {
         return true;
     }
 
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+    WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
-    DWORD isKeyPressedControl = EQ_READ_MEMORY<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
+    DWORD isKeyPressedControl = EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
 
     if (isKeyPressedControl == 1)
     {
@@ -3691,14 +4026,14 @@ bool EQMACMQ_DoButtonMouseLeftUp()
 bool EQMACMQ_DoButtonToolTipText()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
     if (mouseOverWindow != 0x00000000)
     {
         return true;
     }
 
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+    WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
     if (g_hudButtonsIsEnabled == true)
     {
@@ -4594,7 +4929,7 @@ bool EQMACMQ_DoButtonToolTipText()
 
 void EQMACMQ_DoHudButtons()
 {
-    DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
+    DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
     int buttonColor = g_buttonColorMinMaxClose;
     int buttonTextColor = g_buttonTextColorMinMaxClose;
@@ -4797,7 +5132,7 @@ void EQMACMQ_DoHudButtons()
 
 void EQMACMQ_DoClientSwitcherButtons()
 {
-    DWORD resolutionWidth = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_WIDTH);
+    DWORD resolutionWidth = EQ_ReadMemory<DWORD>(EQ_RESOLUTION_WIDTH);
 
     float totalWidth = g_buttonWidth + g_elementOffset + (float)((g_buttonWidth * g_eqProcessesCount) + (g_elementOffset + (g_eqProcessesCount - 1)));
 
@@ -4823,7 +5158,7 @@ void EQMACMQ_DoClientSwitcherButtons()
 
     buttonIndex += 1.0f;
 
-    DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
+    DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
     int buttonColor = g_buttonColorMinMaxClose;
     int buttonTextColor = g_buttonTextColorMinMaxClose;
@@ -4863,16 +5198,16 @@ void EQMACMQ_DoClientSwitcherButtons()
 
 void EQMACMQ_DoMap()
 {
-    DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
+    DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+    WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
-    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+    DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
 
-    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
-    DWORD zoneId = EQ_READ_MEMORY<DWORD>(EQ_ZONE_ID);
+    DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
 
     EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
 
@@ -5166,7 +5501,7 @@ void EQMACMQ_DoMap()
 
     if (g_mapLinesIsEnabled == true)
     {
-        struct _EQMAPLINE *mapLine = g_mapLineListBegin;
+        struct _EQMAPLINE* mapLine = g_mapLineListBegin;
 
         while (mapLine)
         {
@@ -5359,7 +5694,7 @@ void EQMACMQ_DoMap()
 
     if (g_mapPointsIsEnabled == true && g_mapIsMaximized == true)
     {
-        struct _EQMAPPOINT *mapPoint = g_mapPointListBegin;
+        struct _EQMAPPOINT* mapPoint = g_mapPointListBegin;
 
         while (mapPoint)
         {
@@ -5631,7 +5966,7 @@ void EQMACMQ_DoMap()
                 {
                     if (g_mapSpawnClickToTargetIsEnabled == true)
                     {
-                        DWORD isKeyPressedControl = EQ_READ_MEMORY<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
+                        DWORD isKeyPressedControl = EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
 
                         if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT && isKeyPressedControl == 0)
                         {
@@ -5900,7 +6235,7 @@ void EQMACMQ_DoEspSkeletonsDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
         EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
     }
 
-    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+    DWORD worldSpaceToScreenSpaceCameraData = EQ_ReadMemory<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
     EQLOCATION location1 = {dag1->Y, dag1->X, dag1->Z};
     EQLOCATION location2 = {dag2->Y, dag2->X, dag2->Z};
@@ -5997,16 +6332,16 @@ void EQMACMQ_DoEspSkeletonsDraw(PEQDAGINFO dag, int lineColor)
 
 void EQMACMQ_DoEsp()
 {
-    DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
+    DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+    WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
-    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+    DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
 
-    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
-    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+    DWORD worldSpaceToScreenSpaceCameraData = EQ_ReadMemory<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
@@ -6826,7 +7161,7 @@ void EQMACMQ_DoEsp()
 
 void EQMACMQ_DoBuffInfo()
 {
-    DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
+    DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
@@ -6887,7 +7222,7 @@ void EQMACMQ_DoBuffInfo()
 
 void EQMACMQ_DoPlayerInfo()
 {
-    DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
+    DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
@@ -6938,7 +7273,7 @@ void EQMACMQ_DoPlayerInfo()
 
 void EQMACMQ_DoTargetInfo()
 {
-    DWORD fontArial14 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL14);
+    DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
@@ -7070,14 +7405,14 @@ void EQMACMQ_DoTargetInfo()
 
 void EQMACMQ_DoHealthBars()
 {
-    WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-    WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+    WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
-    DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+    DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
 
-    DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
-    DWORD worldSpaceToScreenSpaceCameraData = EQ_READ_MEMORY<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+    DWORD worldSpaceToScreenSpaceCameraData = EQ_ReadMemory<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
@@ -7272,11 +7607,11 @@ void EQMACMQ_DoMessageText()
         return;
     }
 
-    DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+    DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
 
     if (currentTime < g_messageTextTimer)
     {
-        DWORD fontArial16 = EQ_READ_MEMORY<DWORD>(EQ_POINTER_FONT_ARIAL16);
+        DWORD fontArial16 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL16);
 
         int textX = (int)g_messageTextX;
 
@@ -7297,7 +7632,7 @@ void EQMACMQ_DoMessageTextGeneric(const char* text, int textColor)
 
     g_messageTextColor = textColor;
 
-    DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+    DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
 
     g_messageTextTimer = currentTime + g_messageTextDelay;
 }
@@ -7374,7 +7709,7 @@ void EQMACMQ_DoMessageTextGainedExperience()
 
         g_messageTextColor = EQ_TEXT_COLOR_YELLOW;
 
-        DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+        DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
 
         g_messageTextTimer = currentTime + g_messageTextDelay;
 
@@ -7398,11 +7733,11 @@ void EQMACMQ_DoMessageTextGainedExperience()
 
 void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
 {
-    DWORD cameraView = EQ_READ_MEMORY<DWORD>(EQ_CAMERA_VIEW);
+    DWORD cameraView = EQ_ReadMemory<DWORD>(EQ_CAMERA_VIEW);
 
     FLOAT cameraThirdPersonZoom = 0.0f;
 
-    FLOAT cameraThirdPersonZoomMax = EQ_READ_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON_ZOOM_MAX);
+    FLOAT cameraThirdPersonZoomMax = EQ_ReadMemory<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON_ZOOM_MAX);
 
     float zoom = 0.0f;
 
@@ -7410,19 +7745,19 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
 
     if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON2)
     {
-        cameraThirdPersonZoom = EQ_READ_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM);
+        cameraThirdPersonZoom = EQ_ReadMemory<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM);
 
         zoomAddress = EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM;
     }
     else if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON3)
     {
-        cameraThirdPersonZoom = EQ_READ_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON3_ZOOM);
+        cameraThirdPersonZoom = EQ_ReadMemory<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON3_ZOOM);
 
         zoomAddress = EQ_CAMERA_VIEW_THIRD_PERSON3_ZOOM;
     }
     else if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON4)
     {
-        cameraThirdPersonZoom = EQ_READ_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON4_ZOOM);
+        cameraThirdPersonZoom = EQ_ReadMemory<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON4_ZOOM);
 
         zoomAddress = EQ_CAMERA_VIEW_THIRD_PERSON4_ZOOM;
     }
@@ -7440,7 +7775,7 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
             {
                 if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON2)
                 {
-                    EQ_WRITE_MEMORY<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_FIRST_PERSON);
+                    EQ_WriteMemory<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_FIRST_PERSON);
                 }
                 else
                 {
@@ -7448,7 +7783,7 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
                     {
                         zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
 
-                        EQ_WRITE_MEMORY<FLOAT>(zoomAddress, zoom);
+                        EQ_WriteMemory<FLOAT>(zoomAddress, zoom);
                     }
                 }
             }
@@ -7463,7 +7798,7 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
                         zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
                     }
 
-                    EQ_WRITE_MEMORY<FLOAT>(zoomAddress, zoom);
+                    EQ_WriteMemory<FLOAT>(zoomAddress, zoom);
                 }
             }
         }
@@ -7474,9 +7809,9 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
         {
             zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
 
-            EQ_WRITE_MEMORY<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM, zoom);
+            EQ_WriteMemory<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM, zoom);
 
-            EQ_WRITE_MEMORY<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_THIRD_PERSON2);
+            EQ_WriteMemory<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_THIRD_PERSON2);
         }
         else if
         (
@@ -7494,7 +7829,7 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
                     zoom = cameraThirdPersonZoomMax;
                 }
 
-                EQ_WRITE_MEMORY<FLOAT>(zoomAddress, zoom);
+                EQ_WriteMemory<FLOAT>(zoomAddress, zoom);
             }
         }
     }
@@ -7511,7 +7846,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__LMouseDown(void* this_ptr, void* not_u
 
     if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
     {
-        BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
+        BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
 
         if (isNetStatusEnabled == 1)
         {
@@ -7536,7 +7871,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__LMouseUp(void* this_ptr, void* not_use
 
     if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
     {
-        BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
+        BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
 
         if (isNetStatusEnabled == 1)
         {
@@ -7561,16 +7896,16 @@ int __cdecl EQMACMQ_DETOUR_HandleMouseWheel(int a1)
 
     if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
     {
-        BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
+        BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
 
         if (isNetStatusEnabled == 1)
         {
-            DWORD mouseOverWindow = EQ_READ_MEMORY<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+            DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
             if (mouseOverWindow == 0x00000000)
             {
-                WORD mouseX = EQ_READ_MEMORY<WORD>(EQ_MOUSE_X);
-                WORD mouseY = EQ_READ_MEMORY<WORD>(EQ_MOUSE_Y);
+                WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+                WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
                 if
                 (
@@ -7618,7 +7953,7 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyDown(int a1)
         return EQMACMQ_REAL_ProcessKeyDown(a1);
     }
 
-    DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+    DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
 
     if ((g_ignoreKeysTimer > 0) && (currentTime > (g_ignoreKeysTimer + g_ignoreKeysDelay)))
     {
@@ -7781,12 +8116,38 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* not
             EQ_GetItemCostString(item->Cost, itemCostString, sizeof(itemCostString));
 
             char itemCostText[128];
-            sprintf_s(itemCostText, "Sells to merchants for: %s<BR>", itemCostString);
+            sprintf_s(itemCostText, "Value: %s<BR>", itemCostString);
 
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, itemCostText);
         }
 
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "</c>");
+
+        char itemFilename[1024];
+        sprintf_s(itemFilename, ".\\items\\%d.txt", item->Id);
+
+        FILE* file;
+        errno_t fileErrorNumber = fopen_s(&file, itemFilename, "rb");
+
+        if (file)
+        {
+            fseek(file, 0, SEEK_END);
+            long fileSize = ftell(file);
+            fseek(file, 0, SEEK_SET);
+
+            if (fileSize > 0)
+            {
+                char* fileContents = (char*)malloc(fileSize + 1);
+                fread(fileContents, fileSize, 1, file);
+
+                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR>");
+                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, fileContents);
+
+                free(fileContents);
+            }
+
+            fclose(file);
+        }
     }
 
     return result;
@@ -7940,6 +8301,114 @@ int __fastcall EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay(void* this_ptr, vo
     return result;
 };
 
+int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void* not_used, class EQPlayer* a1, bool a2)
+{
+    int result = EQMACMQ_REAL_CDisplay__SetNameSpriteState(this_ptr, a1, a2);
+
+    if (g_nameTextIsEnabled == false)
+    {
+        return result;
+    }
+
+    BYTE showNpcNames = EQ_ReadMemory<BYTE>(EQ_IS_SHOW_NPC_NAMES_ENABLED);
+
+    if (showNpcNames == 0)
+    {
+        return result;
+    }
+
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)a1;
+
+    char nameText[128];
+    strcpy_s(nameText, spawn->ActorInfo->DagHeadPoint->StringSprite->Text);
+
+    if (spawn->Type == EQ_SPAWN_TYPE_NPC)
+    {
+        if (g_nameTextNpcLevelAndClassIsEnabled == true)
+        {
+            char extraText[128];
+            sprintf_s(extraText, "\n(%d %s)", spawn->Level, EQ_GetClassName(spawn->Class));
+
+            strcat_s(nameText, extraText);
+
+            DWORD fontTexture = EQ_GetStringSpriteFontTexture();
+
+            EQ_CLASS_CDisplay->ChangeDagStringSprite(spawn->ActorInfo->DagHeadPoint, fontTexture, nameText);
+
+            // EQ_CLASS_CDisplay->SetNameSpriteTint crashes
+            // have to use the detour
+            EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(this_ptr, not_used, a1);
+        }
+    }
+
+    return result;
+};
+
+int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(void* this_ptr, void* not_used, class EQPlayer* a1)
+{
+    int result = EQMACMQ_REAL_CDisplay__SetNameSpriteTint(this_ptr, a1);
+
+    if (g_nameColorsIsEnabled == false)
+    {
+        return result;
+    }
+
+    if (EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+    {
+        return result;
+    }
+
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)a1;
+
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    if (spawn == targetSpawn || spawn->ActorInfo->DagHeadPoint->StringSprite == NULL)
+    {
+        return result;
+    }
+
+    if (spawn->Type == EQ_SPAWN_TYPE_NPC)
+    {
+        if (spawn->Class == EQ_CLASS_BANKER)
+        {
+            if (g_nameColorsBankerIsEnabled == true)
+            {
+                spawn->ActorInfo->DagHeadPoint->StringSprite->Color = EQ_GetRgbColorFromInt(g_nameColorsBanker);
+            }
+        }
+        else if (spawn->Class == EQ_CLASS_MERCHANT)
+        {
+            if (g_nameColorsMerchantIsEnabled == true)
+            {
+                spawn->ActorInfo->DagHeadPoint->StringSprite->Color = EQ_GetRgbColorFromInt(g_nameColorsMerchant);
+            }
+        }
+        else if (spawn->Class >= EQ_CLASS_GUILDMASTER_BEGIN && spawn->Class <= EQ_CLASS_GUILDMASTER_END)
+        {
+            if (g_nameColorsGuildmasterIsEnabled == true)
+            {
+                spawn->ActorInfo->DagHeadPoint->StringSprite->Color = EQ_GetRgbColorFromInt(g_nameColorsGuildmaster);
+            }
+        }
+    }
+    else if (spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+    {
+        if (g_nameColorsNpcCorpseIsEnabled == true)
+        {
+            spawn->ActorInfo->DagHeadPoint->StringSprite->Color = EQ_GetRgbColorFromInt(g_nameColorsNpcCorpse);
+        }
+    }
+    else if (spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+    {
+        if (g_nameColorsPlayerCorpseIsEnabled == true)
+        {
+            spawn->ActorInfo->DagHeadPoint->StringSprite->Color = EQ_GetRgbColorFromInt(g_nameColorsPlayerCorpse);
+        }
+    }
+
+    return result;
+}
+
 int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not_used, class EQPlayer* a1, char* a2)
 {
     //FILE* file = fopen("eqmac_mq-debug-CEverQuest__InterpretCmd.txt", "a");
@@ -7954,6 +8423,11 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     if (g_bExit == 1)
     {
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, a1, a2);
+    }
+
+    if (strlen(a2) == 0)
+    {
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
     // double slashes not needed, convert "//" to "/" by removing first character
@@ -8038,12 +8512,12 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             if (strcmp(a2, "/bccmd help") == 0)
             {
                 EQ_CLASS_CEverQuest->dsp_chat("Box Chat Help");
-                EQ_CLASS_CEverQuest->dsp_chat("Toggle automatically connecting to the box chat server:");
-                EQ_CLASS_CEverQuest->dsp_chat("- /bccmd autoconnect");
                 EQ_CLASS_CEverQuest->dsp_chat("Connect to the box chat server:");
                 EQ_CLASS_CEverQuest->dsp_chat("- /bccmd connect");
                 EQ_CLASS_CEverQuest->dsp_chat("Disconnect from the box chat server:");
                 EQ_CLASS_CEverQuest->dsp_chat("- /bccmd disconnect");
+                EQ_CLASS_CEverQuest->dsp_chat("Toggle automatically connecting to the box chat server:");
+                EQ_CLASS_CEverQuest->dsp_chat("- /bccmd autoconnect");
                 EQ_CLASS_CEverQuest->dsp_chat("Show connection status with the box chat server:");
                 EQ_CLASS_CEverQuest->dsp_chat("- /bccmd status");
                 EQ_CLASS_CEverQuest->dsp_chat("Send commands to a specific client by character name:");
@@ -8896,6 +9370,79 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // hacks
+    if (strncmp(a2, "/hack", 5) == 0)
+    {
+        if (strcmp(a2, "/hacks") == 0)
+        {
+            EQMACMQ_ToggleHacks();
+        }
+        else if (strncmp(a2, "/hacks ", 7) == 0)
+        {
+            char command[128];
+
+            int index = 0;
+
+            int result = sscanf_s(a2, "%s %d", command, sizeof(command), &index);
+
+            if (result == 2)
+            {
+                struct _EQMACMQHACK* hack = g_hackListBegin;
+
+                while (hack)
+                {
+                    if (hack->Index == index)
+                    {
+                        EQMACMQ_DoHackEnable(hack->Filename, !(hack->IsEnabled));
+
+                        char hackText[128];
+                        sprintf_s
+                        (
+                            hackText, _TRUNCATE,
+                            "%d: %s | %s (%s)",
+                            hack->Index,
+                            hack->IsEnabled ? "On" : "Off",
+                            hack->Name,
+                            hack->Description
+                        );
+
+                        EQ_CLASS_CEverQuest->dsp_chat(hackText);
+
+                        break;
+                    }
+
+                    hack = hack->Next;
+                }
+            }
+        }
+        else if (strcmp(a2, "/hackslist") == 0)
+        {
+            EQ_CLASS_CEverQuest->dsp_chat("Hacks:");
+
+            struct _EQMACMQHACK* hack = g_hackListBegin;
+
+            while (hack)
+            {
+                char hackText[128];
+                sprintf_s
+                (
+                    hackText, _TRUNCATE,
+                    "%d: %s | %s (%s)",
+                    hack->Index,
+                    hack->IsEnabled ? "On" : "Off",
+                    hack->Name,
+                    hack->Description
+                );
+
+                EQ_CLASS_CEverQuest->dsp_chat(hackText);
+
+                hack = hack->Next;
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
     // target
     if (strcmp(a2, "/target myself") == 0)
     {
@@ -9019,7 +9566,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         char bankText[128];
         sprintf_s
         (
-            bankText,
+            bankText, _TRUNCATE,
             "You have %dp %dg %ds %dc in the bank.",
             charInfo->BankPlatinum,
             charInfo->BankGold,
@@ -9042,7 +9589,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         char manaText[128];
         sprintf_s
         (
-            manaText,
+            manaText, _TRUNCATE,
             "You have %d / %d mana.",
             manaCurrent,
             manaMax
@@ -9089,7 +9636,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             EQ_CalculateTickTime(buffTicks, buffHours, buffMinutes, buffSeconds);
 
             char buffText[128];
-            sprintf_s(buffText, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
+            sprintf_s(buffText, _TRUNCATE, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
 
             EQ_CLASS_CEverQuest->dsp_chat(buffText);
         }
@@ -9189,7 +9736,7 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
     }
     else
     {
-        DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+        DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
 
         if (g_ignoreKeysTimer == 0)
         {
@@ -9231,7 +9778,7 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
 
         EQMACMQ_UpdateEqProcesses();
 
-        EQ_WRITE_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED, 1);
+        EQ_WriteMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED, 1);
 
         if (g_writeTextToChatWindowIsEnabled == true)
         {
@@ -9249,12 +9796,12 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
 
     if (g_classicUiIsEnabled == true)
     {
-        BYTE uiState = EQ_READ_MEMORY<BYTE>(EQ_UI_STATE);
+        BYTE uiState = EQ_ReadMemory<BYTE>(EQ_UI_STATE);
 
         if (uiState == EQ_UI_STATE_CLASSIC)
         {
-            DWORD resolutionWidth  = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_WIDTH);
-            DWORD resolutionHeight = EQ_READ_MEMORY<DWORD>(EQ_RESOLUTION_HEIGHT);
+            DWORD resolutionWidth  = EQ_ReadMemory<DWORD>(EQ_RESOLUTION_WIDTH);
+            DWORD resolutionHeight = EQ_ReadMemory<DWORD>(EQ_RESOLUTION_HEIGHT);
 
             if (resolutionWidth == EQ_CLASSIC_UI_WIDTH && resolutionHeight == EQ_CLASSIC_UI_HEIGHT)
             {
@@ -9311,7 +9858,7 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
 
     g_numDeferred2dItems = 0;
 
-    BYTE isNetStatusEnabled = EQ_READ_MEMORY<BYTE>(EQ_IS_NET_STATUS_ENABLED);
+    BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
 
     if (isNetStatusEnabled == 0)
     {
@@ -9381,7 +9928,7 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
     if (g_classicUiIsEnabled == false)
     {
         // redraw the cursor so that the HUD is underneath it
-        DWORD mouseClickState = EQ_READ_MEMORY<DWORD>(EQ_MOUSE_CLICK_STATE);
+        DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
 
         if (mouseClickState != EQ_MOUSE_CLICK_STATE_RIGHT) // hide the cursor while mouse looking
         {
@@ -9397,198 +9944,200 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
     return EQMACMQ_REAL_DrawNetStatus(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 }
 
-DWORD WINAPI EQMACMQ_ThreadBoxChat(LPVOID param)
+DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
 {
-    if (g_boxChatIsEnabled == false)
-    {
-        g_bBoxChatThreadIsFinished = 1;
-        return 0;
-    }
-
     while (g_bExit == 0)
     {
-        if (g_boxChatAutoConnectIsEnabled == true)
+        if (g_boxChatIsEnabled == true)
         {
-            while (g_boxChatIsConnected == false)
+            if (g_boxChatAutoConnectIsEnabled == true)
             {
-                if (EQMACMQ_DoBoxChatConnect() == true)
+                while (g_boxChatIsConnected == false)
                 {
-                    g_boxChatIsConnected = true;
-                    g_boxChatSendConnectedMessage = true;
-                    g_boxChatShowConnectedMessage = true;
-                    break;
-                }
-
-                Sleep(1000);
-            }
-        }
-
-        if (g_boxChatSendConnectedMessage == true)
-        {
-            char connectMessage[128];
-
-            if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
-            {
-                sprintf_s(connectMessage, "Name: %s|", EQ_OBJECT_PlayerSpawn->Name);
-            }
-            else
-            {
-                sprintf_s(connectMessage, "Unknown Player connected|");
-            }
-
-            if (send(g_connectSocket, connectMessage, (int)strlen(connectMessage), 0) == SOCKET_ERROR)
-            {
-                g_boxChatIsConnected = false;
-                g_boxChatShowDisconnectedMessage = true;
-            }
-
-            g_boxChatSendConnectedMessage = false;
-        }
-
-        if (EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
-        {
-            Sleep(1000);
-            continue;
-        }
-
-        DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
-
-        if (currentTime > (g_boxChatKeepAliveTimer + g_boxChatKeepAliveDelay))
-        {
-            char keepAliveMessage[128];
-            strcpy_s(keepAliveMessage, "Keep Alive|");
-
-            if (send(g_connectSocket, keepAliveMessage, (int)strlen(keepAliveMessage), 0) == SOCKET_ERROR)
-            {
-                g_boxChatIsConnected = false;
-                g_boxChatShowDisconnectedMessage = true;
-            }
-
-            g_boxChatKeepAliveTimer = currentTime;
-        }
-
-        FD_ZERO(&g_fdSetRead);
-
-        FD_SET(g_connectSocket, &g_fdSetRead);
-
-        timeval tv;
-        tv.tv_sec  = 0;
-        tv.tv_usec = 0;
-
-        int selectResult = select(0, &g_fdSetRead, NULL, NULL, &tv);
-
-        if (selectResult != SOCKET_ERROR)
-        {
-            if (FD_ISSET(g_connectSocket, &g_fdSetRead))
-            {
-                memset(g_boxChatRecvBuffer, 0, EQMACMQ_BOX_CHAT_RECV_MAX);
-
-                int recvResult = recv(g_connectSocket, g_boxChatRecvBuffer, EQMACMQ_BOX_CHAT_RECV_MAX, 0);
-
-                if (recvResult > 0)
-                {
-                    //EQ_CLASS_CEverQuest->dsp_chat(g_boxChatRecvBuffer);
-
-                    char receivedText[EQMACMQ_BOX_CHAT_RECV_MAX];
-                    strcpy_s(receivedText, g_boxChatRecvBuffer);
-
-                    char* token     = NULL;
-                    char* tokenNext = NULL;
-
-                    token = strtok_s(receivedText, "|", &tokenNext);
-                    while (token != NULL)
+                    if (EQMACMQ_DoBoxChatConnect() == true)
                     {
-                        if (strncmp(token, "Command: ", 9) == 0)
-                        {
-                            char commandText[EQMACMQ_BOX_CHAT_TEXT_MAX] = {0};
-                            strcpy_s(commandText, token);
-
-                            char* token2     = NULL;
-                            char* token2Next = NULL;
-
-                            token2 = strtok_s(commandText, ";", &token2Next);
-                            while (token2 != NULL)
-                            {
-                                char cmdText[EQMACMQ_BOX_CHAT_TEXT_MAX];
-                                strcpy_s(cmdText, token2 + 9);
-
-                                if (cmdText[0] == '/' && strstr(cmdText, ";") == NULL)
-                                {
-                                    for (size_t i = 0; i < EQMACMQ_BOX_CHAT_COMMANDS_MAX; i++)
-                                    {
-                                        if (strlen(g_boxChatInterpretCommandList[i]) == 0)
-                                        {
-                                            strcpy_s(g_boxChatInterpretCommandList[i], cmdText);
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                token2 = strtok_s(NULL, ";", &token2Next);
-                            }
-                        }
-
-                        token = strtok_s(NULL, "|", &tokenNext);
+                        g_boxChatIsConnected = true;
+                        g_boxChatSendConnectedMessage = true;
+                        g_boxChatShowConnectedMessage = true;
+                        break;
                     }
+
+                    if (g_bExit == 1)
+                    {
+                        break;
+                    }
+
+                    Sleep(1000);
                 }
             }
-        }
 
-        if (g_connectSocket != INVALID_SOCKET)
-        {
-            for (size_t i = 0; i < EQMACMQ_BOX_CHAT_COMMANDS_MAX; i++)
+            if (g_boxChatSendConnectedMessage == true)
             {
-                if (strlen(g_boxChatSendCommandList[i]) > 0)
-                {
-                    char sendText[EQMACMQ_BOX_CHAT_TEXT_MAX];
-                    sprintf_s(sendText, "%s|", g_boxChatSendCommandList[i]);
+                char connectMessage[128];
 
-                    if (send(g_connectSocket, sendText, (int)strlen(sendText), 0) == SOCKET_ERROR)
+                if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+                {
+                    sprintf_s(connectMessage, "Name: %s|", EQ_OBJECT_PlayerSpawn->Name);
+                }
+                else
+                {
+                    sprintf_s(connectMessage, "Unknown Player connected|");
+                }
+
+                if (send(g_connectSocket, connectMessage, (int)strlen(connectMessage), 0) == SOCKET_ERROR)
+                {
+                    g_boxChatIsConnected = false;
+                    g_boxChatShowDisconnectedMessage = true;
+                }
+
+                g_boxChatSendConnectedMessage = false;
+            }
+
+            if (EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+            {
+                Sleep(1000);
+                continue;
+            }
+
+            if (g_boxChatIsConnected == true && g_connectSocket != INVALID_SOCKET)
+            {
+                DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
+
+                if (currentTime > (g_boxChatKeepAliveTimer + g_boxChatKeepAliveDelay))
+                {
+                    char keepAliveMessage[128];
+                    strcpy_s(keepAliveMessage, "Keep Alive|");
+
+                    if (send(g_connectSocket, keepAliveMessage, (int)strlen(keepAliveMessage), 0) == SOCKET_ERROR)
                     {
                         g_boxChatIsConnected = false;
                         g_boxChatShowDisconnectedMessage = true;
                     }
 
-                    memset(g_boxChatSendCommandList[i], 0, EQMACMQ_BOX_CHAT_TEXT_MAX);
+                    g_boxChatKeepAliveTimer = currentTime;
+                }
+
+                FD_ZERO(&g_fdSetRead);
+
+                FD_SET(g_connectSocket, &g_fdSetRead);
+
+                timeval tv;
+                tv.tv_sec  = 0;
+                tv.tv_usec = 0;
+
+                int selectResult = select(0, &g_fdSetRead, NULL, NULL, &tv);
+
+                if (selectResult != SOCKET_ERROR)
+                {
+                    if (FD_ISSET(g_connectSocket, &g_fdSetRead))
+                    {
+                        memset(g_boxChatRecvBuffer, 0, EQMACMQ_BOX_CHAT_RECV_MAX);
+
+                        int recvResult = recv(g_connectSocket, g_boxChatRecvBuffer, EQMACMQ_BOX_CHAT_RECV_MAX, 0);
+
+                        if (recvResult > 0)
+                        {
+                            //EQ_CLASS_CEverQuest->dsp_chat(g_boxChatRecvBuffer);
+
+                            char receivedText[EQMACMQ_BOX_CHAT_RECV_MAX];
+                            strcpy_s(receivedText, g_boxChatRecvBuffer);
+
+                            char* token     = NULL;
+                            char* tokenNext = NULL;
+
+                            token = strtok_s(receivedText, "|", &tokenNext);
+                            while (token != NULL)
+                            {
+                                if (strncmp(token, "Command: ", 9) == 0)
+                                {
+                                    char commandText[EQMACMQ_BOX_CHAT_TEXT_MAX] = {0};
+                                    strcpy_s(commandText, token);
+
+                                    char* token2     = NULL;
+                                    char* token2Next = NULL;
+
+                                    token2 = strtok_s(commandText, ";", &token2Next);
+                                    while (token2 != NULL)
+                                    {
+                                        char cmdText[EQMACMQ_BOX_CHAT_TEXT_MAX];
+                                        strcpy_s(cmdText, token2 + 9);
+
+                                        if (cmdText[0] == '/' && strstr(cmdText, ";") == NULL)
+                                        {
+                                            for (size_t i = 0; i < EQMACMQ_BOX_CHAT_COMMANDS_MAX; i++)
+                                            {
+                                                if (strlen(g_boxChatInterpretCommandList[i]) == 0)
+                                                {
+                                                    strcpy_s(g_boxChatInterpretCommandList[i], cmdText);
+                                                    break;
+                                                }
+                                            }
+                                        }
+
+                                        token2 = strtok_s(NULL, ";", &token2Next);
+                                    }
+                                }
+
+                                token = strtok_s(NULL, "|", &tokenNext);
+                            }
+                        }
+                    }
+                }
+
+                for (size_t i = 0; i < EQMACMQ_BOX_CHAT_COMMANDS_MAX; i++)
+                {
+                    if (strlen(g_boxChatSendCommandList[i]) > 0)
+                    {
+                        char sendText[EQMACMQ_BOX_CHAT_TEXT_MAX];
+                        sprintf_s(sendText, "%s|", g_boxChatSendCommandList[i]);
+
+                        if (send(g_connectSocket, sendText, (int)strlen(sendText), 0) == SOCKET_ERROR)
+                        {
+                            g_boxChatIsConnected = false;
+                            g_boxChatShowDisconnectedMessage = true;
+                        }
+
+                        memset(g_boxChatSendCommandList[i], 0, EQMACMQ_BOX_CHAT_TEXT_MAX);
+                    }
                 }
             }
-        }
 
-        for (size_t i = 0; i < EQMACMQ_BOX_CHAT_COMMANDS_MAX; i++)
-        {
-            if (strlen(g_boxChatInterpretCommandList[i]) > 0)
+            for (size_t i = 0; i < EQMACMQ_BOX_CHAT_COMMANDS_MAX; i++)
             {
-                //EQ_CLASS_CEverQuest->dsp_chat(g_boxChatInterpretCommandList[i]);
-
-                if (strlen(g_boxChatInterpretCommandList[i]) > 7 && strncmp(g_boxChatInterpretCommandList[i], "/pause ", 7) == 0)
+                if (strlen(g_boxChatInterpretCommandList[i]) > 0)
                 {
-                    char sleepText[128];
-                    strcpy_s(sleepText, g_boxChatInterpretCommandList[i] + 7);
+                    //EQ_CLASS_CEverQuest->dsp_chat(g_boxChatInterpretCommandList[i]);
 
-                    int sleepTime = atoi(sleepText);
-
-                    if (sleepTime > 0)
+                    if (strlen(g_boxChatInterpretCommandList[i]) > 7 && strncmp(g_boxChatInterpretCommandList[i], "/pause ", 7) == 0)
                     {
-                        Sleep((int)(sleepTime * 1000));
+                        char sleepText[128];
+                        strcpy_s(sleepText, g_boxChatInterpretCommandList[i] + 7);
+
+                        int sleepTime = atoi(sleepText);
+
+                        if (sleepTime > 0)
+                        {
+                            Sleep((int)(sleepTime * 1000));
+                        }
+
+                        memset(g_boxChatInterpretCommandList[i], 0, EQMACMQ_BOX_CHAT_TEXT_MAX);
+
+                        continue;
+                    }
+
+                    for (size_t j = 0; j < EQMACMQ_BOX_CHAT_COMMANDS_MAX; j++)
+                    {
+                        if (strlen(g_boxChatInterpretCommandListEx[j]) == 0)
+                        {
+                            strcpy_s(g_boxChatInterpretCommandListEx[j], g_boxChatInterpretCommandList[i]);
+                            break;
+                        }
                     }
 
                     memset(g_boxChatInterpretCommandList[i], 0, EQMACMQ_BOX_CHAT_TEXT_MAX);
 
-                    continue;
+                    Sleep(1000);
                 }
-
-                for (size_t j = 0; j < EQMACMQ_BOX_CHAT_COMMANDS_MAX; j++)
-                {
-                    if (strlen(g_boxChatInterpretCommandListEx[j]) == 0)
-                    {
-                        strcpy_s(g_boxChatInterpretCommandListEx[j], g_boxChatInterpretCommandList[i]);
-                        break;
-                    }
-                }
-
-                memset(g_boxChatInterpretCommandList[i], 0, EQMACMQ_BOX_CHAT_TEXT_MAX);
-
-                Sleep(1000);
             }
         }
 
@@ -9604,20 +10153,7 @@ DWORD WINAPI EQMACMQ_ThreadBoxChat(LPVOID param)
     closesocket(g_connectSocket);
     //WSACleanup();
 
-    g_bBoxChatThreadIsFinished = 1;
-
-    return 0;
-}
-
-DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
-{
-    while (g_bExit == 0 && g_bBoxChatThreadIsFinished == 0)
-    {
-        Sleep(1000);
-    }
-
-    WaitForSingleObject(g_handleThreadBoxChat, 10000);
-    CloseHandle(g_handleThreadBoxChat);
+    EQMACMQ_DoHacksLoad(false);
 
     DetourRemove((PBYTE)EQMACMQ_REAL_CEverQuest__LMouseDown, (PBYTE)EQMACMQ_DETOUR_CEverQuest__LMouseDown);
     DetourRemove((PBYTE)EQMACMQ_REAL_CEverQuest__LMouseUp,   (PBYTE)EQMACMQ_DETOUR_CEverQuest__LMouseUp);
@@ -9633,6 +10169,9 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
 
     DetourRemove((PBYTE)EQMACMQ_REAL_DrawNetStatus, (PBYTE)EQMACMQ_DETOUR_DrawNetStatus);
 
+    DetourRemove((PBYTE)EQMACMQ_REAL_CDisplay__SetNameSpriteState, (PBYTE)EQMACMQ_DETOUR_CDisplay__SetNameSpriteState);
+    DetourRemove((PBYTE)EQMACMQ_REAL_CDisplay__SetNameSpriteTint,  (PBYTE)EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint);
+
     if (g_classicUiIsEnabled == false)
     {
         DetourRemove((PBYTE)EQMACMQ_REAL_CItemDisplayWnd__SetItem,  (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetItem);
@@ -9641,6 +10180,9 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
         DetourRemove((PBYTE)EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay);
     }
 
+    CloseHandle(g_handleThreadLoad);
+
+    FreeLibraryAndExitThread(g_module, 0);
     FreeLibraryAndExitThread(g_module, 0);
     return 0;
 }
@@ -9706,9 +10248,12 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
 
     EQMACMQ_GuiRecalculateCoordinates();
 
-    g_handleThreadLoop = CreateThread(NULL, 0, &EQMACMQ_ThreadLoop, NULL, 0, NULL);
+    if (g_hacksIsEnabled == true)
+    {
+        EQMACMQ_DoHacksLoad(true);
+    }
 
-    g_handleThreadBoxChat = CreateThread(NULL, 0, &EQMACMQ_ThreadBoxChat, NULL, 0, NULL);
+    g_handleThreadLoop = CreateThread(NULL, 0, &EQMACMQ_ThreadLoop, NULL, 0, NULL);
 
     EQMACMQ_REAL_CEverQuest__LMouseDown = (EQ_FUNCTION_TYPE_CEverQuest__LMouseDown)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__LMouseDown, (PBYTE)EQMACMQ_DETOUR_CEverQuest__LMouseDown);
     EQMACMQ_REAL_CEverQuest__LMouseUp   = (EQ_FUNCTION_TYPE_CEverQuest__LMouseUp)  DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__LMouseUp,   (PBYTE)EQMACMQ_DETOUR_CEverQuest__LMouseUp);
@@ -9723,6 +10268,9 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
     EQMACMQ_REAL_CEverQuest__dsp_chat = (EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__dsp_chat, (PBYTE)EQMACMQ_DETOUR_CEverQuest__dsp_chat);
 
     EQMACMQ_REAL_DrawNetStatus = (EQ_FUNCTION_TYPE_DrawNetStatus)DetourFunction((PBYTE)EQ_FUNCTION_DrawNetStatus, (PBYTE)EQMACMQ_DETOUR_DrawNetStatus);
+
+    EQMACMQ_REAL_CDisplay__SetNameSpriteState = (EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteState)DetourFunction((PBYTE)EQ_FUNCTION_CDisplay__SetNameSpriteState, (PBYTE)EQMACMQ_DETOUR_CDisplay__SetNameSpriteState);
+    EQMACMQ_REAL_CDisplay__SetNameSpriteTint  = (EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteTint) DetourFunction((PBYTE)EQ_FUNCTION_CDisplay__SetNameSpriteTint,  (PBYTE)EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint);
 
     if (g_classicUiIsEnabled == false)
     {
@@ -9747,15 +10295,6 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID reserved)
             break;
 
         case DLL_PROCESS_DETACH:
-            //WaitForSingleObject(g_handleThreadBoxChat, INFINITE);
-            CloseHandle(g_handleThreadBoxChat);
-
-            //WaitForSingleObject(g_handleThreadLoop, INFINITE);
-            CloseHandle(g_handleThreadLoop);
-
-            //WaitForSingleObject(g_handleThreadLoad, INFINITE);
-            CloseHandle(g_handleThreadLoad);
-
             break;
     }
 

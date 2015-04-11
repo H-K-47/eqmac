@@ -70,7 +70,18 @@ void EQ_WriteMemoryString(DWORD address, const char* value)
     *(unsigned char*)(address + j) = '\0';
 }
 
-// structures
+// direct input
+
+IDirectInput8** EQ_ppIDirectInput8 = (IDirectInput8**)EQ_DINPUT;
+#define EQ_IDirectInput8 (*EQ_ppIDirectInput8)
+
+IDirectInputDevice8** EQ_ppIDirectInputDevice8_Keyboard = (IDirectInputDevice8**)EQ_DINPUT_DEVICE_KEYBOARD;
+#define EQ_IDirectInputDevice8_Keyboard (*EQ_ppIDirectInputDevice8_Keyboard)
+
+IDirectInputDevice8** EQ_ppIDirectInputDevice8_Mouse = (IDirectInputDevice8**)EQ_DINPUT_DEVICE_MOUSE;
+#define EQ_IDirectInputDevice8_Mouse (*EQ_ppIDirectInputDevice8_Mouse)
+
+// object structures
 
 EQVIEWPORT* EQ_OBJECT_pViewPort = (EQVIEWPORT*)EQ_STRUCTURE_VIEWPORT;
 #define EQ_OBJECT_ViewPort (*EQ_OBJECT_pViewPort)
@@ -81,7 +92,7 @@ EQGUILDLIST* EQ_OBJECT_pGuildList = (EQGUILDLIST*)EQ_STRUCTURE_GUILD_LIST;
 EQCOMMANDLIST* EQ_OBJECT_pCommandList = (EQCOMMANDLIST*)EQ_STRUCTURE_COMMAND_LIST;
 #define EQ_OBJECT_CommandList (*EQ_OBJECT_pCommandList)
 
-// pointers
+// object pointers
 
 EQSPELLLIST** EQ_OBJECT_ppSpellList = (EQSPELLLIST**)EQ_POINTER_SPELL_MANAGER;
 #define EQ_OBJECT_SpellList (*EQ_OBJECT_ppSpellList)
@@ -169,6 +180,8 @@ public:
 class CDisplay
 {
 public:
+    void CDisplay::Render_World(void);
+    void CDisplay::RealRender_World(void);
     void CDisplay::MoveLocalPlayerToSafeCoords(void);
     static int __cdecl CDisplay::WriteTextHD2(const char* text, int x, int y, int color, int font);
     PEQSTRINGSPRITE CDisplay::ChangeDagStringSprite(PEQDAGINFO dag, int fontTexture, char* text);
@@ -307,6 +320,18 @@ EQ_FUNCTION_AT_ADDRESS(int CXWndManager::DrawWindows(void) const, EQ_FUNCTION_CX
 #endif
 
 /* CDisplay */
+
+#define EQ_FUNCTION_CDisplay__Render_World 0x004AA8BC
+#ifdef EQ_FUNCTION_CDisplay__Render_World
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CDisplay__Render_World)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(void CDisplay::Render_World(void), EQ_FUNCTION_CDisplay__Render_World);
+#endif
+
+#define EQ_FUNCTION_CDisplay__RealRender_World 0x004AAA1B
+#ifdef EQ_FUNCTION_CDisplay__RealRender_World
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CDisplay__RealRender_World)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(void CDisplay::RealRender_World(void), EQ_FUNCTION_CDisplay__RealRender_World);
+#endif
 
 #define EQ_FUNCTION_CDisplay__MoveLocalPlayerToSafeCoords 0x004B459C
 #ifdef EQ_FUNCTION_CDisplay__MoveLocalPlayerToSafeCoords
@@ -1271,7 +1296,7 @@ PEQSPAWNINFO EQ_GetNearestSpawn(int spawnType)
     return NULL;
 }
 
-int EQ_GetStringSpriteFontTexture()
+DWORD EQ_GetStringSpriteFontTexture()
 {
     DWORD display = EQ_ReadMemory<DWORD>(EQ_POINTER_CDisplay);
 

@@ -18,6 +18,10 @@
 #include <psapi.h>
 #pragma comment(lib, "psapi.lib")
 
+#define DIRECTINPUT_VERSION 0x0800
+#include "dinput.h"
+#pragma comment(lib, "dinput.lib")
+
 #include "detours.h"
 #pragma comment(lib, "detours.lib")
 
@@ -30,6 +34,8 @@ const char* g_applicationExeName = "eqmac_mq";
 bool g_bLoaded = false;
 
 volatile int g_bExit = 0;
+
+HWND g_hwnd;
 
 HMODULE g_module;
 
@@ -615,6 +621,11 @@ int g_nameColorsGuildmaster  = 0xFF8000;
 int g_nameColorsPlayerCorpse = 0x808080;
 int g_nameColorsNpcCorpse    = 0x808080;
 
+bool g_limitCpuUsageIsEnabled = true;
+
+int g_limitCpuUsageForegroundDelay = 1;
+int g_limitCpuUsageBackgroundDelay = 10;
+
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
 // need this to clip lines within the map window rectangle
@@ -872,6 +883,33 @@ bool EQMACMQ_DoBoxChatConnect()
     //WSACleanup();
 
     return false;
+}
+
+BOOL CALLBACK EQMACMQ_UpdateHwndProc(HWND hwnd, LPARAM lparam)
+{
+    if (lparam == 0)
+    {
+        return TRUE;
+    }
+
+    DWORD processId;
+    GetWindowThreadProcessId(hwnd, &processId);
+
+    if (processId == lparam)
+    {
+        g_hwnd = hwnd;
+
+        return FALSE;
+    }
+
+    g_hwnd = NULL;
+
+    return TRUE;
+}
+
+void EQMACMQ_UpdateHwnd()
+{
+    EnumWindows(EQMACMQ_UpdateHwndProc, GetCurrentProcessId());
 }
 
 BOOL CALLBACK EQMACMQ_DoClientSwitchProc(HWND hwnd,LPARAM lparam)
@@ -1227,28 +1265,6 @@ bool EQMACMQ_LoadConfig(const char* filename)
 
     g_boxChatKeepAliveDelay = EQMACMQ_ConfigReadInt(filename, "BoxChat", "iKeepAliveDelay", g_boxChatKeepAliveDelay);
 
-    // NameText
-
-    g_nameTextIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bEnabled", g_nameTextIsEnabled);
-
-    g_nameTextNpcLevelAndClassIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bNpcLevelAndClass", g_nameTextNpcLevelAndClassIsEnabled);
-
-    // NameColors
-
-    g_nameColorsIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameColors", "bEnabled", g_nameColorsIsEnabled);
-
-    g_nameColorsBankerIsEnabled       = EQMACMQ_ConfigReadBool(filename, "NameColors", "bBanker",       g_nameColorsBankerIsEnabled);
-    g_nameColorsMerchantIsEnabled     = EQMACMQ_ConfigReadBool(filename, "NameColors", "bMerchant",     g_nameColorsMerchantIsEnabled);
-    g_nameColorsGuildmasterIsEnabled  = EQMACMQ_ConfigReadBool(filename, "NameColors", "bGuildmaster",  g_nameColorsGuildmasterIsEnabled);
-    g_nameColorsPlayerCorpseIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameColors", "bPlayerCorpse", g_nameColorsGuildmasterIsEnabled);
-    g_nameColorsNpcCorpseIsEnabled    = EQMACMQ_ConfigReadBool(filename, "NameColors", "bNpcCorpse",    g_nameColorsGuildmasterIsEnabled);
-
-    g_nameColorsBanker       = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbBanker",       g_nameColorsBanker);
-    g_nameColorsMerchant     = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbMerchant",     g_nameColorsMerchant);
-    g_nameColorsGuildmaster  = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbGuildmaster",  g_nameColorsGuildmaster);
-    g_nameColorsPlayerCorpse = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbPlayerCorpse", g_nameColorsPlayerCorpse);
-    g_nameColorsNpcCorpse    = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbNpcCorpse",    g_nameColorsNpcCorpse);
-
     // HUD
 
     g_hudButtonsIsEnabled = EQMACMQ_ConfigReadBool(filename, "HUD", "bButtons", g_hudButtonsIsEnabled);
@@ -1291,6 +1307,13 @@ bool EQMACMQ_LoadConfig(const char* filename)
     g_clientSwitcherHotkeyNumpad4IsEnabled = EQMACMQ_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad4", g_clientSwitcherHotkeyNumpad4IsEnabled);
     g_clientSwitcherHotkeyNumpad5IsEnabled = EQMACMQ_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad5", g_clientSwitcherHotkeyNumpad5IsEnabled);
     g_clientSwitcherHotkeyNumpad6IsEnabled = EQMACMQ_ConfigReadBool(filename, "ClientSwitcher", "bHotkeyNumpad6", g_clientSwitcherHotkeyNumpad6IsEnabled);
+
+    // LimitCpuUsage
+
+    g_limitCpuUsageIsEnabled = EQMACMQ_ConfigReadBool(filename, "LimitCpuUsage", "bEnabled", g_limitCpuUsageIsEnabled);
+
+    g_limitCpuUsageForegroundDelay = EQMACMQ_ConfigReadInt(filename, "LimitCpuUsage", "iForegroundDelay", g_limitCpuUsageForegroundDelay);
+    g_limitCpuUsageBackgroundDelay = EQMACMQ_ConfigReadInt(filename, "LimitCpuUsage", "iBackgroundDelay", g_limitCpuUsageBackgroundDelay);
 
     // Map
 
@@ -1553,6 +1576,28 @@ bool EQMACMQ_LoadConfig(const char* filename)
 
     EQMACMQ_ConfigReadString(filename, "TargetInfo", "sTextColor", "Pink", g_targetInfoTextColor_string, sizeof(g_targetInfoTextColor_string));
     g_targetInfoTextColor = EQ_GetTextColorIdByName(g_targetInfoTextColor_string);
+
+    // NameText
+
+    g_nameTextIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bEnabled", g_nameTextIsEnabled);
+
+    g_nameTextNpcLevelAndClassIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bNpcLevelAndClass", g_nameTextNpcLevelAndClassIsEnabled);
+
+    // NameColors
+
+    g_nameColorsIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameColors", "bEnabled", g_nameColorsIsEnabled);
+
+    g_nameColorsBankerIsEnabled       = EQMACMQ_ConfigReadBool(filename, "NameColors", "bBanker",       g_nameColorsBankerIsEnabled);
+    g_nameColorsMerchantIsEnabled     = EQMACMQ_ConfigReadBool(filename, "NameColors", "bMerchant",     g_nameColorsMerchantIsEnabled);
+    g_nameColorsGuildmasterIsEnabled  = EQMACMQ_ConfigReadBool(filename, "NameColors", "bGuildmaster",  g_nameColorsGuildmasterIsEnabled);
+    g_nameColorsPlayerCorpseIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameColors", "bPlayerCorpse", g_nameColorsGuildmasterIsEnabled);
+    g_nameColorsNpcCorpseIsEnabled    = EQMACMQ_ConfigReadBool(filename, "NameColors", "bNpcCorpse",    g_nameColorsGuildmasterIsEnabled);
+
+    g_nameColorsBanker       = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbBanker",       g_nameColorsBanker);
+    g_nameColorsMerchant     = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbMerchant",     g_nameColorsMerchant);
+    g_nameColorsGuildmaster  = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbGuildmaster",  g_nameColorsGuildmaster);
+    g_nameColorsPlayerCorpse = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbPlayerCorpse", g_nameColorsPlayerCorpse);
+    g_nameColorsNpcCorpse    = EQMACMQ_ConfigReadInt(filename, "NameColors", "rgbNpcCorpse",    g_nameColorsNpcCorpse);
 
     // Hacks
 
@@ -3138,14 +3183,18 @@ void EQMACMQ_DoHackEnable(const char* filename, bool enable)
             token = strtok_s(NULL, " ", &tokenNext);
         }
 
+        DWORD oldProtection;
+        VirtualProtectEx(GetCurrentProcess(), (LPVOID)address, valueSize, PAGE_EXECUTE_READWRITE, &oldProtection);
+
         WriteProcessMemory(GetCurrentProcess(), (LPVOID)address, value, valueSize, 0);
 
+        DWORD tempProtection;
+        VirtualProtectEx(GetCurrentProcess(), (LPVOID)address, valueSize, oldProtection, &tempProtection);
+
         char logText[128];
-        sprintf_s(logText, "WriteProcessMemory, Address: 0x%08X, First Value: 0x%X, Size: %d", address, *value, valueSize);
+        sprintf_s(logText, _TRUNCATE, "WriteProcessMemory, Address: 0x%08X, First Value: 0x%X, Size: %d", address, *value, valueSize);
 
         EQMACMQ_Log(logText);
-
-        free(value);
 
         struct _EQMACMQHACK* hack = g_hackListBegin;
 
@@ -5225,9 +5274,9 @@ void EQMACMQ_DoMap()
 
     EQGROUPLIST* groupList = (EQGROUPLIST*)EQ_STRUCTURE_GROUP_LIST;
 
-    EQLOCATION playerLocation = {EQ_OBJECT_PlayerSpawn->Y, EQ_OBJECT_PlayerSpawn->X, EQ_OBJECT_PlayerSpawn->Z};
+    EQLOCATION playerLocation = {playerSpawn->Y, playerSpawn->X, playerSpawn->Z};
 
-    EQLOCATION targetLocation = {EQ_OBJECT_TargetSpawn->Y, EQ_OBJECT_TargetSpawn->X, EQ_OBJECT_TargetSpawn->Z};
+    //EQLOCATION targetLocation = {targetSpawn->Y, targetSpawn->X, targetSpawn->Z};
 
     float mapPlayerX = (((-playerSpawn->X * g_mapZoom) + g_mapOriginX) + ((playerSpawn->X + g_mapOffsetX) * g_mapZoom));
     float mapPlayerY = (((-playerSpawn->Y * g_mapZoom) + g_mapOriginY) + ((playerSpawn->Y + g_mapOffsetY) * g_mapZoom));
@@ -6357,9 +6406,9 @@ void EQMACMQ_DoEsp()
 
     EQGROUPLIST* groupList = (EQGROUPLIST*)EQ_STRUCTURE_GROUP_LIST;
 
-    EQLOCATION playerLocation = {EQ_OBJECT_PlayerSpawn->Y, EQ_OBJECT_PlayerSpawn->X, EQ_OBJECT_PlayerSpawn->Z};
+    EQLOCATION playerLocation = {playerSpawn->Y, playerSpawn->X, playerSpawn->Z};
 
-    EQLOCATION targetLocation = {EQ_OBJECT_TargetSpawn->Y, EQ_OBJECT_TargetSpawn->X, EQ_OBJECT_TargetSpawn->Z};
+    //EQLOCATION targetLocation = {targetSpawn->Y, targetSpawn->X, targetSpawn->Z};
 
     if (g_espSkeletonsIsEnabled == true)
     {
@@ -7420,7 +7469,7 @@ void EQMACMQ_DoHealthBars()
 
     PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
 
-    EQLOCATION playerLocation = {EQ_OBJECT_PlayerSpawn->Y, EQ_OBJECT_PlayerSpawn->X, EQ_OBJECT_PlayerSpawn->Z};
+    EQLOCATION playerLocation = {playerSpawn->Y, playerSpawn->X, playerSpawn->Z};
 
     PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
 
@@ -7733,6 +7782,8 @@ void EQMACMQ_DoMessageTextGainedExperience()
 
 void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
 {
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
     DWORD cameraView = EQ_ReadMemory<DWORD>(EQ_CAMERA_VIEW);
 
     FLOAT cameraThirdPersonZoom = 0.0f;
@@ -7771,7 +7822,7 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
             cameraView == EQ_CAMERA_VIEW_THIRD_PERSON4
         )
         {
-            if (cameraThirdPersonZoom <= EQ_OBJECT_PlayerSpawn->ModelHeightOffset)
+            if (cameraThirdPersonZoom <= playerSpawn->ModelHeightOffset)
             {
                 if (cameraView == EQ_CAMERA_VIEW_THIRD_PERSON2)
                 {
@@ -7781,7 +7832,7 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
                 {
                     if (zoomAddress != NULL)
                     {
-                        zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+                        zoom = playerSpawn->ModelHeightOffset;
 
                         EQ_WriteMemory<FLOAT>(zoomAddress, zoom);
                     }
@@ -7791,11 +7842,11 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
             {
                 if (zoomAddress != NULL)
                 {
-                    zoom = cameraThirdPersonZoom - (EQ_OBJECT_PlayerSpawn->ModelHeightOffset * g_mouseWheelZoomMultiplier);
+                    zoom = cameraThirdPersonZoom - (playerSpawn->ModelHeightOffset * g_mouseWheelZoomMultiplier);
 
-                    if (zoom < EQ_OBJECT_PlayerSpawn->ModelHeightOffset)
+                    if (zoom < playerSpawn->ModelHeightOffset)
                     {
-                        zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+                        zoom = playerSpawn->ModelHeightOffset;
                     }
 
                     EQ_WriteMemory<FLOAT>(zoomAddress, zoom);
@@ -7807,7 +7858,7 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
     {
         if (cameraView == EQ_CAMERA_VIEW_FIRST_PERSON)
         {
-            zoom = EQ_OBJECT_PlayerSpawn->ModelHeightOffset;
+            zoom = playerSpawn->ModelHeightOffset;
 
             EQ_WriteMemory<FLOAT>(EQ_CAMERA_VIEW_THIRD_PERSON2_ZOOM, zoom);
 
@@ -7822,7 +7873,7 @@ void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
         {
             if (zoomAddress != NULL)
             {
-                zoom = cameraThirdPersonZoom + (EQ_OBJECT_PlayerSpawn->ModelHeightOffset * g_mouseWheelZoomMultiplier);
+                zoom = cameraThirdPersonZoom + (playerSpawn->ModelHeightOffset * g_mouseWheelZoomMultiplier);
 
                 if (zoom > cameraThirdPersonZoomMax)
                 {
@@ -8103,6 +8154,33 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* not
 
     if (item && EQ_OBJECT_CItemDisplayWnd->DisplayText)
     {
+        char itemFilename[1024];
+        sprintf_s(itemFilename, ".\\items\\%d.txt", item->Id);
+
+        FILE* file;
+        errno_t fileErrorNumber = fopen_s(&file, itemFilename, "rb");
+
+        if (file)
+        {
+            fseek(file, 0, SEEK_END);
+            long fileSize = ftell(file);
+            fseek(file, 0, SEEK_SET);
+
+            if (fileSize > 0)
+            {
+                char* fileContents = (char*)malloc(fileSize);
+                fread(fileContents, fileSize, 1, file);
+
+                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR>");
+                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, fileContents);
+                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR>");
+
+                free(fileContents);
+            }
+
+            fclose(file);
+        }
+
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR><c \"#FF00FF\">");
 
         char itemIdText[128];
@@ -8122,32 +8200,6 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* not
         }
 
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "</c>");
-
-        char itemFilename[1024];
-        sprintf_s(itemFilename, ".\\items\\%d.txt", item->Id);
-
-        FILE* file;
-        errno_t fileErrorNumber = fopen_s(&file, itemFilename, "rb");
-
-        if (file)
-        {
-            fseek(file, 0, SEEK_END);
-            long fileSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
-
-            if (fileSize > 0)
-            {
-                char* fileContents = (char*)malloc(fileSize + 1);
-                fread(fileContents, fileSize, 1, file);
-
-                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR>");
-                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, fileContents);
-
-                free(fileContents);
-            }
-
-            fclose(file);
-        }
     }
 
     return result;
@@ -8235,6 +8287,33 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell(void* this_ptr, void* no
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
         }
 
+        char spellFilename[1024];
+        sprintf_s(spellFilename, ".\\spells\\%d.txt", spell->Id);
+
+        FILE* file;
+        errno_t fileErrorNumber = fopen_s(&file, spellFilename, "rb");
+
+        if (file)
+        {
+            fseek(file, 0, SEEK_END);
+            long fileSize = ftell(file);
+            fseek(file, 0, SEEK_SET);
+
+            if (fileSize > 0)
+            {
+                char* fileContents = (char*)malloc(fileSize);
+                fread(fileContents, fileSize, 1, file);
+
+                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR>");
+                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, fileContents);
+                EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR>");
+
+                free(fileContents);
+            }
+
+            fclose(file);
+        }
+
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR><c \"#FF00FF\">");
 
         memset(spellText, 0, sizeof(spellText));
@@ -8310,6 +8389,11 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
         return result;
     }
 
+    if (EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+    {
+        return result;
+    }
+
     BYTE showNpcNames = EQ_ReadMemory<BYTE>(EQ_IS_SHOW_NPC_NAMES_ENABLED);
 
     if (showNpcNames == 0)
@@ -8318,6 +8402,26 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
     }
 
     PEQSPAWNINFO spawn = (PEQSPAWNINFO)a1;
+
+    if (spawn == NULL)
+    {
+        return result;
+    }
+
+    if (spawn->ActorInfo->DagHeadPoint == NULL)
+    {
+        return result;
+    }
+
+    if (spawn->ActorInfo->DagHeadPoint->StringSprite == NULL)
+    {
+        return result;
+    }
+
+    if (spawn->ActorInfo->DagHeadPoint->StringSprite->Text == NULL)
+    {
+        return result;
+    }
 
     char nameText[128];
     strcpy_s(nameText, spawn->ActorInfo->DagHeadPoint->StringSprite->Text);
@@ -8335,8 +8439,6 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
 
             EQ_CLASS_CDisplay->ChangeDagStringSprite(spawn->ActorInfo->DagHeadPoint, fontTexture, nameText);
 
-            // EQ_CLASS_CDisplay->SetNameSpriteTint crashes
-            // have to use the detour
             EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(this_ptr, not_used, a1);
         }
     }
@@ -8360,9 +8462,17 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(void* this_ptr, void* 
 
     PEQSPAWNINFO spawn = (PEQSPAWNINFO)a1;
 
-    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+    if (spawn == NULL)
+    {
+        return result;
+    }
 
-    if (spawn == targetSpawn || spawn->ActorInfo->DagHeadPoint->StringSprite == NULL)
+    if (spawn->ActorInfo->DagHeadPoint == NULL)
+    {
+        return result;
+    }
+
+    if (spawn->ActorInfo->DagHeadPoint->StringSprite == NULL)
     {
         return result;
     }
@@ -8403,6 +8513,60 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(void* this_ptr, void* 
         if (g_nameColorsPlayerCorpseIsEnabled == true)
         {
             spawn->ActorInfo->DagHeadPoint->StringSprite->Color = EQ_GetRgbColorFromInt(g_nameColorsPlayerCorpse);
+        }
+    }
+
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    if (targetSpawn == NULL)
+    {
+        return result;
+    }
+
+    static int flash;
+
+    if (spawn == targetSpawn)
+    {
+        int r = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.R;
+        int g = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.G;
+        int b = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.B;
+
+        int rr = flash * ((255 - r) / 10);
+        int gg = flash * ((255 - g) / 10);
+        int bb = flash * ((255 - b) / 10);
+
+        int rrr = 0;
+
+        if (255 - rr >= 0)
+        {
+            rrr = 255 - rr;
+        }
+
+        int ggg = 255 - gg;
+
+        if (255 - gg < 0)
+        {
+          ggg = 0;
+        }
+
+        int bbb = 255 - bb;
+
+        if (255 - bb < 0)
+        {
+          bbb = 0;
+        }
+
+        spawn->ActorInfo->DagHeadPoint->StringSprite->Color.R = rrr;
+        spawn->ActorInfo->DagHeadPoint->StringSprite->Color.G = ggg;
+        spawn->ActorInfo->DagHeadPoint->StringSprite->Color.B = bbb;
+
+        if (flash == 10)
+        {
+            flash = 0;
+        }
+        else
+        {
+            flash++;
         }
     }
 
@@ -9733,6 +9897,11 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
         g_ignoreKeysIsEnabled = true;
 
         g_ignoreKeysTimer = 0;
+
+        if (g_limitCpuUsageIsEnabled == true)
+        {
+            Sleep(g_limitCpuUsageBackgroundDelay);
+        }
     }
     else
     {
@@ -9741,6 +9910,11 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
         if (g_ignoreKeysTimer == 0)
         {
             g_ignoreKeysTimer = currentTime;
+        }
+
+        if (g_limitCpuUsageIsEnabled == true)
+        {
+            Sleep(g_limitCpuUsageForegroundDelay);
         }
     }
 
@@ -10180,9 +10354,6 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
         DetourRemove((PBYTE)EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay);
     }
 
-    CloseHandle(g_handleThreadLoad);
-
-    FreeLibraryAndExitThread(g_module, 0);
     FreeLibraryAndExitThread(g_module, 0);
     return 0;
 }

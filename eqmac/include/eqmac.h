@@ -34,6 +34,10 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_ALTERNATE_ADVANCEMENT_EXPERIENCE_MAX 330 // the progress bar (0-330)
 
+#define EQ_DINPUT                 0x8092DC
+#define EQ_DINPUT_DEVICE_KEYBOARD 0x8092E0
+#define EQ_DINPUT_DEVICE_MOUSE    0x8092E4
+
 #define EQ_IS_KEY_PRESSED_SHIFT   0x0080931C // DWORD
 #define EQ_IS_KEY_PRESSED_CONTROL 0x00809320 // DWORD
 #define EQ_IS_KEY_PRESSED_ALT     0x0080932C // DWORD
@@ -1247,7 +1251,7 @@ typedef struct _EQACTORINFO
 /* 0x0008 */ char ActorDef[64]; // xxx_ACTORDEF string (HUM_ACTORDEF, ELM_ACTORDEF, etc)
 /* 0x0048 */ FLOAT Z;
 /* 0x004C */ FLOAT ZCeiling; // Z axis of the ceiling or first collision above player
-/* 0x0050 */ PVOID Unknown0050;
+/* 0x0050 */ PVOID Unknown0050; // EqMobileEmitter*
 /* 0x0054 */ DWORD Unknown0054;
 /* 0x0058 */ DWORD UnknownTimer1;
 /* 0x005C */ DWORD UnknownTimer2;

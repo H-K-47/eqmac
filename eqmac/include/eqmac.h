@@ -34,7 +34,7 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_ALTERNATE_ADVANCEMENT_EXPERIENCE_MAX 330 // the progress bar (0-330)
 
-#define EQ_DINPUT                 0x8092DC
+#define EQ_DINPUT_ROOT            0x8092DC
 #define EQ_DINPUT_DEVICE_KEYBOARD 0x8092E0
 #define EQ_DINPUT_DEVICE_MOUSE    0x8092E4
 
@@ -51,11 +51,17 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_POINTER_GRAPHICS_DLL 0x007F9C50 // EQGfx_Dx8.DLL base address
 
+#define EQ_POINTER_EQGfx_Dx8__t3dSetCameraLocation 0x007F9AE4
+
 #define EQ_GRAPHICS_DLL_DEFERRED_2D_ITEMS_MAX 4000 // t3dDefer...
 
 #define EQ_POINTER_StringTable 0x007F9490 // eqstr_xx.txt
 
 #define EQ_POINTER_CAMERA_INFO 0x0063B928
+
+#define EQ_CAMERA_PITCH_DEFAULT -8.5f // 119.5 + 8.5 = 128 everquest degrees = 90 degrees
+#define EQ_CAMERA_PITCH_MIN -119.5f
+#define EQ_CAMERA_PITCH_MAX 119.5f
 
 #define EQ_POINTER_CXWndManager 0x00809DB4
 
@@ -109,6 +115,19 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_POINTER_CHotButtonWnd   0x0063D628
 #define EQ_POINTER_CItemDisplayWnd 0x0063D5E0
 #define EQ_POINTER_CTradeWnd       0x0063D668
+
+#define EQ_NUM_COMMANDS 277 // 0-276
+#define EQ_NUM_BUFFS 15
+#define EQ_NUM_SPELLS 4000
+#define EQ_NUM_SPELL_GEMS 8
+#define EQ_NUM_GROUP_MEMBERS 5
+#define EQ_NUM_INVENTORY_SLOTS 21
+#define EQ_NUM_INVENTORY_PACK_SLOTS 8
+#define EQ_NUM_INVENTORY_BANK_SLOTS 8
+#define EQ_NUM_SKILLS 74
+#define EQ_NUM_SPELL_BOOK_SPELLS 250 // 32 pages, 8 spells per page, should be 256?
+#define EQ_NUM_SPAWNS 8192
+#define EQ_NUM_GUILDS 512
 
 #define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
 #define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
@@ -170,8 +189,6 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_ZONE_INFO_LONG_NAME_SIZE   0x80
 
 #define EQ_STRUCTURE_COMMAND_LIST 0x00609AF8 // STRUCT
-
-#define EQ_COMMANDS_MAX 277 // 0-276
 
 // /viewport
 #define EQ_STRUCTURE_VIEWPORT 0x00798548 // STRUCT
@@ -235,8 +252,6 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_OFFSET_BUFF_SPELL_ID          0x04 // WORD
 #define EQ_OFFSET_BUFF_TICKS             0x06 // DWORD ; duration in ticks ; seconds = ticks * 3
 
-#define EQ_BUFFS_MAX 15
-
 #define EQ_SPELL_ID_NULL 0xFFFF // WORD
 
 #define EQ_BUFF_TYPE_DETRIMENTAL           0
@@ -294,8 +309,6 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_OFFSET_SPAWN_INFO_IS_AFK                  0x011C // BYTE
 #define EQ_OFFSET_SPAWN_INFO_LAST_NAME               0x012C // STRING [0x20]
 
-#define EQ_SPAWNS_MAX 8192
-
 #define EQ_SPAWN_INFO_NAME_SIZE      0x1E
 #define EQ_SPAWN_INFO_LAST_NAME_SIZE 0x20
 
@@ -323,9 +336,7 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_OFFSET_ACTOR_INFO_IS_NOT_MOVING               0x032D // BYTE
 #define EQ_OFFSET_ACTOR_INFO_IS_LFG                      0x0438 // BYTE
 
-#define EQ_CASTING_SPELL_ID_NULL 0xFFFF
-
-#define EQ_CASTING_SPELL_GEM_NUMBER_SINGING 255
+#define EQ_SPELL_GEM_NUMBER_BARD_SINGING 255
 
 // class EQ_Main
 #define EQ_POINTER_EQ_Main 0x007F9574
@@ -441,7 +452,6 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_OFFSET_CLASS_GUILDMASTER 16 // EQ_CLASS_x + 16 = EQ_CLASS_x_GUILDMASTER
 
 #define EQ_STRUCTURE_GUILD_LIST 0x007F9C94 // EQGUILDINFO
-#define EQ_GUILDS_MAX 512
 
 #define EQ_STRUCTURE_GROUP_LIST 0x007913F8 // EQSPAWNINFO
 #define EQ_GROUP_MEMBERS_MAX 5
@@ -487,6 +497,7 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_ANONYMOUS_STATE_FALSE    0x00
 #define EQ_ANONYMOUS_STATE_TRUE     0x01
 #define EQ_ANONYMOUS_STATE_ROLEPLAY 0x02
+#define EQ_ANONYMOUS_STATE_BOTH     0x03
 
 #define EQ_GAME_STATE_CHARACTER_SELECT 1
 #define EQ_GAME_STATE_ZONING           3
@@ -494,6 +505,10 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_GAME_STATE_IN_GAME          5
 #define EQ_GAME_STATE_LOADING_SCREEN   6
 #define EQ_GAME_STATE_ZONING3          7
+
+#define EQ_GUILD_STATUS_MEMBER  0
+#define EQ_GUILD_STATUS_OFFICER 1
+#define EQ_GUILD_STATUS_LEADER  2
 
 #define EQ_MOUSE_ICON_ARROW             0
 #define EQ_MOUSE_ICON_SIZE_ALL          1
@@ -1121,8 +1136,34 @@ typedef struct _EQSPELLINFO
 
 typedef struct _EQSPELLLIST
 {
-    struct _EQSPELLINFO* Spell[4096]; // 4000 spells
+    struct _EQSPELLINFO* Spell[EQ_NUM_SPELLS];
 } EQSPELLLIST, *PEQSPELLLIST;
+
+// 21 inventory slots
+typedef struct _EQINVENTORY
+{
+/* 00 */ struct _EQITEMINFO* EarLeft;
+/* 01 */ struct _EQITEMINFO* Head;
+/* 02 */ struct _EQITEMINFO* Face;
+/* 03 */ struct _EQITEMINFO* EarRight;
+/* 04 */ struct _EQITEMINFO* Neck;
+/* 05 */ struct _EQITEMINFO* Shoulders;
+/* 06 */ struct _EQITEMINFO* Arms;
+/* 07 */ struct _EQITEMINFO* Back;
+/* 08 */ struct _EQITEMINFO* WristLeft;
+/* 09 */ struct _EQITEMINFO* WristRight;
+/* 10 */ struct _EQITEMINFO* Ranged;
+/* 11 */ struct _EQITEMINFO* Hands;
+/* 12 */ struct _EQITEMINFO* Primary;
+/* 13 */ struct _EQITEMINFO* Secondary;
+/* 14 */ struct _EQITEMINFO* RingLeft;
+/* 15 */ struct _EQITEMINFO* RingRight;
+/* 16 */ struct _EQITEMINFO* Chest;
+/* 17 */ struct _EQITEMINFO* Legs;
+/* 18 */ struct _EQITEMINFO* Feet;
+/* 19 */ struct _EQITEMINFO* Waist;
+/* 20 */ struct _EQITEMINFO* Ammo;
+} EQINVENTORY, *PEQINVENTORY;
 
 // class EQ_Character
 typedef struct _EQCHARINFO
@@ -1149,11 +1190,11 @@ typedef struct _EQCHARINFO
 /* 0x00AA */ WORD BaseAGI;
 /* 0x00AC */ WORD BaseWIS;
 /* 0x00AE */ BYTE Unknown00AE[438];
-/* 0x0264 */ struct _EQBUFFINFO Buffs[15];
+/* 0x0264 */ struct _EQBUFFINFO Buffs[EQ_NUM_BUFFS];
 /* 0x02FA */ BYTE Unknown02FA[1080];
-/* 0x0732 */ WORD SpellBook[250];
+/* 0x0732 */ WORD SpellBook[EQ_NUM_SPELL_BOOK_SPELLS];
 /* 0x0926 */ BYTE Unknown0926[524];
-/* 0x0B32 */ WORD MemorizedSpells[8];
+/* 0x0B32 */ WORD MemorizedSpells[EQ_NUM_SPELL_GEMS]; // spell gem spell ids
 /* 0x0B42 */ BYTE Unknown0B42[34];
 /* 0x0B64 */ BYTE StandingState; // EQ_STANDING_STATE_x
 /* 0x0B65 */ BYTE Unknown0B65[3];
@@ -1165,8 +1206,80 @@ typedef struct _EQCHARINFO
 /* 0x0B7C */ DWORD BankGold;
 /* 0x0B80 */ DWORD BankSilver;
 /* 0x0B84 */ DWORD BankCopper;
-/* 0x0B88 */ BYTE Unknown0B88[32];
-/* 0x0BA8 */ WORD Skills[74];
+/* 0x0B88 */ DWORD CursorPlatinum; // currency held on the mouse cursor
+/* 0x0B8C */ DWORD CursorGold;
+/* 0x0B90 */ DWORD CursorSilver;
+/* 0x0B94 */ DWORD CursorCopper;
+/* 0x0B98 */ BYTE Unknown0B98[16];
+/* 0x0BA8 */ WORD Skills[EQ_NUM_SKILLS];
+/* 0x0C3C */ BYTE Unknown[200];
+/* 0x0D04 */ DWORD IsSwimmingUnderwater;
+/* 0x0D08 */ BYTE Unknown0D08[4];
+/* 0x0D0C */ BYTE Unknown0D0C[4];
+/* 0x0D10 */ BYTE IsAutoSplitEnabled;
+/* 0x0D11 */ BYTE Unknown0D11[43];
+/* 0x0D3C */ DWORD Unknown0D3C;
+/* 0x0D40 */ BYTE Unknown0D40[20];
+/* 0x0D54 */ DWORD Hunger;
+/* 0x0D58 */ DWORD Thirst;
+/* 0x0D5C */ BYTE Unknown0D5C[20];
+/* 0x0D70 */ DWORD ZoneId;
+/* 0x0D74 */ struct _EQSPAWNINFO* SpawnInfo;
+/* 0x0D78 */ struct _EQITEMINFO* CursorItem;
+union
+{
+/* 0x0D7C */ struct _EQINVENTORY Inventory;
+/* 0x0D7C */ struct _EQITEMINFO* InventoryItems[EQ_NUM_INVENTORY_SLOTS];
+};
+/* 0x0DD0 */ struct _EQITEMINFO* InventoryPackItems[EQ_NUM_INVENTORY_PACK_SLOTS];
+/* 0x0DF0 */ BYTE Unknown0DF0[116];
+/* 0x0E64 */ DWORD Unknown0E64;
+/* 0x0E68 */ BYTE Unknown0E68[32];
+/* 0x0E88 */ DWORD Unknown0E88;
+/* 0x0E8C */ BYTE Unknown0E8C[56];
+/* 0x0EC4 */ DWORD ZoneBoundId;
+/* 0x0EC8 */ DWORD Unknown0EC8;
+/* 0x0ECC */ DWORD Unknown0ECC;
+/* 0x0ED0 */ DWORD Unknown0ED0;
+/* 0x0ED4 */ DWORD ZoneBirthId;
+/* 0x0ED8 */ FLOAT ZoneBoundY;
+/* 0x0EDC */ DWORD Unknown0EDC;
+/* 0x0EE0 */ DWORD Unknown0EE0;
+/* 0x0EE4 */ DWORD Unknown0EE4;
+/* 0x0EE8 */ FLOAT ZoneBirthY;
+/* 0x0EEC */ FLOAT ZoneBoundX;
+/* 0x0EF0 */ DWORD Unknown0EF0;
+/* 0x0EF4 */ DWORD Unknown0EF4;
+/* 0x0EF8 */ DWORD Unknown0EF8;
+/* 0x0EFC */ FLOAT ZoneBirthX;
+/* 0x0F00 */ FLOAT ZoneBoundZ;
+/* 0x0F04 */ DWORD Unknown0F04;
+/* 0x0F08 */ DWORD Unknown0F08;
+/* 0x0F0C */ DWORD Unknown0F0C;
+/* 0x0F10 */ FLOAT ZoneBirthZ;
+/* 0x0F14 */ BYTE Unknown0F14[1080];
+/* 0x134C */ WORD Deity;
+/* 0x134E */ WORD GuildId;
+/* 0x1350 */ BYTE Unknown1350[8];
+/* 0x1358 */ BYTE Unknown1358;
+/* 0x1359 */ BYTE Unknown1359;
+/* 0x135A */ BYTE Unknown135A;
+/* 0x135B */ BYTE Unknown135B;
+/* 0x135C */ BYTE Unknown135C;
+/* 0x135D */ BYTE Unknown135D;
+/* 0x135E */ BYTE Stamina; // yellow endurance bar ; 100 = Empty, 0 = Full
+/* 0x135F */ BYTE Unknown135F;
+/* 0x1360 */ BYTE Unknown1360;
+/* 0x1361 */ BYTE AnonymousState;
+/* 0x1362 */ BYTE Unknown1362;
+/* 0x1363 */ BYTE GuildStatus; // guild rank
+/* 0x1364 */ BYTE Drunkness; // 0 = Not Drunk, counts down over time
+/* 0x1365 */ BYTE Unknown1365[451];
+/* 0x1528 */ DWORD AlternateAdvancementExperience;
+/* 0x152C */ BYTE Unknown152C[476];
+/* 0x1708 */ BYTE AirSupply; // air remaining while swimming underwater
+/* 0x1709 */ BYTE Unknown1709[2475];
+/* 0x20B4 */ struct _EQITEMINFO* InventoryBankItems[EQ_NUM_INVENTORY_BANK_SLOTS];
 /* ...... */ 
 } EQCHARINFO, *PEQCHARINFO;
 
@@ -1205,6 +1318,7 @@ typedef struct _EQTRACKINFO
 } EQTRACKINFO, *PEQTRACKINFO;
 
 // model skeleton bones
+// T3D_DAG
 typedef struct _EQDAGINFO
 {
 /* 0x0000 */ DWORD Unknown0000;
@@ -1229,6 +1343,37 @@ typedef struct _EQDAGCHILDREN
 /* 0x0000 */ struct _EQDAGINFO* Child[32];
 } EQDAGCHILDREN, *PEQDAGCHILDREN;
 
+typedef struct _EQACTORCOLLISIONINFO
+{
+/* 0x0000 */ DWORD CollisionVolumeType;
+/* 0x0004 */ DWORD Unknown0004;
+/* 0x0008 */ FLOAT CollisionSize;
+/* ...... */ 
+} EQACTORCOLLISIONINFO, *PEQACTORCOLLISIONINFO;
+
+// T3D_tagACTORINSTANCE
+typedef struct _EQACTORINSTANCEINFO
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD Unknown0004;
+/* 0x0008 */ DWORD Unknown0008;
+/* 0x000C */ DWORD Unknown000C;
+/* 0x0010 */ DWORD WorldX;
+/* 0x0014 */ PVOID WorldY;
+/* 0x0018 */ PVOID WorldZ;
+/* 0x001C */ DWORD Unknown001C;
+/* 0x0020 */ DWORD Unknown0020;
+/* 0x0024 */ DWORD Unknown0024;
+/* 0x0028 */ DWORD RegionNumber;
+/* 0x002C */ struct _EQACTORCOLLISIONINFO* CollisionInfo;
+/* 0x0030 */ DWORD Unknown0030;
+/* 0x0034 */ FLOAT ScaleFactor;
+/* 0x0038 */ FLOAT BoundingRadius;
+/* 0x003C */ BYTE Unknown003C[36];
+/* 0x0060 */ struct _EQSPAWNINFO* UserData;
+/* ...... */ 
+} EQACTORINSTANCEINFO, *PEQACTORINSTANCEINFO;
+
 typedef struct _EQMODELINFO
 {
 /* 0x0000 */ DWORD Unknown0000;
@@ -1238,7 +1383,7 @@ typedef struct _EQMODELINFO
 /* 0x0010 */ DWORD Unknown0010;
 /* 0x0014 */ PVOID Unknown0014;
 /* 0x0018 */ PVOID Unknown0018;
-/* 0x001C */ PVOID ActorInstance;
+/* 0x001C */ struct _EQACTORINSTANCEINFO* ActorInstance;
 /* 0x0020 */ DWORD NumDag; // includes Root
 /* 0x0024 */ struct _EQDAGINFO* DagRoot; // first dag
 /* ...... */ 
@@ -1246,7 +1391,7 @@ typedef struct _EQMODELINFO
 
 typedef struct _EQACTORINFO
 {
-/* 0x0000 */ PVOID ActorInstance; // TODO
+/* 0x0000 */ struct _EQACTORINSTANCEINFO* ActorInstance;
 /* 0x0004 */ struct _EQLIGHTINFO* LightInfo; // PointLight
 /* 0x0008 */ char ActorDef[64]; // xxx_ACTORDEF string (HUM_ACTORDEF, ELM_ACTORDEF, etc)
 /* 0x0048 */ FLOAT Z;
@@ -1292,7 +1437,18 @@ typedef struct _EQACTORINFO
 /* 0x00BC */ FLOAT MovementSpeedModifier; // how much slower/faster you move
 /* 0x00C0 */ BYTE Unknown00C0[196];
 /* 0x0184 */ DWORD Animation;
-/* 0x0188 */ BYTE Unknown0188[252];
+/* 0x0188 */ BYTE Unknown0188[216];
+/* 0x0260 */ DWORD IsHoldingBoth;
+/* 0x0264 */ DWORD IsHoldingSecondary;
+/* 0x0268 */ DWORD IsHoldingPrimary;
+/* 0x026C */ BYTE Unknown026C[4];
+/* 0x0270 */ BYTE Unknown0270[4];
+/* 0x0274 */ BYTE Unknown0274[4];
+/* 0x0278 */ BYTE Unknown0278[4];
+/* 0x027C */ WORD CastingSpellId;
+/* 0x027E */ BYTE CastingSpellGemNumber; // 255 = Bard Singing
+/* 0x027F */ BYTE Unknown027F;
+/* 0x0280 */ BYTE Unknown0280[4];
 /* 0x0284 */ struct _EQMODELINFO* ModelInfo;
 /* 0x0288 */ struct _EQDAGINFO* DagHeadPoint;
 /* 0x028C */ struct _EQDAGINFO* DagHead;
@@ -1378,7 +1534,7 @@ typedef struct _EQSPAWNINFO
 /* 0x0128 */ BYTE Unknown0128[4];
 /* 0x012C */ CHAR LastName[22]; // surname or title
 /* 0x0142 */ BYTE Unknown0142[10];
-/* 0x014C */ WORD GuildRank;
+/* 0x014C */ WORD GuildStatus; // guild rank
 /* 0x014E */ WORD Deity; // EQ_DEITY_x
 /* 0x0150 */ BYTE Unknown0150;
 /* 0x0151 */ BYTE Unknown0151[6];
@@ -1432,7 +1588,7 @@ typedef struct _EQDOORSPAWNINFO
 
 typedef struct _EQGROUPLIST
 {
-    struct _EQSPAWNINFO* GroupMember[5];
+    struct _EQSPAWNINFO* GroupMember[EQ_NUM_GROUP_MEMBERS];
 } EQGROUPLIST, *PEQGROUPLIST;
 
 // sizeof 0x96
@@ -1444,7 +1600,7 @@ typedef struct _EQGUILDINFO
 
 typedef struct _EQGUILDLIST
 {
-    struct _EQGUILDINFO Guild[EQ_GUILDS_MAX];
+    struct _EQGUILDINFO Guild[EQ_NUM_GUILDS];
 } EQGUILDLIST, *PEQGUILDLIST;
 
 // sizeof 0x14
@@ -1464,7 +1620,7 @@ typedef struct _EQCOMMANDINFO
 
 typedef struct _EQCOMMANDLIST
 {
-    struct _EQCOMMANDINFO Command[EQ_COMMANDS_MAX];
+    struct _EQCOMMANDINFO Command[EQ_NUM_COMMANDS];
 } EQCOMMANDLIST, *PEQCOMMANDLIST;
 
 // /viewport

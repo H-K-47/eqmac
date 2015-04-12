@@ -72,7 +72,7 @@ void EQ_WriteMemoryString(DWORD address, const char* value)
 
 // direct input
 
-IDirectInput8** EQ_ppIDirectInput8 = (IDirectInput8**)EQ_DINPUT;
+IDirectInput8** EQ_ppIDirectInput8 = (IDirectInput8**)EQ_DINPUT_ROOT;
 #define EQ_IDirectInput8 (*EQ_ppIDirectInput8)
 
 IDirectInputDevice8** EQ_ppIDirectInputDevice8_Keyboard = (IDirectInputDevice8**)EQ_DINPUT_DEVICE_KEYBOARD;
@@ -153,6 +153,7 @@ public:
     CXStr::CXStr(char const *);
     void CXStr::operator+=(char const *);
     void CXStr::operator=(char const *);
+    class CXStr& CXStr::operator=(class CXStr const&);
 };
 
 class CXWndManager
@@ -223,6 +224,10 @@ class EQ_Character
 {
 public:
     unsigned short EQ_Character::Max_Mana(void);
+    void EQ_Character::eqspa_movement_rate(short unknown);
+    int EQ_Character::CastSpell(unsigned char gem, short spellId, EQITEMINFO** item, short unknown);
+    int EQ_Character::StopSpellCast(unsigned char gem);
+    int EQ_Character::StopSpellCast(unsigned char gem, short spellId);
 };
 
 class EQ_Item
@@ -305,6 +310,12 @@ EQ_FUNCTION_AT_ADDRESS(void CXStr::operator+=(char const *), EQ_FUNCTION_CXStr__
 #define EQ_FUNCTION_CXStr__operator_equal_char_const 0x00576190
 #ifdef EQ_FUNCTION_CXStr__operator_equal_char_const
 EQ_FUNCTION_AT_ADDRESS(void CXStr::operator=(char const *), EQ_FUNCTION_CXStr__operator_equal_char_const);
+#endif
+
+// set
+#define EQ_FUNCTION_CXStr__operator_equal_CXStr_const 0x00576140
+#ifdef EQ_FUNCTION_CXStr__operator_equal_CXStr_const
+EQ_FUNCTION_AT_ADDRESS(class CXStr& CXStr::operator=(class CXStr const&), EQ_FUNCTION_CXStr__operator_equal_CXStr_const);
 #endif
 
 /* CXWndManager */
@@ -424,7 +435,7 @@ EQ_FUNCTION_AT_ADDRESS(int CEverQuest::MoveToZone(int, char*, int, int), EQ_FUNC
 
 #define EQ_FUNCTION_CEverQuest__LootCorpse 0x00547808
 #ifdef EQ_FUNCTION_CEverQuest__LootCorpse
-typedef signed int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LootCorpse)(void* this_ptr, class EQPlayer*, int);
+typedef signed int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LootCorpse)(void* this_ptr, class EQPlayer* spawn, int unknown);
 EQ_FUNCTION_AT_ADDRESS(int CEverQuest::LootCorpse(class EQPlayer*, int), EQ_FUNCTION_CEverQuest__LootCorpse);
 #endif
 
@@ -450,6 +461,30 @@ EQ_FUNCTION_AT_ADDRESS(void EQPlayer::FacePlayer(class EQPlayer*), EQ_FUNCTION_E
 #define EQ_FUNCTION_EQ_Character__Max_Mana 0x004B9483
 #ifdef EQ_FUNCTION_EQ_Character__Max_Mana
 EQ_FUNCTION_AT_ADDRESS(unsigned short EQ_Character::Max_Mana(void), EQ_FUNCTION_EQ_Character__Max_Mana);
+#endif
+
+#define EQ_FUNCTION_EQ_Character__eqspa_movement_rate 0x004CAABA
+#ifdef EQ_FUNCTION_EQ_Character__eqspa_movement_rate
+typedef int (__thiscall* EQ_FUNCTION_TYPE_EQ_Character__eqspa_movement_rate)(void* this_ptr, short unknown);
+EQ_FUNCTION_AT_ADDRESS(void EQ_Character::eqspa_movement_rate(short), EQ_FUNCTION_EQ_Character__eqspa_movement_rate);
+#endif
+
+#define EQ_FUNCTION_EQ_Character__CastSpell 0x004C483B
+#ifdef EQ_FUNCTION_EQ_Character__CastSpell
+typedef int (__thiscall* EQ_FUNCTION_TYPE_EQ_Character__CastSpell)(void* this_ptr, unsigned char gem, short spellId, EQITEMINFO** item, short unknown);
+EQ_FUNCTION_AT_ADDRESS(int EQ_Character::CastSpell(unsigned char, short, EQITEMINFO**, short), EQ_FUNCTION_EQ_Character__CastSpell);
+#endif
+
+#define EQ_FUNCTION_EQ_Character__StopSpellCast 0x004CB510
+#ifdef EQ_FUNCTION_EQ_Character__StopSpellCast
+typedef int (__thiscall* EQ_FUNCTION_TYPE_EQ_Character__StopSpellCast)(void* this_ptr, unsigned char gem, short spellId);
+EQ_FUNCTION_AT_ADDRESS(int EQ_Character::StopSpellCast(unsigned char, short), EQ_FUNCTION_EQ_Character__StopSpellCast);
+#endif
+
+#define EQ_FUNCTION_EQ_Character__StopSpellCast2 0x004CB4E8
+#ifdef EQ_FUNCTION_EQ_Character__StopSpellCast2
+typedef int (__thiscall* EQ_FUNCTION_TYPE_EQ_Character__StopSpellCast2)(void* this_ptr, unsigned char gem);
+EQ_FUNCTION_AT_ADDRESS(int EQ_Character::StopSpellCast(unsigned char), EQ_FUNCTION_EQ_Character__StopSpellCast2);
 #endif
 
 /* CHotButtonWnd */
@@ -527,6 +562,12 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyUp)(int key);
 #define EQ_FUNCTION_CastRay 0x004F20DB
 #ifdef EQ_FUNCTION_CastRay
 EQ_FUNCTION_AT_ADDRESS(int __cdecl EQ_CastRay(class EQPlayer* spawn, float y, float x, float z), EQ_FUNCTION_CastRay);
+#endif
+
+#define EQ_FUNCTION_AutoInventory 0x004F0EEB
+#ifdef EQ_FUNCTION_AutoInventory
+typedef int (__cdecl* EQ_FUNCTION_TYPE_AutoInventory)(PEQCHARINFO character, EQITEMINFO** item, short unknown);
+EQ_FUNCTION_AT_ADDRESS(int __cdecl EQ_AutoInventory(PEQCHARINFO character, EQITEMINFO** item, short unknown), EQ_FUNCTION_AutoInventory);
 #endif
 
 /* EQGfx_Dx8.DLL */
@@ -1475,7 +1516,7 @@ void everquest_function_update_spawns(std::vector<everquest_spawn_t> &spawns)
 
     spawn_info_address = spawn_next_spawn_info;
 
-    for (int i = 0; i < EQ_SPAWNS_MAX; i++)
+    for (int i = 0; i < EQ_NUM_SPAWNS; i++)
     {
         spawn_next_spawn_info = everquest_function_read_memory<DWORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
 

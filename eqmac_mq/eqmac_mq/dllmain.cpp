@@ -56,6 +56,8 @@ EQ_FUNCTION_TYPE_HandleMouseWheel EQMACMQ_REAL_HandleMouseWheel = NULL;
 EQ_FUNCTION_TYPE_ProcessKeyDown EQMACMQ_REAL_ProcessKeyDown = NULL;
 EQ_FUNCTION_TYPE_ProcessKeyUp   EQMACMQ_REAL_ProcessKeyUp   = NULL;
 
+EQ_FUNCTION_TYPE_ProcessMovementKeys EQMACMQ_REAL_ProcessMovementKeys = NULL;
+
 EQ_FUNCTION_TYPE_CEverQuest__InterpretCmd EQMACMQ_REAL_CEverQuest__InterpretCmd = NULL;
 
 EQ_FUNCTION_TYPE_CEverQuest__dsp_chat EQMACMQ_REAL_CEverQuest__dsp_chat = NULL;
@@ -74,7 +76,15 @@ EQ_FUNCTION_TYPE_EQ_Character__eqspa_movement_rate EQMACMQ_REAL_EQ_Character__eq
 
 EQ_FUNCTION_TYPE_EQ_Character__CastSpell EQMACMQ_REAL_EQ_Character__CastSpell = NULL;
 
+EQ_FUNCTION_TYPE_EQ_Character__UseSkill EQMACMQ_REAL_EQ_Character__UseSkill = NULL;
+
 EQ_FUNCTION_TYPE_AutoInventory EQMACMQ_REAL_AutoInventory = NULL;
+
+bool g_loggingIsEnabled = false;
+
+bool g_standWhenCastSpellIsEnabled = true;
+
+bool g_closeLootWindowWhenMovingIsEnabled = true;
 
 bool g_boxChatIsEnabled = true;
 
@@ -653,6 +663,20 @@ bool g_freeCameraIsEnabled = false;
 
 float g_freeCameraMultiplier = 1.0f;
 
+bool g_meleeIsEnabled = false;
+
+bool g_meleeRangeIsEnabled = false;
+
+unsigned int g_meleeTimer = 0;
+unsigned int g_meleeDelay = 1000;
+
+bool g_meleeSkillTauntIsEnabled = false;
+bool g_meleeSkillKickIsEnabled = false;
+bool g_meleeSkillBashIsEnabled = false;
+bool g_meleeSkillSlamIsEnabled = false;
+bool g_meleeSkillDisarmIsEnabled = false;
+bool g_meleeSkillSenseHeadingIsEnabled = false;
+
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
 // need this to clip lines within the map window rectangle
@@ -682,6 +706,11 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(void* this_ptr, void* 
 
 void EQMACMQ_Log(const char* text)
 {
+    if (g_loggingIsEnabled == false)
+    {
+        return;
+    }
+
     FILE* file;
     errno_t fileErrorNumber = fopen_s(&file, "eqmac_mq.log", "a");
 
@@ -1274,6 +1303,8 @@ bool EQMACMQ_LoadConfig(const char* filename)
 
     // Options
 
+    g_loggingIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bLogging", g_loggingIsEnabled);
+
     g_maxDeferred2dItemsPercent = EQMACMQ_ConfigReadFloat(filename, "Options", "fMaxDeferred2dItemsPercent", g_maxDeferred2dItemsPercent);
 
     g_killSwitchIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bKillSwitch", g_killSwitchIsEnabled);
@@ -1281,6 +1312,10 @@ bool EQMACMQ_LoadConfig(const char* filename)
     g_slashCommandsIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bSlashCommands", g_slashCommandsIsEnabled);
 
     g_writeTextToChatWindowIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bWriteTextToChatWindow", g_writeTextToChatWindowIsEnabled);
+
+    g_standWhenCastSpellIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bStandWhenCastSpell", g_standWhenCastSpellIsEnabled);
+
+    g_closeLootWindowWhenMovingIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bCloseLootWindowWhenMoving", g_closeLootWindowWhenMovingIsEnabled);
 
     // BoxChat
 
@@ -1644,6 +1679,21 @@ bool EQMACMQ_LoadConfig(const char* filename)
     // FreeCamera
 
     g_freeCameraMultiplier = EQMACMQ_ConfigReadFloat(filename, "FreeCamera", "fMultiplier", g_freeCameraMultiplier);
+
+    // Melee
+
+    g_meleeIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bEnabled", g_meleeIsEnabled);
+
+    g_meleeRangeIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bRange", g_meleeRangeIsEnabled);
+
+    g_meleeDelay = EQMACMQ_ConfigReadInt(filename, "Melee", "iDelay", g_meleeDelay);
+
+    g_meleeSkillTauntIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bTaunt", g_meleeSkillTauntIsEnabled);
+    g_meleeSkillKickIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bKick", g_meleeSkillKickIsEnabled);
+    g_meleeSkillBashIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bBash", g_meleeSkillBashIsEnabled);
+    g_meleeSkillSlamIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bSlam", g_meleeSkillSlamIsEnabled);
+    g_meleeSkillDisarmIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bDisarm", g_meleeSkillDisarmIsEnabled);
+    g_meleeSkillSenseHeadingIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bSenseHeading", g_meleeSkillSenseHeadingIsEnabled);
 
     return true;
 }
@@ -3103,10 +3153,43 @@ void EQMACMQ_ToggleFreeCamera()
     {
         EQ_WriteBoolVarToChat("Free Camera", g_freeCameraIsEnabled);
 
-        EQ_WriteStringVarToChat("Free Camera", "Use the arrows keys and mouse look to direct the camera.");
+        if (g_freeCameraIsEnabled == true)
+        {
+            EQ_WriteStringVarToChat("Free Camera", "Use the arrows keys and mouse look to direct the camera.");
+        }
     }
 
     EQMACMQ_DoFreeCamera(g_freeCameraIsEnabled);
+}
+
+void EQMACMQ_ToggleMelee()
+{
+    EQ_ToggleBool(g_meleeIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Melee", g_meleeIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleMeleeRange()
+{
+    EQ_ToggleBool(g_meleeRangeIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Melee Range", g_meleeRangeIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleLogging()
+{
+    EQ_ToggleBool(g_loggingIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Logging", g_loggingIsEnabled);
+    }
 }
 
 void EQMACMQ_DoUnload()
@@ -3382,6 +3465,46 @@ void EQMACMQ_DoHacksLoad(bool load)
     }
 }
 
+void EQMACMQ_DoSaveSpellset(const char* name)
+{
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+    if (charInfo == NULL)
+    {
+        return;
+    }
+
+    char filename[1024];
+    sprintf_s(filename, ".\\spellsets\\%s.ini", name);
+
+    FILE* file;
+    errno_t fileErrorNumber = fopen_s(&file, filename, "w");
+
+    if (file)
+    {
+        fprintf(file, "[Spellset]\n");
+
+        for (size_t i = 0; i < EQ_NUM_SPELL_GEMS; i++)
+        {
+            int spellId = charInfo->MemorizedSpells[i];
+
+            if (spellId != EQ_SPELL_ID_NULL)
+            {
+                fprintf(file, "%d=%d\n", i, spellId);
+
+                const char* spellName = EQ_OBJECT_SpellList->Spell[spellId]->Name;
+
+                if (strlen(spellName) != 0 && spellName != NULL)
+                {
+                    fprintf(file, "# %s\n", spellName);
+                }
+            }
+        }
+
+        fclose(file);
+    }
+}
+
 void EQMACMQ_DoFreeCamera(bool enable)
 {
     DWORD baseAddress = EQ_ReadMemory<DWORD>(EQ_POINTER_EQGfx_Dx8__t3dSetCameraLocation);
@@ -3406,6 +3529,8 @@ void EQMACMQ_DoFreeCamera(bool enable)
         VirtualProtectEx(GetCurrentProcess(), (LPVOID)address, 3, PAGE_EXECUTE_READWRITE, &oldProtection);
         WriteProcessMemory(GetCurrentProcess(), (LPVOID)address, "\x90\x90\x90", 3, 0);
         VirtualProtectEx(GetCurrentProcess(), (LPVOID)address, 3, oldProtection, &tempProtection);
+
+        EQ_WriteMemory<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_FIRST_PERSON);
     }
     else
     {
@@ -3428,8 +3553,6 @@ void EQMACMQ_DoFreeCamera(bool enable)
         WriteProcessMemory(GetCurrentProcess(), (LPVOID)address, "\x89\x51\x08", 3, 0);
         VirtualProtectEx(GetCurrentProcess(), (LPVOID)address, 3, oldProtection, &tempProtection);
     }
-
-    EQ_WriteMemory<DWORD>(EQ_CAMERA_VIEW, EQ_CAMERA_VIEW_FIRST_PERSON);
 }
 
 void EQMACMQ_DoFreeCameraKeys()
@@ -3464,7 +3587,6 @@ void EQMACMQ_DoFreeCameraKeys()
         float addY = sinf(cameraHeadingRadians);
         float addX = cosf(cameraHeadingRadians);
         float addZ = sinf(cameraPitchRadians);
-
 
         if (fabs(cameraPitch) < 90.0f)
         {
@@ -3504,7 +3626,6 @@ void EQMACMQ_DoFreeCameraKeys()
         float addY = sinf(cameraHeadingRadians);
         float addX = cosf(cameraHeadingRadians);
         float addZ = sinf(cameraPitchRadians);
-
 
         if (fabs(cameraPitch) < 90.0f)
         {
@@ -8166,6 +8287,98 @@ void EQMACMQ_DoBardTwist()
     g_bardTwistSongIndex++;
 }
 
+void EQMACMQ_DoMelee()
+{
+    BYTE isAutoAttackEnabled = EQ_ReadMemory<BYTE>(EQ_IS_AUTO_ATTACK_ENABLED);
+
+    if (isAutoAttackEnabled == 0)
+    {
+        return;
+    }
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    if (playerSpawn == NULL)
+    {
+        return;
+    }
+
+    if (playerSpawn->StandingState != EQ_STANDING_STATE_STANDING)
+    {
+        return;
+    }
+
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    if (targetSpawn == NULL)
+    {
+        return;
+    }
+
+    if (targetSpawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE || targetSpawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+    {
+        return;
+    }
+
+    DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
+
+    if (currentTime < (g_meleeTimer + g_meleeDelay))
+    {
+        return;
+    }
+    else
+    {
+        g_meleeTimer = currentTime;
+    }
+
+    if (g_meleeRangeIsEnabled == true)
+    {
+        float targetSpawnDistance = EQ_CalculateDistance(playerSpawn->X, playerSpawn->Y, targetSpawn->X, targetSpawn->Y);
+
+        float targetMeleeDistance = EQ_get_melee_range((EQPlayer*)playerSpawn, (EQPlayer*)targetSpawn);
+
+        //char logText[128];
+        //sprintf_s(logText, "EQMAQMQ_DoMelee() targetSpawnDistance: %f, targetMeleeDistance: %f", targetSpawnDistance, targetMeleeDistance);
+        //EQMACMQ_Log(logText);
+
+        if (targetSpawnDistance > targetMeleeDistance)
+        {
+            //EQMACMQ_Log("EQMAQMQ_DoMelee() Melee failed because targetSpawnDistance > targetMeleeDistance");
+            return;
+        }
+    }
+
+    if (g_meleeSkillTauntIsEnabled == true)
+    {
+        EQ_CLASS_EQ_Character->UseSkill(EQ_SKILL_TAUNT, (EQPlayer*)targetSpawn);
+    }
+
+    if (g_meleeSkillKickIsEnabled == true)
+    {
+        EQ_CLASS_EQ_Character->UseSkill(EQ_SKILL_KICK, (EQPlayer*)targetSpawn);
+    }
+
+    if (g_meleeSkillBashIsEnabled == true)
+    {
+        EQ_CLASS_EQ_Character->UseSkill(EQ_SKILL_BASH, (EQPlayer*)targetSpawn);
+    }
+
+    if (g_meleeSkillSlamIsEnabled == true)
+    {
+        EQ_CLASS_EQ_Character->UseSkill(EQ_SKILL_SLAM, (EQPlayer*)targetSpawn);
+    }
+
+    if (g_meleeSkillDisarmIsEnabled == true)
+    {
+        EQ_CLASS_EQ_Character->UseSkill(EQ_SKILL_DISARM, (EQPlayer*)targetSpawn);
+    }
+
+    if (g_meleeSkillSenseHeadingIsEnabled == true)
+    {
+        EQ_CLASS_EQ_Character->UseSkill(EQ_SKILL_SENSE_HEADING, (EQPlayer*)targetSpawn);
+    }
+}
+
 void EQMACMQ_DoMouseWheelZoom(int mouseWheelDelta)
 {
     PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
@@ -8386,6 +8599,68 @@ int __cdecl EQMACMQ_DETOUR_HandleMouseWheel(int a1)
     }
 
     return EQMACMQ_REAL_HandleMouseWheel(a1);
+}
+
+int __cdecl EQMACMQ_DETOUR_ProcessMovementKeys(int a1)
+{
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_ProcessMovementKeys(a1);
+    }
+
+    DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
+
+    if ((g_ignoreKeysTimer > 0) && (currentTime > (g_ignoreKeysTimer + g_ignoreKeysDelay)))
+    {
+        g_ignoreKeysIsEnabled = false;
+
+        g_ignoreKeysTimer = 0;
+    }
+
+    if (g_ignoreKeysIsEnabled == true)
+    {
+        g_ignoreKeysIsEnabled = false;
+
+        return EQMACMQ_REAL_ProcessMovementKeys(EQ_KEY_NULL);
+    }
+
+    int key = a1;
+
+    //char keyText[128];
+    //sprintf_s(keyText, "ProcessMovementKeys: %d", key);
+    //EQ_CLASS_CEverQuest->dsp_chat(keyText);
+
+    if (g_freeCameraIsEnabled == true)
+    {
+        if (key == DIK_UPARROW || key == DIK_DOWNARROW || key == DIK_LEFTARROW || key == DIK_RIGHTARROW)
+        {
+            return EQMACMQ_REAL_ProcessMovementKeys(EQ_KEY_NULL);
+        }
+    }
+
+    if (g_closeLootWindowWhenMovingIsEnabled == true)
+    {
+        if (EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsOpen == 1 && EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsVisible == 1)
+        {
+            if
+            (
+                key == DIK_UPARROW || key == DIK_DOWNARROW || key == DIK_LEFTARROW || key == DIK_RIGHTARROW ||
+                key == DIK_W       || key == DIK_S         || key == DIK_A         || key == DIK_D
+            )
+            {
+                if (g_classicUiIsEnabled == false)
+                {
+                    EQ_CLASS_CLootWnd->Deactivate();
+                }
+                //else
+                //{
+                    //EQ_Main->ReleaseLoot(); // TODO
+                //}
+            }
+        }
+    }
+
+    return EQMACMQ_REAL_ProcessMovementKeys(a1);
 }
 
 int __cdecl EQMACMQ_DETOUR_ProcessKeyDown(int a1)
@@ -9053,6 +9328,7 @@ int __fastcall EQMACMQ_DETOUR_EQ_Character__CastSpell(void* this_ptr, void* not_
         return EQMACMQ_REAL_EQ_Character__CastSpell(this_ptr, a1, a2, a3, a4);
     }
 
+/*
     int result = EQMACMQ_REAL_EQ_Character__CastSpell(this_ptr, a1, a2, a3, a4);
 
     FILE* file = fopen("eqmac_mq-debug-EQ_Character__CastSpell.txt", "a");
@@ -9065,6 +9341,47 @@ int __fastcall EQMACMQ_DETOUR_EQ_Character__CastSpell(void* this_ptr, void* not_
     fclose(file);
 
     return result;
+*/
+
+    if (g_standWhenCastSpellIsEnabled == true)
+    {
+        PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+        if (playerSpawn != NULL)
+        {
+            if (playerSpawn->StandingState == EQ_STANDING_STATE_SITTING)
+            {
+                ((EQPlayer*)playerSpawn)->ChangePosition(EQ_STANDING_STATE_STANDING);
+            }
+        }
+    }
+
+    return EQMACMQ_REAL_EQ_Character__CastSpell(this_ptr, a1, a2, a3, a4);
+}
+
+int __fastcall EQMACMQ_DETOUR_EQ_Character__UseSkill(void* this_ptr, void* not_used, unsigned char a1, class EQPlayer* a2)
+{
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_EQ_Character__UseSkill(this_ptr, a1, a2);
+    }
+
+/*
+    int result = EQMACMQ_REAL_EQ_Character__UseSkill(this_ptr, a1, a2);
+
+    FILE* file = fopen("eqmac_mq-debug-EQ_Character__UseSkill.txt", "a");
+    fprintf(file, "a1: %d\n", a1);
+    if (a2 != NULL)
+    {
+        fprintf(file, "a2: 0x%X\n", a2);
+    }
+    fprintf(file, "\n\n");
+    fclose(file);
+
+    return result;
+*/
+
+    return EQMACMQ_REAL_EQ_Character__UseSkill(this_ptr, a1, a2);
 }
 
 int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not_used, class EQPlayer* a1, char* a2)
@@ -10067,18 +10384,26 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         else if (strcmp(a2, "/speed sow") == 0)
         {
             g_speedHackModifier = EQ_MOVEMENT_SPEED_MODIFIER_SPIRIT_OF_WOLF;
+
+            EQ_WriteStringVarToChat("Speed Modifier", "Spirit of Wolf");
         }
         else if (strcmp(a2, "/speed run1") == 0)
         {
             g_speedHackModifier = EQ_MOVEMENT_SPEED_MODIFIER_AA_RUN1;
+
+            EQ_WriteStringVarToChat("Speed Modifier", "AA Run 1");
         }
         else if (strcmp(a2, "/speed run2") == 0)
         {
             g_speedHackModifier = EQ_MOVEMENT_SPEED_MODIFIER_AA_RUN2;
+
+            EQ_WriteStringVarToChat("Speed Modifier", "AA Run 2");
         }
         else if (strcmp(a2, "/speed run3") == 0)
         {
             g_speedHackModifier = EQ_MOVEMENT_SPEED_MODIFIER_AA_RUN3;
+
+            EQ_WriteStringVarToChat("Speed Modifier", "AA Run 3");
         }
         else if (strncmp(a2, "/speed ", 7) == 0)
         {
@@ -10205,7 +10530,107 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     // free camera
     if (strncmp(a2, "/freecam", 8) == 0)
     {
-        EQMACMQ_ToggleFreeCamera();
+        if (strcmp(a2, "/freecamera") == 0)
+        {
+            EQMACMQ_ToggleFreeCamera();
+        }
+        else if (strncmp(a2, "/freecamera ", 12) == 0)
+        {
+            char command[128];
+
+            float multiplier = 1.0;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &multiplier);
+
+            if (result == 2)
+            {
+                g_freeCameraMultiplier = multiplier;
+
+                EQ_WriteFloatVarToChat("Free Camera Multiplier", g_freeCameraMultiplier);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // melee
+    if (strncmp(a2, "/melee", 6) == 0)
+    {
+        if (strcmp(a2, "/melee") == 0)
+        {
+            EQMACMQ_ToggleMelee();
+        }
+        else if (strcmp(a2, "/meleelist") == 0)
+        {
+            EQ_CLASS_CEverQuest->dsp_chat("Melee:");
+            EQ_WriteBoolVarToChat("Melee Skill Taunt", g_meleeSkillTauntIsEnabled);
+            EQ_WriteBoolVarToChat("Melee Skill Kick", g_meleeSkillKickIsEnabled);
+            EQ_WriteBoolVarToChat("Melee Skill Bash", g_meleeSkillBashIsEnabled);
+            EQ_WriteBoolVarToChat("Melee Skill Slam", g_meleeSkillSlamIsEnabled);
+            EQ_WriteBoolVarToChat("Melee Skill Disarm", g_meleeSkillDisarmIsEnabled);
+            EQ_WriteBoolVarToChat("Melee Skill Sense Heading", g_meleeSkillSenseHeadingIsEnabled);
+        }
+        else if (strcmp(a2, "/meleerange") == 0)
+        {
+            EQMACMQ_ToggleMeleeRange();
+        }
+        else if (strncmp(a2, "/meleedelay ", 12) == 0)
+        {
+            char command[128];
+
+            int delay = 1000;
+
+            int result = sscanf_s(a2, "%s %d", command, sizeof(command), &delay);
+
+            if (result == 2)
+            {
+                g_meleeDelay = delay;
+
+                EQ_WriteIntVarToChat("Melee Delay", g_meleeDelay);
+            }
+        }
+        else if (strncmp(a2, "/melee ", 7) == 0)
+        {
+            char command[128];
+
+            char skill[128];
+
+            int result = sscanf_s(a2, "%s %s", command, sizeof(command), skill, sizeof(skill));
+
+            if (result == 2)
+            {
+                if (strcmp(skill, "taunt") == 0)
+                {
+                    EQ_ToggleBool(g_meleeSkillTauntIsEnabled);
+                    EQ_WriteBoolVarToChat("Melee Skill Taunt", g_meleeSkillTauntIsEnabled);
+                }
+                else if (strcmp(skill, "kick") == 0)
+                {
+                    EQ_ToggleBool(g_meleeSkillKickIsEnabled);
+                    EQ_WriteBoolVarToChat("Melee Skill Kick", g_meleeSkillKickIsEnabled);
+                }
+                else if (strcmp(skill, "bash") == 0)
+                {
+                    EQ_ToggleBool(g_meleeSkillBashIsEnabled);
+                    EQ_WriteBoolVarToChat("Melee Skill Bash", g_meleeSkillBashIsEnabled);
+                }
+                else if (strcmp(skill, "slam") == 0)
+                {
+                    EQ_ToggleBool(g_meleeSkillSlamIsEnabled);
+                    EQ_WriteBoolVarToChat("Melee Skill Slam", g_meleeSkillSlamIsEnabled);
+                }
+                else if (strcmp(skill, "disarm") == 0)
+                {
+                    EQ_ToggleBool(g_meleeSkillDisarmIsEnabled);
+                    EQ_WriteBoolVarToChat("Melee Skill Disarm", g_meleeSkillDisarmIsEnabled);
+                }
+                else if (strcmp(skill, "senseheading") == 0)
+                {
+                    EQ_ToggleBool(g_meleeSkillSenseHeadingIsEnabled);
+                    EQ_WriteBoolVarToChat("Melee Skill Sense Heading", g_meleeSkillSenseHeadingIsEnabled);
+                }
+            }
+        }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
@@ -10279,6 +10704,32 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                 hack = hack->Next;
             }
         }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // save spell set
+    if (strncmp(a2, "/savespellset ", 14) == 0 || strncmp(a2, "/savespells ", 12) == 0)
+    {
+        char command[128];
+
+        char name[128];
+
+        int result = sscanf_s(a2, "%s %s", command, sizeof(command), name, sizeof(name));
+
+        if (result == 2 && strlen(name) > 0)
+        {
+            EQMACMQ_DoSaveSpellset(name);
+
+            EQ_WriteStringVarToChat("Save Spellset", name);
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    if (strcmp(a2, "/logging") == 0)
+    {
+        EQMACMQ_ToggleLogging();
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
@@ -10403,18 +10854,6 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                     }
                 }
             }
-        }
-
-        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
-    }
-
-    if (strcmp(a2, "/spiritofwolf") == 0 || strcmp(a2, "/sow") == 0)
-    {
-        PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
-
-        if (playerSpawn)
-        {
-            playerSpawn->ActorInfo->MovementSpeedModifier = EQ_MOVEMENT_SPEED_MODIFIER_SPIRIT_OF_WOLF;
         }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
@@ -10785,6 +11224,11 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
         EQMACMQ_DoBardTwist();
     }
 
+    if (g_meleeIsEnabled == true)
+    {
+        EQMACMQ_DoMelee();
+    }
+
     if (g_healthBarsIsEnabled == true)
     {
         EQMACMQ_DoHealthBars();
@@ -11085,6 +11529,8 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
     DetourRemove((PBYTE)EQMACMQ_REAL_ProcessKeyDown, (PBYTE)EQMACMQ_DETOUR_ProcessKeyDown);
     DetourRemove((PBYTE)EQMACMQ_REAL_ProcessKeyUp,   (PBYTE)EQMACMQ_DETOUR_ProcessKeyUp);
 
+    DetourRemove((PBYTE)EQMACMQ_REAL_ProcessMovementKeys, (PBYTE)EQMACMQ_DETOUR_ProcessMovementKeys);
+
     DetourRemove((PBYTE)EQMACMQ_REAL_CEverQuest__InterpretCmd, (PBYTE)EQMACMQ_DETOUR_CEverQuest__InterpretCmd);
 
     DetourRemove((PBYTE)EQMACMQ_REAL_CEverQuest__dsp_chat, (PBYTE)EQMACMQ_DETOUR_CEverQuest__dsp_chat);
@@ -11097,6 +11543,8 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
     DetourRemove((PBYTE)EQMACMQ_REAL_EQ_Character__eqspa_movement_rate, (PBYTE)EQMACMQ_DETOUR_EQ_Character__eqspa_movement_rate);
 
     DetourRemove((PBYTE)EQMACMQ_REAL_EQ_Character__CastSpell, (PBYTE)EQMACMQ_DETOUR_EQ_Character__CastSpell);
+
+    DetourRemove((PBYTE)EQMACMQ_REAL_EQ_Character__UseSkill, (PBYTE)EQMACMQ_DETOUR_EQ_Character__UseSkill);
 
     //DetourRemove((PBYTE)EQMACMQ_REAL_AutoInventory, (PBYTE)EQMACMQ_DETOUR_AutoInventory);
 
@@ -11190,6 +11638,9 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
     EQMACMQ_REAL_ProcessKeyDown = (EQ_FUNCTION_TYPE_ProcessKeyDown)DetourFunction((PBYTE)EQ_FUNCTION_ProcessKeyDown, (PBYTE)EQMACMQ_DETOUR_ProcessKeyDown);
     EQMACMQ_REAL_ProcessKeyUp   = (EQ_FUNCTION_TYPE_ProcessKeyUp)  DetourFunction((PBYTE)EQ_FUNCTION_ProcessKeyUp,   (PBYTE)EQMACMQ_DETOUR_ProcessKeyUp);
 
+    EQMACMQ_REAL_ProcessMovementKeys = (EQ_FUNCTION_TYPE_ProcessMovementKeys)DetourFunction((PBYTE)EQ_FUNCTION_ProcessMovementKeys, (PBYTE)EQMACMQ_DETOUR_ProcessMovementKeys);
+
+
     EQMACMQ_REAL_CEverQuest__InterpretCmd = (EQ_FUNCTION_TYPE_CEverQuest__InterpretCmd)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__InterpretCmd, (PBYTE)EQMACMQ_DETOUR_CEverQuest__InterpretCmd);
 
     EQMACMQ_REAL_CEverQuest__dsp_chat = (EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__dsp_chat, (PBYTE)EQMACMQ_DETOUR_CEverQuest__dsp_chat);
@@ -11202,6 +11653,8 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
     EQMACMQ_REAL_EQ_Character__eqspa_movement_rate = (EQ_FUNCTION_TYPE_EQ_Character__eqspa_movement_rate)DetourFunction((PBYTE)EQ_FUNCTION_EQ_Character__eqspa_movement_rate, (PBYTE)EQMACMQ_DETOUR_EQ_Character__eqspa_movement_rate);
 
     EQMACMQ_REAL_EQ_Character__CastSpell = (EQ_FUNCTION_TYPE_EQ_Character__CastSpell)DetourFunction((PBYTE)EQ_FUNCTION_EQ_Character__CastSpell, (PBYTE)EQMACMQ_DETOUR_EQ_Character__CastSpell);
+
+    EQMACMQ_REAL_EQ_Character__UseSkill = (EQ_FUNCTION_TYPE_EQ_Character__UseSkill)DetourFunction((PBYTE)EQ_FUNCTION_EQ_Character__UseSkill, (PBYTE)EQMACMQ_DETOUR_EQ_Character__UseSkill);
 
     //EQMACMQ_REAL_AutoInventory = (EQ_FUNCTION_TYPE_AutoInventory)DetourFunction((PBYTE)EQ_FUNCTION_AutoInventory, (PBYTE)EQMACMQ_DETOUR_AutoInventory);
 

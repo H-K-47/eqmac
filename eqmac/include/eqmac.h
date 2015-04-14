@@ -128,6 +128,7 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_NUM_SPELL_BOOK_SPELLS 250 // 32 pages, 8 spells per page, should be 256?
 #define EQ_NUM_SPAWNS 8192
 #define EQ_NUM_GUILDS 512
+#define EQ_NUM_LOOT_WINDOW_ITEMS 30
 
 #define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
 #define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
@@ -521,10 +522,86 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_MOUSE_ICON_SIZE_BOTTOM_LEFT  8
 #define EQ_MOUSE_ICON_SIZE_BOTTOM_RIGHt 9
 
-#define EQ_HEADING_MAX 512 // yaw
+#define EQ_HEADING_MAX 512.0f // yaw
 
-#define EQ_SKILL_ONE_HAND_BLUNT 0
-#define EQ_SKILL_TRACKING       53
+#define EQ_SKILL_1H_BLUNT               0
+#define EQ_SKILL_1H_SLASHING            1
+#define EQ_SKILL_2H_BLUNT               2
+#define EQ_SKILL_2H_SLASHING            3
+#define EQ_SKILL_ABJURATION             4
+#define EQ_SKILL_ALTERATION             5
+#define EQ_SKILL_APPLY_POISON           6
+#define EQ_SKILL_ARCHERY                7
+#define EQ_SKILL_BACKSTAB               8
+#define EQ_SKILL_BIND_WOUND             9
+#define EQ_SKILL_BASH                   10
+#define EQ_SKILL_BLOCK                  11
+#define EQ_SKILL_BRASS_INSTRUMENTS      12
+#define EQ_SKILL_CHANNELING             13
+#define EQ_SKILL_CONJURATION            14
+#define EQ_SKILL_DEFENSE                15
+#define EQ_SKILL_DISARM                 16
+#define EQ_SKILL_DISARM_TRAPS           17
+#define EQ_SKILL_DIVINATION             18
+#define EQ_SKILL_DODGE                  19
+#define EQ_SKILL_DOUBLE_ATTACK          20
+#define EQ_SKILL_DRAGON_PUNCH           21
+#define EQ_SKILL_TAIL_RAKE              21
+#define EQ_SKILL_DUAL_WIELD             22
+#define EQ_SKILL_EAGLE_STRIKE           23
+#define EQ_SKILL_EVOCATION              24
+#define EQ_SKILL_FEIGN_DEATH            25
+#define EQ_SKILL_FLYING_KICK            26
+#define EQ_SKILL_FORAGE                 27
+#define EQ_SKILL_HAND_TO_HAND           28
+#define EQ_SKILL_HIDE                   29
+#define EQ_SKILL_KICK                   30
+#define EQ_SKILL_MEDITATE               31
+#define EQ_SKILL_MEND                   32
+#define EQ_SKILL_OFFENSE                33
+#define EQ_SKILL_PARRY                  34
+#define EQ_SKILL_PICK_LOCK              35
+#define EQ_SKILL_PIERCING               36
+#define EQ_SKILL_RIPOSTE                37
+#define EQ_SKILL_ROUND_KICK             38
+#define EQ_SKILL_SAFE_FALL              39
+#define EQ_SKILL_SENSE_HEADING          40
+#define EQ_SKILL_SINGING                41
+#define EQ_SKILL_SNEAK                  42
+#define EQ_SKILL_SPECIALIZE_ABJURATION  43
+#define EQ_SKILL_SPECIALIZE_ALTERATION  44
+#define EQ_SKILL_SPECIALIZE_CONJURATION 45
+#define EQ_SKILL_SPECIALIZE_DIVINATION  46
+#define EQ_SKILL_SPECIALIZE_EVOCATION   47
+#define EQ_SKILL_PICK_POCKETS           48
+#define EQ_SKILL_STRINGED_INSTRUMENTS   49
+#define EQ_SKILL_SWIMMING               50
+#define EQ_SKILL_THROWING               51
+#define EQ_SKILL_TIGER_CLAW             52
+#define EQ_SKILL_TRACKING               53
+#define EQ_SKILL_WIND_INSTRUMENTS       54
+#define EQ_SKILL_FISHING                55
+#define EQ_SKILL_MAKE_POISON            56
+#define EQ_SKILL_TINKERING              57
+#define EQ_SKILL_RESEARCH               58
+#define EQ_SKILL_ALCHEMY                59
+#define EQ_SKILL_BAKING                 60
+#define EQ_SKILL_TAILORING              61
+#define EQ_SKILL_SENSE_TRAPS            62
+#define EQ_SKILL_BLACKSMITHING          63
+#define EQ_SKILL_FLETCHING              64
+#define EQ_SKILL_BREWING                65
+#define EQ_SKILL_ALCOHOL_TOLERANCE      66
+#define EQ_SKILL_BEGGING                67
+#define EQ_SKILL_JEWELRY_MAKING         68
+#define EQ_SKILL_POTTERY                69
+#define EQ_SKILL_PERCUSSION_INSTRUMENTS 70
+#define EQ_SKILL_INTIMIDATION           71
+#define EQ_SKILL_BERSERKING             72
+#define EQ_SKILL_TAUNT                  73
+#define EQ_SKILL_FRENZY                 74
+#define EQ_SKILL_GENERIC_TRADESKILL     75
+#define EQ_SKILL_SLAM                   111
 
 // EQ_Character::eqspa_movement_rate
 #define EQ_MOVEMENT_SPEED_MODIFIER_AA_RUN1        0.08f
@@ -627,9 +704,9 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_KEY_NUMPAD_ADD      78
 #define EQ_KEY_NUMPAD_ENTER    156
 
-size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
+const size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
 
-const char* EQ_STRING_TEXT_COLOR_NAME[21] =
+const char* EQ_STRING_TEXT_COLOR_NAME[EQ_STRINGSIZE_TEXT_COLOR_NAME] =
 {
     "Black",
     "Gray",
@@ -654,9 +731,9 @@ const char* EQ_STRING_TEXT_COLOR_NAME[21] =
     "Black 2",
 };
 
-size_t EQ_STRINGSIZE_RACE_NAME = 13;
+const size_t EQ_STRINGSIZE_RACE_NAME = 13;
 
-const char* EQ_STRING_RACE_NAME[13] =
+const char* EQ_STRING_RACE_NAME[EQ_STRINGSIZE_RACE_NAME] =
 {
     "Unknown",
     "Human",
@@ -676,9 +753,9 @@ const char* EQ_STRING_RACE_NAME[13] =
     // Froglok
 };
 
-size_t EQ_STRINGSIZE_RACE_SHORT_NAME = 13;
+const size_t EQ_STRINGSIZE_RACE_SHORT_NAME = 13;
 
-const char* EQ_STRING_RACE_SHORT_NAME[13] =
+const char* EQ_STRING_RACE_SHORT_NAME[EQ_STRINGSIZE_RACE_SHORT_NAME] =
 {
     "UNK",
     "HUM",
@@ -698,9 +775,9 @@ const char* EQ_STRING_RACE_SHORT_NAME[13] =
     // FRG
 };
 
-size_t EQ_STRINGSIZE_CLASS_NAME = 33;
+const size_t EQ_STRINGSIZE_CLASS_NAME = 33;
 
-const char* EQ_STRING_CLASS_NAME[33] =
+const char* EQ_STRING_CLASS_NAME[EQ_STRINGSIZE_CLASS_NAME] =
 {
     "Unknown",
     "Warrior",
@@ -737,9 +814,9 @@ const char* EQ_STRING_CLASS_NAME[33] =
     "Merchant",
 };
 
-size_t EQ_STRINGSIZE_CLASS_SHORT_NAME = 33;
+const size_t EQ_STRINGSIZE_CLASS_SHORT_NAME = 33;
 
-const char* EQ_STRING_CLASS_SHORT_NAME[33] =
+const char* EQ_STRING_CLASS_SHORT_NAME[EQ_STRINGSIZE_CLASS_SHORT_NAME] =
 {
     "UNK",
     "WAR",
@@ -776,7 +853,90 @@ const char* EQ_STRING_CLASS_SHORT_NAME[33] =
     "MERCHANT",
 };
 
-size_t EQ_KEYVALUESTRINGLISTSIZE_DOOR_SPAWN_NAME_DESCRIPTION = 22;
+const size_t EQ_STRINGSIZE_SKILL_NAME = 76;
+
+const char* EQ_STRING_SKILL_NAME[EQ_STRINGSIZE_SKILL_NAME] =
+{
+    "1H Blunt",
+    "1H Slashing",
+    "2H Blunt",
+    "2H Slashing",
+    "Abjuration",
+    "Alteration",
+    "Apply Poison",
+    "Archery",
+    "Backstab",
+    "Bind Wound",
+    "Bash",
+    "Block",
+    "Brass Instruments",
+    "Channeling",
+    "Conjuration",
+    "Defense",
+    "Disarm",
+    "Disarm Traps",
+    "Divination",
+    "Dodge",
+    "Double Attack",
+    "Dragon Punch", // also "Tail Rake"
+    "Dual Wield",
+    "Eagle Strike",
+    "Evocation",
+    "Feign Death",
+    "Flying Kick",
+    "Forage",
+    "Hand To Hand",
+    "Hide",
+    "Kick",
+    "Meditate",
+    "Mend",
+    "Offense",
+    "Parry",
+    "Pick Lock",
+    "Piercing",
+    "Riposte",
+    "Round Kick",
+    "Safe Fall",
+    "Sense Heading",
+    "Singing",
+    "Sneak",
+    "Specialize Abjuration",
+    "Specialize Alteration",
+    "Specialize Conjuration",
+    "Specialize Divination",
+    "Specialize Evocation",
+    "Pick Pockets",
+    "Stringed Instruments",
+    "Swimming",
+    "Throwing",
+    "Tiger Claw",
+    "Tracking",
+    "Wind Instruments",
+    "Fishing",
+    "Make Poison",
+    "Tinkering",
+    "Research",
+    "Alchemy",
+    "Baking",
+    "Tailoring",
+    "Sense Traps",
+    "Blacksmithing",
+    "Fletching",
+    "Brewing",
+    "Alcohol Tolerance",
+    "Begging",
+    "Jewelry Making",
+    "Pottery",
+    "Percussion Instruments",
+    "Intimidation",
+    "Berserking",
+    "Taunt",
+    "Frenzy",
+    "Generic Tradeskill",
+    //"Slam", // Slam is skill index 111
+};
+
+const size_t EQ_KEYVALUESTRINGLISTSIZE_DOOR_SPAWN_NAME_DESCRIPTION = 22;
 
 const char* EQ_KEYVALUESTRINGLIST_DOOR_SPAWN_NAME_DESCRIPTION[][2] =
 {
@@ -806,7 +966,7 @@ const char* EQ_KEYVALUESTRINGLIST_DOOR_SPAWN_NAME_DESCRIPTION[][2] =
     {"FAYLEVATOR",    "Faydark Elevator"},
 };
 
-size_t EQ_KEYVALUESTRINGLISTSIZE_GROUND_SPAWN_NAME_DESCRIPTION = 11;
+const size_t EQ_KEYVALUESTRINGLISTSIZE_GROUND_SPAWN_NAME_DESCRIPTION = 11;
 
 const char* EQ_KEYVALUESTRINGLIST_GROUND_SPAWN_NAME_DESCRIPTION[][2] =
 {
@@ -1773,5 +1933,15 @@ typedef struct _EQCBUFFWINDOW
 /* 0x01B8 */
 /* ...... */
 } EQCBUFFWINDOW, *PEQCBUFFWINDOW;
+
+typedef struct _EQCLOOTWND
+{
+/* 0x0000 */ struct _EQCSIDLWND CSidlWnd;
+/* 0x0138 */ DWORD ItemSlotIndexes[EQ_NUM_LOOT_WINDOW_ITEMS];
+/* 0x01B0 */ DWORD Timer;
+/* 0x01B4 */ PVOID Unknown01B4;
+/* 0x01B8 */ struct _EQITEMINFO* Items[EQ_NUM_LOOT_WINDOW_ITEMS];
+/* ...... */
+} EQCLOOTWND, *PEQCLOOTWND;
 
 #endif // EQMAC_H

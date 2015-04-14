@@ -130,6 +130,9 @@ EQCITEMDISPLAYWND** EQ_OBJECT_ppCItemDisplayWnd = (EQCITEMDISPLAYWND**)EQ_POINTE
 EQCBUFFWINDOW** EQ_OBJECT_ppCBuffWindow = (EQCBUFFWINDOW**)EQ_POINTER_CBuffWindow;
 #define EQ_OBJECT_CBuffWindow (*EQ_OBJECT_ppCBuffWindow)
 
+EQCLOOTWND** EQ_OBJECT_ppCLootWnd = (EQCLOOTWND**)EQ_POINTER_CLootWnd;
+#define EQ_OBJECT_CLootWnd (*EQ_OBJECT_ppCLootWnd)
+
 class CXStr;
 class CXWndManager;
 class CSidlScreenWnd;
@@ -228,6 +231,7 @@ public:
     int EQ_Character::CastSpell(unsigned char gem, short spellId, EQITEMINFO** item, short unknown);
     int EQ_Character::StopSpellCast(unsigned char gem);
     int EQ_Character::StopSpellCast(unsigned char gem, short spellId);
+    int EQ_Character::UseSkill(unsigned char skill, class EQPlayer* targetSpawn);
 };
 
 class EQ_Item
@@ -487,6 +491,14 @@ typedef int (__thiscall* EQ_FUNCTION_TYPE_EQ_Character__StopSpellCast2)(void* th
 EQ_FUNCTION_AT_ADDRESS(int EQ_Character::StopSpellCast(unsigned char), EQ_FUNCTION_EQ_Character__StopSpellCast2);
 #endif
 
+#define EQ_FUNCTION_EQ_Character__UseSkill 0x004BDF2F
+#ifdef EQ_FUNCTION_EQ_Character__UseSkill
+typedef int (__thiscall* EQ_FUNCTION_TYPE_EQ_Character__UseSkill)(void* this_ptr, unsigned char skill, class EQPlayer* targetSpawn);
+EQ_FUNCTION_AT_ADDRESS(int EQ_Character::UseSkill(unsigned char, class EQPlayer*), EQ_FUNCTION_EQ_Character__UseSkill);
+#endif
+
+//int EQ_Character::UseSkill(unsigned char skill, class EQPlayer* spawn);
+
 /* CHotButtonWnd */
 
 #define EQ_FUNCTION_CHotButtonWnd__DoHotButton 0x004209BD
@@ -549,7 +561,7 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_DrawNetStatus)(int, unsigned short, unsig
 typedef int (__cdecl* EQ_FUNCTION_TYPE_HandleMouseWheel)(int mouseWheelDelta);
 #endif
 
-#define EQ_FUNCTION_ProcessKeyDown 0x005257FA
+#define EQ_FUNCTION_ProcessKeyDown 0x00525B04
 #ifdef EQ_FUNCTION_ProcessKeyDown
 typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyDown)(int key);
 #endif
@@ -558,6 +570,15 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyDown)(int key);
 #ifdef EQ_FUNCTION_ProcessKeyUp
 typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyUp)(int key);
 #endif
+
+#define EQ_FUNCTION_ProcessMovementKeys 0x005257FA
+#ifdef EQ_FUNCTION_ProcessMovementKeys
+typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessMovementKeys)(int key);
+#endif
+
+#define EQ_FUNCTION_ExecuteCmd 0x0054050C
+
+#define EQ_FUNCTION_SendMessage 0x0054E51A
 
 #define EQ_FUNCTION_CastRay 0x004F20DB
 #ifdef EQ_FUNCTION_CastRay
@@ -568,6 +589,11 @@ EQ_FUNCTION_AT_ADDRESS(int __cdecl EQ_CastRay(class EQPlayer* spawn, float y, fl
 #ifdef EQ_FUNCTION_AutoInventory
 typedef int (__cdecl* EQ_FUNCTION_TYPE_AutoInventory)(PEQCHARINFO character, EQITEMINFO** item, short unknown);
 EQ_FUNCTION_AT_ADDRESS(int __cdecl EQ_AutoInventory(PEQCHARINFO character, EQITEMINFO** item, short unknown), EQ_FUNCTION_AutoInventory);
+#endif
+
+#define EQ_FUNCTION_get_melee_range 0x004F3898
+#ifdef EQ_FUNCTION_get_melee_range
+EQ_FUNCTION_AT_ADDRESS(float __cdecl EQ_get_melee_range(class EQPlayer* spawn1, class EQPlayer* spawn2), EQ_FUNCTION_get_melee_range);
 #endif
 
 /* EQGfx_Dx8.DLL */

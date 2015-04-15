@@ -73,6 +73,10 @@ TODO...
 /bccmd status
 /bccmd help
 
+/bca
+/bcaa
+/bct
+
 /map
 /mapreload
 /mapbuttons
@@ -246,6 +250,7 @@ TODO...
 /beep
 
 /warp
+/warp y x z
 /warptotarget
 /warptoname spawnname
 

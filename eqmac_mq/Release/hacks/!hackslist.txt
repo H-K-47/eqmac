@@ -1,0 +1,126 @@
+bEnabled0 = 0
+sName0    = "always_daylight"
+
+bEnabled1 = 0
+sName1    = "always_have_max_light_radius"
+
+bEnabled2 = 0
+sName2    = "always_have_ultravision"
+
+bEnabled3 = 0
+sName3    = "always_see_invisible"
+
+bEnabled4 = 0
+sName4    = "compass_window_is_always_accurate"
+
+bEnabled5 = 0
+sName5    = "doors_stay_open"
+
+bEnabled6 = 0
+sName6    = "follow_as_close_as_possible"
+
+bEnabled7 = 0
+sName7    = "follow_at_full_speed"
+
+bEnabled8 = 0
+sName8    = "follow_from_any_distance"
+
+bEnabled9 = 0
+sName9    = "follow_non_group_members"
+
+bEnabled10 = 0
+sName10    = "follow_npcs"
+
+bEnabled11 = 0
+sName11    = "gm_walk"
+
+bEnabled12 = 0
+sName12    = "infinite_air_remaining"
+
+bEnabled13 = 0
+sName13    = "keep_target"
+
+bEnabled14 = 0
+sName14    = "memorize_spells_instantly"
+
+bEnabled15 = 0
+sName15    = "never_blind"
+
+bEnabled16 = 0
+sName16    = "never_drunk"
+
+bEnabled17 = 0
+sName17    = "never_encumbered"
+
+bEnabled18 = 0
+sName18    = "never_hungry_or_thirsty"
+
+bEnabled19 = 0
+sName19    = "never_slide_on_slippery_surfaces"
+
+bEnabled20 = 0
+sName20    = "never_stunned"
+
+bEnabled21 = 0
+sName21    = "never_too_fatigued_to_jump"
+
+bEnabled22 = 0
+sName22    = "no_anonymous_in_who_list"
+
+bEnabled23 = 0
+sName23    = "no_auto_target_attacker"
+
+bEnabled24 = 0
+sName24    = "no_delay_between_jumps"
+
+bEnabled25 = 0
+sName25    = "no_doors"
+
+bEnabled26 = 0
+sName26    = "no_environmental_damage"
+
+bEnabled27 = 0
+sName27    = "no_falling_damage"
+
+bEnabled28 = 0
+sName28    = "no_special_fog"
+
+bEnabled29 = 0
+sName29    = "no_weather"
+
+bEnabled30 = 0
+sName30    = "no_weather_fog"
+
+bEnabled31 = 0
+sName31    = "npc_walk"
+
+bEnabled32 = 0
+sName32    = "scribe_spells_instantly"
+
+bEnabled33 = 0
+sName33    = "show_guild_tag_for_anonymous"
+
+bEnabled34 = 0
+sName34    = "show_name_sprites_from_any_distance"
+
+bEnabled35 = 0
+sName35    = "show_npcs_in_who_list"
+
+bEnabled36 = 0
+sName36    = "show_spawns_from_any_distance"
+
+bEnabled37 = 0
+sName37    = "show_spell_casting_names"
+
+bEnabled38 = 0
+sName38    = "smaller_large_races"
+
+bEnabled39 = 0
+sName39    = "time_in_luclin_zones"
+
+bEnabled40 = 0
+sName40    = "tracksort_for_all_classes"
+
+bEnabled41 = 0
+sName41    = "track_window_controls_for_all_classes"
+

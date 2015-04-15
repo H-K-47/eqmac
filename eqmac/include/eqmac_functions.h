@@ -72,14 +72,14 @@ void EQ_WriteMemoryString(DWORD address, const char* value)
 
 // direct input
 
-IDirectInput8** EQ_ppIDirectInput8 = (IDirectInput8**)EQ_DINPUT_ROOT;
-#define EQ_IDirectInput8 (*EQ_ppIDirectInput8)
+//IDirectInput8** EQ_ppIDirectInput8 = (IDirectInput8**)EQ_DINPUT_ROOT;
+//#define EQ_IDirectInput8 (*EQ_ppIDirectInput8)
 
-IDirectInputDevice8** EQ_ppIDirectInputDevice8_Keyboard = (IDirectInputDevice8**)EQ_DINPUT_DEVICE_KEYBOARD;
-#define EQ_IDirectInputDevice8_Keyboard (*EQ_ppIDirectInputDevice8_Keyboard)
+//IDirectInputDevice8** EQ_ppIDirectInputDevice8_Keyboard = (IDirectInputDevice8**)EQ_DINPUT_DEVICE_KEYBOARD;
+//#define EQ_IDirectInputDevice8_Keyboard (*EQ_ppIDirectInputDevice8_Keyboard)
 
-IDirectInputDevice8** EQ_ppIDirectInputDevice8_Mouse = (IDirectInputDevice8**)EQ_DINPUT_DEVICE_MOUSE;
-#define EQ_IDirectInputDevice8_Mouse (*EQ_ppIDirectInputDevice8_Mouse)
+//IDirectInputDevice8** EQ_ppIDirectInputDevice8_Mouse = (IDirectInputDevice8**)EQ_DINPUT_DEVICE_MOUSE;
+//#define EQ_IDirectInputDevice8_Mouse (*EQ_ppIDirectInputDevice8_Mouse)
 
 // object structures
 
@@ -137,6 +137,8 @@ class CXStr;
 class CXWndManager;
 class CSidlScreenWnd;
 class CXWnd;
+class StringTable;
+class EQ_Main;
 class CDisplay;
 class CEverQuest;
 class EQPlayer;
@@ -148,6 +150,7 @@ class CLootWnd;
 class CTradeWnd;
 class CItemDisplayWnd;
 class CBuffWindow;
+class CSpellBookWnd;
 
 class CXStr
 {
@@ -180,6 +183,24 @@ class CXWnd
 public:
     //
 };
+
+class StringTable
+{
+public:
+    char* StringTable::getString(unsigned long id, bool* unknown);
+};
+
+StringTable** EQ_CLASS_ppStringTable = (StringTable**)EQ_POINTER_StringTable;
+#define EQ_CLASS_StringTable (*EQ_CLASS_ppStringTable)
+
+class EQ_Main
+{
+public:
+    int* __cdecl EQ_Main::ReleaseLoot(void);
+};
+
+EQ_Main** EQ_CLASS_ppEQ_Main = (EQ_Main**)EQ_POINTER_EQ_Main;
+#define EQ_CLASS_EQ_Main (*EQ_CLASS_ppEQ_Main)
 
 class CDisplay
 {
@@ -296,6 +317,19 @@ public:
 CBuffWindow** EQ_CLASS_ppCBuffWindow = (CBuffWindow**)EQ_POINTER_CBuffWindow;
 #define EQ_CLASS_CBuffWindow (*EQ_CLASS_ppCBuffWindow)
 
+class CSpellBookWnd : public CSidlScreenWnd
+{
+public:
+    void CSpellBookWnd::Activate(void);
+    char* CSpellBookWnd::UpdateSpellBookDisplay(void);
+    bool CSpellBookWnd::StartSpellMemorization(int spellBookIndex, int spellGemIndex, bool unknown);
+    int CSpellBookWnd::FinishMemorizing(int spellGemIndex, int spellId);
+    int CSpellBookWnd::GetSpellMemTicksLeft(void);
+};
+
+CSpellBookWnd** EQ_CLASS_ppCSpellBookWnd = (CSpellBookWnd**)EQ_POINTER_CSpellBookWnd;
+#define EQ_CLASS_CSpellBookWnd (*EQ_CLASS_ppCSpellBookWnd)
+
 /* CXStr */
 
 // constructor
@@ -332,6 +366,20 @@ EQ_FUNCTION_AT_ADDRESS(int CXWndManager::DrawCursor(void) const, EQ_FUNCTION_CXW
 #define EQ_FUNCTION_CXWndManager__DrawWindows 0x0059E000
 #ifdef EQ_FUNCTION_CXWndManager__DrawWindows
 EQ_FUNCTION_AT_ADDRESS(int CXWndManager::DrawWindows(void) const, EQ_FUNCTION_CXWndManager__DrawWindows);
+#endif
+
+/* StringTable */
+
+#define EQ_FUNCTION_StringTable__getString 0x00550EFE
+#ifdef EQ_FUNCTION_StringTable__getString
+EQ_FUNCTION_AT_ADDRESS(char* StringTable::getString(unsigned long id, bool* unknown), EQ_FUNCTION_StringTable__getString);
+#endif
+
+/* EQ_Main */
+
+#define EQ_FUNCTION_EQ_Main__ReleaseLoot 0x0047F2BD
+#ifdef EQ_FUNCTION_EQ_Main__ReleaseLoot
+EQ_FUNCTION_AT_ADDRESS(int* _cdecl EQ_Main::ReleaseLoot(void), EQ_FUNCTION_EQ_Main__ReleaseLoot);
 #endif
 
 /* CDisplay */
@@ -549,6 +597,43 @@ typedef int (__thiscall* EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)(void*
 EQ_FUNCTION_AT_ADDRESS(void CBuffWindow::RefreshBuffDisplay(void), EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay);
 #endif
 
+/* CSpellBookWnd */
+
+    //void CSpellBookWnd::Activate(void);
+    //char* CSpellBookWnd::UpdateSpellBookDisplay(void);
+    //bool CSpellBookWnd::StartSpellMemorization(int, int, bool);
+    //int CSpellBookWnd::FinishMemorizing(int a1, int a2);
+
+#define EQ_FUNCTION_CSpellBookWnd__Activate 0x0043441F
+#ifdef EQ_FUNCTION_CSpellBookWnd__Activate
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CSpellBookWnd__Activate)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(void CSpellBookWnd::Activate(void), EQ_FUNCTION_CSpellBookWnd__Activate);
+#endif
+
+#define EQ_FUNCTION_CSpellBookWnd__UpdateSpellBookDisplay 0x004343E7
+#ifdef EQ_FUNCTION_CSpellBookWnd__UpdateSpellBookDisplay
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CSpellBookWnd__UpdateSpellBookDisplay)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(char* CSpellBookWnd::UpdateSpellBookDisplay(void), EQ_FUNCTION_CSpellBookWnd__UpdateSpellBookDisplay);
+#endif
+
+#define EQ_FUNCTION_CSpellBookWnd__StartSpellMemorization 0x00434A05
+#ifdef EQ_FUNCTION_CSpellBookWnd__StartSpellMemorization
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CSpellBookWnd__StartSpellMemorization)(void* this_ptr, int, int, bool);
+EQ_FUNCTION_AT_ADDRESS(bool CSpellBookWnd::StartSpellMemorization(int, int, bool), EQ_FUNCTION_CSpellBookWnd__StartSpellMemorization);
+#endif
+
+#define EQ_FUNCTION_CSpellBookWnd__FinishMemorizing 0x00434B38
+#ifdef EQ_FUNCTION_CSpellBookWnd__FinishMemorizing
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CSpellBookWnd__FinishMemorizing)(void* this_ptr, int, int);
+EQ_FUNCTION_AT_ADDRESS(int CSpellBookWnd::FinishMemorizing(int, int), EQ_FUNCTION_CSpellBookWnd__FinishMemorizing);
+#endif
+
+#define EQ_FUNCTION_CSpellBookWnd__GetSpellMemTicksLeft 0x00434C05
+#ifdef EQ_FUNCTION_CSpellBookWnd__GetSpellMemTicksLeft
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CSpellBookWnd__GetSpellMemTicksLeft)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(int CSpellBookWnd::GetSpellMemTicksLeft(void), EQ_FUNCTION_CSpellBookWnd__GetSpellMemTicksLeft);
+#endif
+
 /* OTHER */
 
 #define EQ_FUNCTION_DrawNetStatus 0x0054D3AE
@@ -574,6 +659,11 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessKeyUp)(int key);
 #define EQ_FUNCTION_ProcessMovementKeys 0x005257FA
 #ifdef EQ_FUNCTION_ProcessMovementKeys
 typedef int (__cdecl* EQ_FUNCTION_TYPE_ProcessMovementKeys)(int key);
+#endif
+
+#define EQ_FUNCTION_GetKey 0x0055AFE2
+#ifdef EQ_FUNCTION_GetKey
+typedef int (__cdecl* EQ_FUNCTION_TYPE_GetKey)(void);
 #endif
 
 #define EQ_FUNCTION_ExecuteCmd 0x0054050C
@@ -616,24 +706,6 @@ EQ_FUNCTION_TYPE_EQGfx_Dx8__t3dDeferQuad EQGfx_Dx8__t3dDeferQuad;
 
 // EQWorldData::GetFullZoneName
 // call 00523E49
-
-// StringTable::getString((ulong,bool *))
-//#define EQ_FUNCTION_StringTable__getString 0x00550EFE
-
-//#define EQ_FUNCTION___get_melee_range 0x004F3898
-
-//#define EQ_FUNCTION___CastRay 0x004F20DB
-
-/*
-
-// EQ_Character::CastSpell((uchar,short,EQ_Item **,short))
-#define EQ_FUNCTION_EQ_Character__CastSpell 0x004C483B
-
-#ifdef EQ_FUNCTION_EQ_Character__CastSpell
-typedef void (__stdcall *_everquest_function_EQ_Character__CastSpell)(unsigned char gem_index, short spell_id);
-_everquest_function_EQ_Character__CastSpell everquest_function_EQ_Character__CastSpell = (_everquest_function_EQ_Character__CastSpell)EQ_FUNCTION_EQ_Character__CastSpell;
-#endif
-*/
 
 void EQ_ToggleBool(bool& b)
 {
@@ -711,51 +783,51 @@ void EQ_GetItemCostString(int cost, char result[], size_t resultSize)
     if (platinum > 0)
     {
         char platinumText[128];
-        sprintf_s(platinumText, "%dp", platinum);
+        _snprintf_s(platinumText, sizeof(platinumText), _TRUNCATE, "%dp", platinum);
 
-        strcat_s(costText, platinumText);
+        strncat_s(costText, sizeof(costText), platinumText, _TRUNCATE);
     }
 
     if (gold > 0)
     {
         if (platinum > 0)
         {
-            strcat_s(costText, " ");
+            strncat_s(costText, sizeof(costText), " ", _TRUNCATE);
         }
 
         char goldText[128];
-        sprintf_s(goldText, "%dg", gold);
+        _snprintf_s(goldText, sizeof(goldText), _TRUNCATE, "%dg", gold);
 
-        strcat_s(costText, goldText);
+        strncat_s(costText, sizeof(costText), goldText, _TRUNCATE);
     }
 
     if (silver > 0)
     {
         if (platinum > 0 || gold > 0)
         {
-            strcat_s(costText, " ");
+            strncat_s(costText, sizeof(costText), " ", _TRUNCATE);
         }
 
         char silverText[128];
-        sprintf_s(silverText, "%ds", silver);
+        _snprintf_s(silverText, sizeof(silverText), _TRUNCATE, "%ds", silver);
 
-        strcat_s(costText, silverText);
+        strncat_s(costText, sizeof(costText), silverText, _TRUNCATE);
     }
 
     if (copper > 0)
     {
         if (platinum > 0 || gold > 0 || silver > 0)
         {
-            strcat_s(costText, " ");
+            strncat_s(costText, sizeof(costText), " ", _TRUNCATE);
         }
 
         char copperText[128];
-        sprintf_s(copperText, "%dc", copper);
+        _snprintf_s(copperText, sizeof(copperText), _TRUNCATE, "%dc", copper);
 
-        strcat_s(costText, copperText);
+        strncat_s(costText, sizeof(costText), copperText, _TRUNCATE);
     }
 
-    strcpy_s(result, resultSize, costText);
+    strncpy_s(result, resultSize, costText, _TRUNCATE);
 }
 
 void EQ_CalculateTickTime(int ticks, int& hours, int& minutes, int& seconds)
@@ -793,38 +865,38 @@ void EQ_GetTickTimeString(int ticks, char result[], size_t resultSize)
     if (hours > 0)
     {
         char hoursText[128];
-        sprintf_s(hoursText, "%dh", hours);
+        _snprintf_s(hoursText, sizeof(hoursText), _TRUNCATE, "%dh", hours);
 
-        strcat_s(timeText, hoursText);
+        strncat_s(timeText, sizeof(timeText), hoursText, _TRUNCATE);
     }
 
     if (minutes > 0)
     {
         if (hours > 0)
         {
-            strcat_s(timeText, " ");
+            strncat_s(timeText, sizeof(timeText), " ", _TRUNCATE);
         }
 
         char minutesText[128];
-        sprintf_s(minutesText, "%dm", minutes);
+        _snprintf_s(minutesText, sizeof(minutesText), _TRUNCATE, "%dm", minutes);
 
-        strcat_s(timeText, minutesText);
+        strncat_s(timeText, sizeof(timeText), minutesText, _TRUNCATE);
     }
 
     if (seconds > 0)
     {
         if (hours > 0 || minutes > 0)
         {
-            strcat_s(timeText, " ");
+            strncat_s(timeText, sizeof(timeText), " ", _TRUNCATE);
         }
 
         char secondsText[128];
-        sprintf_s(secondsText, "%ds", seconds);
+        _snprintf_s(secondsText, sizeof(secondsText), _TRUNCATE, "%ds", seconds);
 
-        strcat_s(timeText, secondsText);
+        strncat_s(timeText, sizeof(timeText), secondsText, _TRUNCATE);
     }
 
-    strcpy_s(result, resultSize, timeText);
+    strncpy_s(result, resultSize, timeText, _TRUNCATE);
 }
 
 const char* EQ_KEYVALUESTRINGLIST_GetValueByKey(const char* list[][2], size_t listSize, char key[])
@@ -1025,7 +1097,7 @@ void EQ_CXStr_Append(PEQCXSTR* cxstr, PCHAR text)
     cxstr = (PEQCXSTR*)temp;
 }
 
-void EQ_CXStr_Set(PEQCXSTR* cxstr, PCHAR text) 
+void EQ_CXStr_Set(PEQCXSTR* cxstr, PCHAR text)
 { 
     CXStr *temp = (CXStr*)cxstr;
 
@@ -1047,7 +1119,7 @@ char* EQ_GetGuildNameById(int guildId)
 void EQ_WriteIntVarToChat(const char* name, int value)
 {
     char text[128];
-    sprintf_s(text, _TRUNCATE, "%s: %d", name, value);
+    _snprintf_s(text, sizeof(text), _TRUNCATE, "%s: %d", name, value);
 
     EQ_CLASS_CEverQuest->dsp_chat(text);
 }
@@ -1055,7 +1127,7 @@ void EQ_WriteIntVarToChat(const char* name, int value)
 void EQ_WriteHexVarToChat(const char* name, int value)
 {
     char text[128];
-    sprintf_s(text, _TRUNCATE, "%s: 0x%08X", value);
+    _snprintf_s(text, sizeof(text), _TRUNCATE, "%s: 0x%08X", value);
 
     EQ_CLASS_CEverQuest->dsp_chat(text);
 }
@@ -1063,7 +1135,7 @@ void EQ_WriteHexVarToChat(const char* name, int value)
 void EQ_WriteFloatVarToChat(const char* name, float value)
 {
     char text[128];
-    sprintf_s(text, _TRUNCATE, "%s: %.1f", name, value);
+    _snprintf_s(text, sizeof(text), _TRUNCATE, "%s: %.1f", name, value);
 
     EQ_CLASS_CEverQuest->dsp_chat(text);
 }
@@ -1071,7 +1143,7 @@ void EQ_WriteFloatVarToChat(const char* name, float value)
 void EQ_WriteBoolVarToChat(const char* name, bool& b)
 {
     char text[128];
-    sprintf_s(text, _TRUNCATE, "%s: %s", name, b ? "On" : "Off");
+    _snprintf_s(text, sizeof(text), _TRUNCATE, "%s: %s", name, b ? "On" : "Off");
 
     EQ_CLASS_CEverQuest->dsp_chat(text);
 }
@@ -1079,8 +1151,13 @@ void EQ_WriteBoolVarToChat(const char* name, bool& b)
 void EQ_WriteStringVarToChat(const char* name, char value[])
 {
     char text[128];
-    sprintf_s(text, _TRUNCATE, "%s: %s", name, value);
+    _snprintf_s(text, sizeof(text), _TRUNCATE, "%s: %s", name, value);
 
+    EQ_CLASS_CEverQuest->dsp_chat(text);
+}
+
+void EQ_WriteStringToChat(const char* text)
+{
     EQ_CLASS_CEverQuest->dsp_chat(text);
 }
 
@@ -1288,13 +1365,11 @@ PEQSPAWNINFO EQ_GetMyCorpse()
     return NULL;
 }
 
-PEQSPAWNINFO EQ_GetNearestSpawn(int spawnType)
+PEQSPAWNINFO EQ_GetNearestSpawn(int spawnType, float maxDistance = 400.0f)
 {
     PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
 
     PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
-
-    //PEQSPAWNINFO nearestSpawn = (PEQSPAWNINFO)malloc(sizeof(EQSPAWNINFO));
 
     int spawnId = 0;
 
@@ -1325,13 +1400,11 @@ PEQSPAWNINFO EQ_GetNearestSpawn(int spawnType)
 
         float spawnDistance = EQ_CalculateDistance(playerSpawn->X, playerSpawn->Y, spawn->X, spawn->Y);
 
-/*
-        if (spawnDistance > 400.0f)
+        if (spawnDistance > maxDistance)
         {
             spawn = spawn->Next;
             continue;
         }
-*/
 
         if (shortestDistance == 0.0f)
         {
@@ -1372,852 +1445,26 @@ DWORD EQ_GetStringSpriteFontTexture()
     return fontTexture;
 }
 
-/*
-template <class T>
-T everquest_function_read_memory(DWORD address);
-
-template <class T>
-void everquest_function_write_memory(DWORD address, T value);
-
-std::string everquest_function_read_memory_string(DWORD address, int size);
-
-bool everquest_function_is_in_game();
-int everquest_function_get_char_info();
-int everquest_function_get_player_spawn_info();
-int everquest_function_get_player_actor_info();
-int everquest_function_get_target_spawn_info();
-int everquest_function_get_target_actor_info();
-void everquest_function_set_target_spawn_info(int spawn_info);
-int everquest_function_get_CDisplay();
-int everquest_function_get_CEverQuest();
-int everquest_function_get_CLootWnd();
-int everquest_function_get_CDisplay_timer();
-void everquest_function_update_spawns(std::vector<everquest_spawn_t> &spawns);
-void everquest_function_update_loot_items(std::vector<everquest_item_t> &items);
-void everquest_function_write_text_to_chat(const char *text);
-void everquest_function_gate_to_bind_point();
-int everquest_function_get_zone_id();
-std::string everquest_function_get_zone_short_name();
-std::string everquest_function_get_zone_long_name();
-void everquest_function_set_auto_attack(bool enabled);
-void everquest_function_warp_to_coordinates(float y, float x, float z, float heading);
-void everquest_function_warp_to_spawn_info(int spawn_info, bool use_heading);
-void everquest_function_adjust_player_distance_from_target(float distance, bool backwards);
-float everquest_function_get_target_distance();
-void everquest_function_set_player_height(float height);
-float everquest_function_get_player_height();
-void everquest_function_set_player_position(unsigned char position);
-unsigned char everquest_function_get_player_position();
-void everquest_function_face_spawn_info(int spawn_info);
-void everquest_function_do_hot_button(short button_index);
-unsigned short everquest_function_get_player_mana_max();
-unsigned short everquest_function_get_player_mana_current();
-float everquest_function_get_player_mana_percent();
-int everquest_function_get_spawn_info_by_name(std::string spawn_name, bool partial_match, bool sort_by_distance, bool ignore_corpse);
-bool everquest_function_is_loot_window_open();
-bool everquest_function_is_loot_window_empty();
-void everquest_function_loot_corpse(int spawn_info);
-void everquest_function_loot_slot(int slot_index);
-void everquest_function_loot_window_close();
-void everquest_function_loot_all_items();
-int everquest_function_get_loot_slot_of_item_by_name(std::string item_name, bool partial_match);
-bool everquest_function_loot_all_items_by_name(std::string item_name, bool partial_match);
-void everquest_function_trade_window_activate(int spawn_info, bool is_target_npc);
-
-template <class T>
-T everquest_function_read_memory(DWORD address)
+int EQ_GetSpellBookSpellIndexBySpellId(short spellId)
 {
-    return *(T*)address;
-}
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
-template <class T>
-void everquest_function_write_memory(DWORD address, T value)
-{
-    *(T*)address = value;
-}
-
-std::string everquest_function_read_memory_string(DWORD address, int size)
-{
-    char *buffer = new char[size + 1];
-
-    for (int i = 0; i < size; i++)
-    {
-        buffer[i] = *(unsigned char*)(address + i);
-    }
-
-    std::string result = buffer;
-
-    delete[] buffer;
-
-    return result;
-}
-
-bool everquest_function_is_in_game()
-{
-    unsigned char result = everquest_function_read_memory<BYTE>(EQ_IS_IN_GAME);
-
-    if (result == 0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-int everquest_function_get_char_info()
-{
-    return everquest_function_read_memory<DWORD>(EQ_CHAR_INFO_POINTER);
-}
-
-int everquest_function_get_player_spawn_info()
-{
-    return everquest_function_read_memory<DWORD>(EQ_PLAYER_SPAWN_INFO_POINTER);
-}
-
-int everquest_function_get_player_actor_info()
-{
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    return everquest_function_read_memory<DWORD>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
-}
-
-int everquest_function_get_target_spawn_info()
-{
-    return everquest_function_read_memory<DWORD>(EQ_TARGET_SPAWN_INFO_POINTER);
-}
-
-int everquest_function_get_target_actor_info()
-{
-    int target_spawn_info = everquest_function_get_target_spawn_info();
-
-    if (target_spawn_info == EQ_SPAWN_INFO_NULL)
-    {
-        return 0;
-    }
-
-    return everquest_function_read_memory<DWORD>(target_spawn_info + EQ_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
-}
-
-void everquest_function_set_target_spawn_info(int spawn_info)
-{
-    everquest_function_write_memory<DWORD>(EQ_TARGET_SPAWN_INFO_POINTER, spawn_info);
-}
-
-int everquest_function_get_CDisplay()
-{
-    return everquest_function_read_memory<DWORD>(EQ_CDisplay_POINTER);
-}
-
-int everquest_function_get_CEverQuest()
-{
-    return everquest_function_read_memory<DWORD>(EQ_CEverQuest_POINTER);
-}
-
-int everquest_function_get_CLootWnd()
-{
-    return everquest_function_read_memory<DWORD>(EQ_CLootWnd_POINTER);
-}
-
-int everquest_function_get_CDisplay_timer()
-{
-    int CDisplay_info = everquest_function_get_CDisplay();
-
-    return everquest_function_read_memory<DWORD>(CDisplay_info + EQ_OFFSET_CDisplay_TIMER);
-}
-
-void everquest_function_update_spawns(std::vector<everquest_spawn_t> &spawns)
-{
-    spawns.clear();
-
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-    int target_spawn_info = everquest_function_get_target_spawn_info();
-
-    float player_y = everquest_function_read_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_Y);
-    float player_x = everquest_function_read_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_X);
-    float player_z = everquest_function_read_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_Z);
-
-    int spawn_info_address = player_spawn_info;
-
-    int spawn_next_spawn_info = everquest_function_read_memory<DWORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
-
-    spawn_info_address = spawn_next_spawn_info;
-
-    for (int i = 0; i < EQ_NUM_SPAWNS; i++)
-    {
-        spawn_next_spawn_info = everquest_function_read_memory<DWORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_NEXT_SPAWN_INFO_POINTER);
-
-        if (spawn_next_spawn_info == EQ_SPAWN_INFO_NULL)
-        {
-            break;
-        }
-
-        int spawn_actor_info = everquest_function_read_memory<DWORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_ACTOR_INFO_POINTER);
-
-        everquest_spawn_t spawn;
-
-        spawn.address = spawn_info_address;
-
-        spawn.spawn_id = everquest_function_read_memory<WORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_SPAWN_ID);
-        spawn.owner_id = everquest_function_read_memory<WORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_OWNER_ID);
-        spawn.guild_id = everquest_function_read_memory<WORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_GUILD_ID);
-
-        spawn.name      = everquest_function_read_memory_string(spawn_info_address + EQ_OFFSET_SPAWN_INFO_NAME,      EQ_SPAWN_INFO_NAME_SIZE);
-        spawn.last_name = everquest_function_read_memory_string(spawn_info_address + EQ_OFFSET_SPAWN_INFO_LAST_NAME, EQ_SPAWN_INFO_LAST_NAME_SIZE);
-
-        spawn.y = everquest_function_read_memory<float>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_Y);
-        spawn.x = everquest_function_read_memory<float>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_X);
-        spawn.z = everquest_function_read_memory<float>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_Z);
-
-        spawn.distance = everquest_calculate_distance(player_x, player_y, spawn.x, spawn.y);
-
-        spawn.distance_z = abs(spawn.z - player_z);
-
-        spawn.heading = everquest_function_read_memory<float>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_HEADING);
-
-        spawn.movement_speed = everquest_function_read_memory<float>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_MOVEMENT_SPEED);
-
-        spawn.standing_state = everquest_function_read_memory<BYTE>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_STANDING_STATE);
-
-        spawn.type   = everquest_function_read_memory<BYTE>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_TYPE);
-        spawn.level  = everquest_function_read_memory<BYTE>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_LEVEL);
-        spawn.race   = everquest_function_read_memory<BYTE>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_RACE);
-        spawn._class = everquest_function_read_memory<BYTE>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_CLASS);
-
-        spawn.hp     = everquest_function_read_memory<DWORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_HP_CURRENT);
-        spawn.hp_max = everquest_function_read_memory<DWORD>(spawn_info_address + EQ_OFFSET_SPAWN_INFO_HP_MAX);
-
-        spawn.is_target = (spawn_info_address == target_spawn_info ? true : false);
-
-        spawn.is_player_corpse = false;
-
-        if (spawn.type == EQ_SPAWN_INFO_TYPE_CORPSE)
-        {
-            std::string player_name = everquest_function_read_memory_string(player_spawn_info + EQ_OFFSET_SPAWN_INFO_NAME, EQ_SPAWN_INFO_NAME_SIZE);
-
-            size_t found = spawn.name.find(player_name);
-
-            if (found != std::string::npos)
-            {
-                spawn.is_player_corpse = true;
-            }
-        }
-
-        spawn.is_holding_both      = everquest_function_read_memory<DWORD>(spawn_actor_info + EQ_OFFSET_ACTOR_INFO_IS_HOLDING_BOTH);
-        spawn.is_holding_secondary = everquest_function_read_memory<DWORD>(spawn_actor_info + EQ_OFFSET_ACTOR_INFO_IS_HOLDING_SECONDARY);
-        spawn.is_holding_primary   = everquest_function_read_memory<DWORD>(spawn_actor_info + EQ_OFFSET_ACTOR_INFO_IS_HOLDING_PRIMARY);
-
-        spawns.push_back(spawn);
-
-        spawn_info_address = spawn_next_spawn_info;
-    }
-}
-
-void everquest_function_update_loot_items(std::vector<everquest_item_t> &items)
-{
-    items.clear();
-
-    if (everquest_function_is_loot_window_open == false)
-    {
-        return;
-    }
-
-    int CLootWnd_info = everquest_function_get_CLootWnd();
-
-    for (int i = 0; i < EQ_CLootWnd_ITEMS_MAX; i++)
-    {
-        int item_info_address = everquest_function_read_memory<DWORD>(CLootWnd_info + EQ_OFFSET_CLootWnd_ITEMS + (i * EQ_CLootWnd_ITEMS_OFFSET));
-
-        if (item_info_address == EQ_ITEM_INFO_NULL)
-        {
-            continue;
-        }
-
-        everquest_item_t item;
-
-        item.loot_window_slot = i;
-
-        item.address = item_info_address;
-
-        item.name      = everquest_function_read_memory_string(item_info_address + EQ_OFFSET_ITEM_INFO_NAME,      EQ_ITEM_INFO_NAME_SIZE);
-        item.lore_name = everquest_function_read_memory_string(item_info_address + EQ_OFFSET_ITEM_INFO_LORE_NAME, EQ_ITEM_INFO_LORE_NAME_SIZE);
-        item.id_file   = everquest_function_read_memory_string(item_info_address + EQ_OFFSET_ITEM_INFO_ID_FILE,   EQ_ITEM_INFO_ID_FILE_SIZE);
-
-        unsigned char item_weight = everquest_function_read_memory<BYTE>(item_info_address + EQ_OFFSET_ITEM_INFO_WEIGHT);
-        item.weight = (float)(item_weight * 0.1);
-
-        item.size = everquest_function_read_memory<BYTE>(item_info_address + EQ_OFFSET_ITEM_INFO_SIZE);
-
-        unsigned char item_is_no_rent = everquest_function_read_memory<BYTE>(item_info_address + EQ_OFFSET_ITEM_INFO_IS_NO_RENT);
-        if (item_is_no_rent == 255)
-        {
-            item.is_no_rent = false;
-        }
-        else
-        {
-            item.is_no_rent = true;
-        }
-
-        unsigned char item_is_no_drop = everquest_function_read_memory<BYTE>(item_info_address + EQ_OFFSET_ITEM_INFO_IS_NO_DROP);
-        if (item_is_no_drop == 255)
-        {
-            item.is_no_drop = false;
-        }
-        else
-        {
-            item.is_no_drop = true;
-        }
-
-        unsigned char item_is_container = everquest_function_read_memory<BYTE>(item_info_address + EQ_OFFSET_ITEM_INFO_IS_CONTAINER);
-        if (item_is_container == 0)
-        {
-            item.is_container = false;
-        }
-        else
-        {
-            item.is_container = true;
-        }
-
-        item.id   = everquest_function_read_memory<WORD>(item_info_address + EQ_OFFSET_ITEM_INFO_ID);
-        item.icon = everquest_function_read_memory<WORD>(item_info_address + EQ_OFFSET_ITEM_INFO_ICON);
-
-        item.equip_slot       = everquest_function_read_memory<DWORD>(item_info_address + EQ_OFFSET_ITEM_INFO_EQUIP_SLOT);
-        item.equippable_slots = everquest_function_read_memory<DWORD>(item_info_address + EQ_OFFSET_ITEM_INFO_EQUIPPABLE_SLOTS);
-
-        item.cost = everquest_function_read_memory<DWORD>(item_info_address + EQ_OFFSET_ITEM_INFO_COST);
-
-        items.push_back(item);
-    }
-}
-
-void everquest_function_write_text_to_chat(const char *text)
-{
-    everquest_object_CEverQuest->dsp_chat(text);
-}
-
-void everquest_function_gate_to_bind_point()
-{
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    everquest_function_write_memory<BYTE>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_TYPE, EQ_SPAWN_INFO_TYPE_CORPSE);
-}
-
-int everquest_function_get_zone_id()
-{
-    return everquest_function_read_memory<DWORD>(EQ_ZONE_ID);
-}
-
-std::string everquest_function_get_zone_short_name()
-{
-    std::string name = everquest_function_read_memory_string(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SHORT_NAME, EQ_ZONE_INFO_SHORT_NAME_SIZE);
-
-    std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-
-    return name;
-}
-
-std::string everquest_function_get_zone_long_name()
-{
-    return everquest_function_read_memory_string(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_LONG_NAME, EQ_ZONE_INFO_LONG_NAME_SIZE);
-}
-
-void everquest_function_set_auto_attack(bool enabled)
-{
-    everquest_function_write_memory<BYTE>(EQ_IS_AUTO_ATTACK_ENABLED, (unsigned char)enabled);
-}
-
-void everquest_function_warp_to_coordinates(float y, float x, float z, float heading = -1.0)
-{
-    if (heading >= 0 && heading <= EQ_HEADING_MAX)
-    {
-        int player_spawn_info = everquest_function_get_player_spawn_info();
-
-        everquest_function_write_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_HEADING, heading);
-    }
-
-    float original_y = everquest_function_read_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_Y);
-    float original_x = everquest_function_read_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_Y);
-    float original_z = everquest_function_read_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_Y);
-
-    everquest_function_write_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_Y, y);
-    everquest_function_write_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_X, x);
-    everquest_function_write_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_Z, z);
-
-    everquest_object_CDisplay->MoveLocalPlayerToSafeCoords();
-
-    everquest_function_write_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_Y, original_y);
-    everquest_function_write_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_X, original_x);
-    everquest_function_write_memory<float>(EQ_ZONE_INFO_STRUCTURE + EQ_OFFSET_ZONE_INFO_SAFE_POINT_Z, original_z);
-}
-
-void everquest_function_warp_to_spawn_info(int spawn_info, bool use_heading = true)
-{
-    if (spawn_info == EQ_SPAWN_INFO_NULL)
-    {
-        return;
-    }
-
-    float spawn_y = everquest_function_read_memory<float>(spawn_info + EQ_OFFSET_SPAWN_INFO_Y);
-    float spawn_x = everquest_function_read_memory<float>(spawn_info + EQ_OFFSET_SPAWN_INFO_X);
-    float spawn_z = everquest_function_read_memory<float>(spawn_info + EQ_OFFSET_SPAWN_INFO_Z);
-
-    float spawn_heading = -1.0;
-    
-    if (use_heading == true)
-    {
-        spawn_heading = everquest_function_read_memory<float>(spawn_info + EQ_OFFSET_SPAWN_INFO_HEADING);
-    }
-
-    everquest_function_warp_to_coordinates(spawn_y, spawn_x, spawn_z, spawn_heading);
-}
-
-void everquest_function_adjust_player_distance_from_target(float distance, bool backwards = true)
-{
-    int target_spawn_info = everquest_function_get_target_spawn_info();
-
-    if (target_spawn_info == EQ_SPAWN_INFO_NULL)
-    {
-        return;
-    }
-
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    if (target_spawn_info == player_spawn_info)
-    {
-        return;
-    }
-
-    float movement_speed = 0.0;
-
-    while (1)
-    {
-        float target_distance = everquest_function_get_target_distance();
-
-        if (target_distance == -1.0)
-        {
-            return;
-        }
-
-        bool distance_is_met = false;
-
-        if (backwards == true)
-        {
-            movement_speed = -1.0;
-
-            distance_is_met = (target_distance <= distance);
-        }
-        else
-        {
-            movement_speed = 1.0;
-
-            distance_is_met = (target_distance >= distance);
-        }
-
-        if (distance_is_met == true)
-        {
-            everquest_function_write_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_MOVEMENT_SPEED, movement_speed);
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    everquest_function_write_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_MOVEMENT_SPEED, 0.0);
-}
-
-float everquest_function_get_target_distance()
-{
-    int target_spawn_info = everquest_function_get_target_spawn_info();
-
-    if (target_spawn_info == EQ_SPAWN_INFO_NULL)
-    {
-        return -1.0;
-    }
-
-    float target_y = everquest_function_read_memory<float>(target_spawn_info + EQ_OFFSET_SPAWN_INFO_Y);
-    float target_x = everquest_function_read_memory<float>(target_spawn_info + EQ_OFFSET_SPAWN_INFO_X);
-
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    if (player_spawn_info == EQ_SPAWN_INFO_NULL)
-    {
-        return -1.0;
-    }
- 
-    float player_y = everquest_function_read_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_Y);
-    float player_x = everquest_function_read_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_X);
-
-    return everquest_calculate_distance(player_x, player_y, target_x, target_y);
-}
-
-void everquest_function_set_player_height(float height)
-{
-    if (height <= 0)
-    {
-        return;
-    }
-
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    ((EQPlayer*)player_spawn_info)->ChangeHeight(height);
-}
-
-float everquest_function_get_player_height()
-{
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    return everquest_function_read_memory<float>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_MODEL_HEIGHT);
-}
-
-void everquest_function_set_player_position(unsigned char position)
-{
-    if (position <= 0)
-    {
-        return;
-    }
-
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    ((EQPlayer*)player_spawn_info)->ChangePosition(position);
-}
-
-unsigned char everquest_function_get_player_position()
-{
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    return everquest_function_read_memory<BYTE>(player_spawn_info + EQ_OFFSET_SPAWN_INFO_STANDING_STATE);
-}
-
-void everquest_function_face_spawn_info(int spawn_info)
-{
-    int player_spawn_info = everquest_function_get_player_spawn_info();
-
-    ((EQPlayer*)player_spawn_info)->FacePlayer((EQPlayer*)spawn_info);
-}
-
-void everquest_function_do_hot_button(short button_index)
-{
-    if (button_index < 0)
-    {
-        return;
-    }
-
-    if (button_index > 0 && button_index < 10)
-    {
-        button_index = button_index - 1;
-    }
-    else
-    {
-        button_index = 9;
-    }
-
-    everquest_object_CHotButtonWnd->DoHotButton(button_index, 1);
-}
-
-unsigned short everquest_function_get_player_mana_max()
-{
-    return everquest_object_EQ_Character->Max_Mana();
-}
-
-unsigned short everquest_function_get_player_mana_current()
-{
-    int char_info = everquest_function_get_char_info();
-
-    unsigned short player_mana_current = everquest_function_read_memory<WORD>(char_info + EQ_OFFSET_CHAR_INFO_MANA_CURRENT);
-
-    return player_mana_current;
-}
-
-float everquest_function_get_player_mana_percent()
-{
-    unsigned short player_mana_current = everquest_function_get_player_mana_current();
-
-    unsigned short player_mana_max = everquest_function_get_player_mana_max();
-
-    return (float)((player_mana_current * 100) / player_mana_max);
-}
-
-int everquest_function_get_spawn_info_by_name(std::string spawn_name, bool partial_match = true, bool sort_by_distance = true, bool ignore_corpse = true)
-{
-    if (spawn_name.size() == 0)
-    {
-        return EQ_SPAWN_INFO_NULL;
-    }
-
-    std::vector<everquest_spawn_t> spawns;
-    std::vector<everquest_spawn_t>::iterator spawns_it;
-
-    everquest_function_update_spawns(spawns);
-
-    if (spawns.size() == 0)
-    {
-        return EQ_SPAWN_INFO_NULL;
-    }
-
-    if (sort_by_distance == true)
-    {
-        std::sort(spawns.begin(), spawns.end(), everquest_sort_spawns_by_distance_t());
-    }
-
-    int spawn_info = EQ_SPAWN_INFO_NULL;
-
-    for (spawns_it = spawns.begin() ; spawns_it != spawns.end(); ++spawns_it)
-    {
-        if (ignore_corpse == true)
-        {
-            if (spawns_it->type == EQ_SPAWN_INFO_TYPE_CORPSE)
-            {
-                continue;
-            }
-        }
-
-        if (partial_match == true)
-        {
-            size_t found = spawns_it->name.find(spawn_name);
-
-            if (found != std::string::npos)
-            {
-                spawn_info = spawns_it->address;
-                break;
-            }
-        }
-        else
-        {
-            if (spawns_it->name == spawn_name)
-            {
-                spawn_info = spawns_it->address;
-                break;
-            }
-        }
-    }
-
-    return spawn_info;
-}
-
-void everquest_function_loot_window_close()
-{
-    everquest_object_CLootWnd->Deactivate();
-}
-
-bool everquest_function_is_loot_window_open()
-{
-    int CLootWnd_info = everquest_function_get_CLootWnd();
-
-    unsigned char is_loot_window_open = everquest_function_read_memory<BYTE>(CLootWnd_info + EQ_OFFSET_CLootWnd_IS_OPEN);
-
-    if (is_loot_window_open == 0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool everquest_function_is_loot_window_empty()
-{
-    if (everquest_function_is_loot_window_open == false)
-    {
-        return true;
-    }
-
-    int CLootWnd_info = everquest_function_get_CLootWnd();
-
-    for (int i = 0; i < EQ_CLootWnd_ITEMS_MAX; i++)
-    {
-        int item_info_address = everquest_function_read_memory<DWORD>(CLootWnd_info + EQ_OFFSET_CLootWnd_ITEMS + (i * EQ_CLootWnd_ITEMS_OFFSET));
-
-        if (item_info_address != EQ_ITEM_INFO_NULL)
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void everquest_function_loot_corpse(int spawn_info)
-{
-    if (spawn_info == EQ_SPAWN_INFO_NULL)
-    {
-        return;
-    }
-
-    unsigned char spawn_type = everquest_function_read_memory<BYTE>(spawn_info + EQ_OFFSET_SPAWN_INFO_TYPE);
-
-    if (spawn_type != EQ_SPAWN_INFO_TYPE_CORPSE)
-    {
-        return;
-    }
-
-    if (everquest_function_is_loot_window_open() == true)
-    {
-        return;
-    }
-
-    everquest_object_CEverQuest->LootCorpse((EQPlayer *)spawn_info, 1);
-}
-
-void everquest_function_loot_slot(int slot_index)
-{
-    if (slot_index < 0)
-    {
-        return;
-    }
-
-    everquest_object_CLootWnd->RequestLootSlot(slot_index, true);
-    Sleep(100);
-}
-
-void everquest_function_loot_all_items()
-{
-    if (everquest_function_is_loot_window_open == false)
-    {
-        return;
-    }
-
-    if (everquest_function_is_loot_window_empty() == true)
-    {
-        everquest_function_loot_window_close();
-        return;
-    }
-
-    int CLootWnd_info = everquest_function_get_CLootWnd();
-
-    for (int i = 0; i < EQ_CLootWnd_ITEMS_MAX; i++)
-    {
-        int item_info_address = everquest_function_read_memory<DWORD>(CLootWnd_info + EQ_OFFSET_CLootWnd_ITEMS + (i * EQ_CLootWnd_ITEMS_OFFSET));
-
-        if (item_info_address == EQ_ITEM_INFO_NULL)
-        {
-            continue;
-        }
-
-        everquest_function_loot_slot(i);
-    }
-}
-
-int everquest_function_get_loot_slot_of_item_by_name(std::string item_name, bool partial_match)
-{
-    if (item_name.size() == 0)
+    if (charInfo == NULL)
     {
         return -1;
     }
 
-    if (everquest_function_is_loot_window_open == false)
+    for (size_t i = 0; i < EQ_NUM_SPELL_BOOK_SPELLS; i++)
     {
-        return -1;
-    }
+        short spellBookSpellId = charInfo->SpellBook[i];
 
-    if (everquest_function_is_loot_window_empty() == true)
-    {
-        everquest_function_loot_window_close();
-        return -1;
-    }
-
-    std::vector<everquest_item_t> loot_items;
-    std::vector<everquest_item_t>::iterator loot_items_it;
-
-    everquest_function_update_loot_items(loot_items);
-
-    if (loot_items.size() == 0)
-    {
-        return -1;
-    }
-
-    int slot_index = -1;
-
-    for (loot_items_it = loot_items.begin() ; loot_items_it != loot_items.end(); ++loot_items_it)
-    {
-        if (partial_match == true)
+        if (spellBookSpellId == spellId)
         {
-            size_t found = loot_items_it->name.find(item_name);
-
-            if (found != std::string::npos)
-            {
-                slot_index = loot_items_it->loot_window_slot;
-                break;
-            }
-        }
-        else
-        {
-            if (loot_items_it->name == item_name)
-            {
-                slot_index = loot_items_it->loot_window_slot;
-                break;
-            }
+            return i;
         }
     }
 
-    return slot_index;
+    return -1;
 }
-
-bool everquest_function_loot_all_items_by_name(std::string item_name, bool partial_match = true)
-{
-    if (item_name.size() == 0)
-    {
-        return false;
-    }
-
-    if (everquest_function_is_loot_window_open == false)
-    {
-        return false;
-    }
-
-    if (everquest_function_is_loot_window_empty() == true)
-    {
-        everquest_function_loot_window_close();
-        return false;
-    }
-
-    std::vector<everquest_item_t> loot_items;
-    std::vector<everquest_item_t>::iterator loot_items_it;
-
-    everquest_function_update_loot_items(loot_items);
-
-    if (loot_items.size() == 0)
-    {
-        return false;
-    }
-
-    bool result = false;
-
-    for (loot_items_it = loot_items.begin() ; loot_items_it != loot_items.end(); ++loot_items_it)
-    {
-        bool found_match = false;
-
-        if (partial_match == true)
-        {
-            size_t found = loot_items_it->name.find(item_name);
-
-            if (found != std::string::npos)
-            {
-                found_match = true;
-                result      = true;
-            }
-        }
-        else
-        {
-            if (loot_items_it->name == item_name)
-            {
-                found_match = true;
-                result      = true;
-            }
-        }
-
-        if (found_match == true)
-        {
-            everquest_function_loot_slot(loot_items_it->loot_window_slot);;
-        }
-    }
-
-    return result;
-}
-
-void everquest_function_trade_window_activate(int spawn_info, bool is_target_npc)
-{
-    everquest_object_CTradeWnd->Activate((EQPlayer *)spawn_info, is_target_npc);
-}
-
-*/
 
 #endif // EQMAC_FUNCTIONS_H

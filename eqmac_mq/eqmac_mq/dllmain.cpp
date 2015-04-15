@@ -18,9 +18,9 @@
 #include <psapi.h>
 #pragma comment(lib, "psapi.lib")
 
-#define DIRECTINPUT_VERSION 0x0800
-#include "dinput.h"
-#pragma comment(lib, "dinput.lib")
+//#define DIRECTINPUT_VERSION 0x0800
+//#include "dinput.h"
+//#pragma comment(lib, "dinput.lib")
 
 #include "detours.h"
 #pragma comment(lib, "detours.lib")
@@ -45,8 +45,6 @@ HANDLE g_handleThreadLoop;
 WSADATA g_wsaData;
 SOCKET g_connectSocket;
 fd_set g_fdSetRead;
-
-unsigned char g_keyboardState[256];
 
 EQ_FUNCTION_TYPE_CEverQuest__LMouseDown EQMACMQ_REAL_CEverQuest__LMouseDown = NULL;
 EQ_FUNCTION_TYPE_CEverQuest__LMouseUp   EQMACMQ_REAL_CEverQuest__LMouseUp   = NULL;
@@ -80,7 +78,12 @@ EQ_FUNCTION_TYPE_EQ_Character__UseSkill EQMACMQ_REAL_EQ_Character__UseSkill = NU
 
 EQ_FUNCTION_TYPE_AutoInventory EQMACMQ_REAL_AutoInventory = NULL;
 
+EQ_FUNCTION_TYPE_CSpellBookWnd__StartSpellMemorization EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization = NULL;
+EQ_FUNCTION_TYPE_CSpellBookWnd__FinishMemorizing       EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing       = NULL;
+
 bool g_loggingIsEnabled = false;
+
+bool g_standWhenMovingIsEnabled = true;
 
 bool g_standWhenCastSpellIsEnabled = true;
 
@@ -128,9 +131,6 @@ bool g_ignoreKeysIsEnabled = false;
 
 unsigned int g_ignoreKeysTimer = 0;
 unsigned int g_ignoreKeysDelay = 100;
-
-// support for the Classic UI from 1999
-bool g_classicUiIsEnabled = false;
 
 int g_zoneId = 0;
 
@@ -677,6 +677,9 @@ bool g_meleeSkillSlamIsEnabled = false;
 bool g_meleeSkillDisarmIsEnabled = false;
 bool g_meleeSkillSenseHeadingIsEnabled = false;
 
+char g_loadSpellsetName[128] = {0};
+bool g_loadSpellsetInProgress = false;
+
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
 // need this to clip lines within the map window rectangle
@@ -892,20 +895,15 @@ bool EQMACMQ_DoBoxChatConnect()
 
     if (strlen(g_boxChatServerIpAddress) == 0)
     {
-        strcpy_s(g_boxChatServerIpAddress, EQMACMQ_BOX_CHAT_SERVER_IP_ADDRESS);
+        strncpy_s(g_boxChatServerIpAddress, sizeof(g_boxChatServerIpAddress), EQMACMQ_BOX_CHAT_SERVER_IP_ADDRESS, _TRUNCATE);
     }
 
     unsigned int portNumber = atoi(g_boxChatServerPort);
 
     // restricted port numbers, use default
-    if (portNumber <= 1024)
+    if (portNumber <= 1024 || strlen(g_boxChatServerPort) == 0)
     {
-        strcpy_s(g_boxChatServerPort, EQMACMQ_BOX_CHAT_SERVER_PORT);
-    }
-
-    if (strlen(g_boxChatServerPort) == 0)
-    {
-        strcpy_s(g_boxChatServerPort, EQMACMQ_BOX_CHAT_SERVER_PORT);
+        strncpy_s(g_boxChatServerPort, sizeof(g_boxChatServerPort), EQMACMQ_BOX_CHAT_SERVER_PORT, _TRUNCATE);
     }
 
     if (getaddrinfo(g_boxChatServerIpAddress, g_boxChatServerPort, &addrinfo_hints, &addrinfo_result) != 0)
@@ -1278,11 +1276,11 @@ bool EQMACMQ_ConfigReadBool(const char* filename, const char* section, const cha
 
 float EQMACMQ_ConfigReadFloat(const char* filename, const char* section, const char* key, float defaultValue)
 {
-    char bufferDefault[255];
-    sprintf_s(bufferDefault, "%f", defaultValue);
+    char bufferDefault[128];
+    _snprintf_s(bufferDefault, sizeof(bufferDefault), _TRUNCATE, "%f", defaultValue);
 
-    char bufferResult[255];
-    GetPrivateProfileStringA(section, key, bufferDefault, bufferResult, 255, filename);
+    char bufferResult[128];
+    GetPrivateProfileStringA(section, key, bufferDefault, bufferResult, sizeof(bufferResult), filename);
 
     float result = (float)atof(bufferResult);
 
@@ -1312,6 +1310,8 @@ bool EQMACMQ_LoadConfig(const char* filename)
     g_slashCommandsIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bSlashCommands", g_slashCommandsIsEnabled);
 
     g_writeTextToChatWindowIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bWriteTextToChatWindow", g_writeTextToChatWindowIsEnabled);
+
+    g_standWhenMovingIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bStandWhenMoving", g_standWhenMovingIsEnabled);
 
     g_standWhenCastSpellIsEnabled = EQMACMQ_ConfigReadBool(filename, "Options", "bStandWhenCastSpell", g_standWhenCastSpellIsEnabled);
 
@@ -1708,9 +1708,9 @@ void EQMACMQ_CopyTargetMapLocationToClipboard()
     }
 
     char locationText[256];
-    sprintf_s
+    _snprintf_s
     (
-        locationText,
+        locationText, sizeof(locationText), _TRUNCATE,
         "P %.4f, %.4f, %.4f, %d, %d, %d, %d, %s",
         -targetSpawn->X, -targetSpawn->Y, targetSpawn->Z,
         0, 0, 0,
@@ -1718,11 +1718,10 @@ void EQMACMQ_CopyTargetMapLocationToClipboard()
         targetSpawn->Name
     );
 
-    const size_t len = sizeof(locationText);
+    const size_t length = sizeof(locationText);
 
-    HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, len);
-    memcpy(GlobalLock(mem), locationText, len);
-
+    HGLOBAL mem = GlobalAlloc(GMEM_MOVEABLE, length);
+    memcpy(GlobalLock(mem), locationText, length);
     GlobalUnlock(mem);
 
     OpenClipboard(0);
@@ -1749,9 +1748,9 @@ struct _EQMACMQHACK* EQMACMQ_HackList_Create(EQMACMQHACK* hack)
 
     g_hackListBegin->Index = hack->Index;
 
-    strcpy_s(g_hackListBegin->Name,        hack->Name);
-    strcpy_s(g_hackListBegin->Filename,    hack->Filename);
-    strcpy_s(g_hackListBegin->Description, hack->Description);
+    strncpy_s(g_hackListBegin->Name,        sizeof(g_hackListBegin->Name),        hack->Name,        _TRUNCATE);
+    strncpy_s(g_hackListBegin->Filename,    sizeof(g_hackListBegin->Filename),    hack->Filename,    _TRUNCATE);
+    strncpy_s(g_hackListBegin->Description, sizeof(g_hackListBegin->Description), hack->Description, _TRUNCATE);
 
     g_hackListBegin->IsEnabled = hack->IsEnabled;
 
@@ -1765,7 +1764,7 @@ struct _EQMACMQHACK* EQMACMQ_HackList_Add(EQMACMQHACK* hack)
         return (EQMACMQ_HackList_Create(hack));
     }
 
-    struct _EQMACMQHACK *node = g_hackListBegin;
+    struct _EQMACMQHACK* node = g_hackListBegin;
 
     if (node == NULL)
     {
@@ -1782,9 +1781,9 @@ struct _EQMACMQHACK* EQMACMQ_HackList_Add(EQMACMQHACK* hack)
 
     node->Next->Index = hack->Index;
 
-    strcpy_s(node->Next->Name,        hack->Name);
-    strcpy_s(node->Next->Filename,    hack->Filename);
-    strcpy_s(node->Next->Description, hack->Description);
+    strncpy_s(node->Next->Name,        sizeof(node->Next->Name),        hack->Name,        _TRUNCATE);
+    strncpy_s(node->Next->Filename,    sizeof(node->Next->Filename),    hack->Filename,    _TRUNCATE);
+    strncpy_s(node->Next->Description, sizeof(node->Next->Description), hack->Description, _TRUNCATE);
 
     node->Next->IsEnabled = hack->IsEnabled;
 
@@ -1793,14 +1792,14 @@ struct _EQMACMQHACK* EQMACMQ_HackList_Add(EQMACMQHACK* hack)
 
 void EQMACMQ_HackList_Destroy()
 {
-    struct _EQMACMQHACK *node = g_hackListBegin;
+    struct _EQMACMQHACK* node = g_hackListBegin;
 
     if (node == NULL)
     {
         return;
     }
 
-    struct _EQMACMQHACK *next;
+    struct _EQMACMQHACK* next;
 
     while (node->Next != NULL)
     {
@@ -1844,7 +1843,7 @@ struct _EQMAPLINE* EQMACMQ_MapLineList_Add(EQMAPLINE* mapLine)
         return (EQMACMQ_MapLineList_Create(mapLine));
     }
 
-    struct _EQMAPLINE *node = g_mapLineListBegin;
+    struct _EQMAPLINE* node = g_mapLineListBegin;
 
     if (node == NULL)
     {
@@ -1875,14 +1874,14 @@ struct _EQMAPLINE* EQMACMQ_MapLineList_Add(EQMAPLINE* mapLine)
 
 void EQMACMQ_MapLineList_Destroy()
 {
-    struct _EQMAPLINE *node = g_mapLineListBegin;
+    struct _EQMAPLINE* node = g_mapLineListBegin;
 
     if (node == NULL)
     {
         return;
     }
 
-    struct _EQMAPLINE *next;
+    struct _EQMAPLINE* next;
 
     while (node->Next != NULL)
     {
@@ -1914,7 +1913,7 @@ struct _EQMAPPOINT* EQMACMQ_MapPointList_Create(EQMAPPOINT* mapPoint)
     g_mapPointListBegin->Size  = mapPoint->Size;
     g_mapPointListBegin->Layer = mapPoint->Layer;
 
-    strcpy_s(g_mapPointListBegin->Text, mapPoint->Text);
+    strncpy_s(g_mapPointListBegin->Text, sizeof(g_mapPointListBegin->Text), mapPoint->Text, _TRUNCATE);
 
     return g_mapPointListBegin;
 }
@@ -1926,7 +1925,7 @@ struct _EQMAPPOINT* EQMACMQ_MapPointList_Add(EQMAPPOINT* mapPoint)
         return (EQMACMQ_MapPointList_Create(mapPoint));
     }
 
-    struct _EQMAPPOINT *node = g_mapPointListBegin;
+    struct _EQMAPPOINT* node = g_mapPointListBegin;
 
     if (node == NULL)
     {
@@ -1950,21 +1949,21 @@ struct _EQMAPPOINT* EQMACMQ_MapPointList_Add(EQMAPPOINT* mapPoint)
     node->Next->Size  = mapPoint->Size;
     node->Next->Layer = mapPoint->Layer;
 
-    strcpy_s(node->Next->Text, mapPoint->Text);
+    strncpy_s(node->Next->Text, sizeof(node->Next->Text), mapPoint->Text, _TRUNCATE);
 
     return node;
 }
 
 void EQMACMQ_MapPointList_Destroy()
 {
-    struct _EQMAPPOINT *node = g_mapPointListBegin;
+    struct _EQMAPPOINT* node = g_mapPointListBegin;
 
     if (node == NULL)
     {
         return;
     }
 
-    struct _EQMAPPOINT *next;
+    struct _EQMAPPOINT* next;
 
     while (node->Next != NULL)
     {
@@ -2074,7 +2073,7 @@ bool EQMACMQ_LoadMap(const char* filename, int layer)
                 }
             }
 
-            strcpy_s(mapPoint.Text, pointText);
+            strncpy_s(mapPoint.Text, sizeof(mapPoint.Text), pointText, _TRUNCATE);
 
             if (result == 9) // the number of values for a point in the map text file
             {
@@ -3199,7 +3198,7 @@ void EQMACMQ_DoUnload()
         if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
         {
             char unloadedText[128];
-            sprintf_s(unloadedText, "%s unloaded.", g_applicationName);
+            _snprintf_s(unloadedText, sizeof(unloadedText), _TRUNCATE, "%s unloaded.", g_applicationName);
 
             EQ_CLASS_CEverQuest->dsp_chat(unloadedText);
         }
@@ -3219,16 +3218,16 @@ void EQMACMQ_DoLoadMap()
         EQMACMQ_MapLineList_Destroy();
         EQMACMQ_MapPointList_Destroy();
 
-        char mapFilename[128];
-        sprintf_s(mapFilename, ".\\maps\\%s.txt", zoneInfo->ShortName);
+        char mapFilename[1024];
+        _snprintf_s(mapFilename, sizeof(mapFilename), _TRUNCATE, ".\\maps\\%s.txt", zoneInfo->ShortName);
 
         EQMACMQ_LoadMap(mapFilename, 0); // layer 0 is the base layer
 
         size_t mapLayer;
         for (mapLayer = 1; mapLayer < (g_mapNumLayers + 1); mapLayer++)
         {
-            char mapFilenameEx[128];
-            sprintf_s(mapFilenameEx, ".\\maps\\%s_%d.txt", zoneInfo->ShortName, mapLayer);
+            char mapFilenameEx[1024];
+            _snprintf_s(mapFilenameEx, sizeof(mapFilenameEx), _TRUNCATE, ".\\maps\\%s_%d.txt", zoneInfo->ShortName, mapLayer);
 
             EQMACMQ_LoadMap(mapFilenameEx, mapLayer);
         }
@@ -3244,16 +3243,16 @@ void EQMACMQ_DoLoadConfig()
     EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
 
     // default config file
-    char configFilename[128];
-    sprintf_s(configFilename, ".\\%s.ini", g_applicationExeName);
+    char configFilename[1024];
+    _snprintf_s(configFilename, sizeof(configFilename), _TRUNCATE, ".\\%s.ini", g_applicationExeName);
 
     EQMACMQ_LoadConfig(configFilename);
 
     // character specific config file
     if (charInfo)
     {
-        char charConfigFilename[128];
-        sprintf_s(charConfigFilename, ".\\charconfigs\\%s.ini", charInfo->Name);
+        char charConfigFilename[1024];
+        _snprintf_s(charConfigFilename, sizeof(charConfigFilename), _TRUNCATE, ".\\charconfigs\\%s.ini", charInfo->Name);
 
         EQMACMQ_LoadConfig(charConfigFilename);
     }
@@ -3261,8 +3260,8 @@ void EQMACMQ_DoLoadConfig()
     // zone specific config file
     if (zoneId != 0)
     {
-        char zoneConfigFilename[128];
-        sprintf_s(zoneConfigFilename, ".\\zoneconfigs\\%s.ini", zoneInfo->ShortName);
+        char zoneConfigFilename[1024];
+        _snprintf_s(zoneConfigFilename, sizeof(zoneConfigFilename), _TRUNCATE, ".\\zoneconfigs\\%s.ini", zoneInfo->ShortName);
 
         EQMACMQ_LoadConfig(zoneConfigFilename);
     }
@@ -3295,7 +3294,7 @@ void EQMACMQ_DoHackEnable(const char* filename, bool enable)
     for (size_t i = 0; i < EQMACMQ_HACKS_MAX; i++)
     {
         char addressKey[128];
-        sprintf_s(addressKey, "Address%d", i);
+        _snprintf_s(addressKey, sizeof(addressKey), _TRUNCATE, "Address%d", i);
 
         char addressString[128];
         EQMACMQ_ConfigReadString(filename, "Hack", addressKey, "", addressString, sizeof(addressString));
@@ -3330,7 +3329,7 @@ void EQMACMQ_DoHackEnable(const char* filename, bool enable)
 
             DWORD offset = strtoul(token, NULL, 16);
 
-            sprintf_s(addressString, "0x%08X", baseAddress + offset);
+            _snprintf_s(addressString, sizeof(addressString), _TRUNCATE, "0x%08X", baseAddress + offset);
         }
 
         DWORD address = strtoul(addressString, NULL, 16);
@@ -3344,11 +3343,11 @@ void EQMACMQ_DoHackEnable(const char* filename, bool enable)
 
         if (enable == true)
         {
-            sprintf_s(valueKey, "Enable%d", i);
+            _snprintf_s(valueKey, sizeof(valueKey), _TRUNCATE, "Enable%d", i);
         }
         else
         {
-            sprintf_s(valueKey, "Disable%d", i);
+            _snprintf_s(valueKey, sizeof(valueKey), _TRUNCATE, "Disable%d", i);
         }
 
         char valueString[128];
@@ -3385,10 +3384,12 @@ void EQMACMQ_DoHackEnable(const char* filename, bool enable)
         DWORD tempProtection;
         VirtualProtectEx(GetCurrentProcess(), (LPVOID)address, valueSize, oldProtection, &tempProtection);
 
-        char logText[128];
-        sprintf_s(logText, _TRUNCATE, "WriteProcessMemory, Address: 0x%08X, First Value: 0x%X, Size: %d", address, *value, valueSize);
-
-        EQMACMQ_Log(logText);
+        if (g_loggingIsEnabled == true)
+        {
+            char logText[1024];
+            _snprintf_s(logText, sizeof(logText), _TRUNCATE, "%s | WriteProcessMemory, Address: 0x%08X, First Value: 0x%X, Size: %d", __FUNCTION__, address, *value, valueSize);
+            EQMACMQ_Log(logText);
+        }
 
         struct _EQMACMQHACK* hack = g_hackListBegin;
 
@@ -3409,18 +3410,18 @@ void EQMACMQ_DoHacksLoad(bool load)
 {
     EQMACMQ_HackList_Destroy();
 
-    char configFilename[128];
-    sprintf_s(configFilename, ".\\%s.ini", g_applicationExeName);
+    char configFilename[1024];
+    _snprintf_s(configFilename, sizeof(configFilename), _TRUNCATE, ".\\%s.ini", g_applicationExeName);
 
     for (size_t i = 0; i < EQMACMQ_HACKS_MAX; i++)
     {
         char enabledKey[128];
-        sprintf_s(enabledKey, "bEnabled%d", i);
+        _snprintf_s(enabledKey, sizeof(enabledKey), _TRUNCATE, "bEnabled%d", i);
 
         bool enabled = EQMACMQ_ConfigReadBool(configFilename, "Hacks", enabledKey, false);
 
         char nameKey[128];
-        sprintf_s(nameKey, "sName%d", i);
+        _snprintf_s(nameKey, sizeof(nameKey), _TRUNCATE, "sName%d", i);
 
         char name[128];
         EQMACMQ_ConfigReadString(configFilename, "Hacks", nameKey, "", name, sizeof(name));
@@ -3431,7 +3432,7 @@ void EQMACMQ_DoHacksLoad(bool load)
         }
 
         char hackFilename[1024];
-        sprintf_s(hackFilename, ".\\hacks\\%s.ini", name);
+        _snprintf_s(hackFilename, sizeof(hackFilename), _TRUNCATE, ".\\hacks\\%s.ini", name);
 
         char hackName[1024];
         EQMACMQ_ConfigReadString(hackFilename, "Hack", "Name", "No name", hackName, sizeof(hackName));
@@ -3445,9 +3446,9 @@ void EQMACMQ_DoHacksLoad(bool load)
 
             hack.Index = i + 1;
 
-            strcpy_s(hack.Name,        hackName);
-            strcpy_s(hack.Filename,    hackFilename);
-            strcpy_s(hack.Description, hackDescription);
+            strncpy_s(hack.Name,        sizeof(hack.Name),        hackName,        _TRUNCATE);
+            strncpy_s(hack.Filename,    sizeof(hack.Filename),    hackFilename,    _TRUNCATE);
+            strncpy_s(hack.Description, sizeof(hack.Description), hackDescription, _TRUNCATE);
 
             hack.IsEnabled = enabled;
 
@@ -3475,7 +3476,7 @@ void EQMACMQ_DoSaveSpellset(const char* name)
     }
 
     char filename[1024];
-    sprintf_s(filename, ".\\spellsets\\%s.ini", name);
+    _snprintf_s(filename, sizeof(filename), _TRUNCATE, ".\\spellsets\\%s.ini", name);
 
     FILE* file;
     errno_t fileErrorNumber = fopen_s(&file, filename, "w");
@@ -3502,6 +3503,72 @@ void EQMACMQ_DoSaveSpellset(const char* name)
         }
 
         fclose(file);
+    }
+}
+
+void EQMACMQ_DoLoadSpellset(const char* name)
+{
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+    if (charInfo == NULL)
+    {
+        return;
+    }
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    if (playerSpawn == NULL)
+    {
+        return;
+    }
+
+    bool bMemorize = false;
+
+    char filename[1024];
+    _snprintf_s(filename, sizeof(filename), _TRUNCATE, ".\\spellsets\\%s.ini", name);
+
+    FILE* file;
+    errno_t fileErrorNumber = fopen_s(&file, filename, "r");
+
+    if (file)
+    {
+        for (size_t i = 0; i < EQ_NUM_SPELL_GEMS; i++)
+        {
+            if (charInfo->MemorizedSpells[i] != EQ_SPELL_ID_NULL)
+            {
+                continue;
+            }
+
+            char gemIndexText[8];
+            _snprintf_s(gemIndexText, sizeof(gemIndexText), _TRUNCATE, "%d", i);
+
+            int spellId = EQMACMQ_ConfigReadInt(filename, "Spellset", gemIndexText, EQ_SPELL_ID_NULL);
+
+            if (spellId != EQ_SPELL_ID_NULL)
+            {
+                if (EQ_CLASS_CSpellBookWnd->GetSpellMemTicksLeft() == 0)
+                {
+                    int spellBookIndex = EQ_GetSpellBookSpellIndexBySpellId(spellId);
+
+                    if (spellBookIndex != -1)
+                    {
+                        EQ_CLASS_CSpellBookWnd->Activate();
+                        EQ_CLASS_CSpellBookWnd->StartSpellMemorization(spellBookIndex, i, 0);
+
+                        bMemorize = true;
+                    }
+                }
+            }
+        }
+
+        fclose(file);
+    }
+
+    if (bMemorize == false || playerSpawn->StandingState == EQ_STANDING_STATE_STANDING)
+    {
+        memset(g_loadSpellsetName, 0, sizeof(g_loadSpellsetName));
+
+        g_loadSpellsetInProgress = false;
     }
 }
 
@@ -3755,10 +3822,7 @@ bool EQMACMQ_DoButtonMouseLeftHeldDown()
             {
                 if (g_mapRotateIsEnabled == false)
                 {
-                    if (g_classicUiIsEnabled == false)
-                    {
-                        EQ_OBJECT_CXWndManager->MouseIcon = EQ_MOUSE_ICON_SIZE_ALL;
-                    }
+                    EQ_OBJECT_CXWndManager->MouseIcon = EQ_MOUSE_ICON_SIZE_ALL;
 
                     if (g_mouseIsDragging == true)
                     {
@@ -4544,7 +4608,7 @@ bool EQMACMQ_DoButtonToolTipText()
         )
         {
             char buttonText[128];
-            sprintf_s(buttonText, "Exit %s", g_applicationName);
+            _snprintf_s(buttonText, sizeof(buttonText), _TRUNCATE, "Exit %s", g_applicationName);
 
             EQ_DrawTooltipText
             (
@@ -5300,11 +5364,11 @@ bool EQMACMQ_DoButtonToolTipText()
             char buttonText[128];
             if (g_mapIsMaximized == false)
             {
-                strcpy_s(buttonText, "Maximize");
+                strncpy_s(buttonText, sizeof(buttonText), "Maximize", _TRUNCATE);
             }
             else
             {
-                strcpy_s(buttonText, "Restore");
+                strncpy_s(buttonText, sizeof(buttonText), "Restore", _TRUNCATE);
             }
 
             EQ_DrawTooltipText
@@ -5975,13 +6039,13 @@ void EQMACMQ_DoMap()
 
         if (g_mapIsMaximized == false)
         {
-            strcpy_s(mapButtonMaximizeText, "+");
+            strncpy_s(mapButtonMaximizeText, sizeof(mapButtonMaximizeText), "+", _TRUNCATE);
             mapButtonMaximizeTextOffsetX = 3.0;
             mapButtonMaximizeTextOffsetY = 2.0;
         }
         else
         {
-            strcpy_s(mapButtonMaximizeText, "-");
+            strncpy_s(mapButtonMaximizeText, sizeof(mapButtonMaximizeText), "-", _TRUNCATE);
             mapButtonMaximizeTextOffsetX = 4.0;
             mapButtonMaximizeTextOffsetY = 2.0;
         }
@@ -6236,7 +6300,7 @@ void EQMACMQ_DoMap()
             }
 
             char pointText[128];
-            sprintf_s(pointText, "+ %s", mapPoint->Text);
+            _snprintf_s(pointText, sizeof(pointText), _TRUNCATE, "+ %s", mapPoint->Text);
 
             EQ_CLASS_CDisplay->WriteTextHD2(pointText, (int)pointX, (int)pointY, g_mapPointTextColor, fontArial14);
 
@@ -6418,7 +6482,7 @@ void EQMACMQ_DoMap()
                 bool bFilter = true;
 
                 char filter[4096];
-                strcpy_s(filter, g_mapSpawnFilterNpc);
+                strncpy_s(filter, sizeof(filter), g_mapSpawnFilterNpc, _TRUNCATE);
 
                 char* filterToken;
                 char* filterTokenNext = NULL;
@@ -6448,7 +6512,7 @@ void EQMACMQ_DoMap()
             else
             {
                 char spawnText[128];
-                sprintf_s(spawnText, "+ %s", spawnName);
+                _snprintf_s(spawnText, sizeof(spawnText), "+ %s", spawnName, _TRUNCATE);
 
                 EQ_CLASS_CDisplay->WriteTextHD2(spawnText, (int)mapSpawnX, (int)mapSpawnY, textColor, fontArial14);
             }
@@ -6470,7 +6534,7 @@ void EQMACMQ_DoMap()
                     if (g_mapIsMaximized == false)
                     {
                         char spawnText[128];
-                        sprintf_s(spawnText, "%s", spawnName);
+                        _snprintf_s(spawnText, sizeof(spawnText), _TRUNCATE, "%s", spawnName);
 
                         int textWidth = EQ_GetFontTextWidth(EQ_POINTER_FONT_ARIAL14, spawnText);
 
@@ -6680,7 +6744,7 @@ void EQMACMQ_DoMap()
         float textY = g_mapMaxY + g_elementOffset;
 
         char zoneText[128];
-        sprintf_s(zoneText, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
+        _snprintf_s(zoneText, sizeof(zoneText), _TRUNCATE, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
         EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
 
         textY = textY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
@@ -6688,7 +6752,7 @@ void EQMACMQ_DoMap()
         if (g_mapIsMaximized == true)
         {
             char locationText[128];
-            sprintf_s(locationText, "Location: %.2f, %.2f, %.2f", playerLocation.Y, playerLocation.X, playerLocation.Z);
+            _snprintf_s(locationText, sizeof(locationText), _TRUNCATE, "Location: %.2f, %.2f, %.2f", playerLocation.Y, playerLocation.X, playerLocation.Z);
             EQ_CLASS_CDisplay->WriteTextHD2(locationText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
 
             textY = textY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
@@ -6697,7 +6761,7 @@ void EQMACMQ_DoMap()
         if (g_mapRotateIsEnabled == true)
         {
             char headingText[128];
-            sprintf_s(headingText, "Heading: %s", EQ_GetCardinalDirectionByHeading(playerSpawn->Heading));
+            _snprintf_s(headingText, sizeof(headingText), _TRUNCATE, "Heading: %s", EQ_GetCardinalDirectionByHeading(playerSpawn->Heading));
             EQ_CLASS_CDisplay->WriteTextHD2(headingText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
 
             textY = textY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
@@ -6721,12 +6785,6 @@ void EQMACMQ_DoEspSkeletonsDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
     int viewPortY1 = EQ_OBJECT_ViewPort.Y1;
     int viewPortX2 = EQ_OBJECT_ViewPort.X2;
     int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
-
-    if (g_classicUiIsEnabled == true)
-    {
-        EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
-        EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
-    }
 
     DWORD worldSpaceToScreenSpaceCameraData = EQ_ReadMemory<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
@@ -6893,12 +6951,6 @@ void EQMACMQ_DoEsp()
                 int viewPortX2 = EQ_OBJECT_ViewPort.X2;
                 int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
 
-                if (g_classicUiIsEnabled == true)
-                {
-                    EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
-                    EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
-                }
-
                 float resultX = 0.0f;
                 float resultY = 0.0f;
                 int result = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &spawnLocation, &resultX, &resultY);
@@ -7013,12 +7065,6 @@ void EQMACMQ_DoEsp()
             int viewPortX2 = EQ_OBJECT_ViewPort.X2;
             int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
 
-            if (g_classicUiIsEnabled == true)
-            {
-                EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
-                EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
-            }
-
             int screenX = (int)(resultX + viewPortX1);
             int screenY = (int)(resultY + viewPortY1);
 
@@ -7057,7 +7103,7 @@ void EQMACMQ_DoEsp()
             {
                 if (g_espShowUniqueDoorSpawnsIsEnabled == true)
                 {
-                    sprintf_s(spawnText, "+ %s", doorDescription);
+                    _snprintf_s(spawnText, sizeof(spawnText), _TRUNCATE, "+ %s", doorDescription);
                 }
                 else
                 {
@@ -7069,7 +7115,7 @@ void EQMACMQ_DoEsp()
             {
                 if (g_espShowDoorSpawnsIsEnabled == true)
                 {
-                    sprintf_s(spawnText, "+ Door: %s", spawnName);
+                    _snprintf_s(spawnText, sizeof(spawnText), _TRUNCATE, "+ Door: %s", spawnName);
                 }
                 else
                 {
@@ -7081,8 +7127,8 @@ void EQMACMQ_DoEsp()
             if (g_espShowTextDistanceIsEnabled == true)
             {
                 char distanceText[32];
-                sprintf_s(distanceText, " (%d)", (int)spawnDistance);
-                strcat_s(spawnText, distanceText);
+                _snprintf_s(distanceText, sizeof(distanceText), _TRUNCATE, " (%d)", (int)spawnDistance);
+                strncat_s(spawnText, sizeof(spawnText), distanceText, _TRUNCATE);
             }
 
             if (g_espShowTextIsEnabled == false)
@@ -7149,12 +7195,6 @@ void EQMACMQ_DoEsp()
             int viewPortX2 = EQ_OBJECT_ViewPort.X2;
             int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
 
-            if (g_classicUiIsEnabled == true)
-            {
-                EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
-                EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
-            }
-
             int screenX = (int)(resultX + viewPortX1);
             int screenY = (int)(resultY + viewPortY1);
 
@@ -7191,13 +7231,13 @@ void EQMACMQ_DoEsp()
             }
 
             char spawnText[128];
-            sprintf_s(spawnText, "+ %s", spawnName);
+            _snprintf_s(spawnText, sizeof(spawnText), _TRUNCATE, "+ %s", spawnName);
 
             if (g_espShowTextDistanceIsEnabled == true)
             {
                 char distanceText[32];
-                sprintf_s(distanceText, " (%d)", (int)spawnDistance);
-                strcat_s(spawnText, distanceText);
+                _snprintf_s(distanceText, sizeof(distanceText), _TRUNCATE, " (%d)", (int)spawnDistance);
+                strncat_s(spawnText, sizeof(spawnText), distanceText, _TRUNCATE);
             }
 
             if (g_espShowTextIsEnabled == false)
@@ -7325,12 +7365,6 @@ void EQMACMQ_DoEsp()
             int viewPortX2 = EQ_OBJECT_ViewPort.X2;
             int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
 
-            if (g_classicUiIsEnabled == true)
-            {
-                EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
-                EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
-            }
-
             int screenX = (int)(resultX + viewPortX1);
             int screenY = (int)(resultY + viewPortY1);
 
@@ -7369,7 +7403,7 @@ void EQMACMQ_DoEsp()
                         if (hpPercent < 100)
                         {
                             char hpText[128];
-                            sprintf_s(hpText, "HP: %d/%d (%d%%)", hpCurrent, hpMax, hpPercent);
+                            _snprintf_s(hpText, sizeof(hpText), _TRUNCATE, "HP: %d/%d (%d%%)", hpCurrent, hpMax, hpPercent);
 
                             EQ_CLASS_CDisplay->WriteTextHD2(hpText, screenX, playerTextY, EQ_TEXT_COLOR_RED, fontArial14);
 
@@ -7390,7 +7424,7 @@ void EQMACMQ_DoEsp()
                             int manaPercent = (manaCurrent * 100) / manaMax;
 
                             char manaText[128];
-                            sprintf_s(manaText, "MANA: %d/%d (%d%%)", manaCurrent, manaMax, manaPercent);
+                            _snprintf_s(manaText, sizeof(manaText), _TRUNCATE, "MANA: %d/%d (%d%%)", manaCurrent, manaMax, manaPercent);
 
                             EQ_CLASS_CDisplay->WriteTextHD2(manaText, screenX, playerTextY, EQ_TEXT_COLOR_CYAN, fontArial14);
 
@@ -7410,7 +7444,7 @@ void EQMACMQ_DoEsp()
                 bool bFilter = true;
 
                 char filter[4096];
-                strcpy_s(filter, g_mapSpawnFilterNpc);
+                strncpy_s(filter, sizeof(filter), g_mapSpawnFilterNpc, _TRUNCATE);
 
                 char* filterToken;
                 char* filterTokenNext = NULL;
@@ -7469,7 +7503,7 @@ void EQMACMQ_DoEsp()
             }
 
             char spawnText[128];
-            sprintf_s(spawnText, "+ %s", spawnName);
+            _snprintf_s(spawnText, sizeof(spawnText), _TRUNCATE, "+ %s", spawnName);
 
             if (g_espShowTextIsGameMasterIsEnabled == true)
             {
@@ -7477,7 +7511,7 @@ void EQMACMQ_DoEsp()
                 {
                     textColor = g_espGameMasterTextColor;
 
-                    strcat_s(spawnText, " GM");
+                    strncat_s(spawnText, sizeof(spawnText), " GM", _TRUNCATE);
                 }
             }
 
@@ -7485,7 +7519,7 @@ void EQMACMQ_DoEsp()
             {
                 if (spawn->IsPlayerKill == 1)
                 {
-                    strcat_s(spawnText, " PVP");
+                    strncat_s(spawnText, sizeof(spawnText), " PVP", _TRUNCATE);
                 }
             }
 
@@ -7493,7 +7527,7 @@ void EQMACMQ_DoEsp()
             {
                 if (spawn->ActorInfo->IsLookingForGroup == 1)
                 {
-                    strcat_s(spawnText, " LFG");
+                    strncat_s(spawnText, sizeof(spawnText), " LFG", _TRUNCATE);
                 }
             }
 
@@ -7501,7 +7535,7 @@ void EQMACMQ_DoEsp()
             {
                 if (spawn->IsAwayFromKeyboard == 1)
                 {
-                    strcat_s(spawnText, " AFK");
+                    strncat_s(spawnText, sizeof(spawnText), " AFK", _TRUNCATE);
                 }
             }
 
@@ -7511,7 +7545,7 @@ void EQMACMQ_DoEsp()
                 {
                     if (spawn->IsLinkDead == 1)
                     {
-                        strcat_s(spawnText, " LD");
+                        strncat_s(spawnText, sizeof(spawnText), " LD", _TRUNCATE);
                     }
                 }
 
@@ -7519,7 +7553,7 @@ void EQMACMQ_DoEsp()
                 {
                     if (spawn->StandingState == EQ_STANDING_STATE_FEIGNED)
                     {
-                        strcat_s(spawnText, " FD");
+                        strncat_s(spawnText, sizeof(spawnText), " FD", _TRUNCATE);
                     }
                 }
             }
@@ -7527,8 +7561,8 @@ void EQMACMQ_DoEsp()
             if (g_espShowTextLevelIsEnabled == true)
             {
                 char levelText[32];
-                sprintf_s(levelText, " L%d", spawn->Level);
-                strcat_s(spawnText, levelText);
+                _snprintf_s(levelText, sizeof(levelText), _TRUNCATE, " L%d", spawn->Level);
+                strncat_s(spawnText, sizeof(spawnText), levelText, _TRUNCATE);
             }
 
             if (g_espShowTextPlayerClassIsEnabled == true)
@@ -7536,16 +7570,16 @@ void EQMACMQ_DoEsp()
                 if (spawn->Type == EQ_SPAWN_TYPE_PLAYER)
                 {
                     char classText[32];
-                    sprintf_s(classText, " %s", EQ_GetClassShortName(spawn->Class));
-                    strcat_s(spawnText, classText);
+                    _snprintf_s(classText, sizeof(classText), _TRUNCATE, " %s", EQ_GetClassShortName(spawn->Class));
+                    strncat_s(spawnText, sizeof(spawnText), classText, _TRUNCATE);
                 }
             }
 
             if (g_espShowTextDistanceIsEnabled == true)
             {
                 char distanceText[32];
-                sprintf_s(distanceText, " (%d)", (int)spawnDistance);
-                strcat_s(spawnText, distanceText);
+                _snprintf_s(distanceText, sizeof(distanceText), _TRUNCATE, " (%d)", (int)spawnDistance);
+                strncat_s(spawnText, sizeof(spawnText), distanceText, _TRUNCATE);
             }
 
             if (g_espShowTextIsEnabled == false)
@@ -7565,7 +7599,7 @@ void EQMACMQ_DoEsp()
                             screenY = screenY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
                             char guildText[128];
-                            sprintf_s(guildText, "<%s>", EQ_GetGuildNameById(spawn->GuildId));
+                            _snprintf_s(guildText, sizeof(guildText), _TRUNCATE, "<%s>", EQ_GetGuildNameById(spawn->GuildId));
 
                             EQ_CLASS_CDisplay->WriteTextHD2(guildText, screenX, screenY, textColor, fontArial14);
                         }
@@ -7578,7 +7612,7 @@ void EQMACMQ_DoEsp()
                             screenY = screenY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
                             char hpText[128];
-                            sprintf_s(hpText, "HP: %d%%", spawn->HpCurrent);
+                            _snprintf_s(hpText, sizeof(hpText), _TRUNCATE, "HP: %d%%", spawn->HpCurrent);
 
                             EQ_CLASS_CDisplay->WriteTextHD2(hpText, screenX, screenY, textColor, fontArial14);
                         }
@@ -7601,7 +7635,7 @@ void EQMACMQ_DoEsp()
                             screenY = screenY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
                             char classText[128];
-                            sprintf_s(classText, "(%s)", EQ_STRING_CLASS_NAME[spawn->Class]);
+                            _snprintf_s(classText, sizeof(classText), _TRUNCATE, "(%s)", EQ_STRING_CLASS_NAME[spawn->Class]);
 
                             EQ_CLASS_CDisplay->WriteTextHD2(classText, screenX, screenY, textColor, fontArial14);
                         }
@@ -7614,7 +7648,7 @@ void EQMACMQ_DoEsp()
                             screenY = screenY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
 
                             char hpText[128];
-                            sprintf_s(hpText, "HP: %d%%", spawn->HpCurrent);
+                            _snprintf_s(hpText, sizeof(hpText), _TRUNCATE, "HP: %d%%", spawn->HpCurrent);
 
                             EQ_CLASS_CDisplay->WriteTextHD2(hpText, screenX, screenY, textColor, fontArial14);
                         }
@@ -7703,7 +7737,7 @@ void EQMACMQ_DoBuffInfo()
         }
 
         char buffText[128];
-        sprintf_s(buffText, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
+        _snprintf_s(buffText, sizeof(buffText), _TRUNCATE, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
 
         EQ_CLASS_CDisplay->WriteTextHD2(buffText, (int)g_buffInfoX, (int)buffY, textColor, fontArial14);
 
@@ -7736,7 +7770,7 @@ void EQMACMQ_DoPlayerInfo()
         int hpPercent = (hpCurrent * 100) / hpMax;
 
         char hpText[128];
-        sprintf_s(hpText, "HP: %d/%d (%d%%)", hpCurrent, hpMax, hpPercent);
+        _snprintf_s(hpText, sizeof(hpText), _TRUNCATE, "HP: %d/%d (%d%%)", hpCurrent, hpMax, hpPercent);
 
         EQ_CLASS_CDisplay->WriteTextHD2(hpText, (int)g_playerInfoX, (int)playerTextY, g_playerInfoTextColor, fontArial14);
 
@@ -7753,7 +7787,7 @@ void EQMACMQ_DoPlayerInfo()
             int manaPercent = (manaCurrent * 100) / manaMax;
 
             char manaText[128];
-            sprintf_s(manaText, "MANA: %d/%d (%d%%)", manaCurrent, manaMax, manaPercent);
+            _snprintf_s(manaText, sizeof(manaText), _TRUNCATE, "MANA: %d/%d (%d%%)", manaCurrent, manaMax, manaPercent);
 
             EQ_CLASS_CDisplay->WriteTextHD2(manaText, (int)g_playerInfoX, (int)playerTextY, g_playerInfoTextColor, fontArial14);
 
@@ -7780,33 +7814,33 @@ void EQMACMQ_DoTargetInfo()
     const char* targetName = EQ_CLASS_CEverQuest->trimName(targetSpawn->Name);
 
     char targetText[128];
-    sprintf_s(targetText, "Target: %s", targetName);
+    _snprintf_s(targetText, sizeof(targetText), _TRUNCATE, "Target: %s", targetName);
 
     if (targetSpawn->IsPlayerKill == 1)
     {
-        strcat_s(targetText, " PVP");
+        strncat_s(targetText, sizeof(targetText), " PVP", _TRUNCATE);
     }
 
     if (targetSpawn->ActorInfo->IsLookingForGroup == 1)
     {
-        strcat_s(targetText, " LFG");
+        strncat_s(targetText, sizeof(targetText), " LFG", _TRUNCATE);
     }
 
     if (targetSpawn->IsAwayFromKeyboard == 1)
     {
-        strcat_s(targetText, " AFK");
+        strncat_s(targetText, sizeof(targetText), " AFK", _TRUNCATE);
     }
 
     if (targetSpawn->Type == EQ_SPAWN_TYPE_PLAYER)
     {
         if (targetSpawn->IsLinkDead == 1)
         {
-            strcat_s(targetText, " LD");
+            strncat_s(targetText, sizeof(targetText), " LD", _TRUNCATE);
         }
 
         if (targetSpawn->StandingState == EQ_STANDING_STATE_FEIGNED)
         {
-            strcat_s(targetText, " FD");
+            strncat_s(targetText, sizeof(targetText), " FD", _TRUNCATE);
         }
     }
 
@@ -7819,7 +7853,7 @@ void EQMACMQ_DoTargetInfo()
     const char* classShortName = EQ_GetClassShortName(targetSpawn->Class);
 
     char levelRaceClassText[128];
-    sprintf_s(levelRaceClassText, "L%d %s %s", targetSpawn->Level, raceShortName, classShortName);
+    _snprintf_s(levelRaceClassText, sizeof(levelRaceClassText), _TRUNCATE, "L%d %s %s", targetSpawn->Level, raceShortName, classShortName);
 
     EQ_CLASS_CDisplay->WriteTextHD2(levelRaceClassText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
@@ -7828,7 +7862,7 @@ void EQMACMQ_DoTargetInfo()
     if (targetSpawn->GuildId != EQ_GUILD_ID_NULL)
     {
         char guildText[128];
-        sprintf_s(guildText, "<%s>", EQ_GetGuildNameById(targetSpawn->GuildId));
+        _snprintf_s(guildText, sizeof(guildText), _TRUNCATE, "<%s>", EQ_GetGuildNameById(targetSpawn->GuildId));
 
         EQ_CLASS_CDisplay->WriteTextHD2(guildText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
@@ -7848,7 +7882,7 @@ void EQMACMQ_DoTargetInfo()
             {
                 int hpPercent = (hpCurrent * 100) / hpMax;
 
-                sprintf_s(hpText, "HP: %d/%d (%d%%)", hpCurrent, hpMax, hpPercent);
+                _snprintf_s(hpText, sizeof(hpText), _TRUNCATE, "HP: %d/%d (%d%%)", hpCurrent, hpMax, hpPercent);
             }
         }
         else
@@ -7857,7 +7891,7 @@ void EQMACMQ_DoTargetInfo()
 
             if (hpCurrent > 0)
             {
-                sprintf_s(hpText, "HP: %d%%", targetSpawn->HpCurrent);
+                _snprintf_s(hpText, sizeof(hpText), _TRUNCATE, "HP: %d%%", targetSpawn->HpCurrent);
             }
         }
 
@@ -7876,7 +7910,7 @@ void EQMACMQ_DoTargetInfo()
             int manaPercent = (manaCurrent * 100) / manaMax;
 
             char manaText[128];
-            sprintf_s(manaText, "MANA: %d/%d (%d%%)", manaCurrent, manaMax, manaPercent);
+            _snprintf_s(manaText, sizeof(manaText), _TRUNCATE, "MANA: %d/%d (%d%%)", manaCurrent, manaMax, manaPercent);
 
             EQ_CLASS_CDisplay->WriteTextHD2(manaText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
@@ -7886,7 +7920,7 @@ void EQMACMQ_DoTargetInfo()
         float experiencePercent = (float)((charInfo->Experience * 100.0f) / EQ_EXPERIENCE_MAX);
 
         char experienceText[128];
-        sprintf_s(experienceText, "EXP: %d/%d (%.0f%%)", charInfo->Experience, EQ_EXPERIENCE_MAX, experiencePercent);
+        _snprintf_s(experienceText, sizeof(experienceText), _TRUNCATE, "EXP: %d/%d (%.0f%%)", charInfo->Experience, EQ_EXPERIENCE_MAX, experiencePercent);
 
         EQ_CLASS_CDisplay->WriteTextHD2(experienceText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
@@ -8029,12 +8063,6 @@ void EQMACMQ_DoHealthBars()
             int viewPortX2 = EQ_OBJECT_ViewPort.X2;
             int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
 
-            if (g_classicUiIsEnabled == true)
-            {
-                EQ_ApplyClassicUiDrawOffset(viewPortX1, viewPortY1);
-                EQ_ApplyClassicUiDrawOffset(viewPortX2, viewPortY2);
-            }
-
             float screenX = (float)(resultX + viewPortX1);
             float screenY = (float)(resultY + viewPortY1);
 
@@ -8119,7 +8147,7 @@ void EQMACMQ_DoMessageText()
 
 void EQMACMQ_DoMessageTextGeneric(const char* text, int textColor)
 {
-    strcpy_s(g_messageText, text);
+    strncpy_s(g_messageText, sizeof(g_messageText), text, _TRUNCATE);
 
     g_messageTextColor = textColor;
 
@@ -8191,11 +8219,11 @@ void EQMACMQ_DoMessageTextGainedExperience()
 
         if (bLostExperience == false)
         {
-            sprintf_s(g_messageText, "You gained %d experience! (%.0f%%)", differenceExperience, differenceExperiencePercent);
+            _snprintf_s(g_messageText, sizeof(g_messageText), _TRUNCATE, "You gained %d experience! (%.0f%%)", differenceExperience, differenceExperiencePercent);
         }
         else
         {
-            sprintf_s(g_messageText, "You lost %d experience! (%.0f%%)", differenceExperience, differenceExperiencePercent);
+            _snprintf_s(g_messageText, sizeof(g_messageText), _TRUNCATE, "You lost %d experience! (%.0f%%)", differenceExperience, differenceExperiencePercent);
         }
 
         g_messageTextColor = EQ_TEXT_COLOR_YELLOW;
@@ -8211,7 +8239,7 @@ void EQMACMQ_DoMessageTextGainedExperience()
             float experiencePercent = (float)((charInfo->Experience * 100.0f) / EQ_EXPERIENCE_MAX);
 
             char experienceText[128];
-            sprintf_s(experienceText, "You have %d/%d experience. (%.0f%%)", charInfo->Experience, EQ_EXPERIENCE_MAX, experiencePercent);
+            _snprintf_s(experienceText, sizeof(experienceText), _TRUNCATE, "You have %d/%d experience. (%.0f%%)", charInfo->Experience, EQ_EXPERIENCE_MAX, experiencePercent);
 
             EQ_CLASS_CEverQuest->dsp_chat(experienceText, EQ_TEXT_COLOR_YELLOW, true);
         }
@@ -8337,13 +8365,22 @@ void EQMACMQ_DoMelee()
 
         float targetMeleeDistance = EQ_get_melee_range((EQPlayer*)playerSpawn, (EQPlayer*)targetSpawn);
 
-        //char logText[128];
-        //sprintf_s(logText, "EQMAQMQ_DoMelee() targetSpawnDistance: %f, targetMeleeDistance: %f", targetSpawnDistance, targetMeleeDistance);
-        //EQMACMQ_Log(logText);
+        if (g_loggingIsEnabled == true)
+        {
+            char logText[1024];
+            _snprintf_s(logText, sizeof(logText), _TRUNCATE, "%s | targetSpawnDistance: %f, targetMeleeDistance: %f", __FUNCTION__, targetSpawnDistance, targetMeleeDistance);
+            EQMACMQ_Log(logText);
+        }
 
         if (targetSpawnDistance > targetMeleeDistance)
         {
-            //EQMACMQ_Log("EQMAQMQ_DoMelee() Melee failed because targetSpawnDistance > targetMeleeDistance");
+            if (g_loggingIsEnabled == true)
+            {
+                char logText[1024];
+                _snprintf_s(logText, sizeof(logText), _TRUNCATE, "%s | skipping melee because melee range is enabled and targetSpawnDistance > targetMeleeDistance", __FUNCTION__, targetSpawnDistance, targetMeleeDistance);
+                EQMACMQ_Log(logText);
+            }
+
             return;
         }
     }
@@ -8547,53 +8584,57 @@ int __cdecl EQMACMQ_DETOUR_HandleMouseWheel(int a1)
         return EQMACMQ_REAL_HandleMouseWheel(a1);
     }
 
+    if (EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+    {
+        return EQMACMQ_REAL_HandleMouseWheel(a1);
+    }
+
+    BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
+
+    if (isNetStatusEnabled == 0)
+    {
+        return EQMACMQ_REAL_HandleMouseWheel(a1);
+    }
+
     int mouseWheelDelta = a1;
 
-    if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+
+    if (mouseOverWindow == 0x00000000)
     {
-        BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
+        WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+        WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
-        if (isNetStatusEnabled == 1)
+        if
+        (
+            EQMACMQ_IsPointInsideRectangle
+            (
+                mouseX, mouseY,
+                (int)g_mapX,     (int)g_mapY,
+                (int)g_mapWidth, (int)g_mapHeight
+            )
+            == true
+            &&
+            g_mapIsEnabled == true
+        )
         {
-            DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
-
-            if (mouseOverWindow == 0x00000000)
+            if (g_mapMouseWheelZoomIsEnabled == true)
             {
-                WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
-                WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
-
-                if
-                (
-                    EQMACMQ_IsPointInsideRectangle
-                    (
-                        mouseX, mouseY,
-                        (int)g_mapX,     (int)g_mapY,
-                        (int)g_mapWidth, (int)g_mapHeight
-                    )
-                    == true
-                    &&
-                    g_mapIsEnabled == true
-                )
+                if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_UP)
                 {
-                    if (g_mapMouseWheelZoomIsEnabled == true)
-                    {
-                        if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_UP)
-                        {
-                            EQMACMQ_MapMouseWheelZoomIn();
-                        }
-                        else if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_DOWN)
-                        {
-                            EQMACMQ_MapMouseWheelZoomOut();
-                        }
-                    }
+                    EQMACMQ_MapMouseWheelZoomIn();
                 }
-                else
+                else if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_DOWN)
                 {
-                    if (g_mouseWheelZoomIsEnabled == true)
-                    {
-                        EQMACMQ_DoMouseWheelZoom(mouseWheelDelta);
-                    }
+                    EQMACMQ_MapMouseWheelZoomOut();
                 }
+            }
+        }
+        else
+        {
+            if (g_mouseWheelZoomIsEnabled == true)
+            {
+                EQMACMQ_DoMouseWheelZoom(mouseWheelDelta);
             }
         }
     }
@@ -8608,31 +8649,15 @@ int __cdecl EQMACMQ_DETOUR_ProcessMovementKeys(int a1)
         return EQMACMQ_REAL_ProcessMovementKeys(a1);
     }
 
-    DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
-
-    if ((g_ignoreKeysTimer > 0) && (currentTime > (g_ignoreKeysTimer + g_ignoreKeysDelay)))
-    {
-        g_ignoreKeysIsEnabled = false;
-
-        g_ignoreKeysTimer = 0;
-    }
-
-    if (g_ignoreKeysIsEnabled == true)
-    {
-        g_ignoreKeysIsEnabled = false;
-
-        return EQMACMQ_REAL_ProcessMovementKeys(EQ_KEY_NULL);
-    }
-
     int key = a1;
 
     //char keyText[128];
-    //sprintf_s(keyText, "ProcessMovementKeys: %d", key);
+    //_snprintf_s(keyText, sizeof(keyText), _TRUNCATE, "ProcessMovementKeys: %d", key);
     //EQ_CLASS_CEverQuest->dsp_chat(keyText);
 
     if (g_freeCameraIsEnabled == true)
     {
-        if (key == DIK_UPARROW || key == DIK_DOWNARROW || key == DIK_LEFTARROW || key == DIK_RIGHTARROW)
+        if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
         {
             return EQMACMQ_REAL_ProcessMovementKeys(EQ_KEY_NULL);
         }
@@ -8642,20 +8667,43 @@ int __cdecl EQMACMQ_DETOUR_ProcessMovementKeys(int a1)
     {
         if (EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsOpen == 1 && EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsVisible == 1)
         {
-            if
-            (
-                key == DIK_UPARROW || key == DIK_DOWNARROW || key == DIK_LEFTARROW || key == DIK_RIGHTARROW ||
-                key == DIK_W       || key == DIK_S         || key == DIK_A         || key == DIK_D
-            )
+            BYTE isNotTypingIinChat = EQ_ReadMemory<BYTE>(EQ_IS_NOT_TYPING_IN_CHAT);
+
+            if (isNotTypingIinChat == 1)
             {
-                if (g_classicUiIsEnabled == false)
+                if
+                (
+                    key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW ||
+                    key == EQ_KEY_W        || key == EQ_KEY_S          || key == EQ_KEY_A          || key == EQ_KEY_D
+                )
                 {
                     EQ_CLASS_CLootWnd->Deactivate();
                 }
-                //else
-                //{
-                    //EQ_Main->ReleaseLoot(); // TODO
-                //}
+            }
+        }
+    }
+
+    if (g_standWhenMovingIsEnabled == true)
+    {
+        BYTE isNotTypingIinChat = EQ_ReadMemory<BYTE>(EQ_IS_NOT_TYPING_IN_CHAT);
+
+        if (isNotTypingIinChat == 1)
+        {
+            if
+            (
+                key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW ||
+                key == EQ_KEY_W        || key == EQ_KEY_S          || key == EQ_KEY_A          || key == EQ_KEY_D
+            )
+            {
+                PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+                if (playerSpawn != NULL)
+                {
+                    if (playerSpawn->StandingState == EQ_STANDING_STATE_SITTING)
+                    {
+                        ((EQPlayer*)playerSpawn)->ChangePosition(EQ_STANDING_STATE_STANDING);
+                    }
+                }
             }
         }
     }
@@ -8670,6 +8718,22 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyDown(int a1)
         return EQMACMQ_REAL_ProcessKeyDown(a1);
     }
 
+    DWORD keyboard = EQ_ReadMemory<DWORD>(EQ_DINPUT_DEVICE_KEYBOARD);
+
+    if (keyboard == NULL)
+    {
+        return EQMACMQ_REAL_ProcessKeyDown(EQ_KEY_NULL);
+    }
+
+    DWORD keyboard0000 = EQ_ReadMemory<DWORD>(keyboard + 0x0000);
+    DWORD keyboard0004 = EQ_ReadMemory<DWORD>(keyboard + 0x0004);
+
+    if (keyboard0000 == NULL || keyboard0004 == NULL)
+    {
+        return EQMACMQ_REAL_ProcessKeyDown(EQ_KEY_NULL);
+    }
+
+/*
     DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
 
     if ((g_ignoreKeysTimer > 0) && (currentTime > (g_ignoreKeysTimer + g_ignoreKeysDelay)))
@@ -8685,16 +8749,17 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyDown(int a1)
 
         return EQMACMQ_REAL_ProcessKeyDown(EQ_KEY_NULL);
     }
+*/
 
     int key = a1;
 
     //char keyText[128];
-    //sprintf_s(keyText, "ProcessKeyDown: %d", key);
+    //_snprintf_s(keyText, sizeof(keyText), _TRUNCATE, "ProcessKeyDown: %d", key);
     //EQ_CLASS_CEverQuest->dsp_chat(keyText);
 
     if (g_freeCameraIsEnabled == true)
     {
-        if (key == DIK_UPARROW || key == DIK_DOWNARROW || key == DIK_LEFTARROW || key == DIK_RIGHTARROW)
+        if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
         {
             return EQMACMQ_REAL_ProcessKeyDown(EQ_KEY_NULL);
         }
@@ -8738,12 +8803,12 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyUp(int a1)
     int key = a1;
 
     //char keyText[128];
-    //sprintf_s(keyText, "ProcessKeyUp: %d", key);
+    //_snprintf_s(keyText, sizeof(keyText), _TRUNCATE, "ProcessKeyUp: %d", key);
     //EQ_CLASS_CEverQuest->dsp_chat(keyText);
 
     if (g_freeCameraIsEnabled == true)
     {
-        if (key == DIK_UPARROW || key == DIK_DOWNARROW || key == DIK_LEFTARROW || key == DIK_RIGHTARROW)
+        if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
         {
             return EQMACMQ_REAL_ProcessKeyUp(EQ_KEY_NULL);
         }
@@ -8837,6 +8902,57 @@ int __cdecl EQMACMQ_DETOUR_AutoInventory(PEQCHARINFO a1, EQITEMINFO** a2, short 
     return EQMACMQ_REAL_AutoInventory(a1, a2, a3);
 }
 
+int __fastcall EQMACMQ_DETOUR_CSpellBookWnd__StartSpellMemorization(void* this_ptr, void* not_used, int a1, int a2, bool a3)
+{
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization(this_ptr, a1, a2, a3);
+    }
+
+/*
+    FILE* file = fopen("eqmac_mq-debug-CSpellBookWnd__StartSpellMemorization.txt", "a");
+    fprintf(file, "a1: %d\n", a1);
+    fprintf(file, "a2: %d\n", a2);
+    fprintf(file, "a3: %d\n", a3);
+    fprintf(file, "a1: 0x%X\n", a1);
+    fprintf(file, "a2: 0x%X\n", a2);
+    fprintf(file, "\n\n");
+    fclose(file);
+*/
+
+    return EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization(this_ptr, a1, a2, a3);
+}
+
+int __fastcall EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing(void* this_ptr, void* not_used, int a1, int a2)
+{
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing(this_ptr, a1, a2);
+    }
+
+    int result = EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing(this_ptr, a1, a2);
+
+/*
+    FILE* file = fopen("eqmac_mq-debug-CSpellBookWnd__FinishMemorizing.txt", "a");
+    fprintf(file, "a1: %d\n", a1);
+    fprintf(file, "a2: %d\n", a2);
+    fprintf(file, "a1: 0x%X\n", a1);
+    fprintf(file, "a2: 0x%X\n", a2);
+    fprintf(file, "\n\n");
+    fclose(file);
+*/
+
+    if (g_loadSpellsetInProgress == true)
+    {
+        if (strlen(g_loadSpellsetName) > 0)
+        {
+            EQMACMQ_DoLoadSpellset(g_loadSpellsetName);
+        }
+    }
+
+    return result;
+}
+
 int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* not_used, EQ_Item* a1, bool a2)
 {
     if (g_bExit == 1)
@@ -8861,7 +8977,7 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* not
     if (item && EQ_OBJECT_CItemDisplayWnd->DisplayText)
     {
         char itemFilename[1024];
-        sprintf_s(itemFilename, ".\\items\\%d.txt", item->Id);
+        _snprintf_s(itemFilename, sizeof(itemFilename), _TRUNCATE, ".\\items\\%d.txt", item->Id);
 
         FILE* file;
         errno_t fileErrorNumber = fopen_s(&file, itemFilename, "rb");
@@ -8890,7 +9006,7 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* not
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR><c \"#FF00FF\">");
 
         char itemIdText[128];
-        sprintf_s(itemIdText, "ID: %d (0x%08X)<BR>", item->Id, item->Id);
+        _snprintf_s(itemIdText, sizeof(itemIdText), _TRUNCATE, "ID: %d (0x%08X)<BR>", item->Id, item->Id);
 
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, itemIdText);
 
@@ -8900,7 +9016,7 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetItem(void* this_ptr, void* not
             EQ_GetItemCostString(item->Cost, itemCostString, sizeof(itemCostString));
 
             char itemCostText[128];
-            sprintf_s(itemCostText, "Value: %s<BR>", itemCostString);
+            _snprintf_s(itemCostText, sizeof(itemCostText), _TRUNCATE, "Value: %s<BR>", itemCostString);
 
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, itemCostText);
         }
@@ -8944,7 +9060,7 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell(void* this_ptr, void* no
             float spellRecastTime = (float)(spell->RecastTime / 1000);
 
             memset(spellText, 0, sizeof(spellText));
-            sprintf_s(spellText, "Recast Time: %.1f<BR>", spellRecastTime);
+            _snprintf_s(spellText, sizeof(spellText), _TRUNCATE, "Recast Time: %.1f<BR>", spellRecastTime);
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
         }
 
@@ -8953,21 +9069,21 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell(void* this_ptr, void* no
             float spellRecoveryTime = (float)(spell->RecoveryTime / 1000);
 
             memset(spellText, 0, sizeof(spellText));
-            sprintf_s(spellText, "Recovery Time: %.1f<BR>", spellRecoveryTime);
+            _snprintf_s(spellText, sizeof(spellText), _TRUNCATE, "Recovery Time: %.1f<BR>", spellRecoveryTime);
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
         }
 
         if (spell->Range > 0.0f)
         {
             memset(spellText, 0, sizeof(spellText));
-            sprintf_s(spellText, "Range: %.1f<BR>", spell->Range);
+            _snprintf_s(spellText, sizeof(spellText), _TRUNCATE, "Range: %.1f<BR>", spell->Range);
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
         }
 
         if (spell->AoeRange > 0.0f)
         {
             memset(spellText, 0, sizeof(spellText));
-            sprintf_s(spellText, "AOE Range: %.1f<BR>", spell->AoeRange);
+            _snprintf_s(spellText, sizeof(spellText), _TRUNCATE, "AOE Range: %.1f<BR>", spell->AoeRange);
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
         }
 
@@ -8977,7 +9093,7 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell(void* this_ptr, void* no
             EQ_GetTickTimeString(spell->Duration, spellDurationTimeText, sizeof(spellDurationTimeText));
 
             memset(spellText, 0, sizeof(spellText));
-            sprintf_s(spellText, "Duration: %s<BR>", spellDurationTimeText);
+            _snprintf_s(spellText, sizeof(spellText), _TRUNCATE, "Duration: %s<BR>", spellDurationTimeText);
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
         }
 
@@ -8987,19 +9103,19 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell(void* this_ptr, void* no
             EQ_GetTickTimeString(spell->AoeDuration, spellAoeDurationTimeText, sizeof(spellAoeDurationTimeText));
 
             memset(spellText, 0, sizeof(spellText));
-            sprintf_s(spellText, "AOE Duration: %s<BR>", spellAoeDurationTimeText);
+            _snprintf_s(spellText, sizeof(spellText), _TRUNCATE, "AOE Duration: %s<BR>", spellAoeDurationTimeText);
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
         }
 
         if (spell->DurationFormula > 0)
         {
             memset(spellText, 0, sizeof(spellText));
-            sprintf_s(spellText, "Duration Formula: %d<BR>", spell->DurationFormula);
+            _snprintf_s(spellText, sizeof(spellText), _TRUNCATE, "Duration Formula: %d<BR>", spell->DurationFormula);
             EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
         }
 
         char spellFilename[1024];
-        sprintf_s(spellFilename, ".\\spells\\%d.txt", spell->Id);
+        _snprintf_s(spellFilename, sizeof(spellFilename), _TRUNCATE, ".\\spells\\%d.txt", spell->Id);
 
         FILE* file;
         errno_t fileErrorNumber = fopen_s(&file, spellFilename, "rb");
@@ -9028,7 +9144,7 @@ int __fastcall EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell(void* this_ptr, void* no
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "<BR><c \"#FF00FF\">");
 
         memset(spellText, 0, sizeof(spellText));
-        sprintf_s(spellText, "ID: %d (0x%08X)<BR>", spell->Id, spell->Id);
+        _snprintf_s(spellText, sizeof(spellText), _TRUNCATE, "ID: %d (0x%08X)<BR>", spell->Id, spell->Id);
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, spellText);
 
         EQ_CXStr_Append(&EQ_OBJECT_CItemDisplayWnd->DisplayText, "</c>");
@@ -9080,7 +9196,7 @@ int __fastcall EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay(void* this_ptr, vo
         EQ_GetTickTimeString(buffTicks, buffTickTimeText, sizeof(buffTickTimeText));
 
         char buffTimeText[128];
-        sprintf_s(buffTimeText, " (%s)", buffTickTimeText);
+        _snprintf_s(buffTimeText, sizeof(buffTimeText), _TRUNCATE, " (%s)", buffTickTimeText);
 
         PEQCSIDLWND buffButtonWnd = (PEQCSIDLWND)buffWindow->BuffButtonWnd[i];
 
@@ -9145,16 +9261,16 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
     }
 
     char nameText[128];
-    strcpy_s(nameText, spawn->ActorInfo->DagHeadPoint->StringSprite->Text);
+    strncpy_s(nameText, sizeof(nameText), spawn->ActorInfo->DagHeadPoint->StringSprite->Text, _TRUNCATE);
 
     if (spawn->Type == EQ_SPAWN_TYPE_NPC)
     {
         if (g_nameTextNpcLevelAndClassIsEnabled == true)
         {
             char extraText[128];
-            sprintf_s(extraText, "\n(%d %s)", spawn->Level, EQ_GetClassName(spawn->Class));
+            _snprintf_s(extraText, sizeof(extraText), _TRUNCATE, "\n(%d %s)", spawn->Level, EQ_GetClassName(spawn->Class));
 
-            strcat_s(nameText, extraText);
+            strncat_s(nameText, sizeof(nameText), extraText, _TRUNCATE);
 
             DWORD fontTexture = EQ_GetStringSpriteFontTexture();
 
@@ -9419,7 +9535,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             {
                 if (strlen(g_boxChatSendCommandList[i]) == 0)
                 {
-                    strcpy_s(g_boxChatSendCommandList[i], a2);
+                    strncpy_s(g_boxChatSendCommandList[i], sizeof(g_boxChatSendCommandList[i]), a2, _TRUNCATE);
                     break;
                 }
             }
@@ -9453,8 +9569,8 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
 
                 if (result == 4)
                 {
-                    strcpy_s(g_boxChatServerIpAddress, ipAddress);
-                    strcpy_s(g_boxChatServerPort,      port);
+                    strncpy_s(g_boxChatServerIpAddress, sizeof(g_boxChatServerIpAddress), ipAddress, _TRUNCATE);
+                    strncpy_s(g_boxChatServerPort,      sizeof(g_boxChatServerPort),      port,      _TRUNCATE);
 
                     EQ_WriteStringVarToChat("Box Chat Server IP Address", g_boxChatServerIpAddress);
                     EQ_WriteStringVarToChat("Box Chat Server Port",       g_boxChatServerPort);
@@ -9479,7 +9595,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             if (strcmp(a2, "/bccmd status") == 0)
             {
                 char statusText[128];
-                sprintf_s(statusText, _TRUNCATE, "Box Chat Status: %s", g_boxChatIsConnected ? "Connected" : "Disconnected");
+                _snprintf_s(statusText, sizeof(statusText), _TRUNCATE, "Box Chat Status: %s", g_boxChatIsConnected ? "Connected" : "Disconnected");
 
                 EQ_CLASS_CEverQuest->dsp_chat(statusText);
             }
@@ -9831,7 +9947,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
 
             if (result == 2)
             {
-                strcpy_s(g_mapSpawnFilterNpc, filter);
+                strncpy_s(g_mapSpawnFilterNpc, sizeof(g_mapSpawnFilterNpc), filter, _TRUNCATE);
 
                 EQ_WriteStringVarToChat("Map Spawn Filter NPC", g_mapSpawnFilterNpc);
             }
@@ -10053,7 +10169,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
 
             if (result == 2)
             {
-                strcpy_s(g_espFilterNpc, filter);
+                strncpy_s(g_espFilterNpc, sizeof(g_espFilterNpc), filter, _TRUNCATE);
 
                 EQ_WriteStringVarToChat("ESP Filter NPC", g_espFilterNpc);
             }
@@ -10471,7 +10587,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             if (result > 1)
             {
                 char twistText[128];
-                strcpy_s(twistText, "Twist: ");
+                strncpy_s(twistText, sizeof(twistText), "Twist: ", _TRUNCATE);
 
                 for (int i = 0; i < result - 1; i++)
                 {
@@ -10485,8 +10601,8 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                     char songNumberString[128];
                     _itoa_s(songNumbers[i], songNumberString, 10);
 
-                    strcat_s(twistText, _TRUNCATE, songNumberString);
-                    strcat_s(twistText, " ");
+                    strncat_s(twistText, sizeof(twistText), songNumberString, _TRUNCATE);
+                    strncat_s(twistText, sizeof(twistText), " ",              _TRUNCATE);
                 }
 
                 EQ_CLASS_CEverQuest->dsp_chat(twistText);
@@ -10661,9 +10777,9 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                         EQMACMQ_DoHackEnable(hack->Filename, !(hack->IsEnabled));
 
                         char hackText[128];
-                        sprintf_s
+                        _snprintf_s
                         (
-                            hackText, _TRUNCATE,
+                            hackText, sizeof(hackText), _TRUNCATE,
                             "%d: %s | %s (%s)",
                             hack->Index,
                             hack->IsEnabled ? "On" : "Off",
@@ -10689,9 +10805,9 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             while (hack)
             {
                 char hackText[128];
-                sprintf_s
+                _snprintf_s
                 (
-                    hackText, _TRUNCATE,
+                    hackText, sizeof(hackText), _TRUNCATE,
                     "%d: %s | %s (%s)",
                     hack->Index,
                     hack->IsEnabled ? "On" : "Off",
@@ -10722,6 +10838,34 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             EQMACMQ_DoSaveSpellset(name);
 
             EQ_WriteStringVarToChat("Save Spellset", name);
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // load spell set
+    if (strncmp(a2, "/loadspellset ", 14) == 0 || strncmp(a2, "/loadspells ", 12) == 0)
+    {
+        char command[128];
+
+        char name[128];
+
+        int result = sscanf_s(a2, "%s %s", command, sizeof(command), name, sizeof(name));
+
+        if (result == 2 && strlen(name) > 0)
+        {
+            char filename[1024];
+            _snprintf_s(filename, sizeof(filename), _TRUNCATE, ".\\spellsets\\%s.ini", name);
+
+            if (EQMACMQ_FileExists(filename) == true)
+            {
+                strncpy_s(g_loadSpellsetName, sizeof(g_loadSpellsetName), name, _TRUNCATE);
+                g_loadSpellsetInProgress = true;
+
+                EQMACMQ_DoLoadSpellset(name);
+            }
+
+            EQ_WriteStringVarToChat("Load Spellset", name);
         }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
@@ -10866,9 +11010,9 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         if (charInfo)
         {
             char bankText[128];
-            sprintf_s
+            _snprintf_s
             (
-                bankText, _TRUNCATE,
+                bankText, sizeof(bankText), _TRUNCATE,
                 "You have %dp %dg %ds %dc in the bank.",
                 charInfo->BankPlatinum,
                 charInfo->BankGold,
@@ -10892,9 +11036,9 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             int manaMax     = EQ_CLASS_EQ_Character->Max_Mana();
 
             char manaText[128];
-            sprintf_s
+            _snprintf_s
             (
-                manaText, _TRUNCATE,
+                manaText, sizeof(manaText), _TRUNCATE,
                 "You have %d / %d mana.",
                 manaCurrent,
                 manaMax
@@ -10944,7 +11088,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                 EQ_CalculateTickTime(buffTicks, buffHours, buffMinutes, buffSeconds);
 
                 char buffText[128];
-                sprintf_s(buffText, _TRUNCATE, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
+                _snprintf_s(buffText, sizeof(buffText), _TRUNCATE, "%02d: (%02d:%02d:%02d) %s", i + 1, buffHours, buffMinutes, buffSeconds, spellName);
 
                 EQ_CLASS_CEverQuest->dsp_chat(buffText);
             }
@@ -11087,14 +11231,12 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
             if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
             {
                 char loadedText[128];
-                sprintf_s(loadedText, "%s loaded.", g_applicationName);
+                _snprintf_s(loadedText, sizeof(loadedText), _TRUNCATE, "%s loaded.", g_applicationName);
 
                 EQ_CLASS_CEverQuest->dsp_chat(loadedText);
             }
         }
     }
-
-    //HRESULT keyboardStateResult = EQ_IDirectInputDevice8_Keyboard->GetDeviceState(sizeof(g_keyboardState), (LPVOID)&g_keyboardState);
 
     if (EQMACMQ_IsForegroundWindowCurrentProcessId() == false)
     {
@@ -11119,38 +11261,6 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
         if (g_limitCpuUsageIsEnabled == true)
         {
             Sleep(g_limitCpuUsageForegroundDelay);
-        }
-    }
-
-    // fix a bug in the game where the net status text is drawn in the wrong location
-    // when using the classic UI with a resolution higher than 640x480 and not using
-    // the fullscreen transparent screen mode (the stone UI)
-    if (g_classicUiIsEnabled == true)
-    {
-        int x = a4;
-        int y = a5;
-
-        EQ_ApplyClassicUiDrawOffset(x, y);
-
-        a4 = x;
-        a5 = y;
-    }
-
-    bool bClassicUi640x480 = false;
-
-    if (g_classicUiIsEnabled == true)
-    {
-        BYTE uiState = EQ_ReadMemory<BYTE>(EQ_UI_STATE);
-
-        if (uiState == EQ_UI_STATE_CLASSIC)
-        {
-            DWORD resolutionWidth  = EQ_ReadMemory<DWORD>(EQ_RESOLUTION_WIDTH);
-            DWORD resolutionHeight = EQ_ReadMemory<DWORD>(EQ_RESOLUTION_HEIGHT);
-
-            if (resolutionWidth == EQ_CLASSIC_UI_WIDTH && resolutionHeight == EQ_CLASSIC_UI_HEIGHT)
-            {
-                bClassicUi640x480 = true;
-            }
         }
     }
 
@@ -11183,7 +11293,7 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
                 if (g_writeTextToChatWindowIsEnabled == true)
                 {
                     char boxChatText[128];
-                    sprintf_s(boxChatText, _TRUNCATE, "Box Chat: %s", g_boxChatInterpretCommandListEx[i]);
+                    _snprintf_s(boxChatText, sizeof(boxChatText), _TRUNCATE, "Box Chat: %s", g_boxChatInterpretCommandListEx[i]);
 
                     EQ_CLASS_CEverQuest->dsp_chat(boxChatText);
                 }
@@ -11216,7 +11326,12 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
 
     if (g_freeCameraIsEnabled == true)
     {
-        EQMACMQ_DoFreeCameraKeys();
+        BYTE isNotTypingIinChat = EQ_ReadMemory<BYTE>(EQ_IS_NOT_TYPING_IN_CHAT);
+
+        if (isNotTypingIinChat == 1)
+        {
+            EQMACMQ_DoFreeCameraKeys();
+        }
     }
 
     if (g_bardTwistIsEnabled == true)
@@ -11241,27 +11356,24 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
         EQMACMQ_DoEsp();
     }
 
-    if (bClassicUi640x480 == false)
+    if (g_playerInfoIsEnabled == true)
     {
-        if (g_playerInfoIsEnabled == true)
-        {
-            EQMACMQ_DoPlayerInfo();
-        }
+        EQMACMQ_DoPlayerInfo();
+    }
 
-        if (g_targetInfoIsEnabled == true)
-        {
-            EQMACMQ_DoTargetInfo();
-        }
+    if (g_targetInfoIsEnabled == true)
+    {
+        EQMACMQ_DoTargetInfo();
+    }
 
-        if (g_buffInfoIsEnabled == true)
-        {
-            EQMACMQ_DoBuffInfo();
-        }
+    if (g_buffInfoIsEnabled == true)
+    {
+        EQMACMQ_DoBuffInfo();
+    }
 
-        if (g_mapIsEnabled == true)
-        {
-            EQMACMQ_DoMap();
-        }
+    if (g_mapIsEnabled == true)
+    {
+        EQMACMQ_DoMap();
     }
 
     if (g_messageTextIsEnabled == true)
@@ -11274,34 +11386,25 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
         EQMACMQ_DoMessageTextGainedExperience();
     }
 
-    if (bClassicUi640x480 == false)
+    if (g_clientSwitcherIsEnabled == true && g_clientSwitcherButtonsIsEnabled == true)
     {
-        if (g_clientSwitcherIsEnabled == true && g_clientSwitcherButtonsIsEnabled == true)
-        {
-            EQMACMQ_DoClientSwitcherButtons();
-        }
-
-        if (g_hudButtonsIsEnabled == true)
-        {
-            EQMACMQ_DoHudButtons();
-        }
+        EQMACMQ_DoClientSwitcherButtons();
     }
 
-    if (g_classicUiIsEnabled == false)
+    if (g_hudButtonsIsEnabled == true)
     {
-        // redraw the cursor so that the HUD is underneath it
-        DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
-
-        if (mouseClickState != EQ_MOUSE_CLICK_STATE_RIGHT) // hide the cursor while mouse looking
-        {
-            EQ_CLASS_CXWndManager->DrawCursor();
-        }
+        EQMACMQ_DoHudButtons();
     }
 
-    if (bClassicUi640x480 == false)
+    // redraw the cursor so that the HUD is underneath it
+    DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
+
+    if (mouseClickState != EQ_MOUSE_CLICK_STATE_RIGHT) // hide the cursor while mouse looking
     {
-        EQMACMQ_DoButtonToolTipText();
+        EQ_CLASS_CXWndManager->DrawCursor();
     }
+
+    EQMACMQ_DoButtonToolTipText();
 
     return EQMACMQ_REAL_DrawNetStatus(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 }
@@ -11339,11 +11442,11 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
 
                 if (EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
                 {
-                    sprintf_s(connectMessage, "Name: %s|", EQ_OBJECT_PlayerSpawn->Name);
+                    _snprintf_s(connectMessage, sizeof(connectMessage), _TRUNCATE, "Name: %s|", EQ_OBJECT_PlayerSpawn->Name);
                 }
                 else
                 {
-                    sprintf_s(connectMessage, "Unknown Player connected|");
+                    _snprintf_s(connectMessage, sizeof(connectMessage), _TRUNCATE, "Unknown Player connected|");
                 }
 
                 if (send(g_connectSocket, connectMessage, (int)strlen(connectMessage), 0) == SOCKET_ERROR)
@@ -11368,7 +11471,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                 if (currentTime > (g_boxChatKeepAliveTimer + g_boxChatKeepAliveDelay))
                 {
                     char keepAliveMessage[128];
-                    strcpy_s(keepAliveMessage, "Keep Alive|");
+                    strncpy_s(keepAliveMessage, sizeof(keepAliveMessage), "Keep Alive|", _TRUNCATE);
 
                     if (send(g_connectSocket, keepAliveMessage, (int)strlen(keepAliveMessage), 0) == SOCKET_ERROR)
                     {
@@ -11402,7 +11505,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                             //EQ_CLASS_CEverQuest->dsp_chat(g_boxChatRecvBuffer);
 
                             char receivedText[EQMACMQ_BOX_CHAT_RECV_MAX];
-                            strcpy_s(receivedText, g_boxChatRecvBuffer);
+                            strncpy_s(receivedText, sizeof(receivedText), g_boxChatRecvBuffer, _TRUNCATE);
 
                             char* token     = NULL;
                             char* tokenNext = NULL;
@@ -11413,7 +11516,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                                 if (strncmp(token, "Command: ", 9) == 0)
                                 {
                                     char commandText[EQMACMQ_BOX_CHAT_TEXT_MAX] = {0};
-                                    strcpy_s(commandText, token);
+                                    strncpy_s(commandText, sizeof(commandText), token, _TRUNCATE);
 
                                     char* token2     = NULL;
                                     char* token2Next = NULL;
@@ -11422,7 +11525,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                                     while (token2 != NULL)
                                     {
                                         char cmdText[EQMACMQ_BOX_CHAT_TEXT_MAX];
-                                        strcpy_s(cmdText, token2 + 9);
+                                        strncpy_s(cmdText, sizeof(cmdText), token2 + 9, _TRUNCATE);
 
                                         if (cmdText[0] == '/' && strstr(cmdText, ";") == NULL)
                                         {
@@ -11430,7 +11533,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                                             {
                                                 if (strlen(g_boxChatInterpretCommandList[i]) == 0)
                                                 {
-                                                    strcpy_s(g_boxChatInterpretCommandList[i], cmdText);
+                                                    strncpy_s(g_boxChatInterpretCommandList[i], sizeof(g_boxChatInterpretCommandList[i]), cmdText, _TRUNCATE);
                                                     break;
                                                 }
                                             }
@@ -11451,7 +11554,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                     if (strlen(g_boxChatSendCommandList[i]) > 0)
                     {
                         char sendText[EQMACMQ_BOX_CHAT_TEXT_MAX];
-                        sprintf_s(sendText, "%s|", g_boxChatSendCommandList[i]);
+                        _snprintf_s(sendText, sizeof(sendText), _TRUNCATE, "%s|", g_boxChatSendCommandList[i]);
 
                         if (send(g_connectSocket, sendText, (int)strlen(sendText), 0) == SOCKET_ERROR)
                         {
@@ -11473,7 +11576,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                     if (strlen(g_boxChatInterpretCommandList[i]) > 7 && strncmp(g_boxChatInterpretCommandList[i], "/pause ", 7) == 0)
                     {
                         char sleepText[128];
-                        strcpy_s(sleepText, g_boxChatInterpretCommandList[i] + 7);
+                        strncpy_s(sleepText, sizeof(sleepText), g_boxChatInterpretCommandList[i] + 7, _TRUNCATE);
 
                         int sleepTime = atoi(sleepText);
 
@@ -11491,7 +11594,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                     {
                         if (strlen(g_boxChatInterpretCommandListEx[j]) == 0)
                         {
-                            strcpy_s(g_boxChatInterpretCommandListEx[j], g_boxChatInterpretCommandList[i]);
+                            strncpy_s(g_boxChatInterpretCommandListEx[j], sizeof(g_boxChatInterpretCommandListEx[j]), g_boxChatInterpretCommandList[i], _TRUNCATE);
                             break;
                         }
                     }
@@ -11548,13 +11651,13 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
 
     //DetourRemove((PBYTE)EQMACMQ_REAL_AutoInventory, (PBYTE)EQMACMQ_DETOUR_AutoInventory);
 
-    if (g_classicUiIsEnabled == false)
-    {
-        DetourRemove((PBYTE)EQMACMQ_REAL_CItemDisplayWnd__SetItem,  (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetItem);
-        DetourRemove((PBYTE)EQMACMQ_REAL_CItemDisplayWnd__SetSpell, (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell);
+    DetourRemove((PBYTE)EQMACMQ_REAL_CItemDisplayWnd__SetItem,  (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetItem);
+    DetourRemove((PBYTE)EQMACMQ_REAL_CItemDisplayWnd__SetSpell, (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell);
 
-        DetourRemove((PBYTE)EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay);
-    }
+    DetourRemove((PBYTE)EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay);
+
+    DetourRemove((PBYTE)EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization,  (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__StartSpellMemorization);
+    DetourRemove((PBYTE)EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing,        (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing);
 
     Sleep(1000);
 
@@ -11612,11 +11715,14 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
     }
 
     char eqClientIniNewUi[128];
-    EQMACMQ_ConfigReadString("eqclient.ini", "Defaults", "NewUI", "FALSE", eqClientIniNewUi, sizeof(eqClientIniNewUi));
+    EQMACMQ_ConfigReadString(".\\eqclient.ini", "Defaults", "NewUI", "TRUE", eqClientIniNewUi, sizeof(eqClientIniNewUi));
 
-    if (strcmp(eqClientIniNewUi, "FALSE") == 0 || strcmp(eqClientIniNewUi, "false") == 0 || strcmp(eqClientIniNewUi, "0") == 0)
+    if (_stricmp(eqClientIniNewUi, "FALSE") == 0)
     {
-        g_classicUiIsEnabled = true;
+        MessageBoxA(NULL, "Error: Classic UI / Velious UI not supported!\nSet NewUI=TRUE in eqclient.ini to use the Luclin UI.", g_applicationName, MB_ICONERROR);
+
+        FreeLibraryAndExitThread(g_module, 0);
+        return 0;
     }
 
     EQMACMQ_DoLoadConfig();
@@ -11640,7 +11746,6 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
 
     EQMACMQ_REAL_ProcessMovementKeys = (EQ_FUNCTION_TYPE_ProcessMovementKeys)DetourFunction((PBYTE)EQ_FUNCTION_ProcessMovementKeys, (PBYTE)EQMACMQ_DETOUR_ProcessMovementKeys);
 
-
     EQMACMQ_REAL_CEverQuest__InterpretCmd = (EQ_FUNCTION_TYPE_CEverQuest__InterpretCmd)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__InterpretCmd, (PBYTE)EQMACMQ_DETOUR_CEverQuest__InterpretCmd);
 
     EQMACMQ_REAL_CEverQuest__dsp_chat = (EQ_FUNCTION_TYPE_CEverQuest__dsp_chat)DetourFunction((PBYTE)EQ_FUNCTION_CEverQuest__dsp_chat, (PBYTE)EQMACMQ_DETOUR_CEverQuest__dsp_chat);
@@ -11658,13 +11763,13 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
 
     //EQMACMQ_REAL_AutoInventory = (EQ_FUNCTION_TYPE_AutoInventory)DetourFunction((PBYTE)EQ_FUNCTION_AutoInventory, (PBYTE)EQMACMQ_DETOUR_AutoInventory);
 
-    if (g_classicUiIsEnabled == false)
-    {
-        EQMACMQ_REAL_CItemDisplayWnd__SetItem  = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem) DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetItem,  (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetItem);
-        EQMACMQ_REAL_CItemDisplayWnd__SetSpell = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell)DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetSpell, (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell);
+    EQMACMQ_REAL_CItemDisplayWnd__SetItem  = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem) DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetItem,  (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetItem);
+    EQMACMQ_REAL_CItemDisplayWnd__SetSpell = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell)DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetSpell, (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell);
 
-        EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay = (EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)DetourFunction((PBYTE)EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay);
-    }
+    EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay = (EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)DetourFunction((PBYTE)EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay);
+
+    EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization = (EQ_FUNCTION_TYPE_CSpellBookWnd__StartSpellMemorization)DetourFunction((PBYTE)EQ_FUNCTION_CSpellBookWnd__StartSpellMemorization, (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__StartSpellMemorization);
+    EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing       = (EQ_FUNCTION_TYPE_CSpellBookWnd__FinishMemorizing)      DetourFunction((PBYTE)EQ_FUNCTION_CSpellBookWnd__FinishMemorizing,       (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing);
 
     return 0;
 }

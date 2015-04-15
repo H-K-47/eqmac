@@ -30,6 +30,8 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_IS_NET_STATUS_ENABLED 0x007985EC // BYTE
 
+#define EQ_IS_NOT_TYPING_IN_CHAT 0x0079856C // BYTE
+
 #define EQ_EXPERIENCE_MAX 350 // the progress bar (0-350)
 
 #define EQ_ALTERNATE_ADVANCEMENT_EXPERIENCE_MAX 330 // the progress bar (0-330)
@@ -115,6 +117,7 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_POINTER_CHotButtonWnd   0x0063D628
 #define EQ_POINTER_CItemDisplayWnd 0x0063D5E0
 #define EQ_POINTER_CTradeWnd       0x0063D668
+#define EQ_POINTER_CSpellBookWnd   0x0063D64C
 
 #define EQ_NUM_COMMANDS 277 // 0-276
 #define EQ_NUM_BUFFS 15
@@ -202,6 +205,11 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_CLASSIC_UI_WIDTH  640
 #define EQ_CLASSIC_UI_HEIGHT 480
+
+#define EQ_CLASSIC_UI_CHAT_WINDOW_X      112
+#define EQ_CLASSIC_UI_CHAT_WINDOW_Y      327
+#define EQ_CLASSIC_UI_CHAT_WINDOW_WIDTH  414
+#define EQ_CLASSIC_UI_CHAT_WINDOW_HEIGHT 153
 
 #define EQ_POINTER_WORLD_INFO 0x007F9494
 #define EQ_OFFSET_WORLD_INFO_HOUR   0x04 // BYTE
@@ -340,10 +348,22 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_SPELL_GEM_NUMBER_BARD_SINGING 255
 
 // class EQ_Main
+// Classic UI from 1999 and the Velious UI
+// when using NewUI=FALSE in eqclient.ini
 #define EQ_POINTER_EQ_Main 0x007F9574
-#define EQ_POINTER_CLASSIC_UI_INFO EQ_POINTER_EQ_Main
-#define EQ_OFFSET_CLASSIC_UI_INFO_STATE               0x00E88 // BYTE ; EQ_CLASSIC_UI_STATE_x
-#define EQ_OFFSET_CLASSIC_UI_INFO_IS_SIDE_WINDOW_OPEN 0x5F314 // DWORD ; trade window, loot window, bank window, merchant window
+#define EQ_OFFSET_EQ_Main_UI_STATE                        0x00E88 // BYTE ; EQ_CLASSIC_UI_STATE_x
+#define EQ_OFFSET_EQ_Main_SPELL_BOOK_SCRIBE_SPELL_TIMER   0x00E94 // WORD
+#define EQ_OFFSET_EQ_Main_SPELL_BOOK_MEMORIZE_SPELL_TIMER 0x00E96 // WORD
+#define EQ_OFFSET_EQ_Main_IS_LOOT_WINDOW_OPEN             0x5F30C // DWORD ; 1 = Loot window is open, looting a corpse
+#define EQ_OFFSET_EQ_Main_IS_SIDE_WINDOW_OPEN             0x5F314 // DWORD ; trade window, loot window, bank window, merchant window
+#define EQ_OFFSET_EQ_Main_CHAT_WINDOW_X                   0x98C68 // DWORD
+#define EQ_OFFSET_EQ_Main_CHAT_WINDOW_Y                   0x98C6C // DWORD
+#define EQ_OFFSET_EQ_Main_CHAT_WINDOW_WIDTH               0x98C70 // DWORD
+#define EQ_OFFSET_EQ_Main_CHAT_WINDOW_HEIGHT              0x98C74 // DWORD
+#define EQ_OFFSET_EQ_Main_CHAT_WINDOW_UNKNOWN             0x98C78 // DWORD
+#define EQ_OFFSET_EQ_Main_CHAT_WINDOW_IS_VISIBLE          0x98C7C // DWORD
+#define EQ_OFFSET_EQ_Main_CHAT_WINDOW_IS_DRAGGING         0x98C80 // DWORD
+#define EQ_OFFSET_EQ_Main_CHAT_WINDOW_IS_RESIZING         0x98C84 // DWORD
 
 #define EQ_UI_STATE 0x0063B918 // BYTE
 
@@ -659,6 +679,11 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_KEY_PRINT_SCREEN 188
 #define EQ_KEY_PAUSE_BREAK  197
+
+#define EQ_KEY_UP_ARROW    200
+#define EQ_KEY_LEFT_ARROW  203
+#define EQ_KEY_RIGHT_ARROW 205
+#define EQ_KEY_DOWN_ARROW  208
 
 #define EQ_KEY_W 17
 #define EQ_KEY_A 30
@@ -1769,11 +1794,11 @@ typedef struct _EQCOMMANDINFO
 /* 0x0000 */ DWORD Id;
 /* 0x0004 */ PCHAR Name;
 /* 0x0008 */ PCHAR Name2;
-/* 0x000C */ union
-             {
-                 VOID (__stdcall* Function)(PEQSPAWNINFO, PCHAR);
-                 DWORD FunctionAddress;
-             };
+union
+{
+/* 0x000C */ VOID (__stdcall* Function)(PEQSPAWNINFO, PCHAR);
+/* 0x000C */ DWORD FunctionAddress;
+};
 /* 0x0010 */ WORD Restriction;
 /* 0x0012 */ WORD Category;
 } EQCOMMANDINFO, *PEQCOMMANDINFO;

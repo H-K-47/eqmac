@@ -1,5 +1,9 @@
 EQMac MacroQuest
 
+Features:
+TODO...
+
+Installion:
 Extract to your EQMac folder where eqgame.exe is located.
 Use eqgame_inject_dll.exe to inject the eqmac_mq.dll into eqgame.exe while the game is running.
 A batch file is provided to inject the DLL for you.
@@ -8,9 +12,6 @@ You can change various options by editing the eqmac_mq.ini configuration file.
 You can make a zone specific configuration file by creating a ZONENAME.ini in the zoneconfigs folder. (example: c:\eqmac\zoneconfigs\poknowledge.ini)
 You can make a character specific configuration file by creating a CHARACTERNAME.ini file in the charconfigs folder (example: c:\eqmac\charconfigs\Soandso.ini)
 
-Command List:
-TODO
-
 Missing DLLs?
 
 Visual C++ Redistributable Packages for Visual Studio 2013
@@ -18,3 +19,47 @@ https://www.microsoft.com/en-us/download/details.aspx?id=40784
 vcredist_x86.exe
 vcredist_x64.exe
 vcredist_arm.exe
+
+Command List:
+
+/unload
+Unload MacroQuest
+
+/configreload
+Reload config files
+
+/hudbuttons
+Toggle the HUD buttons
+
+/mousewheelzoom
+Toggle Mouse Wheel Zoom
+
+/mousewheelzoom #
+Set Mouse Wheel Zoom speed
+
+/clientswitcher
+Toggle the Client Switcher
+
+/clientswitcher #
+Switch to client by number
+
+/clientswitchernext
+Switch to next client
+
+/clientswitcherprevious
+/clientswitcherprev
+Switch to previous client
+
+/clientswitcherrefresh
+Refresh how many clients are loaded
+
+/clientswitchersyncmouse
+Toggle mouse sync
+
+/clientswitcherbuttons
+Toggle the Client Switcher hud buttons
+
+/clientswitcherhotkeys
+Toggle the Client Switcher hotkeys
+
+TODO...

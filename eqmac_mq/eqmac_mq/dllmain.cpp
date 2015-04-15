@@ -12056,6 +12056,62 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // warp
+    if (strncmp(a2, "/warp", 5) == 0)
+    {
+        if (strcmp(a2, "/warptotarget") == 0)
+        {
+            EQ_WarpToTarget();
+        }
+        else if (strncmp(a2, "/warptoname ", 12) == 0)
+        {
+            char command[128];
+
+            char name[128];
+
+            int result = sscanf_s(a2, "%s %s", command, sizeof(command), name, sizeof(name));
+
+            if (result == 2 && strlen(name) > 0)
+            {
+                EQ_WarpToSpawnByName(name);
+            }
+        }
+        else if (strncmp(a2, "/warp ", 6) == 0)
+        {
+            char command[128];
+
+            float y = EQ_OBJECT_ZoneInfo.SafeCoordsY;
+            float x = EQ_OBJECT_ZoneInfo.SafeCoordsX;
+            float z = EQ_OBJECT_ZoneInfo.SafeCoordsZ;
+
+            int result = sscanf_s(a2, "%s %f %f %f", command, sizeof(command), &y, &x, &z);
+
+            if (result == 4)
+            {
+                EQ_Warp(y, x, z);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // zone
+    if (strncmp(a2, "/zone ", 6) == 0)
+    {
+        char command[128];
+
+        char zoneShortName[128];
+
+        int result = sscanf_s(a2, "%s %s", command, sizeof(command), zoneShortName, sizeof(zoneShortName));
+
+        if (result == 2)
+        {
+            EQ_CLASS_CEverQuest->MoveToZone(zoneShortName, "repop to home at death", 1, 0);
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
     // dump commands
     if (strcmp(a2, "/dumpcommands") == 0)
     {

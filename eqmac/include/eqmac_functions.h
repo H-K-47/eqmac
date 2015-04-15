@@ -1592,4 +1592,60 @@ int EQ_GetSpellGemBySpellId(int spellId)
     return EQ_SPELL_ID_NULL;
 }
 
+void EQ_Warp(float y, float x, float z)
+{
+    float safeCoordsY = EQ_OBJECT_ZoneInfo.SafeCoordsY;
+    float safeCoordsX = EQ_OBJECT_ZoneInfo.SafeCoordsX;
+    float safeCoordsZ = EQ_OBJECT_ZoneInfo.SafeCoordsZ;
+
+    EQ_OBJECT_ZoneInfo.SafeCoordsY = y;
+    EQ_OBJECT_ZoneInfo.SafeCoordsX = x;
+    EQ_OBJECT_ZoneInfo.SafeCoordsZ = z;
+
+    EQ_CLASS_CDisplay->MoveLocalPlayerToSafeCoords();
+
+    EQ_OBJECT_ZoneInfo.SafeCoordsY = safeCoordsY;
+    EQ_OBJECT_ZoneInfo.SafeCoordsX = safeCoordsX;
+    EQ_OBJECT_ZoneInfo.SafeCoordsZ = safeCoordsZ;
+}
+
+void EQ_WarpToTarget()
+{
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    if (targetSpawn != NULL)
+    {
+        EQ_Warp(targetSpawn->Y, targetSpawn->X, targetSpawn->Z);
+    }
+}
+
+void EQ_WarpToSpawnByName(const char* name)
+{
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+    while (spawn)
+    {
+        if (strcmp(spawn->Name, name) == 0)
+        {
+            EQ_Warp(spawn->Y, spawn->X, spawn->Z);
+            return;
+        }
+
+        spawn = spawn->Next;
+    }
+
+    spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
+
+    while (spawn)
+    {
+        if (strstr(spawn->Name, name) != NULL)
+        {
+            EQ_Warp(spawn->Y, spawn->X, spawn->Z);
+            return;
+        }
+
+        spawn = spawn->Next;
+    }
+}
+
 #endif // EQMAC_FUNCTIONS_H

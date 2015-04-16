@@ -33,13 +33,13 @@ DWORD WINAPI EQMACKEYS_ThreadLoop(LPVOID param)
 {
     while (TRUE)
     {
-        if (EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+        if (EQ_OBJECT_CEverQuest == NULL || EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
         {
             Sleep(1000);
             continue;
         }
 
-        DWORD currentTime = EQ_READ_MEMORY<DWORD>(EQ_TIMER);
+        DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
 
         if ((currentTime - g_hotkeyTimer) < g_hotkeyDelay)
         {
@@ -130,6 +130,8 @@ DWORD WINAPI EQMACKEYS_ThreadLoop(LPVOID param)
         Sleep(10);
     }
 
+    Sleep(1000);
+
     FreeLibraryAndExitThread(g_module, 0);
     return 0;
 }
@@ -153,11 +155,6 @@ BOOL APIENTRY DllMain(HMODULE module, DWORD reason, LPVOID reserved)
             break;
 
         case DLL_PROCESS_DETACH:
-            //WaitForSingleObject(g_handleThreadLoad, INFINITE);
-            CloseHandle(g_handleThreadLoad);
-
-            //WaitForSingleObject(g_handleThreadLoop, INFINITE);
-            CloseHandle(g_handleThreadLoop);
             break;
     }
 

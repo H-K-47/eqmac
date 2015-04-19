@@ -118,6 +118,9 @@ EQSPAWNINFO** EQ_OBJECT_ppPlayerSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_PLAYER_SPA
 EQSPAWNINFO** EQ_OBJECT_ppTargetSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_TARGET_SPAWN_INFO;
 #define EQ_OBJECT_TargetSpawn (*EQ_OBJECT_ppTargetSpawnInfo)
 
+EQSPAWNINFO** EQ_OBJECT_ppCorpseSpawnInfo = (EQSPAWNINFO**)EQ_POINTER_CORPSE_SPAWN_INFO;
+#define EQ_OBJECT_CorpseSpawn (*EQ_OBJECT_ppCorpseSpawnInfo)
+
 EQCEVERQUEST** EQ_OBJECT_ppCEverquest = (EQCEVERQUEST**)EQ_POINTER_CEverQuest;
 #define EQ_OBJECT_CEverQuest (*EQ_OBJECT_ppCEverquest)
 
@@ -151,6 +154,7 @@ class CTradeWnd;
 class CItemDisplayWnd;
 class CBuffWindow;
 class CSpellBookWnd;
+class CTrackingWnd;
 
 class CXStr
 {
@@ -329,6 +333,15 @@ public:
 
 CSpellBookWnd** EQ_CLASS_ppCSpellBookWnd = (CSpellBookWnd**)EQ_POINTER_CSpellBookWnd;
 #define EQ_CLASS_CSpellBookWnd (*EQ_CLASS_ppCSpellBookWnd)
+
+class CTrackingWnd : public CSidlScreenWnd
+{
+public:
+    void CTrackingWnd::Activate(void);
+};
+
+CTrackingWnd** EQ_CLASS_ppCTrackingWnd = (CTrackingWnd**)EQ_POINTER_CTrackingWnd;
+#define EQ_CLASS_CTrackingWnd (*EQ_CLASS_ppCTrackingWnd)
 
 /* CXStr */
 
@@ -558,6 +571,7 @@ EQ_FUNCTION_AT_ADDRESS(void CHotButtonWnd::DoHotButton(unsigned short, bool), EQ
 
 #define EQ_FUNCTION_CLootWnd__Deactivate 0x0042651F
 #ifdef EQ_FUNCTION_CLootWnd__Deactivate
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CLootWnd__Deactivate)(void* this_ptr);
 EQ_FUNCTION_AT_ADDRESS(void CLootWnd::Deactivate(void), EQ_FUNCTION_CLootWnd__Deactivate);
 #endif
 
@@ -599,11 +613,6 @@ EQ_FUNCTION_AT_ADDRESS(void CBuffWindow::RefreshBuffDisplay(void), EQ_FUNCTION_C
 
 /* CSpellBookWnd */
 
-    //void CSpellBookWnd::Activate(void);
-    //char* CSpellBookWnd::UpdateSpellBookDisplay(void);
-    //bool CSpellBookWnd::StartSpellMemorization(int, int, bool);
-    //int CSpellBookWnd::FinishMemorizing(int a1, int a2);
-
 #define EQ_FUNCTION_CSpellBookWnd__Activate 0x0043441F
 #ifdef EQ_FUNCTION_CSpellBookWnd__Activate
 typedef int (__thiscall* EQ_FUNCTION_TYPE_CSpellBookWnd__Activate)(void* this_ptr);
@@ -632,6 +641,14 @@ EQ_FUNCTION_AT_ADDRESS(int CSpellBookWnd::FinishMemorizing(int, int), EQ_FUNCTIO
 #ifdef EQ_FUNCTION_CSpellBookWnd__GetSpellMemTicksLeft
 typedef int (__thiscall* EQ_FUNCTION_TYPE_CSpellBookWnd__GetSpellMemTicksLeft)(void* this_ptr);
 EQ_FUNCTION_AT_ADDRESS(int CSpellBookWnd::GetSpellMemTicksLeft(void), EQ_FUNCTION_CSpellBookWnd__GetSpellMemTicksLeft);
+#endif
+
+/* CTrackingWnd */
+
+#define EQ_FUNCTION_CTrackingWnd__Activate 0x004382A1
+#ifdef EQ_FUNCTION_CTrackingWnd__Activate
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CTrackingWnd__Activate)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(void CTrackingWnd::Activate(void), EQ_FUNCTION_CTrackingWnd__Activate);
 #endif
 
 /* OTHER */
@@ -734,6 +751,56 @@ void EQ_Rotate2d(float cx, float cy, float& x, float& y, float angle)
 
     x = nx;
     y = ny;
+}
+
+bool EQ_IsInGame()
+{
+    return (EQ_OBJECT_CEverQuest != NULL && EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME);
+}
+
+bool EQ_IsAutoAttackEnabled()
+{
+    return (EQ_ReadMemory<BYTE>(EQ_IS_AUTO_ATTACK_ENABLED) == 1);
+}
+
+bool EQ_IsNetStatusEnabled()
+{
+    return (EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED) == 1);
+}
+
+bool EQ_IsNotTypingInChat()
+{
+    return (EQ_ReadMemory<BYTE>(EQ_IS_NOT_TYPING_IN_CHAT) == 1);
+}
+
+bool EQ_IsInspectEnabled()
+{
+    return (EQ_ReadMemory<BYTE>(EQ_IS_INSPECT_ENABLED) == 1);
+}
+
+bool EQ_IsShowNpcNamesEnabled()
+{
+    return (EQ_ReadMemory<BYTE>(EQ_IS_SHOW_NPC_NAMES_ENABLED) == 1);
+}
+
+bool EQ_IsKeyPressedControl()
+{
+    return (EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_CONTROL) == 1);
+}
+
+bool EQ_IsKeyPressedAlt()
+{
+    return (EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_ALT) == 1);
+}
+
+bool EQ_IsKeyPressedShift()
+{
+    return (EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_SHIFT) == 1);
+}
+
+bool EQ_IsMouseHoveringOverCXWnd()
+{
+    return (EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW) != NULL);
 }
 
 struct _EQRGBCOLOR EQ_GetRgbColorFromInt(int value)
@@ -1445,8 +1512,13 @@ DWORD EQ_GetStringSpriteFontTexture()
     return fontTexture;
 }
 
-int EQ_GetSpellBookSpellIndexBySpellId(short spellId)
+signed int EQ_GetSpellBookSpellIndexBySpellId(int spellId)
 {
+    if (spellId == EQ_SPELL_ID_NULL)
+    {
+        return -1;
+    }
+
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
     if (charInfo == NULL)
@@ -1456,7 +1528,7 @@ int EQ_GetSpellBookSpellIndexBySpellId(short spellId)
 
     for (size_t i = 0; i < EQ_NUM_SPELL_BOOK_SPELLS; i++)
     {
-        short spellBookSpellId = charInfo->SpellBook[i];
+        int spellBookSpellId = charInfo->SpellBook[i];
 
         if (spellBookSpellId == spellId)
         {
@@ -1465,6 +1537,49 @@ int EQ_GetSpellBookSpellIndexBySpellId(short spellId)
     }
 
     return -1;
+}
+
+int EQ_GetSpellIdByName(const char* spellName)
+{
+    if (strlen(spellName) == 0 || spellName == NULL)
+    {
+        return EQ_SPELL_ID_NULL;
+    }
+
+    for (size_t i = 0; i < EQ_NUM_SPELLS; i++)
+    {
+        if (strcmp(EQ_OBJECT_SpellList->Spell[i]->Name, spellName) == 0)
+        {
+            return i;
+        }
+    }
+
+    return EQ_SPELL_ID_NULL;
+}
+
+int EQ_GetSpellGemBySpellId(int spellId)
+{
+    if (spellId == EQ_SPELL_ID_NULL)
+    {
+        return EQ_SPELL_ID_NULL;
+    }
+
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+    if (charInfo == NULL)
+    {
+        return EQ_SPELL_ID_NULL;
+    }
+
+    for (size_t i = 0; i < EQ_NUM_SPELL_GEMS; i++)
+    {
+        if (charInfo->MemorizedSpells[i] == spellId)
+        {
+            return i;
+        }
+    }
+
+    return EQ_SPELL_ID_NULL;
 }
 
 #endif // EQMAC_FUNCTIONS_H

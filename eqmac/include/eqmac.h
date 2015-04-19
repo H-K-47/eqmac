@@ -32,6 +32,8 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_IS_NOT_TYPING_IN_CHAT 0x0079856C // BYTE
 
+#define EQ_IS_INSPECT_ENABLED 0x007CF28C // BYTE
+
 #define EQ_EXPERIENCE_MAX 350 // the progress bar (0-350)
 
 #define EQ_ALTERNATE_ADVANCEMENT_EXPERIENCE_MAX 330 // the progress bar (0-330)
@@ -104,20 +106,14 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_OFFSET_CDisplay_TIMER                              0x00C8 // DWORD ; global timer in milliseconds, 1000 milliseconds = 1 second
 #define EQ_OFFSET_CDisplay_STRING_SPRITE_FONT_TEXTURE_POINTER 0x2E08 // S3D_FONTTEXTURE* for CDisplay::ChangeDagStringSprite
 
-#define EQ_POINTER_CLootWnd 0x0063D65C
-#define EQ_OFFSET_CLootWnd_IS_OPEN            0x134 // BYTE
-#define EQ_OFFSET_CLootWnd_POINTER_FIRST_ITEM 0x1B8
-
-#define EQ_CLootWnd_POINTER_ITEM_OFFSET 0x04 // offset between each item pointer
-
-#define EQ_CLootWnd_ITEMS_MAX 30
-
 #define EQ_POINTER_CBuffWindow     0x0063D638
 #define EQ_POINTER_CGiveWnd        0x0063D678
 #define EQ_POINTER_CHotButtonWnd   0x0063D628
 #define EQ_POINTER_CItemDisplayWnd 0x0063D5E0
 #define EQ_POINTER_CTradeWnd       0x0063D668
 #define EQ_POINTER_CSpellBookWnd   0x0063D64C
+#define EQ_POINTER_CLootWnd        0x0063D65C
+#define EQ_POINTER_CTrackingWnd    0x0063D67C
 
 #define EQ_NUM_COMMANDS 277 // 0-276
 #define EQ_NUM_BUFFS 15
@@ -132,6 +128,8 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_NUM_SPAWNS 8192
 #define EQ_NUM_GUILDS 512
 #define EQ_NUM_LOOT_WINDOW_ITEMS 30
+#define EQ_NUM_HOTBUTTONS 10
+#define EQ_NUM_HOTBUTTONS_TOTAL 100
 
 #define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
 #define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
@@ -417,6 +415,12 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_CAMERA_VIEW_THIRD_PERSON_ZOOM_MAX 0x005E8538 // FLOAT ; equals 200.0f
 
+#define EQ_IS_HIDING_OR_TRACKING 0x007989E2 // WORD
+
+#define EQ_IS_HIDING_OR_TRACKING_EQUALS_NONE     0xFFFF
+#define EQ_IS_HIDING_OR_TRACKING_EQUALS_HIDING   0x001D
+#define EQ_IS_HIDING_OR_TRACKING_EQUALS_TRACKING 0x0035
+
 #define EQ_RACE_UNKNOWN   0
 #define EQ_RACE_HUMAN     1
 #define EQ_RACE_BARBARIAN 2
@@ -623,6 +627,16 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_SKILL_GENERIC_TRADESKILL     75
 #define EQ_SKILL_SLAM                   111
 
+#define EQ_HOTBUTTTON_TYPE1_ATTACK       1 // Melee or Range
+#define EQ_HOTBUTTTON_TYPE1_SKILL1       2
+#define EQ_HOTBUTTTON_TYPE1_SKILL2       3
+#define EQ_HOTBUTTTON_TYPE1_SOCIAL_MACRO 4
+#define EQ_HOTBUTTTON_TYPE1_ITEM         5
+#define EQ_HOTBUTTTON_TYPE1_DEFAULT      6
+#define EQ_HOTBUTTTON_TYPE1_SPELL_GEM    7
+
+#define EQ_HOTBUTTTON_TYPE2_EMPTY 255
+
 // EQ_Character::eqspa_movement_rate
 #define EQ_MOVEMENT_SPEED_MODIFIER_AA_RUN1        0.08f
 #define EQ_MOVEMENT_SPEED_MODIFIER_AA_RUN2        0.14f
@@ -661,6 +675,7 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferRect "t3dDeferRect" // EQGfx_Dx8.t3dDeferRect
 #define EQ_GRAPHICS_DLL_FUNCTION_NAME_t3dDeferQuad "t3dDeferQuad" // EQGfx_Dx8.t3dDeferQuad
 
+// direct input key scan codes (DIK_*)
 #define EQ_KEY_NULL 0
 
 #define EQ_KEY_ENTER     28
@@ -1622,7 +1637,9 @@ typedef struct _EQACTORINFO
 /* 0x00BC */ FLOAT MovementSpeedModifier; // how much slower/faster you move
 /* 0x00C0 */ BYTE Unknown00C0[196];
 /* 0x0184 */ DWORD Animation;
-/* 0x0188 */ BYTE Unknown0188[216];
+/* 0x0188 */ BYTE Unknown0188[44];
+/* 0x01B4 */ DWORD IsInvisible; // NPCs only? used by /hidecorpses command
+/* 0x01B8 */ BYTE Unknown01B8[168];
 /* 0x0260 */ DWORD IsHoldingBoth;
 /* 0x0264 */ DWORD IsHoldingSecondary;
 /* 0x0268 */ DWORD IsHoldingPrimary;
@@ -1689,7 +1706,7 @@ typedef struct _EQSPAWNINFO
 /* 0x00AC */ BYTE Gender; // EQ_GENDER_x
 /* 0x00AD */ BYTE Level;
 /* 0x00AE */ BYTE IsHidden; // 0 = Visible, 1 = Invisible
-/* 0x00AF */ BYTE IsSnared; // 0 = Normal Movement Speed, 1 = Slow Movement Speed
+/* 0x00AF */ BYTE IsSneaking; // sneaking or snared ; 0 = Normal Movement Speed, 1 = Slow Movement Speed
 /* 0x00B0 */ BYTE IsPlayerKill; // PVP flagged with red name by Priest of Discord
 /* 0x00B1 */ BYTE StandingState; // EQ_STANDING_STATE_x
 /* 0x00B2 */ BYTE LightType; // EQ_LIGHT_TYPE_x
@@ -1807,6 +1824,19 @@ typedef struct _EQCOMMANDLIST
 {
     struct _EQCOMMANDINFO Command[EQ_NUM_COMMANDS];
 } EQCOMMANDLIST, *PEQCOMMANDLIST;
+
+typedef struct _EQHOTBUTTONINFO
+{
+/* 0x0000 */ BYTE Type1;
+/* 0x0001 */ BYTE Unknown0001;
+/* 0x0002 */ BYTE Type2;
+/* 0x0003 */ BYTE Unknown0003;
+} EQHOTBUTTONINFO, *PEQHOTBUTTONINFO;
+
+typedef struct _EQHOTBUTTONLIST
+{
+    struct _EQHOTBUTTONINFO HotButton[EQ_NUM_HOTBUTTONS_TOTAL];
+} EQHOTBUTTONLIST, *PEQHOTBUTTONLIST;
 
 // /viewport
 typedef struct _EQVIEWPORT

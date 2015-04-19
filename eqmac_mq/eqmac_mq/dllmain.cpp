@@ -81,13 +81,14 @@ EQ_FUNCTION_TYPE_AutoInventory EQMACMQ_REAL_AutoInventory = NULL;
 EQ_FUNCTION_TYPE_CSpellBookWnd__StartSpellMemorization EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization = NULL;
 EQ_FUNCTION_TYPE_CSpellBookWnd__FinishMemorizing       EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing       = NULL;
 
+EQ_FUNCTION_TYPE_CLootWnd__Deactivate EQMACMQ_REAL_CLootWnd__Deactivate = NULL;
+
+bool g_killSwitchIsEnabled = true;
 bool g_loggingIsEnabled = false;
-
 bool g_standWhenMovingIsEnabled = true;
-
 bool g_standWhenCastSpellIsEnabled = true;
-
 bool g_closeLootWindowWhenMovingIsEnabled = true;
+bool g_hideCorpseLootedIsEnabled = false;
 
 bool g_boxChatIsEnabled = true;
 
@@ -122,8 +123,6 @@ char g_boxChatSendCommandList[EQMACMQ_BOX_CHAT_COMMANDS_MAX][EQMACMQ_BOX_CHAT_TE
 char g_boxChatInterpretCommandList[EQMACMQ_BOX_CHAT_COMMANDS_MAX][EQMACMQ_BOX_CHAT_TEXT_MAX] = {0};
 
 char g_boxChatInterpretCommandListEx[EQMACMQ_BOX_CHAT_COMMANDS_MAX][EQMACMQ_BOX_CHAT_TEXT_MAX] = {0};
-
-bool g_killSwitchIsEnabled = true;
 
 bool g_ignoreKeysIsEnabled = true;
 
@@ -271,7 +270,7 @@ bool g_mapSpawnDistanceNpcIsEnabled          = true;
 bool g_mapSpawnDistanceNpcCorpseIsEnabled    = false;
 
 bool g_mapSpawnFilterNpcIsEnabled = false;
-char g_mapSpawnFilterNpc[4096];
+char g_mapSpawnFilterNpc[4096] = {0};
 
 float g_mapDefaultX = 5.0f;
 float g_mapDefaultY = 64.0f;
@@ -473,7 +472,7 @@ bool g_espDistanceGroundSpawnIsEnabled  = true;
 bool g_espDistanceDoorSpawnIsEnabled    = true;
 
 bool g_espFilterNpcIsEnabled = false;
-char g_espFilterNpc[4096];
+char g_espFilterNpc[4096] = {0};
 
 int g_espPlayerTextColor       = EQ_TEXT_COLOR_RED;
 int g_espPlayerCorpseTextColor = EQ_TEXT_COLOR_YELLOW;
@@ -676,7 +675,25 @@ bool g_meleeSkillDisarmIsEnabled = false;
 bool g_meleeSkillSenseHeadingIsEnabled = false;
 
 char g_loadSpellsetName[128] = {0};
-bool g_loadSpellsetInProgress = false;
+bool g_loadSpellsetIsInProgress = false;
+
+bool g_lootAllIsInProgress = false;
+
+bool g_lootAllNoDropIsEnabled = false;
+
+bool g_lootAllFilterIsEnabled = false;
+char g_lootAllFilter[4096] = {0};
+
+unsigned int g_lootAllCounter = 0;
+
+unsigned int g_lootAllTimer = 0;
+unsigned int g_lootAllDelay = 1000;
+
+bool g_skillHackIsEnabled = true;
+
+unsigned int g_skillHackSwimming = 200;
+unsigned int g_skillHackTracking = 200;
+unsigned int g_skillHackSenseHeading = 200;
 
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
@@ -1676,9 +1693,21 @@ bool EQMACMQ_LoadConfig(const char* filename)
 
     g_speedHackModifier = EQMACMQ_ConfigReadFloat(filename, "SpeedHack", "fModifier", g_speedHackModifier);
 
+    // SkillHack
+
+    g_skillHackIsEnabled = EQMACMQ_ConfigReadBool(filename, "SkillHack", "bEnabled", g_skillHackIsEnabled);
+
+    g_skillHackSwimming = EQMACMQ_ConfigReadInt(filename, "SkillHack", "iSwimming", g_skillHackSwimming);
+    g_skillHackTracking = EQMACMQ_ConfigReadInt(filename, "SkillHack", "iTracking", g_skillHackTracking);
+    g_skillHackSenseHeading = EQMACMQ_ConfigReadInt(filename, "SkillHack", "iSenseHeading", g_skillHackSenseHeading);
+
     // BardTwist
 
     g_bardTwistDelay = EQMACMQ_ConfigReadInt(filename, "BardTwist", "iDelay", g_bardTwistDelay);
+
+    // LootAll
+
+    g_lootAllDelay = EQMACMQ_ConfigReadInt(filename, "LootAll", "iDelay", g_lootAllDelay);
 
     // FreeCamera
 
@@ -3138,6 +3167,49 @@ void EQMACMQ_ToggleSpeedHack()
     }
 }
 
+void EQMACMQ_ToggleSkillHack()
+{
+    EQ_ToggleBool(g_skillHackIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Skill Hack", g_skillHackIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleHideCorpseLooted()
+{
+    EQ_ToggleBool(g_hideCorpseLootedIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Hide Corpse Looted", g_hideCorpseLootedIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleInspect()
+{
+    bool isInspectEnabled = EQ_IsInspectEnabled();
+
+    if (isInspectEnabled == true)
+    {
+        isInspectEnabled = false;
+
+        EQ_WriteMemory<BYTE>(EQ_IS_INSPECT_ENABLED, 0);
+    }
+    else
+    {
+        isInspectEnabled = true;
+
+        EQ_WriteMemory<BYTE>(EQ_IS_INSPECT_ENABLED, 1);
+    }
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Inspect", isInspectEnabled);
+    }
+}
+
 void EQMACMQ_ToggleBardTwist()
 {
     EQ_ToggleBool(g_bardTwistIsEnabled);
@@ -3199,7 +3271,7 @@ void EQMACMQ_DoUnload()
 {
     if (g_writeTextToChatWindowIsEnabled == true)
     {
-        if (EQ_OBJECT_CEverQuest && EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+        if (EQ_IsInGame() == true)
         {
             char unloadedText[128];
             _snprintf_s(unloadedText, sizeof(unloadedText), _TRUNCATE, "%s unloaded.", g_applicationName);
@@ -3572,7 +3644,107 @@ void EQMACMQ_DoLoadSpellset(const char* name)
     {
         memset(g_loadSpellsetName, 0, sizeof(g_loadSpellsetName));
 
-        g_loadSpellsetInProgress = false;
+        g_loadSpellsetIsInProgress = false;
+    }
+}
+
+void EQMACMQ_DoLootAll()
+{
+    if (g_lootAllIsInProgress == false)
+    {
+        return;
+    }
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    if (playerSpawn == NULL)
+    {
+        g_lootAllCounter = 0;
+        g_lootAllIsInProgress = false;
+        return;
+    }
+
+    if (playerSpawn->StandingState != EQ_STANDING_STATE_LOOTING)
+    {
+        if (g_lootAllCounter > 1)
+        {
+            g_lootAllCounter = 0;
+            g_lootAllIsInProgress = false;
+        }
+        return;
+    }
+
+    PEQSPAWNINFO corpseSpawn = (PEQSPAWNINFO)EQ_OBJECT_CorpseSpawn;
+
+    if (corpseSpawn == NULL)
+    {
+        if (g_lootAllCounter > 1)
+        {
+            g_lootAllCounter = 0;
+            g_lootAllIsInProgress = false;
+        }
+        return;
+    }
+
+    bool bFoundLoot = false;
+
+    if (EQ_OBJECT_CLootWnd && EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsOpen == 1 && EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsVisible == 1)
+    {
+        for (size_t i = 0; i < EQ_NUM_LOOT_WINDOW_ITEMS; i++)
+        {
+            if (EQ_OBJECT_CLootWnd->Items[i] != NULL && EQ_OBJECT_CLootWnd->Items[i]->NoDrop == 0xFF)
+            {
+                bFoundLoot = true;
+
+                EQ_CLASS_CLootWnd->RequestLootSlot(i, true);
+
+                break;
+            }
+        }
+    }
+
+    if (bFoundLoot == false)
+    {
+        g_lootAllCounter++;
+
+        if (g_lootAllCounter > 1)
+        {
+            g_lootAllCounter = 0;
+            g_lootAllIsInProgress = false;
+
+            EQ_CLASS_CLootWnd->Deactivate();
+        }
+    }
+}
+
+void EQMACMQ_DoSkillHack()
+{
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+    if (charInfo == NULL)
+    {
+        return;
+    }
+
+    unsigned int swimming = charInfo->Skills[EQ_SKILL_SWIMMING];
+
+    if (swimming < g_skillHackSwimming)
+    {
+        charInfo->Skills[EQ_SKILL_SWIMMING] = g_skillHackSwimming;
+    }
+
+    unsigned int tracking = charInfo->Skills[EQ_SKILL_TRACKING];
+
+    if (tracking < g_skillHackTracking)
+    {
+        charInfo->Skills[EQ_SKILL_TRACKING] = g_skillHackTracking;
+    }
+
+    unsigned int senseHeading = charInfo->Skills[EQ_SKILL_SENSE_HEADING];
+
+    if (senseHeading < g_skillHackSenseHeading)
+    {
+        charInfo->Skills[EQ_SKILL_SENSE_HEADING] = g_skillHackSenseHeading;
     }
 }
 
@@ -3791,8 +3963,7 @@ void EQMACMQ_DoFreeCameraKeys()
 bool EQMACMQ_DoButtonMouseLeftHeldDown()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
-    if (mouseOverWindow != 0x00000000)
+    if (EQ_IsMouseHoveringOverCXWnd() == true)
     {
         return true;
     }
@@ -3807,9 +3978,7 @@ bool EQMACMQ_DoButtonMouseLeftHeldDown()
         return true;
     }
 
-    DWORD isKeyPressedControl = EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
-
-    if (isKeyPressedControl == 1)
+    if (EQ_IsKeyPressedControl() == true)
     {
         if (g_mapIsEnabled == true && g_mapButtonsIsEnabled == true)
         {
@@ -3891,8 +4060,7 @@ bool EQMACMQ_DoButtonMouseLeftHeldDown()
 bool EQMACMQ_DoButtonMouseLeftDown()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
-    if (mouseOverWindow != 0x00000000)
+    if (EQ_IsMouseHoveringOverCXWnd() == true)
     {
         g_mouseIsDragging = false;
 
@@ -3945,8 +4113,7 @@ bool EQMACMQ_DoButtonMouseLeftUp()
     g_mouseIsDragging = false;
 
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
-    if (mouseOverWindow != 0x00000000)
+    if (EQ_IsMouseHoveringOverCXWnd() == true)
     {
         return true;
     }
@@ -3954,9 +4121,7 @@ bool EQMACMQ_DoButtonMouseLeftUp()
     WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
     WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
-    DWORD isKeyPressedControl = EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
-
-    if (isKeyPressedControl == 1)
+    if (EQ_IsKeyPressedControl() == true)
     {
         if (g_mapIsEnabled == true && g_mapButtonsIsEnabled == true)
         {
@@ -4589,8 +4754,7 @@ bool EQMACMQ_DoButtonMouseLeftUp()
 bool EQMACMQ_DoButtonToolTipText()
 {
     // prevent hud buttons from working if a game gui window or element overlaps
-    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
-    if (mouseOverWindow != 0x00000000)
+    if (EQ_IsMouseHoveringOverCXWnd() == true)
     {
         return true;
     }
@@ -5768,8 +5932,6 @@ void EQMACMQ_DoMap()
 
     DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
 
-    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
-
     DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
 
     EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
@@ -6523,13 +6685,11 @@ void EQMACMQ_DoMap()
 
             if (EQMACMQ_IsPointInsideRectangle(mouseX, mouseY, (int)(mapSpawnX + 1) - 4, (int)(mapSpawnY + 6) - 4, 8, 8) == true)
             {
-                if (mouseOverWindow == 0x00000000)
+                if (EQ_IsMouseHoveringOverCXWnd() == false)
                 {
                     if (g_mapSpawnClickToTargetIsEnabled == true)
                     {
-                        DWORD isKeyPressedControl = EQ_ReadMemory<DWORD>(EQ_IS_KEY_PRESSED_CONTROL);
-
-                        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT && isKeyPressedControl == 0)
+                        if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT && EQ_IsKeyPressedControl() == false)
                         {
                             EQ_OBJECT_TargetSpawn = spawn;
                         }
@@ -6864,7 +7024,7 @@ void EQMACMQ_DoEspSkeletonsDrawLineBetweenDag(PEQDAGINFO dag1, PEQDAGINFO dag2, 
 
 void EQMACMQ_DoEspSkeletonsDraw(PEQDAGINFO dag, int lineColor)
 {
-    // note: this is a recursive function
+    // note: this is a recursive function, it calls itself
 
     if (dag == NULL)
     {
@@ -6893,8 +7053,6 @@ void EQMACMQ_DoEsp()
     WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
     DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
-
-    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
 
     DWORD worldSpaceToScreenSpaceCameraData = EQ_ReadMemory<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
@@ -7148,7 +7306,7 @@ void EQMACMQ_DoEsp()
             {
                 if (EQMACMQ_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
-                    if (mouseOverWindow == 0x00000000)
+                    if (EQ_IsMouseHoveringOverCXWnd() == false)
                     {
                         // remove the "+ "
                         if (strlen(spawnText) > 2)
@@ -7257,7 +7415,7 @@ void EQMACMQ_DoEsp()
             {
                 if (EQMACMQ_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
-                    if (mouseOverWindow == 0x00000000)
+                    if (EQ_IsMouseHoveringOverCXWnd() == false)
                     {
                         // remove the "+ "
                         if (strlen(spawnText) > 2)
@@ -7664,7 +7822,7 @@ void EQMACMQ_DoEsp()
             {
                 if (EQMACMQ_IsPointInsideRectangle(mouseX, mouseY, (int)(screenX + 1) - 4, (int)(screenY + 6) - 4, 8, 8) == true)
                 {
-                    if (mouseOverWindow == 0x00000000)
+                    if (EQ_IsMouseHoveringOverCXWnd() == false)
                     {
                         // remove the "+ "
                         if (strlen(spawnText) > 2)
@@ -7939,8 +8097,6 @@ void EQMACMQ_DoHealthBars()
 
     DWORD mouseClickState = EQ_ReadMemory<DWORD>(EQ_MOUSE_CLICK_STATE);
 
-    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
-
     DWORD worldSpaceToScreenSpaceCameraData = EQ_ReadMemory<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
 
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
@@ -8107,7 +8263,7 @@ void EQMACMQ_DoHealthBars()
             {
                 if (EQMACMQ_IsPointInsideRectangle(mouseX, mouseY, (int)screenX, (int)screenY, (int)g_healthBarsWidth, (int)g_healthBarsHeight) == true)
                 {
-                    if (mouseOverWindow == 0x00000000)
+                    if (EQ_IsMouseHoveringOverCXWnd() == false)
                     {
                         if (mouseClickState == EQ_MOUSE_CLICK_STATE_LEFT)
                         {
@@ -8326,9 +8482,7 @@ void EQMACMQ_DoBardTwist()
 
 void EQMACMQ_DoMelee()
 {
-    BYTE isAutoAttackEnabled = EQ_ReadMemory<BYTE>(EQ_IS_AUTO_ATTACK_ENABLED);
-
-    if (isAutoAttackEnabled == 0)
+    if (EQ_IsAutoAttackEnabled() == false)
     {
         return;
     }
@@ -8543,16 +8697,11 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__LMouseDown(void* this_ptr, void* not_u
         return EQMACMQ_REAL_CEverQuest__LMouseDown(this_ptr, a1, a2);
     }
 
-    if (EQ_OBJECT_CEverQuest && EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+    if (EQ_IsInGame() == true && EQ_IsNetStatusEnabled() == true)
     {
-        BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
-
-        if (isNetStatusEnabled == 1)
+        if (EQMACMQ_DoButtonMouseLeftDown() == true)
         {
-            if (EQMACMQ_DoButtonMouseLeftDown() == true)
-            {
-                return EQMACMQ_REAL_CEverQuest__LMouseDown(this_ptr, 0xFFFF, 0xFFFF);
-            }
+            return EQMACMQ_REAL_CEverQuest__LMouseDown(this_ptr, 0xFFFF, 0xFFFF);
         }
     }
 
@@ -8566,16 +8715,11 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__LMouseUp(void* this_ptr, void* not_use
         return EQMACMQ_REAL_CEverQuest__LMouseUp(this_ptr, a1, a2);
     }
 
-    if (EQ_OBJECT_CEverQuest && EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+    if (EQ_IsInGame() == true && EQ_IsNetStatusEnabled() == true)
     {
-        BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
-
-        if (isNetStatusEnabled == 1)
+        if (EQMACMQ_DoButtonMouseLeftUp() == true)
         {
-            if (EQMACMQ_DoButtonMouseLeftUp() == true)
-            {
-                return EQMACMQ_REAL_CEverQuest__LMouseUp(this_ptr, 0xFFFF, 0xFFFF);
-            }
+            return EQMACMQ_REAL_CEverQuest__LMouseUp(this_ptr, 0xFFFF, 0xFFFF);
         }
     }
 
@@ -8589,58 +8733,56 @@ int __cdecl EQMACMQ_DETOUR_HandleMouseWheel(int a1)
         return EQMACMQ_REAL_HandleMouseWheel(a1);
     }
 
-    if (EQ_OBJECT_CEverQuest == NULL || EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+    if (EQ_IsInGame() == false)
     {
         return EQMACMQ_REAL_HandleMouseWheel(a1);
     }
 
-    BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
+    if (EQ_IsNetStatusEnabled() == false)
+    {
+        return EQMACMQ_REAL_HandleMouseWheel(a1);
+    }
 
-    if (isNetStatusEnabled == 0)
+    if (EQ_IsMouseHoveringOverCXWnd() == true)
     {
         return EQMACMQ_REAL_HandleMouseWheel(a1);
     }
 
     int mouseWheelDelta = a1;
 
-    DWORD mouseOverWindow = EQ_ReadMemory<DWORD>(EQ_CXWND_MANAGER_MOUSE_HOVER_WINDOW);
+    WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+    WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
 
-    if (mouseOverWindow == 0x00000000)
-    {
-        WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
-        WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
-
-        if
+    if
+    (
+        EQMACMQ_IsPointInsideRectangle
         (
-            EQMACMQ_IsPointInsideRectangle
-            (
-                mouseX, mouseY,
-                (int)g_mapX,     (int)g_mapY,
-                (int)g_mapWidth, (int)g_mapHeight
-            )
-            == true
-            &&
-            g_mapIsEnabled == true
+            mouseX, mouseY,
+            (int)g_mapX,     (int)g_mapY,
+            (int)g_mapWidth, (int)g_mapHeight
         )
+        == true
+        &&
+        g_mapIsEnabled == true
+    )
+    {
+        if (g_mapMouseWheelZoomIsEnabled == true)
         {
-            if (g_mapMouseWheelZoomIsEnabled == true)
+            if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_UP)
             {
-                if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_UP)
-                {
-                    EQMACMQ_MapMouseWheelZoomIn();
-                }
-                else if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_DOWN)
-                {
-                    EQMACMQ_MapMouseWheelZoomOut();
-                }
+                EQMACMQ_MapMouseWheelZoomIn();
+            }
+            else if (mouseWheelDelta == EQ_MOUSE_WHEEL_DELTA_DOWN)
+            {
+                EQMACMQ_MapMouseWheelZoomOut();
             }
         }
-        else
+    }
+    else
+    {
+        if (g_mouseWheelZoomIsEnabled == true)
         {
-            if (g_mouseWheelZoomIsEnabled == true)
-            {
-                EQMACMQ_DoMouseWheelZoom(mouseWheelDelta);
-            }
+            EQMACMQ_DoMouseWheelZoom(mouseWheelDelta);
         }
     }
 
@@ -8654,6 +8796,11 @@ int __cdecl EQMACMQ_DETOUR_ProcessMovementKeys(int a1)
         return EQMACMQ_REAL_ProcessMovementKeys(a1);
     }
 
+    if (a1 > 0xFF)
+    {
+        return EQMACMQ_REAL_ProcessKeyDown(EQ_KEY_NULL);
+    }
+
     int key = a1;
 
     //char keyText[128];
@@ -8662,9 +8809,15 @@ int __cdecl EQMACMQ_DETOUR_ProcessMovementKeys(int a1)
 
     if (g_freeCameraIsEnabled == true)
     {
-        if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
+        if (EQ_IsNotTypingInChat() == true)
         {
-            return EQMACMQ_REAL_ProcessMovementKeys(EQ_KEY_NULL);
+            if (EQ_IsKeyPressedControl() == false && EQ_IsKeyPressedAlt() == false && EQ_IsKeyPressedShift() == false)
+            {
+                if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
+                {
+                    return EQMACMQ_REAL_ProcessMovementKeys(EQ_KEY_NULL);
+                }
+            }
         }
     }
 
@@ -8676,6 +8829,11 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyDown(int a1)
     if (g_bExit == 1)
     {
         return EQMACMQ_REAL_ProcessKeyDown(a1);
+    }
+
+    if (a1 > 0xFF)
+    {
+        return EQMACMQ_REAL_ProcessKeyDown(EQ_KEY_NULL);
     }
 
     if (g_ignoreKeysIsEnabled == true)
@@ -8694,27 +8852,34 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyDown(int a1)
 
     if (g_freeCameraIsEnabled == true)
     {
-        if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
+        if (EQ_IsNotTypingInChat() == true)
         {
-            return EQMACMQ_REAL_ProcessKeyDown(EQ_KEY_NULL);
+            if (EQ_IsKeyPressedControl() == false && EQ_IsKeyPressedAlt() == false && EQ_IsKeyPressedShift() == false)
+            {
+                if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
+                {
+                    return EQMACMQ_REAL_ProcessKeyDown(EQ_KEY_NULL);
+                }
+            }
         }
     }
 
-if (g_closeLootWindowWhenMovingIsEnabled == true)
+    if (g_closeLootWindowWhenMovingIsEnabled == true)
     {
         if (EQ_OBJECT_CLootWnd && EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsOpen == 1 && EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsVisible == 1)
         {
-            BYTE isNotTypingIinChat = EQ_ReadMemory<BYTE>(EQ_IS_NOT_TYPING_IN_CHAT);
-
-            if (isNotTypingIinChat == 1)
+            if (EQ_IsNotTypingInChat() == true)
             {
-                if
-                (
-                    key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW ||
-                    key == EQ_KEY_W        || key == EQ_KEY_S          || key == EQ_KEY_A          || key == EQ_KEY_D
-                )
+                if (EQ_IsKeyPressedControl() == false && EQ_IsKeyPressedAlt() == false && EQ_IsKeyPressedShift() == false)
                 {
-                    EQ_CLASS_CLootWnd->Deactivate();
+                    if
+                    (
+                        key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW ||
+                        key == EQ_KEY_W        || key == EQ_KEY_S          || key == EQ_KEY_A          || key == EQ_KEY_D
+                    )
+                    {
+                        EQ_CLASS_CLootWnd->Deactivate();
+                    }
                 }
             }
         }
@@ -8722,23 +8887,24 @@ if (g_closeLootWindowWhenMovingIsEnabled == true)
 
     if (g_standWhenMovingIsEnabled == true)
     {
-        BYTE isNotTypingIinChat = EQ_ReadMemory<BYTE>(EQ_IS_NOT_TYPING_IN_CHAT);
-
-        if (isNotTypingIinChat == 1)
+        if (EQ_IsNotTypingInChat() == true)
         {
-            if
-            (
-                key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW ||
-                key == EQ_KEY_W        || key == EQ_KEY_S          || key == EQ_KEY_A          || key == EQ_KEY_D
-            )
+            if (EQ_IsKeyPressedControl() == false && EQ_IsKeyPressedAlt() == false && EQ_IsKeyPressedShift() == false)
             {
-                PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
-
-                if (playerSpawn != NULL)
+                if
+                (
+                    key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW ||
+                    key == EQ_KEY_W        || key == EQ_KEY_S          || key == EQ_KEY_A          || key == EQ_KEY_D
+                )
                 {
-                    if (playerSpawn->StandingState == EQ_STANDING_STATE_SITTING)
+                    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+                    if (playerSpawn != NULL)
                     {
-                        ((EQPlayer*)playerSpawn)->ChangePosition(EQ_STANDING_STATE_STANDING);
+                        if (playerSpawn->StandingState == EQ_STANDING_STATE_SITTING)
+                        {
+                            ((EQPlayer*)playerSpawn)->ChangePosition(EQ_STANDING_STATE_STANDING);
+                        }
                     }
                 }
             }
@@ -8780,6 +8946,11 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyUp(int a1)
         return EQMACMQ_REAL_ProcessKeyUp(a1);
     }
 
+    if (a1 > 0xFF)
+    {
+        return EQMACMQ_REAL_ProcessKeyUp(EQ_KEY_NULL);
+    }
+
     if (g_ignoreKeysIsEnabled == true)
     {
         if (g_ignoreKeysTimer < g_ignoreKeysDelay)
@@ -8796,9 +8967,15 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyUp(int a1)
 
     if (g_freeCameraIsEnabled == true)
     {
-        if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
+        if (EQ_IsNotTypingInChat() == true)
         {
-            return EQMACMQ_REAL_ProcessKeyUp(EQ_KEY_NULL);
+            if (EQ_IsKeyPressedControl() == false && EQ_IsKeyPressedAlt() == false && EQ_IsKeyPressedShift() == false)
+            {
+                if (key == EQ_KEY_UP_ARROW || key == EQ_KEY_DOWN_ARROW || key == EQ_KEY_LEFT_ARROW || key == EQ_KEY_RIGHT_ARROW)
+                {
+                    return EQMACMQ_REAL_ProcessKeyUp(EQ_KEY_NULL);
+                }
+            }
         }
     }
 
@@ -8930,11 +9107,36 @@ int __fastcall EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing(void* this_ptr, vo
     fclose(file);
 */
 
-    if (g_loadSpellsetInProgress == true)
+    if (g_loadSpellsetIsInProgress == true)
     {
         if (strlen(g_loadSpellsetName) > 0)
         {
             EQMACMQ_DoLoadSpellset(g_loadSpellsetName);
+        }
+    }
+
+    return result;
+}
+
+int __fastcall EQMACMQ_DETOUR_CLootWnd__Deactivate(void* this_ptr, void* not_used)
+{
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_CLootWnd__Deactivate(this_ptr);
+    }
+
+    int result = EQMACMQ_REAL_CLootWnd__Deactivate(this_ptr);
+
+    if (g_hideCorpseLootedIsEnabled == true)
+    {
+        if (EQ_OBJECT_CorpseSpawn)
+        {
+            PEQSPAWNINFO corpseSpawn = (PEQSPAWNINFO)EQ_OBJECT_CorpseSpawn;
+
+            if (corpseSpawn != NULL)
+            {
+                corpseSpawn->ActorInfo->IsInvisible = 1;
+            }
         }
     }
 
@@ -9216,17 +9418,15 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
         return result;
     }
 
-    if (EQ_OBJECT_CEverQuest == NULL || EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+    if (EQ_IsInGame() == false)
     {
         return result;
     }
 
-    BYTE showNpcNames = EQ_ReadMemory<BYTE>(EQ_IS_SHOW_NPC_NAMES_ENABLED);
-
-    if (showNpcNames == 0)
-    {
-        return result;
-    }
+    //if (EQ_IsShowNpcNamesEnabled() == false)
+    //{
+        //return result;
+    //}
 
     PEQSPAWNINFO spawn = (PEQSPAWNINFO)a1;
 
@@ -9287,7 +9487,7 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(void* this_ptr, void* 
         return result;
     }
 
-    if (EQ_OBJECT_CEverQuest == NULL || EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+    if (EQ_IsInGame() == false)
     {
         return result;
     }
@@ -9355,51 +9555,53 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(void* this_ptr, void* 
         return result;
     }
 
+    if (spawn != targetSpawn)
+    {
+        return result;
+    }
+
     static int flash;
 
-    if (spawn == targetSpawn)
+    int r = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.R;
+    int g = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.G;
+    int b = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.B;
+
+    int rr = flash * ((255 - r) / 10);
+    int gg = flash * ((255 - g) / 10);
+    int bb = flash * ((255 - b) / 10);
+
+    int rrr = 0;
+
+    if (255 - rr >= 0)
     {
-        int r = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.R;
-        int g = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.G;
-        int b = spawn->ActorInfo->DagHeadPoint->StringSprite->Color.B;
+        rrr = 255 - rr;
+    }
 
-        int rr = flash * ((255 - r) / 10);
-        int gg = flash * ((255 - g) / 10);
-        int bb = flash * ((255 - b) / 10);
+    int ggg = 255 - gg;
 
-        int rrr = 0;
+    if (255 - gg < 0)
+    {
+        ggg = 0;
+    }
 
-        if (255 - rr >= 0)
-        {
-            rrr = 255 - rr;
-        }
+    int bbb = 255 - bb;
 
-        int ggg = 255 - gg;
+    if (255 - bb < 0)
+    {
+        bbb = 0;
+    }
 
-        if (255 - gg < 0)
-        {
-          ggg = 0;
-        }
+    spawn->ActorInfo->DagHeadPoint->StringSprite->Color.R = rrr;
+    spawn->ActorInfo->DagHeadPoint->StringSprite->Color.G = ggg;
+    spawn->ActorInfo->DagHeadPoint->StringSprite->Color.B = bbb;
 
-        int bbb = 255 - bb;
-
-        if (255 - bb < 0)
-        {
-          bbb = 0;
-        }
-
-        spawn->ActorInfo->DagHeadPoint->StringSprite->Color.R = rrr;
-        spawn->ActorInfo->DagHeadPoint->StringSprite->Color.G = ggg;
-        spawn->ActorInfo->DagHeadPoint->StringSprite->Color.B = bbb;
-
-        if (flash == 10)
-        {
-            flash = 0;
-        }
-        else
-        {
-            flash++;
-        }
+    if (flash == 10)
+    {
+        flash = 0;
+    }
+    else
+    {
+        flash++;
     }
 
     return result;
@@ -9420,7 +9622,10 @@ int __fastcall EQMACMQ_DETOUR_EQ_Character__eqspa_movement_rate(void* this_ptr, 
 
         if (playerSpawn != NULL)
         {
-            playerSpawn->ActorInfo->MovementSpeedModifier = g_speedHackModifier;
+            if (playerSpawn->ActorInfo->MovementSpeedModifier < g_speedHackModifier)
+            {
+                playerSpawn->ActorInfo->MovementSpeedModifier = g_speedHackModifier;
+            }
         }
     }
 
@@ -9517,6 +9722,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         memmove(a2, a2 + 1, strlen(a2));
     }
 
+    // box chat
     if (g_boxChatIsEnabled == true)
     {
         if (strlen(a2) > 0)
@@ -9619,7 +9825,6 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     }
 
     // unload
-
     if (strcmp(a2, "/unload") == 0)
     {
         EQMACMQ_DoUnload();
@@ -9628,7 +9833,6 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     }
 
     // config
-
     if (strncmp(a2, "/config", 7) == 0)
     {
         if (strcmp(a2, "/configreload") == 0)
@@ -9640,7 +9844,6 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     }
 
     // hud
-
     if (strncmp(a2, "/hud", 4) == 0)
     {
         if (strcmp(a2, "/hudbuttons") == 0)
@@ -9651,8 +9854,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // mousewheelzoom
-
+    // mouse wheel zoom
     if (strncmp(a2, "/mousewheelzoom", 15) == 0)
     {
         if (strcmp(a2, "/mousewheelzoom") == 0)
@@ -9678,8 +9880,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // clientswitcher
-
+    // client switcher
     if (strncmp(a2, "/clientswitcher", 15) == 0)
     {
         if (strcmp(a2, "/clientswitcher on") == 0)
@@ -9741,7 +9942,6 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     }
 
     // map
-
     if (strncmp(a2, "/map", 4) == 0)
     {
         if (strcmp(a2, "/map") == 0)
@@ -10065,7 +10265,6 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     }
 
     // esp
-
     if (strncmp(a2, "/esp", 4) == 0)
     {
         if (strcmp(a2, "/esp on") == 0)
@@ -10199,8 +10398,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // healthbars
-
+    // health bars
     if (strncmp(a2, "/healthbars", 11) == 0)
     {
         if (strcmp(a2, "/healthbars") == 0)
@@ -10273,8 +10471,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // buffinfo
-
+    // buff info
     if (strncmp(a2, "/buffinfo", 9) == 0)
     {
         if (strcmp(a2, "/buffinfo") == 0)
@@ -10320,8 +10517,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // playerinfo
-
+    // player info
     if (strncmp(a2, "/playerinfo", 11) == 0)
     {
         if (strcmp(a2, "/playerinfo") == 0)
@@ -10367,8 +10563,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // targetinfo
-
+    // target info
     if (strncmp(a2, "/targetinfo", 11) == 0)
     {
         if (strcmp(a2, "/targetinfo") == 0)
@@ -10414,7 +10609,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // messagetext
+    // message text
     if (strncmp(a2, "/messagetext", 12) == 0)
     {
         if (strcmp(a2, "/messagetext") == 0)
@@ -10443,7 +10638,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // buffwindowtimers
+    // buff window timers
     if (strcmp(a2, "/buffwindowtimers") == 0)
     {
         EQMACMQ_ToggleBuffWindowTimers();
@@ -10530,6 +10725,14 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // skill hack
+    if (strncmp(a2, "/skillh", 7) == 0)
+    {
+        EQMACMQ_ToggleSkillHack();
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
     // bard twist
     if (strncmp(a2, "/twist", 6) == 0)
     {
@@ -10577,7 +10780,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             if (result > 1)
             {
                 char twistText[128];
-                strncpy_s(twistText, sizeof(twistText), "Twist: ", _TRUNCATE);
+                strncpy_s(twistText, sizeof(twistText), "Twist Songs: ", _TRUNCATE);
 
                 for (int i = 0; i < result - 1; i++)
                 {
@@ -10588,8 +10791,8 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
 
                     g_bardTwistSongNumbers[i] = songNumbers[i] - 1;
 
-                    char songNumberString[128];
-                    _itoa_s(songNumbers[i], songNumberString, 10);
+                    char songNumberString[8];
+                    _itoa_s(songNumbers[i], songNumberString, sizeof(songNumberString), 10);
 
                     strncat_s(twistText, sizeof(twistText), songNumberString, _TRUNCATE);
                     strncat_s(twistText, sizeof(twistText), " ",              _TRUNCATE);
@@ -10834,7 +11037,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     }
 
     // load spell set
-    if (strncmp(a2, "/loadspellset ", 14) == 0 || strncmp(a2, "/loadspells ", 12) == 0)
+    if (strncmp(a2, "/loadspellset ", 14) == 0 || strncmp(a2, "/loadspells ", 12) == 0 || strncmp(a2, "/memspellset ", 13) == 0 || strncmp(a2, "/memspells ", 11) == 0)
     {
         char command[128];
 
@@ -10850,17 +11053,22 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             if (EQMACMQ_FileExists(filename) == true)
             {
                 strncpy_s(g_loadSpellsetName, sizeof(g_loadSpellsetName), name, _TRUNCATE);
-                g_loadSpellsetInProgress = true;
+                g_loadSpellsetIsInProgress = true;
 
                 EQMACMQ_DoLoadSpellset(name);
-            }
 
-            EQ_WriteStringVarToChat("Load Spellset", name);
+                EQ_WriteStringVarToChat("Load Spellset", name);
+            }
+            else
+            {
+                EQ_WriteStringVarToChat("Load Spellset", "File not found!");
+            }
         }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // logging
     if (strcmp(a2, "/logging") == 0)
     {
         EQMACMQ_ToggleLogging();
@@ -10868,7 +11076,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // target
+    // targeting
     if (strcmp(a2, "/target myself") == 0)
     {
         PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
@@ -10953,6 +11161,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // target height / size
     if (strncmp(a2, "/targetheight", 13) == 0)
     {
         if (strcmp(a2, "/targetheight") == 0)
@@ -10993,6 +11202,21 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // face target
+    if (strncmp(a2, "/facetar", 8) == 0)
+    {
+        PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+        PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+        if (playerSpawn && targetSpawn)
+        {
+            ((EQPlayer*)playerSpawn)->FacePlayer((EQPlayer*)targetSpawn);
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // bank info
     if (strcmp(a2, "/bank") == 0)
     {
         PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
@@ -11016,6 +11240,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // mana info
     if (strcmp(a2, "/mana") == 0)
     {
         PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
@@ -11040,6 +11265,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // buff info
     if (strcmp(a2, "/buffs") == 0)
     {
         EQ_CLASS_CEverQuest->dsp_chat("Buffs:");
@@ -11087,21 +11313,150 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    if (strcmp(a2, "/autoinventory") == 0 || strncmp(a2, "/autoinv", 8) == 0)
+    // autoinventory
+    if (strncmp(a2, "/autoinv", 8) == 0)
     {
         PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
-        if (charInfo)
+        if (charInfo && charInfo->CursorItem != NULL)
         {
-            if (charInfo->CursorItem != NULL)
+            EQ_AutoInventory(charInfo, &charInfo->CursorItem, 0);
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // do hotbutton
+    if (strncmp(a2, "/dohotbutton ", 13) == 0)
+    {
+        char command[128];
+
+        unsigned int button = 0;
+
+        int result = sscanf_s(a2, "%s %d", command, sizeof(command), &button);
+
+        if (result == 2)
+        {
+            if (button > 0 && button <= EQ_NUM_HOTBUTTONS_TOTAL)
             {
-                EQ_AutoInventory(charInfo, &charInfo->CursorItem, 0);
+                EQ_CLASS_CHotButtonWnd->DoHotButton(button - 1, false);
             }
         }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // stop cast
+    if (strcmp(a2, "/stopcast") == 0)
+    {
+        PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+        if (charInfo != NULL)
+        {
+            EQ_CLASS_EQ_Character->StopSpellCast(0);
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // track
+    if (strcmp(a2, "/track") == 0)
+    {
+        EQ_CLASS_CTrackingWnd->Activate();
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // stop tracking
+    if (strncmp(a2, "/stoptrack", 10) == 0)
+    {
+        WORD isHidingOrTracking = EQ_ReadMemory<WORD>(EQ_IS_HIDING_OR_TRACKING);
+
+        if (isHidingOrTracking == EQ_IS_HIDING_OR_TRACKING_EQUALS_TRACKING)
+        {
+            EQ_WriteMemory<WORD>(EQ_IS_HIDING_OR_TRACKING, EQ_IS_HIDING_OR_TRACKING_EQUALS_NONE);
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // toggle inspect
+    if (strcmp(a2, "/toggleinspect") == 0)
+    {
+        EQMACMQ_ToggleInspect();
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // hide corpses looted
+    if (_stricmp(a2, "/hidecorpses looted") == 0 || _stricmp(a2, "/hidecorpse looted") == 0)
+    {
+        EQMACMQ_ToggleHideCorpseLooted();
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // loot all
+    if (strcmp(a2, "/lootall") == 0)
+    {
+        PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+        PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+        PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+        if (charInfo != NULL && playerSpawn != NULL && targetSpawn != NULL)
+        {
+            if (playerSpawn->StandingState != EQ_STANDING_STATE_LOOTING)
+            {
+                if (targetSpawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE || targetSpawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+                {
+                    EQ_CLASS_CEverQuest->LootCorpse((EQPlayer*)targetSpawn, 0);
+                }
+            }
+        }
+
+        g_lootAllCounter = 0;
+        g_lootAllIsInProgress = true;
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // casting "Spell Name"
+    if (strncmp(a2, "/casting", 8) == 0)
+    {
+        if (strncmp(a2, "/casting \"", 10) == 0)
+        {
+            if (strlen(a2) > 9 && a2[9] == '"' && a2[strlen(a2) - 1] == '"')
+            {
+                char command[128];
+
+                char spellName[128];
+
+                //unsigned int spellGem = EQ_SPELL_ID_NULL;
+
+                int result = sscanf_s(a2, "%s \"%[^\"]\"", command, sizeof(command), spellName, sizeof(spellName));//, &spellGem);
+
+                if (result == 2)
+                {
+                    int spellId = EQ_GetSpellIdByName(spellName);
+
+                    if (spellId != EQ_SPELL_ID_NULL)
+                    {
+                        int spellGem = EQ_GetSpellGemBySpellId(spellId);
+
+                        if (spellGem != EQ_SPELL_ID_NULL)
+                        {
+                            EQ_CLASS_EQ_Character->StopSpellCast(0);
+                            EQ_CLASS_EQ_Character->CastSpell(spellGem, spellId, NULL, -1);
+                        }
+                    }
+                }
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // dump commands
     if (strcmp(a2, "/dumpcommands") == 0)
     {
         FILE* file;
@@ -11164,7 +11519,11 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_use
 
     if (g_bardTwistIsEnabled == true)
     {
-        if (strcmp(a1, "You miss a note, bringing your song to a close!") == 0)
+        if
+        (
+            strcmp(a1, "You miss a note, bringing your song to a close!") == 0 ||
+            strcmp(a1, "You must first select a target for this spell!")  == 0
+        )
         {
             g_bardTwistTimer = EQ_ReadMemory<DWORD>(EQ_TIMER) - g_bardTwistDelay;
         }
@@ -11218,7 +11577,7 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
 
         if (g_writeTextToChatWindowIsEnabled == true)
         {
-            if (EQ_OBJECT_CEverQuest && EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+            if (EQ_IsInGame() == true)
             {
                 char loadedText[128];
                 _snprintf_s(loadedText, sizeof(loadedText), _TRUNCATE, "%s loaded.", g_applicationName);
@@ -11293,7 +11652,7 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
                     EQ_CLASS_CEverQuest->dsp_chat(boxChatText);
                 }
 
-                if (EQ_OBJECT_CEverQuest && EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+                if (EQ_IsInGame() == true)
                 {
                     PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
 
@@ -11310,23 +11669,40 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
 
     g_numDeferred2dItems = 0;
 
-    BYTE isNetStatusEnabled = EQ_ReadMemory<BYTE>(EQ_IS_NET_STATUS_ENABLED);
-
-    if (isNetStatusEnabled == 0)
+    if (EQ_IsNetStatusEnabled() == false)
     {
         g_messageTextTimer = 0;
     }
 
     EQMACMQ_DoUpdateZone();
 
+    if (g_lootAllIsInProgress == true)
+    {
+        DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
+
+        if (currentTime < (g_lootAllTimer + g_lootAllDelay))
+        {
+            //
+        }
+        else
+        {
+            EQMACMQ_DoLootAll();
+
+            g_lootAllTimer = currentTime;
+        }
+    }
+
     if (g_freeCameraIsEnabled == true)
     {
-        BYTE isNotTypingIinChat = EQ_ReadMemory<BYTE>(EQ_IS_NOT_TYPING_IN_CHAT);
-
-        if (isNotTypingIinChat == 1)
+        if (EQ_IsNotTypingInChat() == true)
         {
             EQMACMQ_DoFreeCameraKeys();
         }
+    }
+
+    if (g_skillHackIsEnabled == true)
+    {
+        EQMACMQ_DoSkillHack();
     }
 
     if (g_bardTwistIsEnabled == true)
@@ -11435,7 +11811,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
             {
                 char connectMessage[128];
 
-                if (EQ_OBJECT_CEverQuest && EQ_OBJECT_CEverQuest->GameState == EQ_GAME_STATE_IN_GAME)
+                if (EQ_IsInGame() == true)
                 {
                     _snprintf_s(connectMessage, sizeof(connectMessage), _TRUNCATE, "Name: %s|", EQ_OBJECT_PlayerSpawn->Name);
                 }
@@ -11453,7 +11829,7 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
                 g_boxChatSendConnectedMessage = false;
             }
 
-            if (EQ_OBJECT_CEverQuest == NULL || EQ_OBJECT_CEverQuest->GameState != EQ_GAME_STATE_IN_GAME)
+            if (EQ_IsInGame() == false)
             {
                 Sleep(1000);
                 continue;
@@ -11654,6 +12030,8 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
     DetourRemove((PBYTE)EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization,  (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__StartSpellMemorization);
     DetourRemove((PBYTE)EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing,        (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing);
 
+    DetourRemove((PBYTE)EQMACMQ_REAL_CLootWnd__Deactivate, (PBYTE)EQMACMQ_DETOUR_CLootWnd__Deactivate);
+
     Sleep(1000);
 
     FreeLibraryAndExitThread(g_module, 0);
@@ -11765,6 +12143,8 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
 
     EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization = (EQ_FUNCTION_TYPE_CSpellBookWnd__StartSpellMemorization)DetourFunction((PBYTE)EQ_FUNCTION_CSpellBookWnd__StartSpellMemorization, (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__StartSpellMemorization);
     EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing       = (EQ_FUNCTION_TYPE_CSpellBookWnd__FinishMemorizing)      DetourFunction((PBYTE)EQ_FUNCTION_CSpellBookWnd__FinishMemorizing,       (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing);
+
+    EQMACMQ_REAL_CLootWnd__Deactivate = (EQ_FUNCTION_TYPE_CLootWnd__Deactivate)DetourFunction((PBYTE)EQ_FUNCTION_CLootWnd__Deactivate, (PBYTE)EQMACMQ_DETOUR_CLootWnd__Deactivate);
 
     return 0;
 }

@@ -83,6 +83,9 @@ void EQ_WriteMemoryString(DWORD address, const char* value)
 
 // object structures
 
+EQZONEINFO* EQ_OBJECT_pZoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
+#define EQ_OBJECT_ZoneInfo (*EQ_OBJECT_pZoneInfo)
+
 EQVIEWPORT* EQ_OBJECT_pViewPort = (EQVIEWPORT*)EQ_STRUCTURE_VIEWPORT;
 #define EQ_OBJECT_ViewPort (*EQ_OBJECT_pViewPort)
 
@@ -1539,7 +1542,7 @@ signed int EQ_GetSpellBookSpellIndexBySpellId(int spellId)
     return -1;
 }
 
-int EQ_GetSpellIdByName(const char* spellName)
+int EQ_GetSpellIdBySpellName(const char* spellName)
 {
     if (strlen(spellName) == 0 || spellName == NULL)
     {
@@ -1573,7 +1576,7 @@ int EQ_GetSpellGemBySpellId(int spellId)
 
     for (size_t i = 0; i < EQ_NUM_SPELL_GEMS; i++)
     {
-        if (charInfo->MemorizedSpells[i] == spellId)
+        if (charInfo->MemorizedSpell[i] == spellId)
         {
             return i;
         }

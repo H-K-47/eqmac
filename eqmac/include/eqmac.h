@@ -130,6 +130,7 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_NUM_LOOT_WINDOW_ITEMS 30
 #define EQ_NUM_HOTBUTTONS 10
 #define EQ_NUM_HOTBUTTONS_TOTAL 100
+#define EQ_NUM_CONTAINER_SLOTS 10
 
 #define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
 #define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
@@ -189,6 +190,8 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_ZONE_INFO_PLAYER_NAME_SIZE 0x40
 #define EQ_ZONE_INFO_SHORT_NAME_SIZE  0x20
 #define EQ_ZONE_INFO_LONG_NAME_SIZE   0x80
+
+#define EQ_ZONE_GRAVITY_DEFAULT 0.400000006
 
 #define EQ_STRUCTURE_COMMAND_LIST 0x00609AF8 // STRUCT
 
@@ -1236,6 +1239,37 @@ typedef struct _EQZONEINFO
 /* 0x0000 */ CHAR PlayerName[64]; // [0x40]
 /* 0x0040 */ CHAR ShortName[32]; // [0x20]
 /* 0x0060 */ CHAR LongName[128]; // [0x80]
+/* 0x00E0 */ BYTE Unknown00E0[150];
+/* 0x0176 */ BYTE Type;
+/* 0x0177 */ BYTE FogColorRed[4];
+/* 0x017B */ BYTE FogColorGreen[4];
+/* 0x017F */ BYTE FogColorBlue[4];
+/* 0x0183 */ BYTE Unknown0183;
+/* 0x0184 */ FLOAT Unknown0184;
+/* 0x0188 */ FLOAT Unknown0188;
+/* 0x018C */ FLOAT Unknown018C;
+/* 0x0190 */ FLOAT Unknown0190;
+/* 0x0194 */ FLOAT Unknown0194;
+/* 0x0198 */ FLOAT Unknown0198;
+/* 0x019C */ FLOAT Unknown019C;
+/* 0x01A0 */ FLOAT Unknown01A0;
+/* 0x01A4 */ FLOAT Gravity;
+/* 0x01A8 */ BYTE Unknown01A8;
+/* 0x01A9 */ BYTE Unknown01A9;
+/* 0x01AA */ BYTE Unknown01AA;
+/* 0x01AB */ BYTE Unknown01AB;
+/* 0x01AC */ BYTE Unknown01AC;
+/* 0x01AD */ BYTE Unknown01AD[45];
+/* 0x01DA */ BYTE SkyType;
+/* 0x01DB */ BYTE Unknown01DB[9];
+/* 0x01E4 */ FLOAT ExperienceMultiplier;
+/* 0x01E8 */ FLOAT SafeCoordsY; // CDisplay::MoveLocalPlayerToSafeCoords
+/* 0x01EC */ FLOAT SafeCoordsX;
+/* 0x01F0 */ FLOAT SafeCoordsZ;
+/* 0x01F4 */ FLOAT Unknown01F4;
+/* 0x01F8 */ FLOAT Unknown01F8;
+/* 0x01FC */ FLOAT MinClip; // draw distance (minimum Far Clip Plane)
+/* 0x0200 */ FLOAT MaxClip; // draw distance (maximum Far Clip Plane)
 /* ...... */ 
 } EQZONEINFO, *PEQZONEINFO;
 
@@ -1251,6 +1285,74 @@ typedef struct _EQBUFFINFO
 /* 0x0008 */ WORD Unknown0008;
 /* 0x000A */
 } EQBUFFINFO, *PEQBUFFINFO;
+
+typedef struct _EQITEMCOMMONINFO
+{
+/* 0x00E4 */ INT8 Strength;       // STR
+/* 0x00E5 */ INT8 Stamina;        // STA
+/* 0x00E6 */ INT8 Charisma;       // CHA
+/* 0x00E7 */ INT8 Dexterity;      // DEX
+/* 0x00E8 */ INT8 Intelligence;   // INT
+/* 0x00E9 */ INT8 Agility;        // AGI
+/* 0x00EA */ INT8 Wisdom;         // WIS
+/* 0x00EB */ INT8 SaveMagic;      // SV MAGIC
+/* 0x00EC */ INT8 SaveFire;       // SV FIRE
+/* 0x00ED */ INT8 SaveCold;       // SV COLD
+/* 0x00EE */ INT8 SaveDisease;    // SV DISEASE
+/* 0x00EF */ INT8 SavePoison;     // SV POISON
+/* 0x00F0 */ INT16 Health;        // HP
+/* 0x00F2 */ INT16 Mana;          // Mana
+/* 0x00F4 */ INT16 ArmorClass;    // AC
+/* 0x00F6 */ BYTE Unknown0246[2];
+/* 0x00F8 */ BYTE Light;
+/* 0x00F9 */ BYTE AttackDelay;    // Atk Delay
+/* 0x00FA */ BYTE Damage;         // DMG
+/* 0x00FB */ BYTE IsStackableEx;
+/* 0x00FC */ BYTE Range;
+/* 0x00FD */ BYTE Skill;
+/* 0x00FE */ BYTE Magic;
+/* 0x00FF */ BYTE CastingLevelEx;
+/* 0x0100 */ BYTE Material; // 0=None, 1=Leather, 2=Chain, 3=Plate, 4=Silk, etc
+/* 0x0101 */ BYTE Unknown0258[3];
+/* 0x0104 */ DWORD Color;
+/* 0x0108 */ BYTE Unknown0264[2];
+/* 0x010A */ WORD SpellIdEx;
+/* 0x010C */ WORD Classes; // bitwise flag
+/* 0x010E */ BYTE Unknown0270[2];
+/* 0x0110 */ WORD Races; // bitwise flag
+/* 0x0112 */ BYTE Unknown0274[2];
+/* 0x0114 */ BYTE IsStackable;
+/* 0x0115 */ BYTE CastingLevel; // also weapon proc level
+union
+{
+/* 0x0116 */ BYTE StackCount;
+/* 0x0116 */ BYTE Charges;
+};
+/* 0x0117 */ BYTE EffectType;
+/* 0x0118 */ WORD SpellId;
+/* 0x011A */ BYTE Unknown0123[10];
+/* 0x0124 */ WORD SkillModId;
+/* 0x0126 */ INT8 SkillModPercent;
+/* ...... */ 
+} EQITEMCOMMONINFO, *PEQITEMCOMMONINFO;
+
+typedef struct _EQITEMCONTAINERINFO
+{
+/* 0x00E4 */ struct _EQITEMINFO* Item[EQ_NUM_CONTAINER_SLOTS];
+/* 0x010C */ BYTE Combine;
+/* 0x010D */ BYTE Capacity; // num slots
+/* 0x010E */ BYTE IsOpen;
+/* 0x010F */ BYTE SizeCapacity;
+/* 0x0110 */ BYTE WeightReduction; // percent
+/* ...... */ 
+} EQITEMCONTAINERINFO, *PEQITEMCONTAINERINFO;
+
+typedef struct _EQITEMBOOKINFO
+{
+/* 0x00E4 */ BYTE Unknown0228[3];
+/* 0x00E7 */ CHAR File[15];
+/* ...... */ 
+} EQITEMBOOKINFO, *PEQITEMBOOKINFO;
 
 typedef struct _EQITEMINFO
 {
@@ -1269,19 +1371,14 @@ typedef struct _EQITEMINFO
 /* 0x00B8 */ DWORD EquipSlot;
 /* 0x00BC */ DWORD EquippableSlots; // flag
 /* 0x00C0 */ DWORD Cost; // value in copper, sells to merchant for value
-/* 0x00C4 */ BYTE Unknown00C4[50];
-/* 0x00F6 */ BYTE IsStackable; // can have quantity more than 1
-/* 0x00F7 */ BYTE Unknown00F7[31];
-/* 0x0116 */ BYTE Quantity; // count, amount
+/* 0x00C4 */ BYTE Unknown00C4[32];
+union
+{
+/* 0x00E4 */ EQITEMCOMMONINFO    Common;
+/* 0x00E4 */ EQITEMCONTAINERINFO Container;
+/* 0x00E4 */ EQITEMBOOKINFO      Book;
+};
 /* ...... */ 
-/*
-    union
-    {
-        COMMON    Common;
-        CONTAINER Container;
-        BOOK      Book;
-    };
-*/
 } EQITEMINFO, *PEQITEMINFO;
 
 // class EQ_Spell
@@ -1390,12 +1487,18 @@ typedef struct _EQCHARINFO
 /* 0x00AA */ WORD BaseAGI;
 /* 0x00AC */ WORD BaseWIS;
 /* 0x00AE */ BYTE Unknown00AE[438];
-/* 0x0264 */ struct _EQBUFFINFO Buffs[EQ_NUM_BUFFS];
+/* 0x0264 */ struct _EQBUFFINFO Buff[EQ_NUM_BUFFS];
 /* 0x02FA */ BYTE Unknown02FA[1080];
 /* 0x0732 */ WORD SpellBook[EQ_NUM_SPELL_BOOK_SPELLS];
 /* 0x0926 */ BYTE Unknown0926[524];
-/* 0x0B32 */ WORD MemorizedSpells[EQ_NUM_SPELL_GEMS]; // spell gem spell ids
-/* 0x0B42 */ BYTE Unknown0B42[34];
+/* 0x0B32 */ WORD MemorizedSpell[EQ_NUM_SPELL_GEMS]; // spell gem spell ids
+/* 0x0B42 */ BYTE Unknown0B42[14];
+/* 0x0B50 */ WORD Unknown0B50;
+/* 0x0B52 */ WORD Unknown0B52;
+/* 0x0B54 */ FLOAT ZoneEnterY;
+/* 0x0B58 */ FLOAT ZoneEnterX;
+/* 0x0B5C */ FLOAT ZoneEnterZ;
+/* 0x0B60 */ FLOAT Unknown0060;
 /* 0x0B64 */ BYTE StandingState; // EQ_STANDING_STATE_x
 /* 0x0B65 */ BYTE Unknown0B65[3];
 /* 0x0B68 */ DWORD Platinum;
@@ -1411,8 +1514,12 @@ typedef struct _EQCHARINFO
 /* 0x0B90 */ DWORD CursorSilver;
 /* 0x0B94 */ DWORD CursorCopper;
 /* 0x0B98 */ BYTE Unknown0B98[16];
-/* 0x0BA8 */ WORD Skills[EQ_NUM_SKILLS];
-/* 0x0C3C */ BYTE Unknown[200];
+/* 0x0BA8 */ WORD Skill[EQ_NUM_SKILLS];
+/* 0x0C3C */ BYTE Unknown0C3C[64];
+/* 0x0C7C */ WORD Vision1;
+/* 0x0C7E */ BYTE Unknown0C7E[12];
+/* 0x0C8A */ WORD Vision2;
+/* 0x0C8C */ BYTE Unknown0C8C[120];
 /* 0x0D04 */ DWORD IsSwimmingUnderwater;
 /* 0x0D08 */ BYTE Unknown0D08[4];
 /* 0x0D0C */ BYTE Unknown0D0C[4];
@@ -1429,9 +1536,9 @@ typedef struct _EQCHARINFO
 union
 {
 /* 0x0D7C */ struct _EQINVENTORY Inventory;
-/* 0x0D7C */ struct _EQITEMINFO* InventoryItems[EQ_NUM_INVENTORY_SLOTS];
+/* 0x0D7C */ struct _EQITEMINFO* InventoryItem[EQ_NUM_INVENTORY_SLOTS];
 };
-/* 0x0DD0 */ struct _EQITEMINFO* InventoryPackItems[EQ_NUM_INVENTORY_PACK_SLOTS];
+/* 0x0DD0 */ struct _EQITEMINFO* InventoryPackItem[EQ_NUM_INVENTORY_PACK_SLOTS];
 /* 0x0DF0 */ BYTE Unknown0DF0[116];
 /* 0x0E64 */ DWORD Unknown0E64;
 /* 0x0E68 */ BYTE Unknown0E68[32];
@@ -1479,7 +1586,7 @@ union
 /* 0x152C */ BYTE Unknown152C[476];
 /* 0x1708 */ BYTE AirSupply; // air remaining while swimming underwater
 /* 0x1709 */ BYTE Unknown1709[2475];
-/* 0x20B4 */ struct _EQITEMINFO* InventoryBankItems[EQ_NUM_INVENTORY_BANK_SLOTS];
+/* 0x20B4 */ struct _EQITEMINFO* InventoryBankItem[EQ_NUM_INVENTORY_BANK_SLOTS];
 /* ...... */ 
 } EQCHARINFO, *PEQCHARINFO;
 
@@ -1992,10 +2099,10 @@ typedef struct _EQCBUFFWINDOW
 typedef struct _EQCLOOTWND
 {
 /* 0x0000 */ struct _EQCSIDLWND CSidlWnd;
-/* 0x0138 */ DWORD ItemSlotIndexes[EQ_NUM_LOOT_WINDOW_ITEMS];
+/* 0x0138 */ DWORD ItemSlotIndex[EQ_NUM_LOOT_WINDOW_ITEMS];
 /* 0x01B0 */ DWORD Timer;
 /* 0x01B4 */ PVOID Unknown01B4;
-/* 0x01B8 */ struct _EQITEMINFO* Items[EQ_NUM_LOOT_WINDOW_ITEMS];
+/* 0x01B8 */ struct _EQITEMINFO* Item[EQ_NUM_LOOT_WINDOW_ITEMS];
 /* ...... */
 } EQCLOOTWND, *PEQCLOOTWND;
 

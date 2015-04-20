@@ -681,8 +681,11 @@ bool g_lootAllIsInProgress = false;
 
 bool g_lootAllNoDropIsEnabled = false;
 
-bool g_lootAllFilterIsEnabled = false;
-char g_lootAllFilter[4096] = {0};
+bool g_lootAllFilterIdIsEnabled = false;
+char g_lootAllFilterId[4096] = {0};
+
+bool g_lootAllFilterNameIsEnabled = false;
+char g_lootAllFilterName[4096] = {0};
 
 unsigned int g_lootAllCounter = 0;
 
@@ -1708,6 +1711,16 @@ bool EQMACMQ_LoadConfig(const char* filename)
     // LootAll
 
     g_lootAllDelay = EQMACMQ_ConfigReadInt(filename, "LootAll", "iDelay", g_lootAllDelay);
+
+    g_lootAllNoDropIsEnabled = EQMACMQ_ConfigReadBool(filename, "LootAll", "bNoDrop", g_lootAllNoDropIsEnabled);
+
+    g_lootAllFilterIdIsEnabled = EQMACMQ_ConfigReadBool(filename, "LootAll", "bFilterId", g_lootAllFilterIdIsEnabled);
+
+    EQMACMQ_ConfigReadString(filename, "LootAll", "sFilterId", "", g_lootAllFilterId, sizeof(g_lootAllFilterId));
+
+    g_lootAllFilterNameIsEnabled = EQMACMQ_ConfigReadBool(filename, "LootAll", "bFilterName", g_lootAllFilterNameIsEnabled);
+
+    EQMACMQ_ConfigReadString(filename, "LootAll", "sFilterName", "", g_lootAllFilterName, sizeof(g_lootAllFilterName));
 
     // FreeCamera
 
@@ -3257,6 +3270,36 @@ void EQMACMQ_ToggleMeleeRange()
     }
 }
 
+void EQMACMQ_ToggleLootAllNoDrop()
+{
+    EQ_ToggleBool(g_lootAllNoDropIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Loot All NO DROP", g_lootAllNoDropIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleLootAllFilterId()
+{
+    EQ_ToggleBool(g_lootAllFilterIdIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Loot All Filter By ID", g_lootAllFilterIdIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleLootAllFilterName()
+{
+    EQ_ToggleBool(g_lootAllFilterNameIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Loot All Filter By Name", g_lootAllFilterNameIsEnabled);
+    }
+}
+
 void EQMACMQ_ToggleLogging()
 {
     EQ_ToggleBool(g_loggingIsEnabled);
@@ -3287,15 +3330,13 @@ void EQMACMQ_DoLoadMap()
 {
     DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
 
-    EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
-
     if (zoneId != 0)
     {
         EQMACMQ_MapLineList_Destroy();
         EQMACMQ_MapPointList_Destroy();
 
         char mapFilename[1024];
-        _snprintf_s(mapFilename, sizeof(mapFilename), _TRUNCATE, ".\\maps\\%s.txt", zoneInfo->ShortName);
+        _snprintf_s(mapFilename, sizeof(mapFilename), _TRUNCATE, ".\\maps\\%s.txt", EQ_OBJECT_ZoneInfo.ShortName);
 
         EQMACMQ_LoadMap(mapFilename, 0); // layer 0 is the base layer
 
@@ -3303,7 +3344,7 @@ void EQMACMQ_DoLoadMap()
         for (mapLayer = 1; mapLayer < (g_mapNumLayers + 1); mapLayer++)
         {
             char mapFilenameEx[1024];
-            _snprintf_s(mapFilenameEx, sizeof(mapFilenameEx), _TRUNCATE, ".\\maps\\%s_%d.txt", zoneInfo->ShortName, mapLayer);
+            _snprintf_s(mapFilenameEx, sizeof(mapFilenameEx), _TRUNCATE, ".\\maps\\%s_%d.txt", EQ_OBJECT_ZoneInfo.ShortName, mapLayer);
 
             EQMACMQ_LoadMap(mapFilenameEx, mapLayer);
         }
@@ -3315,8 +3356,6 @@ void EQMACMQ_DoLoadConfig()
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
     DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
-
-    EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
 
     // default config file
     char configFilename[1024];
@@ -3337,7 +3376,7 @@ void EQMACMQ_DoLoadConfig()
     if (zoneId != 0)
     {
         char zoneConfigFilename[1024];
-        _snprintf_s(zoneConfigFilename, sizeof(zoneConfigFilename), _TRUNCATE, ".\\zoneconfigs\\%s.ini", zoneInfo->ShortName);
+        _snprintf_s(zoneConfigFilename, sizeof(zoneConfigFilename), _TRUNCATE, ".\\zoneconfigs\\%s.ini", EQ_OBJECT_ZoneInfo.ShortName);
 
         EQMACMQ_LoadConfig(zoneConfigFilename);
     }
@@ -3346,8 +3385,6 @@ void EQMACMQ_DoLoadConfig()
 void EQMACMQ_DoUpdateZone()
 {
     DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
-
-    EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
 
     if (g_zoneId != zoneId && zoneId != 0)
     {
@@ -3563,7 +3600,7 @@ void EQMACMQ_DoSaveSpellset(const char* name)
 
         for (size_t i = 0; i < EQ_NUM_SPELL_GEMS; i++)
         {
-            int spellId = charInfo->MemorizedSpells[i];
+            int spellId = charInfo->MemorizedSpell[i];
 
             if (spellId != EQ_SPELL_ID_NULL)
             {
@@ -3610,7 +3647,7 @@ void EQMACMQ_DoLoadSpellset(const char* name)
     {
         for (size_t i = 0; i < EQ_NUM_SPELL_GEMS; i++)
         {
-            if (charInfo->MemorizedSpells[i] != EQ_SPELL_ID_NULL)
+            if (charInfo->MemorizedSpell[i] != EQ_SPELL_ID_NULL)
             {
                 continue;
             }
@@ -3688,12 +3725,84 @@ void EQMACMQ_DoLootAll()
 
     bool bFoundLoot = false;
 
+    bool bFoundNoDrop = false;
+
     if (EQ_OBJECT_CLootWnd && EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsOpen == 1 && EQ_OBJECT_CLootWnd->CSidlWnd.EQWnd.IsVisible == 1)
     {
         for (size_t i = 0; i < EQ_NUM_LOOT_WINDOW_ITEMS; i++)
         {
-            if (EQ_OBJECT_CLootWnd->Items[i] != NULL && EQ_OBJECT_CLootWnd->Items[i]->NoDrop == 0xFF)
+            if (EQ_OBJECT_CLootWnd->Item[i] != NULL)
             {
+                if (EQ_OBJECT_CLootWnd->Item[i]->NoDrop == 0x00)
+                {
+                    bFoundNoDrop = true;
+
+                    if (g_lootAllNoDropIsEnabled == false)
+                    {
+                        continue;
+                    }
+                }
+
+                if (g_lootAllFilterIdIsEnabled == true && strlen(g_lootAllFilterId) > 0)
+                {
+                    bool bIdFound = false;
+
+                    char filter[4096];
+                    strncpy_s(filter, sizeof(filter), g_lootAllFilterId, _TRUNCATE);
+
+                    char* token     = NULL;
+                    char* tokenNext = NULL;
+
+                    token = strtok_s(filter, ",", &tokenNext);
+
+                    while (token != NULL)
+                    {
+                        int id = atoi(token);
+
+                        if (EQ_OBJECT_CLootWnd->Item[i]->Id == id)
+                        {
+                            bIdFound = true;
+                            break;
+                        }
+
+                        token = strtok_s(NULL, ",", &tokenNext);
+                    }
+
+                    if (bIdFound == false)
+                    {
+                        continue;
+                    }
+                }
+
+                if (g_lootAllFilterNameIsEnabled == true && strlen(g_lootAllFilterName) > 0)
+                {
+                    bool bNameFound = false;
+
+                    char filter[4096];
+                    strncpy_s(filter, sizeof(filter), g_lootAllFilterName, _TRUNCATE);
+
+                    char* token     = NULL;
+                    char* tokenNext = NULL;
+
+                    token = strtok_s(filter, ",", &tokenNext);
+
+                    while (token != NULL)
+                    {
+                        if (strcmp(EQ_OBJECT_CLootWnd->Item[i]->Name, token) == 0)
+                        {
+                            bNameFound = true;
+                            break;
+                        }
+
+                        token = strtok_s(NULL, ",", &tokenNext);
+                    }
+
+                    if (bNameFound == false)
+                    {
+                        continue;
+                    }
+                }
+
                 bFoundLoot = true;
 
                 EQ_CLASS_CLootWnd->RequestLootSlot(i, true);
@@ -3701,6 +3810,11 @@ void EQMACMQ_DoLootAll()
                 break;
             }
         }
+    }
+
+    if (g_lootAllNoDropIsEnabled == false && bFoundNoDrop == true)
+    {
+        bFoundLoot = true;
     }
 
     if (bFoundLoot == false)
@@ -3726,25 +3840,25 @@ void EQMACMQ_DoSkillHack()
         return;
     }
 
-    unsigned int swimming = charInfo->Skills[EQ_SKILL_SWIMMING];
+    unsigned int swimming = charInfo->Skill[EQ_SKILL_SWIMMING];
 
     if (swimming < g_skillHackSwimming)
     {
-        charInfo->Skills[EQ_SKILL_SWIMMING] = g_skillHackSwimming;
+        charInfo->Skill[EQ_SKILL_SWIMMING] = g_skillHackSwimming;
     }
 
-    unsigned int tracking = charInfo->Skills[EQ_SKILL_TRACKING];
+    unsigned int tracking = charInfo->Skill[EQ_SKILL_TRACKING];
 
     if (tracking < g_skillHackTracking)
     {
-        charInfo->Skills[EQ_SKILL_TRACKING] = g_skillHackTracking;
+        charInfo->Skill[EQ_SKILL_TRACKING] = g_skillHackTracking;
     }
 
-    unsigned int senseHeading = charInfo->Skills[EQ_SKILL_SENSE_HEADING];
+    unsigned int senseHeading = charInfo->Skill[EQ_SKILL_SENSE_HEADING];
 
     if (senseHeading < g_skillHackSenseHeading)
     {
-        charInfo->Skills[EQ_SKILL_SENSE_HEADING] = g_skillHackSenseHeading;
+        charInfo->Skill[EQ_SKILL_SENSE_HEADING] = g_skillHackSenseHeading;
     }
 }
 
@@ -5934,8 +6048,6 @@ void EQMACMQ_DoMap()
 
     DWORD zoneId = EQ_ReadMemory<DWORD>(EQ_ZONE_ID);
 
-    EQZONEINFO* zoneInfo = (EQZONEINFO*)EQ_STRUCTURE_ZONE_INFO;
-
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
     PEQSPAWNINFO spawn = (PEQSPAWNINFO)EQ_OBJECT_FirstSpawn;
@@ -6650,7 +6762,7 @@ void EQMACMQ_DoMap()
                 char filter[4096];
                 strncpy_s(filter, sizeof(filter), g_mapSpawnFilterNpc, _TRUNCATE);
 
-                char* filterToken;
+                char* filterToken     = NULL;
                 char* filterTokenNext = NULL;
 
                 filterToken = strtok_s(filter, ",", &filterTokenNext);
@@ -6908,7 +7020,7 @@ void EQMACMQ_DoMap()
         float textY = g_mapMaxY + g_elementOffset;
 
         char zoneText[128];
-        _snprintf_s(zoneText, sizeof(zoneText), _TRUNCATE, "Zone: %s (ID: %d)", zoneInfo->ShortName, zoneId);
+        _snprintf_s(zoneText, sizeof(zoneText), _TRUNCATE, "Zone: %s (ID: %d)", EQ_OBJECT_ZoneInfo.ShortName, zoneId);
         EQ_CLASS_CDisplay->WriteTextHD2(zoneText, (int)g_mapX, (int)textY, g_mapZoneInfoTextColor, fontArial14);
 
         textY = textY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
@@ -7608,7 +7720,7 @@ void EQMACMQ_DoEsp()
                 char filter[4096];
                 strncpy_s(filter, sizeof(filter), g_mapSpawnFilterNpc, _TRUNCATE);
 
-                char* filterToken;
+                char* filterToken     = NULL;
                 char* filterTokenNext = NULL;
 
                 filterToken = strtok_s(filter, ",", &filterTokenNext);
@@ -7858,7 +7970,7 @@ void EQMACMQ_DoBuffInfo()
 
     for (size_t i = 0; i < EQ_NUM_BUFFS; i++)
     {
-        int spellId = charInfo->Buffs[i].SpellId;
+        int spellId = charInfo->Buff[i].SpellId;
 
         if (spellId == EQ_SPELL_ID_NULL)
         {
@@ -7872,7 +7984,7 @@ void EQMACMQ_DoBuffInfo()
             continue;
         }
 
-        int buffTicks = charInfo->Buffs[i].Ticks;
+        int buffTicks = charInfo->Buff[i].Ticks;
 
         if (buffTicks == 0)
         {
@@ -8468,7 +8580,7 @@ void EQMACMQ_DoBardTwist()
 
     if (gem != -1)
     {
-        int spellId = charInfo->MemorizedSpells[g_bardTwistSongIndex];
+        int spellId = charInfo->MemorizedSpell[g_bardTwistSongIndex];
 
         if (spellId != EQ_SPELL_ID_NULL)
         {
@@ -8576,6 +8688,93 @@ void EQMACMQ_DoMelee()
     if (g_meleeSkillSenseHeadingIsEnabled == true)
     {
         EQ_CLASS_EQ_Character->UseSkill(EQ_SKILL_SENSE_HEADING, (EQPlayer*)targetSpawn);
+    }
+}
+
+void EQMACMQ_DoBankList()
+{
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+    if (charInfo == NULL)
+    {
+        return;
+    }
+
+    EQ_CLASS_CEverQuest->dsp_chat("Bank:");
+
+    for (size_t i = 0; i < EQ_NUM_INVENTORY_BANK_SLOTS; i++)
+    {
+        PEQITEMINFO item = (PEQITEMINFO)charInfo->InventoryBankItem[i];
+
+        if (item == NULL)
+        {
+            continue;
+        }
+
+        char bankText[128];
+        _snprintf_s
+        (
+            bankText, sizeof(bankText), _TRUNCATE,
+            "%02d: %s",
+            i + 1, item->Name
+        );
+
+        if (item->IsContainer == 0)
+        {
+            if (item->Common.IsStackable == 1 && item->Common.StackCount > 1)
+            {
+                char stackCountText[128];
+                _snprintf_s
+                (
+                    stackCountText, sizeof(stackCountText), _TRUNCATE,
+                    " x%d",
+                    item->Common.StackCount
+                );
+
+                strncat_s(bankText, sizeof(bankText), stackCountText, _TRUNCATE);
+            }
+        }
+
+        EQ_CLASS_CEverQuest->dsp_chat(bankText);
+
+        if (item->IsContainer == 1)
+        {
+            for (size_t j = 0; j < EQ_NUM_CONTAINER_SLOTS; j++)
+            {
+                PEQITEMINFO containerItem = (PEQITEMINFO)charInfo->InventoryBankItem[i]->Container.Item[j];
+
+                if (containerItem == NULL)
+                {
+                    continue;
+                }
+
+                char bankTextEx[128];
+                _snprintf_s
+                (
+                    bankTextEx, sizeof(bankTextEx), _TRUNCATE,
+                    "- %s",
+                    containerItem->Name
+                );
+
+                if (containerItem->IsContainer == 0)
+                {
+                    if (containerItem->Common.IsStackable == 1 && containerItem->Common.StackCount > 1)
+                    {
+                        char stackCountTextEx[128];
+                        _snprintf_s
+                        (
+                            stackCountTextEx, sizeof(stackCountTextEx), _TRUNCATE,
+                            " x%d",
+                            containerItem->Common.StackCount
+                        );
+
+                        strncat_s(bankTextEx, sizeof(bankTextEx), stackCountTextEx, _TRUNCATE);
+                    }
+                }
+
+                EQ_CLASS_CEverQuest->dsp_chat(bankTextEx);
+            }
+        }
     }
 }
 
@@ -9370,14 +9569,14 @@ int __fastcall EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay(void* this_ptr, vo
 
     for (size_t i = 0; i < EQ_NUM_BUFFS; i++)
     {
-        int spellId = charInfo->Buffs[i].SpellId;
+        int spellId = charInfo->Buff[i].SpellId;
 
         if (spellId == EQ_SPELL_ID_NULL)
         {
             continue;
         }
 
-        int buffTicks = charInfo->Buffs[i].Ticks;
+        int buffTicks = charInfo->Buff[i].Ticks;
 
         if (buffTicks == 0)
         {
@@ -11202,6 +11401,103 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // zone gravity
+    if (strcmp(a2, "/zonegravity") == 0)
+    {
+        EQ_OBJECT_ZoneInfo.Gravity = (float)EQ_ZONE_GRAVITY_DEFAULT;
+
+        EQ_WriteFloatVarToChat("Zone Gravity set to Default", (float)EQ_ZONE_GRAVITY_DEFAULT);
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+    else if (strncmp(a2, "/zonegravity ", 13) == 0)
+    {
+        char command[128];
+
+        float gravity = 0.0f;
+
+        int result = sscanf_s(a2, "%s %f", command, sizeof(command), &gravity);
+
+        if (result == 2)
+        {
+            if (gravity > 0.0f)
+            {
+                EQ_OBJECT_ZoneInfo.Gravity = gravity;
+
+                EQ_WriteFloatVarToChat("Zone Gravity", gravity);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // zone clip
+    if (strncmp(a2, "/zoneclip ", 10) == 0)
+    {
+        char command[128];
+
+        float clip = 0.0f;
+
+        int result = sscanf_s(a2, "%s %f", command, sizeof(command), &clip);
+
+        if (result == 2)
+        {
+            if (clip > 0.0f)
+            {
+                EQ_OBJECT_ZoneInfo.MinClip = clip;
+                EQ_OBJECT_ZoneInfo.MaxClip = clip;
+
+                EQ_WriteFloatVarToChat("Zone Minimum And Maximum Clip", clip);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // zone min clip
+    if (strncmp(a2, "/zoneminclip ", 13) == 0)
+    {
+        char command[128];
+
+        float clip = 0.0f;
+
+        int result = sscanf_s(a2, "%s %f", command, sizeof(command), &clip);
+
+        if (result == 2)
+        {
+            if (clip > 0.0f)
+            {
+                EQ_OBJECT_ZoneInfo.MinClip = clip;
+
+                EQ_WriteFloatVarToChat("Zone Minimum Clip", clip);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // zone max clip
+    if (strncmp(a2, "/zonemaxclip ", 13) == 0)
+    {
+        char command[128];
+
+        float clip = 0.0f;
+
+        int result = sscanf_s(a2, "%s %f", command, sizeof(command), &clip);
+
+        if (result == 2)
+        {
+            if (clip > 0.0f)
+            {
+                EQ_OBJECT_ZoneInfo.MaxClip = clip;
+
+                EQ_WriteFloatVarToChat("Zone Maximum Clip", clip);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
     // face target
     if (strncmp(a2, "/facetar", 8) == 0)
     {
@@ -11236,6 +11532,14 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
 
             EQ_CLASS_CEverQuest->dsp_chat(bankText);
         }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // bank list
+    if (strcmp(a2, "/banklist") == 0)
+    {
+        EQMACMQ_DoBankList();
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
@@ -11276,7 +11580,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         {
             for (size_t i = 0; i < EQ_NUM_BUFFS; i++)
             {
-                int spellId = charInfo->Buffs[i].SpellId;
+                int spellId = charInfo->Buff[i].SpellId;
 
                 if (spellId == EQ_SPELL_ID_NULL)
                 {
@@ -11290,7 +11594,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                     continue;
                 }
 
-                int buffTicks = charInfo->Buffs[i].Ticks;
+                int buffTicks = charInfo->Buff[i].Ticks;
 
                 if (buffTicks == 0)
                 {
@@ -11397,25 +11701,40 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     }
 
     // loot all
-    if (strcmp(a2, "/lootall") == 0)
+    if (strncmp(a2, "/lootall", 8) == 0)
     {
-        PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
-        PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
-        PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
-
-        if (charInfo != NULL && playerSpawn != NULL && targetSpawn != NULL)
+        if (strcmp(a2, "/lootall") == 0)
         {
-            if (playerSpawn->StandingState != EQ_STANDING_STATE_LOOTING)
+            PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+            PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+            PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+            if (charInfo != NULL && playerSpawn != NULL && targetSpawn != NULL)
             {
-                if (targetSpawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE || targetSpawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+                if (playerSpawn->StandingState != EQ_STANDING_STATE_LOOTING)
                 {
-                    EQ_CLASS_CEverQuest->LootCorpse((EQPlayer*)targetSpawn, 0);
+                    if (targetSpawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE || targetSpawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+                    {
+                        EQ_CLASS_CEverQuest->LootCorpse((EQPlayer*)targetSpawn, 0);
+                    }
                 }
             }
-        }
 
-        g_lootAllCounter = 0;
-        g_lootAllIsInProgress = true;
+            g_lootAllCounter = 0;
+            g_lootAllIsInProgress = true;
+        }
+        else if (strcmp(a2, "/lootallnodrop") == 0)
+        {
+            EQMACMQ_ToggleLootAllNoDrop();
+        }
+        else if (strcmp(a2, "/lootallfilterid") == 0)
+        {
+            EQMACMQ_ToggleLootAllFilterId();
+        }
+        else if (strcmp(a2, "/lootallfiltername") == 0)
+        {
+            EQMACMQ_ToggleLootAllFilterName();
+        }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
@@ -11431,13 +11750,13 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
 
                 char spellName[128];
 
-                //unsigned int spellGem = EQ_SPELL_ID_NULL;
+                //char item[128];
 
-                int result = sscanf_s(a2, "%s \"%[^\"]\"", command, sizeof(command), spellName, sizeof(spellName));//, &spellGem);
+                int result = sscanf_s(a2, "%s \"%[^\"]\"", command, sizeof(command), spellName, sizeof(spellName)); //item, sizeof(item)
 
                 if (result == 2)
                 {
-                    int spellId = EQ_GetSpellIdByName(spellName);
+                    int spellId = EQ_GetSpellIdBySpellName(spellName);
 
                     if (spellId != EQ_SPELL_ID_NULL)
                     {
@@ -11450,8 +11769,18 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                         }
                     }
                 }
+
+                // else if (result == 3) // item
             }
         }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // beep
+    if (strcmp(a2, "/beep") == 0)
+    {
+        MessageBeep(MB_OK);
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }

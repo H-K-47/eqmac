@@ -238,6 +238,7 @@ public:
     int CEverQuest::MoveToZone(char* zoneShortName, char* text, int destinationType, int zoneRequestReason);
     int CEverQuest::MoveToZone(int zoneId, char* text, int destinationType, int zoneRequestReason);
     int CEverQuest::LootCorpse(class EQPlayer* spawn, int unknown);
+    void CEverQuest::DropHeldItemOnGround(bool showDropMessage);
 };
 
 CEverQuest** EQ_CLASS_ppCEverQuest = (CEverQuest**)EQ_POINTER_CEverQuest;
@@ -505,6 +506,12 @@ EQ_FUNCTION_AT_ADDRESS(int CEverQuest::MoveToZone(int, char*, int, int), EQ_FUNC
 #ifdef EQ_FUNCTION_CEverQuest__LootCorpse
 typedef signed int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__LootCorpse)(void* this_ptr, class EQPlayer* spawn, int unknown);
 EQ_FUNCTION_AT_ADDRESS(int CEverQuest::LootCorpse(class EQPlayer*, int), EQ_FUNCTION_CEverQuest__LootCorpse);
+#endif
+
+#define EQ_FUNCTION_CEverQuest__DropHeldItemOnGround 0x00530D7E
+#ifdef EQ_FUNCTION_CEverQuest__DropHeldItemOnGround
+typedef signed int (__thiscall* EQ_FUNCTION_TYPE_CEverQuest__DropHeldItemOnGround)(void* this_ptr, bool showDropMessage);
+EQ_FUNCTION_AT_ADDRESS(void CEverQuest::DropHeldItemOnGround(bool showDropMessage), EQ_FUNCTION_CEverQuest__DropHeldItemOnGround);
 #endif
 
 /* EQPlayer */

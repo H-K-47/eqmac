@@ -494,6 +494,10 @@ char g_espGameMasterTextColor_string[32];
 char g_espGroundSpawnTextColor_string[32];
 char g_espDoorSpawnTextColor_string[32];
 
+bool g_espTargetLineIsEnabled = false;
+float g_espTargetLineDistance = 100.0f;
+int g_espTargetLineColor      = 0xFF800080;
+
 bool g_buffInfoIsEnabled = true;
 
 float g_buffInfoX = 768.0f;
@@ -655,6 +659,10 @@ int g_bardTwistSongNumbers[g_bardTwistSongNumbersMax] = {-1};
 
 unsigned int g_bardTwistTimer = 0;
 unsigned int g_bardTwistDelay = 3300; // 3.3 seconds ; 3 second cast time, 0.3 seconds to account for latency
+
+bool g_bardKiteIsEnabled = false;
+
+float g_bardKiteDistance = 90.0f;
 
 bool g_freeCameraIsEnabled = false;
 
@@ -1585,6 +1593,10 @@ bool EQMACMQ_LoadConfig(const char* filename)
     g_espGroundSpawnTextColor  = EQ_GetTextColorIdByName(g_espGroundSpawnTextColor_string);
     g_espDoorSpawnTextColor    = EQ_GetTextColorIdByName(g_espDoorSpawnTextColor_string);
 
+    g_espTargetLineIsEnabled = EQMACMQ_ConfigReadBool(filename, "ESP", "bTargetLine", g_espTargetLineIsEnabled);
+    g_espTargetLineDistance = EQMACMQ_ConfigReadFloat(filename, "ESP", "fTargetLineDistance", g_espTargetLineDistance);
+    g_espTargetLineColor = EQMACMQ_ConfigReadInt(filename, "ESP", "argbTargetLineColor", g_espTargetLineColor);
+
     // HealthBars
 
     g_healthBarsIsEnabled = EQMACMQ_ConfigReadBool(filename, "HealthBars", "bEnabled", g_healthBarsIsEnabled);
@@ -1707,6 +1719,10 @@ bool EQMACMQ_LoadConfig(const char* filename)
     // BardTwist
 
     g_bardTwistDelay = EQMACMQ_ConfigReadInt(filename, "BardTwist", "iDelay", g_bardTwistDelay);
+
+    // BardKite
+
+    g_bardKiteDistance = EQMACMQ_ConfigReadFloat(filename, "BardKite", "fDistance", g_bardKiteDistance);
 
     // LootAll
 
@@ -2863,6 +2879,21 @@ void EQMACMQ_ToggleEspClipToViewPort()
     }
 }
 
+void EQMACMQ_ToggleEspTargetLine()
+{
+    EQ_ToggleBool(g_espTargetLineIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("ESP Target Line", g_espTargetLineIsEnabled);
+
+        if (g_espTargetLineIsEnabled == true)
+        {
+            EQ_WriteFloatVarToChat("Distance", g_espTargetLineDistance);
+        }
+    }
+}
+
 void EQMACMQ_ToggleEspSkeletons()
 {
     EQ_ToggleBool(g_espSkeletonsIsEnabled);
@@ -3230,6 +3261,21 @@ void EQMACMQ_ToggleBardTwist()
     if (g_writeTextToChatWindowIsEnabled == true)
     {
         EQ_WriteBoolVarToChat("Bard Twist", g_bardTwistIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleBardKite()
+{
+    EQ_ToggleBool(g_bardKiteIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Bard Kite", g_bardKiteIsEnabled);
+
+        if (g_bardKiteIsEnabled == true)
+        {
+            EQ_WriteFloatVarToChat("Distance", g_bardKiteDistance);
+        }
     }
 }
 
@@ -3733,7 +3779,7 @@ void EQMACMQ_DoLootAll()
         {
             if (EQ_OBJECT_CLootWnd->Item[i] != NULL)
             {
-                if (EQ_OBJECT_CLootWnd->Item[i]->NoDrop == 0x00)
+                if (EQ_OBJECT_CLootWnd->Item[i]->NoDrop == EQ_ITEM_NO_DROP_TRUE)
                 {
                     bFoundNoDrop = true;
 
@@ -7157,6 +7203,105 @@ void EQMACMQ_DoEspSkeletonsDraw(PEQDAGINFO dag, int lineColor)
     }
 }
 
+void EQMACMQ_DoEspTargetLine()
+{
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    if (playerSpawn == NULL || targetSpawn == NULL)
+    {
+        return;
+    }
+
+    if (EQMACMQ_IsDeferred2dItemsAtMax() == true)
+    {
+        return;
+    }
+
+    EQLOCATION playerLocation = {playerSpawn->Y, playerSpawn->X, playerSpawn->Z};
+    EQLOCATION targetLocation = {targetSpawn->Y, targetSpawn->X, targetSpawn->Z};
+
+    float targetDistance = EQ_CalculateDistance(playerLocation.X, playerLocation.Y, targetLocation.X, targetLocation.Y);
+
+    if (targetDistance > g_espTargetLineDistance)
+    {
+        return;
+    }
+
+    int viewPortX1 = EQ_OBJECT_ViewPort.X1;
+    int viewPortY1 = EQ_OBJECT_ViewPort.Y1;
+    int viewPortX2 = EQ_OBJECT_ViewPort.X2;
+    int viewPortY2 = EQ_OBJECT_ViewPort.Y2;
+
+    DWORD worldSpaceToScreenSpaceCameraData = EQ_ReadMemory<DWORD>(EQ_POINTER_WORLD_SPACE_TO_SCREEN_SPACE_CAMERA_DATA);
+
+    float result1X = 0.0f;
+    float result1Y = 0.0f;
+    int result1 = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &playerLocation, &result1X, &result1Y);
+
+    if (result1 == EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+    {
+        return;
+    }
+
+    int screen1X = (int)(result1X + viewPortX1);
+    int screen1Y = (int)(result1Y + viewPortY1);
+
+    if
+    (
+        EQMACMQ_IsPointInsideRectangle
+        (
+            screen1X, screen1Y,
+            viewPortX1,  viewPortY1,
+            viewPortX2 - viewPortX1,
+            viewPortY2 - viewPortY1
+        )
+        == false
+    )
+    {
+        return;
+    }
+
+    float result2X = 0.0f;
+    float result2Y = 0.0f;
+    int result2 = EQGfx_Dx8__t3dWorldSpaceToScreenSpace(worldSpaceToScreenSpaceCameraData, &targetLocation, &result2X, &result2Y);
+
+    if (result2 == EQ_WORLD_SPACE_TO_SCREEN_SPACE_RESULT_FAILURE)
+    {
+        return;
+    }
+
+    int screen2X = (int)(result2X + viewPortX1);
+    int screen2Y = (int)(result2Y + viewPortY1);
+
+    if
+    (
+        EQMACMQ_IsPointInsideRectangle
+        (
+            screen2X, screen2Y,
+            viewPortX1,  viewPortY1,
+            viewPortX2 - viewPortX1,
+            viewPortY2 - viewPortY1
+        )
+        == false
+    )
+    {
+        return;
+    }
+
+    EQLINE line;
+    line.X1 = (float)screen1X;
+    line.Y1 = (float)screen1Y;
+    line.Z1 = 1.0f;
+    line.X2 = (float)screen2X;
+    line.Y2 = (float)screen2Y;
+    line.Z2 = 1.0f;
+
+    EQGfx_Dx8__t3dDeferLine(&line, g_espTargetLineColor);
+
+    g_numDeferred2dItems++;
+}
+
 void EQMACMQ_DoEsp()
 {
     DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
@@ -7309,6 +7454,11 @@ void EQMACMQ_DoEsp()
 
             spawn = spawn->Next;
         }
+    }
+
+    if (g_espTargetLineIsEnabled == true)
+    {
+        EQMACMQ_DoEspTargetLine();
     }
 
     doorSpawn = (PEQDOORSPAWNINFO)EQ_OBJECT_FirstDoorSpawn;
@@ -8080,7 +8230,7 @@ void EQMACMQ_DoTargetInfo()
 
     PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
 
-    if (targetSpawn == NULL)
+    if (playerSpawn == NULL || targetSpawn == NULL)
     {
         return;
     }
@@ -8199,6 +8349,21 @@ void EQMACMQ_DoTargetInfo()
         EQ_CLASS_CDisplay->WriteTextHD2(experienceText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
 
         targetTextY = targetTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
+    }
+
+    if (targetSpawn != playerSpawn)
+    {
+        float targetDistance = EQ_CalculateDistance(playerSpawn->X, playerSpawn->Y, targetSpawn->X, targetSpawn->Y);
+
+        if (targetDistance > 0.0f)
+        {
+            char distanceText[128];
+            _snprintf_s(distanceText, sizeof(distanceText), _TRUNCATE, "Distance: %.0f", targetDistance);
+
+            EQ_CLASS_CDisplay->WriteTextHD2(distanceText, (int)g_targetInfoX, (int)targetTextY, g_targetInfoTextColor, fontArial14);
+
+            targetTextY = targetTextY + (g_fontHeight - g_fontHeightEmptyPixelsTop);
+        }
     }
 }
 
@@ -8590,6 +8755,45 @@ void EQMACMQ_DoBardTwist()
     }
 
     g_bardTwistSongIndex++;
+}
+
+void EQMACMQ_DoBardKite()
+{
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    if (playerSpawn == NULL || targetSpawn == NULL)
+    {
+        return;
+    }
+
+    if (targetSpawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE || targetSpawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+    {
+        return;
+    }
+
+    int hpCurrent = playerSpawn->HpCurrent;
+    int hpMax     = playerSpawn->HpMax;
+
+    if (hpCurrent > 0 && hpMax > 0)
+    {
+        int hpPercent = (hpCurrent * 100) / hpMax;
+
+        if (hpPercent < 25)
+        {
+            return;
+        }
+    }
+
+    float targetDistance = EQ_CalculateDistance(playerSpawn->X, playerSpawn->Y, targetSpawn->X, targetSpawn->Y);
+
+    if (targetDistance >= g_bardKiteDistance)
+    {
+        playerSpawn->MovementSpeed  = 0.0f;
+        playerSpawn->MovementSpeedY = 0.0f;
+        playerSpawn->MovementSpeedX = 0.0f;
+        playerSpawn->MovementSpeedZ = 0.0f;
+    }
 }
 
 void EQMACMQ_DoMelee()
@@ -9326,6 +9530,9 @@ int __fastcall EQMACMQ_DETOUR_CLootWnd__Deactivate(void* this_ptr, void* not_use
 
     int result = EQMACMQ_REAL_CLootWnd__Deactivate(this_ptr);
 
+    g_lootAllCounter = 0;
+    g_lootAllIsInProgress = false;
+
     if (g_hideCorpseLootedIsEnabled == true)
     {
         if (EQ_OBJECT_CorpseSpawn)
@@ -9334,7 +9541,10 @@ int __fastcall EQMACMQ_DETOUR_CLootWnd__Deactivate(void* this_ptr, void* not_use
 
             if (corpseSpawn != NULL)
             {
-                corpseSpawn->ActorInfo->IsInvisible = 1;
+                if (corpseSpawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+                {
+                    corpseSpawn->ActorInfo->IsInvisible = 1;
+                }
             }
         }
     }
@@ -10589,6 +10799,25 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                 EQ_WriteFloatVarToChat("ESP Skeletons Distance", g_espSkeletonsDistance);
             }
         }
+        else if (strcmp(a2, "/esptargetline") == 0)
+        {
+            EQMACMQ_ToggleEspTargetLine();
+        }
+        else if (strncmp(a2, "/esptargetlinedistance ", 23) == 0)
+        {
+            char command[128];
+
+            float distance = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &distance);
+
+            if (result == 2)
+            {
+                g_espTargetLineDistance = distance;
+
+                EQ_WriteFloatVarToChat("ESP Target Line Distance", g_espTargetLineDistance);
+            }
+        }
         else
         {
             EQMACMQ_ToggleEsp();
@@ -11013,6 +11242,32 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                 g_bardTwistDelay = delay;
 
                 EQ_WriteIntVarToChat("Twist Delay", g_bardTwistDelay);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // bard kite
+    if (strncmp(a2, "/kite", 5) == 0)
+    {
+        if (strcmp(a2, "/kite") == 0)
+        {
+            EQMACMQ_ToggleBardKite();
+        }
+        else if (strncmp(a2, "/kitedistance ", 14) == 0)
+        {
+            char command[128];
+
+            float distance = 0.0f;
+
+            int result = sscanf_s(a2, "%s %f", command, sizeof(command), &distance);
+
+            if (result == 2)
+            {
+                g_bardKiteDistance = distance;
+
+                EQ_WriteFloatVarToChat("Bard Kite Distance", g_bardKiteDistance);
             }
         }
 
@@ -11630,6 +11885,22 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // drop
+    if (strcmp(a2, "/drop") == 0)
+    {
+        PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+        if (charInfo && charInfo->CursorItem != NULL)
+        {
+            if (charInfo->CursorItem->NoDrop == EQ_ITEM_NO_DROP_FALSE)
+            {
+                EQ_CLASS_CEverQuest->DropHeldItemOnGround(true);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
     // do hotbutton
     if (strncmp(a2, "/dohotbutton ", 13) == 0)
     {
@@ -12037,6 +12308,11 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
     if (g_bardTwistIsEnabled == true)
     {
         EQMACMQ_DoBardTwist();
+    }
+
+    if (g_bardKiteIsEnabled == true)
+    {
+        EQMACMQ_DoBardKite();
     }
 
     if (g_meleeIsEnabled == true)

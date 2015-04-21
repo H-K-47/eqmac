@@ -160,6 +160,12 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_ITEM_SIZE_LARGE  3
 #define EQ_ITEM_SIZE_GIANT  4
 
+#define EQ_ITEM_NO_DROP_TRUE  0x00
+#define EQ_ITEM_NO_DROP_FALSE 0xFF
+
+#define EQ_ITEM_NO_RENT_TRUE  0x00
+#define EQ_ITEM_NO_RENT_FALSE 0xFF
+
 #define EQ_ZONE_ID 0x007B9648 // DWORD
 
 #define EQ_ZONE_ID_FREPORTW       9   // West Freeport

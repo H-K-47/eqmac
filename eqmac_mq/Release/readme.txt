@@ -38,6 +38,9 @@ Command List:
 /unload
 Unload MacroQuest
 
+/version
+Show Build Date
+
 /configreload
 Reload config files
 
@@ -228,6 +231,7 @@ TODO...
 /target corpse
 /target npccorpse
 /target playercorpse
+/target pccorpse
 
 /targetheight
 /targetheight #
@@ -270,5 +274,9 @@ TODO...
 /zone zoneshortname
 
 /script scriptname OR /lua scriptname
+
+/scripts
+/scriptslist
+/scripts #
 
 /dumpcommands

@@ -1242,6 +1242,13 @@ void EQ_WriteStringToChatWithColor(const char* text, int color)
     EQ_CLASS_CEverQuest->dsp_chat(text, color, false);
 }
 
+void EQ_DrawText(const char* text, int x, int y, int color)
+{
+    DWORD fontArial14 = EQ_ReadMemory<DWORD>(EQ_POINTER_FONT_ARIAL14);
+
+    EQ_CLASS_CDisplay->WriteTextHD2(text, x, y, color, fontArial14);
+}
+
 void EQ_DrawRectangle(float x, float y, float width, float height, int color, bool filled = false)
 {
     EQRECT rect;

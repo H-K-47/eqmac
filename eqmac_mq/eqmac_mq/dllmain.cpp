@@ -25,6 +25,8 @@
 #include "detours.h"
 #pragma comment(lib, "detours.lib")
 
+#include "lua.hpp"
+
 #include "eqmac.h"
 #include "eqmac_functions.h"
 #include "eqmac_lua.h"
@@ -623,6 +625,23 @@ typedef struct _EQMACMQHACK
 
 struct _EQMACMQHACK* g_hackListBegin = NULL;
 
+bool g_scriptsIsEnabled = true;
+
+#define EQMACMQ_SCRIPTS_MAX 256
+
+typedef struct _EQMACMQSCRIPT
+{
+    struct _EQMACMQSCRIPT* Next;
+    DWORD Index;
+    CHAR Name[128];
+    CHAR Filename[1024];
+    CHAR Description[1024];
+    BOOL IsEnabled;
+    lua_State* LuaState;
+} EQMACMQSCRIPT, *PEQMACMQSCRIPT;
+
+struct _EQMACMQSCRIPT* g_scriptListBegin = NULL;
+
 bool g_nameTextIsEnabled = true;
 
 bool g_nameTextNpcLevelAndClassIsEnabled = true;
@@ -729,6 +748,7 @@ void EQMACMQ_DoLoadConfig();
 void EQMACMQ_DoLoadMap();
 
 void EQMACMQ_DoHacksLoad(bool load);
+void EQMACMQ_DoScriptsLoad();
 void EQMACMQ_DoFreeCamera(bool enable);
 
 int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void* not_used, class EQPlayer* a1, bool a2);
@@ -905,6 +925,10 @@ DWORD EQMACMQ_GetModuleBaseAddress(const wchar_t* moduleName)
 
 bool EQMACMQ_DoBoxChatConnect()
 {
+    // functions WSAStartup() and WSACleanup() are commented out
+    // because the game already calls them for us
+    // if we call the functions ourselves, the game will crash
+
     closesocket(g_connectSocket);
     //WSACleanup();
 
@@ -913,8 +937,8 @@ bool EQMACMQ_DoBoxChatConnect()
         //return false;
     //}
 
-    struct addrinfo *addrinfo_result = NULL;
-    struct addrinfo *addrinfo_ptr    = NULL;
+    struct addrinfo* addrinfo_result = NULL;
+    struct addrinfo* addrinfo_ptr    = NULL;
     struct addrinfo addrinfo_hints;
 
     ZeroMemory(&addrinfo_hints, sizeof(addrinfo_hints));
@@ -1703,6 +1727,10 @@ bool EQMACMQ_LoadConfig(const char* filename)
 
     g_hacksIsEnabled = EQMACMQ_ConfigReadBool(filename, "Hacks", "bEnabled", g_hacksIsEnabled);
 
+    // Scripts
+
+    g_scriptsIsEnabled = EQMACMQ_ConfigReadBool(filename, "Scripts", "bEnabled", g_scriptsIsEnabled);
+
     // SpeedHack
 
     g_speedHackIsEnabled = EQMACMQ_ConfigReadBool(filename, "SpeedHack", "bEnabled", g_speedHackIsEnabled);
@@ -1872,6 +1900,86 @@ void EQMACMQ_HackList_Destroy()
     }
 
     g_hackListBegin = NULL;
+}
+
+struct _EQMACMQSCRIPT* EQMACMQ_ScriptList_Create(EQMACMQSCRIPT* script)
+{
+    g_scriptListBegin = (struct _EQMACMQSCRIPT*)malloc(sizeof(struct _EQMACMQSCRIPT));
+
+    if (g_scriptListBegin == NULL)
+    {
+        return NULL;
+    }
+
+    g_scriptListBegin->Next = NULL;
+
+    g_scriptListBegin->Index = script->Index;
+
+    strncpy_s(g_scriptListBegin->Name,        sizeof(g_scriptListBegin->Name),        script->Name,        _TRUNCATE);
+    strncpy_s(g_scriptListBegin->Filename,    sizeof(g_scriptListBegin->Filename),    script->Filename,    _TRUNCATE);
+    strncpy_s(g_scriptListBegin->Description, sizeof(g_scriptListBegin->Description), script->Description, _TRUNCATE);
+
+    g_scriptListBegin->IsEnabled = script->IsEnabled;
+
+    g_scriptListBegin->LuaState = script->LuaState;
+
+    return g_scriptListBegin;
+}
+
+struct _EQMACMQSCRIPT* EQMACMQ_ScriptList_Add(EQMACMQSCRIPT* script)
+{
+    if (g_scriptListBegin == NULL)
+    {
+        return (EQMACMQ_ScriptList_Create(script));
+    }
+
+    struct _EQMACMQSCRIPT* node = g_scriptListBegin;
+
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
+    while (node->Next != NULL)
+    {
+        node = node->Next;
+    }
+
+    node->Next = (struct _EQMACMQSCRIPT*)malloc(sizeof(struct _EQMACMQSCRIPT));
+    node->Next->Next = NULL;
+
+    node->Next->Index = script->Index;
+
+    strncpy_s(node->Next->Name,        sizeof(node->Next->Name),        script->Name,        _TRUNCATE);
+    strncpy_s(node->Next->Filename,    sizeof(node->Next->Filename),    script->Filename,    _TRUNCATE);
+    strncpy_s(node->Next->Description, sizeof(node->Next->Description), script->Description, _TRUNCATE);
+
+    node->Next->IsEnabled = script->IsEnabled;
+
+    node->Next->LuaState = script->LuaState;
+
+    return node;
+}
+
+void EQMACMQ_ScriptList_Destroy()
+{
+    struct _EQMACMQSCRIPT* node = g_scriptListBegin;
+
+    if (node == NULL)
+    {
+        return;
+    }
+
+    struct _EQMACMQSCRIPT* next;
+
+    while (node->Next != NULL)
+    {
+        next = node->Next;
+        free(node);
+        node = next;
+    }
+
+    g_scriptListBegin = NULL;
 }
 
 struct _EQMAPLINE* EQMACMQ_MapLineList_Create(EQMAPLINE* mapLine)
@@ -3167,6 +3275,21 @@ void EQMACMQ_ToggleHacks()
     }
 }
 
+void EQMACMQ_ToggleScripts()
+{
+    EQ_ToggleBool(g_scriptsIsEnabled);
+
+    if (g_scriptsIsEnabled == true)
+    {
+        EQMACMQ_DoScriptsLoad();
+    }
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Scripts", g_scriptsIsEnabled);
+    }
+}
+
 void EQMACMQ_ToggleLimitCpuUsage()
 {
     EQ_ToggleBool(g_limitCpuUsageIsEnabled);
@@ -3578,21 +3701,21 @@ void EQMACMQ_DoHacksLoad(bool load)
         char enabledKey[128];
         _snprintf_s(enabledKey, sizeof(enabledKey), _TRUNCATE, "bEnabled%d", i);
 
-        bool enabled = EQMACMQ_ConfigReadBool(configFilename, "Hacks", enabledKey, false);
+        bool isEnabled = EQMACMQ_ConfigReadBool(configFilename, "Hacks", enabledKey, false);
 
-        char nameKey[128];
-        _snprintf_s(nameKey, sizeof(nameKey), _TRUNCATE, "sName%d", i);
+        char filenameKey[128];
+        _snprintf_s(filenameKey, sizeof(filenameKey), _TRUNCATE, "sFilename%d", i);
 
-        char name[128];
-        EQMACMQ_ConfigReadString(configFilename, "Hacks", nameKey, "", name, sizeof(name));
+        char filenameTemp[128];
+        EQMACMQ_ConfigReadString(configFilename, "Hacks", filenameKey, "", filenameTemp, sizeof(filenameTemp));
 
-        if (strlen(name) == 0)
+        if (strlen(filenameTemp) == 0)
         {
             continue;
         }
 
         char hackFilename[1024];
-        _snprintf_s(hackFilename, sizeof(hackFilename), _TRUNCATE, ".\\hacks\\%s.ini", name);
+        _snprintf_s(hackFilename, sizeof(hackFilename), _TRUNCATE, ".\\hacks\\%s.ini", filenameTemp);
 
         char hackName[1024];
         EQMACMQ_ConfigReadString(hackFilename, "Hack", "Name", "No name", hackName, sizeof(hackName));
@@ -3610,7 +3733,7 @@ void EQMACMQ_DoHacksLoad(bool load)
             strncpy_s(hack.Filename,    sizeof(hack.Filename),    hackFilename,    _TRUNCATE);
             strncpy_s(hack.Description, sizeof(hack.Description), hackDescription, _TRUNCATE);
 
-            hack.IsEnabled = enabled;
+            hack.IsEnabled = isEnabled;
 
             EQMACMQ_HackList_Add(&hack);
 
@@ -3623,6 +3746,86 @@ void EQMACMQ_DoHacksLoad(bool load)
         {
             EQMACMQ_DoHackEnable(hackFilename, false);
         }
+    }
+}
+
+void EQMACMQ_DoScriptsLoad()
+{
+    EQMACMQ_ScriptList_Destroy();
+
+    char configFilename[1024];
+    _snprintf_s(configFilename, sizeof(configFilename), _TRUNCATE, ".\\%s.ini", g_applicationExeName);
+
+    for (size_t i = 0; i < EQMACMQ_SCRIPTS_MAX; i++)
+    {
+        char enabledKey[128];
+        _snprintf_s(enabledKey, sizeof(enabledKey), _TRUNCATE, "bEnabled%d", i);
+
+        bool isEnabled = EQMACMQ_ConfigReadBool(configFilename, "Scripts", enabledKey, false);
+
+        char filenameKey[128];
+        _snprintf_s(filenameKey, sizeof(filenameKey), _TRUNCATE, "sFilename%d", i);
+
+        char filenameTemp[128];
+        EQMACMQ_ConfigReadString(configFilename, "Scripts", filenameKey, "", filenameTemp, sizeof(filenameTemp));
+
+        if (strlen(filenameTemp) == 0)
+        {
+            continue;
+        }
+
+        char filename[1024];
+        _snprintf_s(filename, sizeof(filename), _TRUNCATE, ".\\scripts\\%s.lua", filenameTemp);
+
+        char nameKey[128];
+        _snprintf_s(nameKey, sizeof(nameKey), _TRUNCATE, "sName%d", i);
+
+        char name[128];
+        EQMACMQ_ConfigReadString(configFilename, "Scripts", nameKey, "", name, sizeof(name));
+
+        if (strlen(name) == 0)
+        {
+            continue;
+        }
+
+        char descriptionKey[128];
+        _snprintf_s(descriptionKey, sizeof(descriptionKey), _TRUNCATE, "sDescription%d", i);
+
+        char description[128];
+        EQMACMQ_ConfigReadString(configFilename, "Scripts", descriptionKey, "", description, sizeof(description));
+
+        if (strlen(description) == 0)
+        {
+            continue;
+        }
+
+        EQMACMQSCRIPT script;
+
+        script.Index = i + 1;
+
+        strncpy_s(script.Name,        sizeof(script.Name),        name,        _TRUNCATE);
+        strncpy_s(script.Filename,    sizeof(script.Filename),    filename,    _TRUNCATE);
+        strncpy_s(script.Description, sizeof(script.Description), description, _TRUNCATE);
+
+        script.IsEnabled = isEnabled;
+
+        lua_State* L = lua_newthread(EQ_LUA_STATE);
+
+        lua_pushthread(L);
+        lua_newtable(L);
+        lua_newtable(L);
+        lua_getglobal(L, "_G");
+        lua_setfield(L, -2, "__index");
+        lua_setmetatable(L, -2);
+        if (!lua_setfenv(L, -2))
+        {
+            continue;
+        }
+        lua_pop(L, 1);
+
+        script.LuaState = L;
+
+        EQMACMQ_ScriptList_Add(&script);
     }
 }
 
@@ -3966,7 +4169,7 @@ void EQMACMQ_DoFreeCameraKeys()
         return;
     }
 
-    if (GetAsyncKeyState(VK_UP))
+    if (GetAsyncKeyState(VK_UP) & 0x8000)
     {
         float cameraY = EQ_OBJECT_CameraInfo->Y;
         float cameraX = EQ_OBJECT_CameraInfo->X;
@@ -4005,7 +4208,7 @@ void EQMACMQ_DoFreeCameraKeys()
         EQ_OBJECT_CameraInfo->Z = cameraZ;
     }
 
-    if (GetAsyncKeyState(VK_DOWN))
+    if (GetAsyncKeyState(VK_DOWN) & 0x8000)
     {
         float cameraY = EQ_OBJECT_CameraInfo->Y;
         float cameraX = EQ_OBJECT_CameraInfo->X;
@@ -4044,7 +4247,7 @@ void EQMACMQ_DoFreeCameraKeys()
         EQ_OBJECT_CameraInfo->Z = cameraZ;
     }
 
-    if (GetAsyncKeyState(VK_LEFT))
+    if (GetAsyncKeyState(VK_LEFT) & 0x8000)
     {
         float cameraY = EQ_OBJECT_CameraInfo->Y;
         float cameraX = EQ_OBJECT_CameraInfo->X;
@@ -4081,7 +4284,7 @@ void EQMACMQ_DoFreeCameraKeys()
         EQ_OBJECT_CameraInfo->Z = cameraZ;
     }
 
-    if (GetAsyncKeyState(VK_RIGHT))
+    if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
     {
         float cameraY = EQ_OBJECT_CameraInfo->Y;
         float cameraX = EQ_OBJECT_CameraInfo->X;
@@ -10132,6 +10335,31 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         memmove(a2, a2 + 1, strlen(a2));
     }
 
+    if (g_scriptsIsEnabled == true)
+    {
+        struct _EQMACMQSCRIPT* script = g_scriptListBegin;
+
+        while (script)
+        {
+            if (script->IsEnabled == 1 && script->LuaState != NULL)
+            {
+                lua_pushstring(script->LuaState, a2);
+                lua_setglobal(script->LuaState, "OnInterpretCommand_Text");
+
+                EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "OnInterpretCommand");
+
+                int returnValue = (int)lua_tointeger(script->LuaState, -1);
+
+                if (returnValue == 1)
+                {
+                    return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+                }
+            }
+
+            script = script->Next;
+        }
+    }
+
     // box chat
     if (g_boxChatIsEnabled == true)
     {
@@ -11516,7 +11744,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             }
             else
             {
-                EQ_WriteStringVarToChat("Load Spellset file not found: ", filename);
+                EQ_WriteStringVarToChat("Load Spellset file not found", filename);
             }
         }
 
@@ -11543,9 +11771,96 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             }
             else
             {
-                EQ_WriteStringVarToChat("Script file not found: ", filename);
+                EQ_WriteStringVarToChat("Script file not found", filename);
             }
         }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // hacks
+    if (strncmp(a2, "/scripts", 8) == 0)
+    {
+        if (strcmp(a2, "/scripts") == 0)
+        {
+            EQMACMQ_ToggleScripts();
+        }
+        else if (strncmp(a2, "/scripts ", 9) == 0)
+        {
+            char command[128];
+
+            int index = 0;
+
+            int result = sscanf_s(a2, "%s %d", command, sizeof(command), &index);
+
+            if (result == 2)
+            {
+                struct _EQMACMQSCRIPT* script = g_scriptListBegin;
+
+                while (script)
+                {
+                    if (script->Index == index)
+                    {
+                        script->IsEnabled = !script->IsEnabled;
+
+                        char scriptText[128];
+                        _snprintf_s
+                        (
+                            scriptText, sizeof(scriptText), _TRUNCATE,
+                            "%d: %s | %s (%s)",
+                            script->Index,
+                            script->IsEnabled ? "On" : "Off",
+                            script->Name,
+                            script->Description
+                        );
+
+                        EQ_CLASS_CEverQuest->dsp_chat(scriptText);
+
+                        break;
+                    }
+
+                    script = script->Next;
+                }
+            }
+        }
+        else if (strcmp(a2, "/scriptslist") == 0)
+        {
+            EQ_CLASS_CEverQuest->dsp_chat("Scripts:");
+
+            struct _EQMACMQSCRIPT* script = g_scriptListBegin;
+
+            while (script)
+            {
+                char scriptText[128];
+                _snprintf_s
+                (
+                    scriptText, sizeof(scriptText), _TRUNCATE,
+                    "%d: %s | %s (%s)",
+                    script->Index,
+                    script->IsEnabled ? "On" : "Off",
+                    script->Name,
+                    script->Description
+                );
+
+                EQ_CLASS_CEverQuest->dsp_chat(scriptText);
+
+                script = script->Next;
+            }
+        }
+        else if (strcmp(a2, "/scriptsreload") == 0)
+        {
+            EQMACMQ_DoScriptsLoad();
+
+            EQ_CLASS_CEverQuest->dsp_chat("Scripts reloaded.");
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // version
+    if (strcmp(a2, "/version") == 0)
+    {
+        EQ_WriteStringVarToChat("Build Date", __DATE__);
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
@@ -12271,6 +12586,21 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
         }
     }
 
+    if (g_scriptsIsEnabled == true)
+    {
+        struct _EQMACMQSCRIPT* script = g_scriptListBegin;
+
+        while (script)
+        {
+            if (script->IsEnabled == 1 && script->LuaState != NULL)
+            {
+                EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "OnDrawNetStatus");
+            }
+
+            script = script->Next;
+        }
+    }
+
     DWORD currentTime = EQ_ReadMemory<DWORD>(EQ_TIMER);
 
     if (g_ignoreKeysIsEnabled == true)
@@ -12798,6 +13128,11 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
     if (g_hacksIsEnabled == true)
     {
         EQMACMQ_DoHacksLoad(true);
+    }
+
+    if (g_scriptsIsEnabled == true)
+    {
+        EQMACMQ_DoScriptsLoad();
     }
 
     g_handleThreadLoop = CreateThread(NULL, 0, &EQMACMQ_ThreadLoop, NULL, 0, NULL);

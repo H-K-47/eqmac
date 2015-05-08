@@ -1,4 +1,4 @@
-require "./scripts/eqmac"
+require ".\\scripts\\system\\eqmac"
 
 local eq = require("eq")
      

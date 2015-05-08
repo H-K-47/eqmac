@@ -652,6 +652,24 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_MOVEMENT_SPEED_MODIFIER_AA_RUN3        0.21f
 #define EQ_MOVEMENT_SPEED_MODIFIER_SPIRIT_OF_WOLF 0.30f
 
+// CEverQuest::MoveToZone
+#define EQ_ZONE_REQUEST_REASON_ZONE_TRANSFER 0
+/*
+enum ZoneReason
+{
+    ZoneTransfer = 0,
+    ClickZone = 1,
+    VehicleTransfer = 2,
+    Summon = 3,
+    GotoPlayer = 5,
+    PortalSpell = 7,
+    ZoneCommand = 8,
+    Resurrect = 9,
+    Death = 10,
+    Teleport = 11
+};
+*/
+
 #define EQ_TEXT_COLOR_BLACK       0x00
 #define EQ_TEXT_COLOR_GRAY        0x01
 #define EQ_TEXT_COLOR_GREEN       0x02

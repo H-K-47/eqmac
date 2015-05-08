@@ -695,7 +695,7 @@ typedef int (__cdecl* EQ_FUNCTION_TYPE_GetKey)(void);
 
 #define EQ_FUNCTION_ExecuteCmd 0x0054050C
 
-#define EQ_FUNCTION_SendMessage 0x0054E51A
+#define EQ_FUNCTION_send_message 0x0054E51A
 
 #define EQ_FUNCTION_CastRay 0x004F20DB
 #ifdef EQ_FUNCTION_CastRay
@@ -828,22 +828,21 @@ void EQ_CalculateItemCost(int cost, int& platinum, int& gold, int& silver, int& 
 {
     // cost is in total copper value of item
 
-    if (cost > 0)
+    if (cost < 0)
     {
-        platinum = cost / 1000;
-
-        cost = cost % 1000;
-
-        gold = cost / 100;
-
-        cost = cost % 100;
-
-        silver = cost / 10;
-
-        cost = cost % 10;
-
-        copper = cost;
+        return;
     }
+
+    platinum = cost / 1000;
+    cost     = cost % 1000;
+
+    gold     = cost / 100;
+    cost     = cost % 100;
+
+    silver   = cost / 10;
+    cost     = cost % 10;
+
+    copper   = cost;
 }
 
 void EQ_GetItemCostString(int cost, char result[], size_t resultSize)
@@ -1167,7 +1166,7 @@ const char* EQ_GetCardinalDirectionByHeading(float heading)
 
 void EQ_CXStr_Append(PEQCXSTR* cxstr, PCHAR text)
 {
-    CXStr *temp = (CXStr*)cxstr;
+    CXStr* temp = (CXStr*)cxstr;
 
     (*temp) += text;
 
@@ -1176,7 +1175,7 @@ void EQ_CXStr_Append(PEQCXSTR* cxstr, PCHAR text)
 
 void EQ_CXStr_Set(PEQCXSTR* cxstr, PCHAR text)
 { 
-    CXStr *temp = (CXStr*)cxstr;
+    CXStr* temp = (CXStr*)cxstr;
 
     (*temp) = text;
 
@@ -1236,6 +1235,11 @@ void EQ_WriteStringVarToChat(const char* name, char value[])
 void EQ_WriteStringToChat(const char* text)
 {
     EQ_CLASS_CEverQuest->dsp_chat(text);
+}
+
+void EQ_WriteStringToChatWithColor(const char* text, int color)
+{
+    EQ_CLASS_CEverQuest->dsp_chat(text, color, false);
 }
 
 void EQ_DrawRectangle(float x, float y, float width, float height, int color, bool filled = false)
@@ -1431,7 +1435,7 @@ PEQSPAWNINFO EQ_GetMyCorpse()
             continue;
         }
 
-        if (strstr(spawn->Name, playerSpawn->Name) != NULL)
+        if (strstr(spawn->Name, playerSpawn->Name) != NULL) // TODO: strcmp needed
         {
             return spawn;
         }

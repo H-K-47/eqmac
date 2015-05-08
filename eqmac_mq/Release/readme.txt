@@ -1,7 +1,20 @@
 EQMac MacroQuest
 
 Features:
-TODO...
+In-Game Map
+Mouse Wheel Zooming
+Client Switcher
+ESP Hack
+Speed Hack
+Box Chat Server
+Buff Timers
+Bard Twist
+Load/Save Spellsets
+Loot All
+Hide Corpses Looted
+Auto Inventory
+Lua Scripting
+and more!
 
 Installion:
 Extract to your EQMac folder where eqgame.exe is located.
@@ -187,7 +200,7 @@ TODO...
 /nametext
 /namecolors
 
-/freecamera OR /freecamera
+/freecamera OR /freecam
 
 /melee
 /meleelist
@@ -255,5 +268,7 @@ TODO...
 /warptoname spawnname
 
 /zone zoneshortname
+
+/script scriptname OR /lua scriptname
 
 /dumpcommands

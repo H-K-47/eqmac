@@ -52,14 +52,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;EQMAC_MQ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\Code\_libraries\detours\include;D:\Code\everquest\eqmac\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Code\_libraries\detours\include;D:\Code\_libraries\LuaJIT-2.0.3\src;D:\Code\everquest\eqmac\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\Code\_libraries\detours\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;ws2_32.lib;detours.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Code\_libraries\detours\lib;D:\Code\_libraries\LuaJIT-2.0.3\src</AdditionalLibraryDirectories>
+      <AdditionalDependencies>psapi.lib;ws2_32.lib;detours.lib;lua51.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -72,20 +72,21 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;EQMAC_MQ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>D:\Code\_libraries\detours\include;D:\Code\everquest\eqmac\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Code\_libraries\detours\include;D:\Code\_libraries\LuaJIT-2.0.3\src;D:\Code\everquest\eqmac\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>D:\Code\_libraries\detours\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;ws2_32.lib;detours.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Code\_libraries\detours\lib;D:\Code\_libraries\LuaJIT-2.0.3\src</AdditionalLibraryDirectories>
+      <AdditionalDependencies>psapi.lib;ws2_32.lib;detours.lib;lua51.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\eqmac\include\eqmac.h" />
     <ClInclude Include="..\..\eqmac\include\eqmac_functions.h" />
+    <ClInclude Include="..\..\eqmac\include\eqmac_lua.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

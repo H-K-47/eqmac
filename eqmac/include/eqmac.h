@@ -551,9 +551,9 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_MOUSE_ICON_SIZE_RIGHT        4
 #define EQ_MOUSE_ICON_SIZE_BOTTOM       5
 #define EQ_MOUSE_ICON_SIZE_TOP_LEFT     6
-#define EQ_MOUSE_ICON_SIZE_TOP_RIGHt    7
+#define EQ_MOUSE_ICON_SIZE_TOP_RIGHT    7
 #define EQ_MOUSE_ICON_SIZE_BOTTOM_LEFT  8
-#define EQ_MOUSE_ICON_SIZE_BOTTOM_RIGHt 9
+#define EQ_MOUSE_ICON_SIZE_BOTTOM_RIGHT 9
 
 #define EQ_HEADING_MAX 512.0f // yaw
 
@@ -1671,9 +1671,9 @@ typedef struct _EQACTORINSTANCEINFO
 /* 0x0004 */ DWORD Unknown0004;
 /* 0x0008 */ DWORD Unknown0008;
 /* 0x000C */ DWORD Unknown000C;
-/* 0x0010 */ DWORD WorldX;
-/* 0x0014 */ PVOID WorldY;
-/* 0x0018 */ PVOID WorldZ;
+/* 0x0010 */ FLOAT WorldX;
+/* 0x0014 */ FLOAT WorldY;
+/* 0x0018 */ FLOAT WorldZ;
 /* 0x001C */ DWORD Unknown001C;
 /* 0x0020 */ DWORD Unknown0020;
 /* 0x0024 */ DWORD Unknown0024;
@@ -2097,7 +2097,7 @@ typedef struct _EQCBUFFWINDOW
 {
 /* 0x0000 */ struct _EQCSIDLWND CSidlWnd;
 /* 0x0138 */ BYTE Unknown0138[68];
-/* 0x017C */ struct _EQCSIDLWND* BuffButtonWnd[15]; // CButtonWnd
+/* 0x017C */ struct _EQCSIDLWND* BuffButtonWnd[EQ_NUM_BUFFS]; // CButtonWnd
 /* 0x01B8 */
 /* ...... */
 } EQCBUFFWINDOW, *PEQCBUFFWINDOW;

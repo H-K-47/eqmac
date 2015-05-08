@@ -27,6 +27,7 @@
 
 #include "eqmac.h"
 #include "eqmac_functions.h"
+#include "eqmac_lua.h"
 
 const char* g_applicationName    = "EQMac MacroQuest";
 const char* g_applicationExeName = "eqmac_mq";
@@ -11515,7 +11516,34 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             }
             else
             {
-                EQ_WriteStringVarToChat("Load Spellset", "File not found!");
+                EQ_WriteStringVarToChat("Load Spellset file not found: ", filename);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // script
+    if (strncmp(a2, "/script ", 8) == 0 || strncmp(a2, "/lua ", 5) == 0)
+    {
+        char command[128];
+
+        char name[128];
+
+        int result = sscanf_s(a2, "%s %s", command, sizeof(command), name, sizeof(name));
+
+        if (result == 2 && strlen(name) > 0)
+        {
+            char filename[1024];
+            _snprintf_s(filename, sizeof(filename), _TRUNCATE, ".\\scripts\\%s.lua", name);
+
+            if (EQMACMQ_FileExists(filename) == true)
+            {
+                EQ_LUA_DoScript(filename);
+            }
+            else
+            {
+                EQ_WriteStringVarToChat("Script file not found: ", filename);
             }
         }
 
@@ -12106,7 +12134,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
 
         if (result == 2)
         {
-            EQ_CLASS_CEverQuest->MoveToZone(zoneShortName, "repop to home at death", 1, 0);
+            EQ_CLASS_CEverQuest->MoveToZone(zoneShortName, "repop to home at death", 1, 0); // TODO: only works for gate to bind, use zoneline method instead
         }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
@@ -12693,6 +12721,8 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
 
     DetourRemove((PBYTE)EQMACMQ_REAL_CLootWnd__Deactivate, (PBYTE)EQMACMQ_DETOUR_CLootWnd__Deactivate);
 
+    EQ_LUA_Close();
+
     Sleep(1000);
 
     FreeLibraryAndExitThread(g_module, 0);
@@ -12758,6 +12788,8 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
         FreeLibraryAndExitThread(g_module, 0);
         return 0;
     }
+
+    EQ_LUA_Open();
 
     EQMACMQ_DoLoadConfig();
 

@@ -1,0 +1,1 @@
+A simple tune that increases the strength, dexterity, and armor class of group members.

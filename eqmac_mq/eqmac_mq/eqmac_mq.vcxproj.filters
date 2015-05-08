@@ -21,6 +21,9 @@
     <ClInclude Include="..\..\eqmac\include\eqmac_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\eqmac\include\eqmac_lua.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

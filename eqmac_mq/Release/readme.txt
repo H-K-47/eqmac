@@ -273,10 +273,12 @@ TODO...
 
 /zone zoneshortname
 
-/script scriptname OR /lua scriptname
+/script scriptname
 
 /scripts
 /scriptslist
 /scripts #
+
+/lua luastring
 
 /dumpcommands

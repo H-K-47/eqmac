@@ -644,6 +644,7 @@ struct _EQMACMQSCRIPT* g_scriptListBegin = NULL;
 
 bool g_nameTextIsEnabled = true;
 
+bool g_nameTextTargetHealthIsEnabled = true;
 bool g_nameTextNpcLevelAndClassIsEnabled = true;
 
 bool g_nameColorsIsEnabled = true;
@@ -1705,6 +1706,7 @@ bool EQMACMQ_LoadConfig(const char* filename)
 
     g_nameTextIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bEnabled", g_nameTextIsEnabled);
 
+    g_nameTextTargetHealthIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bTargetHealth", g_nameTextTargetHealthIsEnabled);
     g_nameTextNpcLevelAndClassIsEnabled = EQMACMQ_ConfigReadBool(filename, "NameText", "bNpcLevelAndClass", g_nameTextNpcLevelAndClassIsEnabled);
 
     // NameColors
@@ -9652,6 +9654,38 @@ int __cdecl EQMACMQ_DETOUR_ProcessKeyUp(int a1)
         return EQMACMQ_REAL_ProcessKeyUp(EQ_KEY_NULL);
     }
 
+    if (g_scriptsIsEnabled == true)
+    {
+        struct _EQMACMQSCRIPT* script = g_scriptListBegin;
+
+        while (script)
+        {
+            if (script->IsEnabled == 1 && script->LuaState != NULL)
+            {
+                lua_pushinteger(script->LuaState, key);
+                lua_setglobal(script->LuaState, "Event_ProcessKeyUp_Key");
+
+                bool result = EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "Event_ProcessKeyUp");
+
+                if (result == false)
+                {
+                    script->IsEnabled = 0;
+                }
+                else
+                {
+                    int returnValue = (int)lua_tointeger(script->LuaState, -1);
+
+                    if (returnValue == 1)
+                    {
+                        return EQMACMQ_REAL_ProcessKeyUp(EQ_KEY_NULL);
+                    }
+                }
+            }
+
+            script = script->Next;
+        }
+    }
+
     return EQMACMQ_REAL_ProcessKeyUp(a1);
 }
 
@@ -9750,6 +9784,26 @@ int __fastcall EQMACMQ_DETOUR_CLootWnd__Deactivate(void* this_ptr, void* not_use
                     corpseSpawn->ActorInfo->IsInvisible = 1;
                 }
             }
+        }
+    }
+
+    if (g_scriptsIsEnabled == true)
+    {
+        struct _EQMACMQSCRIPT* script = g_scriptListBegin;
+
+        while (script)
+        {
+            if (script->IsEnabled == 1 && script->LuaState != NULL)
+            {
+                bool result = EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "Event_CLootWindow__Deactivate");
+
+                if (result == false)
+                {
+                    script->IsEnabled = 0;
+                }
+            }
+
+            script = script->Next;
         }
     }
 
@@ -10066,6 +10120,69 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
     char nameText[128];
     strncpy_s(nameText, sizeof(nameText), spawn->ActorInfo->DagHeadPoint->StringSprite->Text, _TRUNCATE);
 
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+    PEQSPAWNINFO targetSpawn = (PEQSPAWNINFO)EQ_OBJECT_TargetSpawn;
+
+    if (spawn->Type == EQ_SPAWN_TYPE_PLAYER || spawn->Type == EQ_SPAWN_TYPE_NPC)
+    {
+        if (spawn == targetSpawn)
+        {
+            if (g_nameTextTargetHealthIsEnabled == true)
+            {
+                char extraText[128];
+
+                int hpPercent = 0;
+
+                if (spawn == playerSpawn)
+                {
+                    int hpCurrent = spawn->HpCurrent;
+                    int hpMax     = spawn->HpMax;
+
+                    if (hpCurrent > 0 && hpMax > 0)
+                    {
+                        hpPercent = (hpCurrent * 100) / hpMax;
+                    }
+                }
+                else
+                {
+                    hpPercent = spawn->HpCurrent;
+                }
+
+                char* guildTag = strstr(nameText, "\n");
+
+                if (guildTag == NULL)
+                {
+                    _snprintf_s(extraText, sizeof(extraText), _TRUNCATE, " - %d%%", hpPercent);
+
+                    strncat_s(nameText, sizeof(nameText), extraText, _TRUNCATE);
+                }
+                else
+                {
+                    char tempText[128];
+                    strncpy_s(tempText, sizeof(tempText), nameText, _TRUNCATE);
+
+                    char* spawnNameText = NULL;
+                    char* spawnGuildTag = NULL;
+
+                    char* token     = NULL;
+                    char* tokenNext = NULL;
+
+                    spawnNameText = strtok_s(tempText, "\n", &tokenNext);
+
+                    if (spawnNameText != NULL)
+                    {
+                        spawnGuildTag = strtok_s(NULL, "\n", &tokenNext);
+                    }
+
+                    if (spawnGuildTag != NULL)
+                    {
+                        _snprintf_s(nameText, sizeof(nameText), _TRUNCATE, "%s - %d%%\n%s", spawnNameText, hpPercent, spawnGuildTag);
+                    }
+                }
+            }
+        }
+    }
+
     if (spawn->Type == EQ_SPAWN_TYPE_NPC)
     {
         if (g_nameTextNpcLevelAndClassIsEnabled == true)
@@ -10074,14 +10191,14 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
             _snprintf_s(extraText, sizeof(extraText), _TRUNCATE, "\n(%d %s)", spawn->Level, EQ_GetClassName(spawn->Class));
 
             strncat_s(nameText, sizeof(nameText), extraText, _TRUNCATE);
-
-            DWORD fontTexture = EQ_GetStringSpriteFontTexture();
-
-            EQ_CLASS_CDisplay->ChangeDagStringSprite(spawn->ActorInfo->DagHeadPoint, fontTexture, nameText);
-
-            EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(this_ptr, not_used, a1);
         }
     }
+
+    DWORD fontTexture = EQ_GetStringSpriteFontTexture();
+
+    EQ_CLASS_CDisplay->ChangeDagStringSprite(spawn->ActorInfo->DagHeadPoint, fontTexture, nameText);
+
+    EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(this_ptr, not_used, a1);
 
     return result;
 };
@@ -10341,18 +10458,25 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
 
         while (script)
         {
-            if (script->IsEnabled == 1 && script->LuaState != NULL)
+            if (script->IsEnabled == 1 && script->LuaState != NULL && script->Filename != NULL)
             {
                 lua_pushstring(script->LuaState, a2);
-                lua_setglobal(script->LuaState, "OnInterpretCommand_Text");
+                lua_setglobal(script->LuaState, "Event_CEverQuest__InterpretCmd_Text");
 
-                EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "OnInterpretCommand");
+                bool result = EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "Event_CEverQuest__InterpretCmd");
 
-                int returnValue = (int)lua_tointeger(script->LuaState, -1);
-
-                if (returnValue == 1)
+                if (result == false)
                 {
-                    return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+                    script->IsEnabled = 0;
+                }
+                else
+                {
+                    int returnValue = (int)lua_tointeger(script->LuaState, -1);
+
+                    if (returnValue == 1)
+                    {
+                        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+                    }
                 }
             }
 
@@ -11522,7 +11646,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     // free camera
     if (strncmp(a2, "/freecam", 8) == 0)
     {
-        if (strcmp(a2, "/freecamera") == 0)
+        if (strcmp(a2, "/freecamera") == 0 || strcmp(a2, "/freecam") == 0)
         {
             EQMACMQ_ToggleFreeCamera();
         }
@@ -11752,7 +11876,7 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
     }
 
     // script
-    if (strncmp(a2, "/script ", 8) == 0 || strncmp(a2, "/lua ", 5) == 0)
+    if (strncmp(a2, "/script ", 8) == 0)
     {
         char command[128];
 
@@ -11778,12 +11902,23 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
-    // hacks
+    // scripts
     if (strncmp(a2, "/scripts", 8) == 0)
     {
         if (strcmp(a2, "/scripts") == 0)
         {
             EQMACMQ_ToggleScripts();
+        }
+        else if (strcmp(a2, "/scripts off") == 0)
+        {
+            struct _EQMACMQSCRIPT* script = g_scriptListBegin;
+
+            while (script)
+            {
+                script->IsEnabled = 0;
+
+                script = script->Next;
+            }
         }
         else if (strncmp(a2, "/scripts ", 9) == 0)
         {
@@ -11852,6 +11987,20 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
             EQMACMQ_DoScriptsLoad();
 
             EQ_CLASS_CEverQuest->dsp_chat("Scripts reloaded.");
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // lua
+    if (strncmp(a2, "/lua ", 5) == 0)
+    {
+        char text[4096];
+        strncpy_s(text, sizeof(text), a2 + 5, _TRUNCATE);
+
+        if (text != NULL && strlen(text) > 0)
+        {
+            EQ_LUA_DoString(text);
         }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
@@ -12090,6 +12239,27 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                 EQ_OBJECT_ZoneInfo.MaxClip = clip;
 
                 EQ_WriteFloatVarToChat("Zone Maximum Clip", clip);
+            }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // mouseto
+    if (strncmp(a2, "/mouseto ", 9) == 0)
+    {
+        char command[128];
+
+        int x = -1;
+        int y = -1;
+
+        int result = sscanf_s(a2, "%s %d %d", command, sizeof(command), &x, &y);
+
+        if (result == 3)
+        {
+            if (x != -1 && y != -1)
+            {
+                EQ_SetMousePosition(x, y);
             }
         }
 
@@ -12528,6 +12698,29 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__dsp_chat(void* this_ptr, void* not_use
         }
     }
 
+    if (g_scriptsIsEnabled == true)
+    {
+        struct _EQMACMQSCRIPT* script = g_scriptListBegin;
+
+        while (script)
+        {
+            if (script->IsEnabled == 1 && script->LuaState != NULL && script->Filename != NULL)
+            {
+                lua_pushstring(script->LuaState, a1);
+                lua_setglobal(script->LuaState, "Event_CEverQuest__dsp_chat_Text");
+
+                bool result = EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "Event_CEverQuest__dsp_chat");
+
+                if (result == false)
+                {
+                    script->IsEnabled = 0;
+                }
+            }
+
+            script = script->Next;
+        }
+    }
+
     return EQMACMQ_REAL_CEverQuest__dsp_chat(this_ptr, a1, a2, a3);
 }
 
@@ -12592,9 +12785,14 @@ int __cdecl EQMACMQ_DETOUR_DrawNetStatus(int a1, unsigned short a2, unsigned sho
 
         while (script)
         {
-            if (script->IsEnabled == 1 && script->LuaState != NULL)
+            if (script->IsEnabled == 1 && script->LuaState != NULL && script->Filename != NULL)
             {
-                EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "OnDrawNetStatus");
+                bool result = EQ_LUA_DoScriptFunction(script->LuaState, script->Filename, "Event_DrawNetStatus");
+
+                if (result == false)
+                {
+                    script->IsEnabled = 0;
+                }
             }
 
             script = script->Next;
@@ -13120,6 +13318,10 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
     }
 
     EQ_LUA_Open();
+    luaL_dofile(EQ_LUA_STATE, ".\\scripts\\system\\eqmac.lua");
+    luaL_dofile(EQ_LUA_STATE, ".\\scripts\\system\\dinput.lua");
+    luaL_dofile(EQ_LUA_STATE, ".\\scripts\\system\\print.lua");
+    luaL_dofile(EQ_LUA_STATE, ".\\scripts\\system\\user.lua");
 
     EQMACMQ_DoLoadConfig();
 

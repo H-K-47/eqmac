@@ -1659,4 +1659,10 @@ void EQ_WarpToSpawnByName(const char* name)
     }
 }
 
+void EQ_SetMousePosition(int x, int y)
+{
+    EQ_WriteMemory<WORD>(EQ_MOUSE_X_REAL, x);
+    EQ_WriteMemory<WORD>(EQ_MOUSE_Y_REAL, y);
+}
+
 #endif // EQMAC_FUNCTIONS_H

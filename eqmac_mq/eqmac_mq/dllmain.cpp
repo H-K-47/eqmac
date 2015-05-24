@@ -69,6 +69,7 @@ EQ_FUNCTION_TYPE_CItemDisplayWnd__SetItem  EQMACMQ_REAL_CItemDisplayWnd__SetItem
 EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell EQMACMQ_REAL_CItemDisplayWnd__SetSpell = NULL;
 
 EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay  EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay = NULL;
+EQ_FUNCTION_TYPE_CBuffWindow__PostDraw            EQMACMQ_REAL_CBuffWindow__PostDraw           = NULL;
 
 EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteState EQMACMQ_REAL_CDisplay__SetNameSpriteState = NULL;
 EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteTint  EQMACMQ_REAL_CDisplay__SetNameSpriteTint  = NULL;
@@ -10107,6 +10108,71 @@ int __fastcall EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay(void* this_ptr, vo
     return result;
 };
 
+int __fastcall EQMACMQ_DETOUR_CBuffWindow__PostDraw(void* this_ptr, void* not_used)
+{
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_CBuffWindow__PostDraw(this_ptr);
+    }
+
+    int result = EQMACMQ_REAL_CBuffWindow__PostDraw(this_ptr);
+
+    if (g_buffWindowTimersIsEnabled == false)
+    {
+        return result;
+    }
+
+    PEQCBUFFWINDOW buffWindow = (PEQCBUFFWINDOW)this_ptr;
+
+    PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
+
+    if (charInfo == NULL)
+    {
+        return result;
+    }
+
+    for (size_t i = 0; i < EQ_NUM_BUFFS; i++)
+    {
+        int spellId = charInfo->Buff[i].SpellId;
+
+        if (spellId == EQ_SPELL_ID_NULL)
+        {
+            continue;
+        }
+
+        int buffTicks = charInfo->Buff[i].Ticks;
+
+        if (buffTicks == 0)
+        {
+            continue;
+        }
+
+        char buffTimeText[128];
+        EQ_GetShortTickTimeString(buffTicks, buffTimeText, sizeof(buffTimeText));
+
+        PEQCSIDLWND buffButtonWnd = (PEQCSIDLWND)buffWindow->BuffButtonWnd[i];
+
+        if (buffButtonWnd != NULL)
+        {
+            if (buffButtonWnd->EQWnd.ToolTipText != NULL)
+            {
+                char originalToolTipText[128];
+                strncpy_s(originalToolTipText, sizeof(originalToolTipText), buffButtonWnd->EQWnd.ToolTipText->Text, _TRUNCATE);
+
+                EQ_CXStr_Set(&buffButtonWnd->EQWnd.ToolTipText, buffTimeText);
+
+                CXRect relativeRect = ((CXWnd*)buffButtonWnd)->GetScreenRect();
+
+                ((CXWnd*)buffButtonWnd)->DrawTooltipAtPoint(relativeRect.X1, relativeRect.Y1);
+
+                EQ_CXStr_Set(&buffButtonWnd->EQWnd.ToolTipText, originalToolTipText);
+            }
+        }
+    }
+
+    return result;
+};
+
 int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void* not_used, class EQPlayer* a1, bool a2)
 {
     if (g_bExit == 1)
@@ -13296,13 +13362,14 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
     DetourRemove((PBYTE)EQMACMQ_REAL_CItemDisplayWnd__SetSpell, (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell);
 
     DetourRemove((PBYTE)EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay);
+    DetourRemove((PBYTE)EQMACMQ_REAL_CBuffWindow__PostDraw,           (PBYTE)EQMACMQ_DETOUR_CBuffWindow__PostDraw);
 
     DetourRemove((PBYTE)EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization,  (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__StartSpellMemorization);
     DetourRemove((PBYTE)EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing,        (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing);
 
     DetourRemove((PBYTE)EQMACMQ_REAL_CLootWnd__Deactivate, (PBYTE)EQMACMQ_DETOUR_CLootWnd__Deactivate);
 
-    DetourRemove((PBYTE)EQMACMQ_REAL_CInvSlot__HandleRButtonUp, (PBYTE)EQMACMQ_DETOUR_CInvSlot__HandleRButtonUp);
+    //DetourRemove((PBYTE)EQMACMQ_REAL_CInvSlot__HandleRButtonUp, (PBYTE)EQMACMQ_DETOUR_CInvSlot__HandleRButtonUp);
 
     EQ_LUA_Close();
 
@@ -13425,13 +13492,14 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
     EQMACMQ_REAL_CItemDisplayWnd__SetSpell = (EQ_FUNCTION_TYPE_CItemDisplayWnd__SetSpell)DetourFunction((PBYTE)EQ_FUNCTION_CItemDisplayWnd__SetSpell, (PBYTE)EQMACMQ_DETOUR_CItemDisplayWnd__SetSpell);
 
     EQMACMQ_REAL_CBuffWindow__RefreshBuffDisplay = (EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)DetourFunction((PBYTE)EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay, (PBYTE)EQMACMQ_DETOUR_CBuffWindow__RefreshBuffDisplay);
+    EQMACMQ_REAL_CBuffWindow__PostDraw           = (EQ_FUNCTION_TYPE_CBuffWindow__PostDraw)          DetourFunction((PBYTE)EQ_FUNCTION_CBuffWindow__PostDraw,           (PBYTE)EQMACMQ_DETOUR_CBuffWindow__PostDraw);
 
     EQMACMQ_REAL_CSpellBookWnd__StartSpellMemorization = (EQ_FUNCTION_TYPE_CSpellBookWnd__StartSpellMemorization)DetourFunction((PBYTE)EQ_FUNCTION_CSpellBookWnd__StartSpellMemorization, (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__StartSpellMemorization);
     EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing       = (EQ_FUNCTION_TYPE_CSpellBookWnd__FinishMemorizing)      DetourFunction((PBYTE)EQ_FUNCTION_CSpellBookWnd__FinishMemorizing,       (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing);
 
     EQMACMQ_REAL_CLootWnd__Deactivate = (EQ_FUNCTION_TYPE_CLootWnd__Deactivate)DetourFunction((PBYTE)EQ_FUNCTION_CLootWnd__Deactivate, (PBYTE)EQMACMQ_DETOUR_CLootWnd__Deactivate);
 
-    EQMACMQ_REAL_CInvSlot__HandleRButtonUp = (EQ_FUNCTION_TYPE_CInvSlot__HandleRButtonUp)DetourFunction((PBYTE)EQ_FUNCTION_CInvSlot__HandleRButtonUp, (PBYTE)EQMACMQ_DETOUR_CInvSlot__HandleRButtonUp);
+    //EQMACMQ_REAL_CInvSlot__HandleRButtonUp = (EQ_FUNCTION_TYPE_CInvSlot__HandleRButtonUp)DetourFunction((PBYTE)EQ_FUNCTION_CInvSlot__HandleRButtonUp, (PBYTE)EQMACMQ_DETOUR_CInvSlot__HandleRButtonUp);
 
     return 0;
 }

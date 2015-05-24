@@ -155,6 +155,7 @@ class EQ_Item;
 class EQ_Spell;
 class CInvSlot;
 class CInvSlotMgr;
+class CButtonWnd;
 class CHotButtonWnd;
 class CLootWnd;
 class CTradeWnd;
@@ -192,7 +193,9 @@ public:
 class CXWnd
 {
 public:
-    //
+    void CXWnd::DrawTooltipAtPoint(int x, int y);
+    class CXRect CXWnd::GetRelativeRect(void) const;
+    class CXRect CXWnd::GetScreenRect(void) const;
 };
 
 class CXPoint
@@ -205,6 +208,15 @@ public:
 class CXRect
 {
 public:
+    //CXRect::CXRect();
+    //CXRect::CXRect(int x1, int y1, int x2, int y2)
+    //{
+        //X1 = x1;
+        //Y1 = y1;
+        //X2 = x2;
+        //Y2 = y2;
+    //}
+
     DWORD X1;
     DWORD Y1;
     DWORD X2;
@@ -313,6 +325,12 @@ public:
 CInvSlotMgr** EQ_CLASS_ppCInvSlotMgr = (CInvSlotMgr**)EQ_POINTER_CInvSlotMgr;
 #define EQ_CLASS_CInvSlotMgr (*EQ_CLASS_ppCInvSlotMgr)
 
+class CButtonWnd
+{
+public:
+    //
+};
+
 class CHotButtonWnd : public CSidlScreenWnd
 {
 public:
@@ -355,6 +373,8 @@ class CBuffWindow : public CSidlScreenWnd
 {
 public:
     void CBuffWindow::RefreshBuffDisplay(void);
+    void CBuffWindow::OnProcessFrame();
+    void CBuffWindow::PostDraw(void);
 };
 
 CBuffWindow** EQ_CLASS_ppCBuffWindow = (CBuffWindow**)EQ_POINTER_CBuffWindow;
@@ -418,6 +438,23 @@ EQ_FUNCTION_AT_ADDRESS(int CXWndManager::DrawCursor(void) const, EQ_FUNCTION_CXW
 #define EQ_FUNCTION_CXWndManager__DrawWindows 0x0059E000
 #ifdef EQ_FUNCTION_CXWndManager__DrawWindows
 EQ_FUNCTION_AT_ADDRESS(int CXWndManager::DrawWindows(void) const, EQ_FUNCTION_CXWndManager__DrawWindows);
+#endif
+
+/* CXWnd */
+
+#define EQ_FUNCTION_CXWnd__DrawTooltipAtPoint 0x00574800
+#ifdef EQ_FUNCTION_CXWnd__DrawTooltipAtPoint
+EQ_FUNCTION_AT_ADDRESS(void CXWnd::DrawTooltipAtPoint(int, int), EQ_FUNCTION_CXWnd__DrawTooltipAtPoint);
+#endif
+
+#define EQ_FUNCTION_CXWnd__GetRelativeRect 0x005750C0
+#ifdef EQ_FUNCTION_CXWnd__GetRelativeRect
+EQ_FUNCTION_AT_ADDRESS(class CXRect CXWnd::GetRelativeRect(void) const, EQ_FUNCTION_CXWnd__GetRelativeRect);
+#endif
+
+#define EQ_FUNCTION_CXWnd__GetScreenRect 0x005751C0
+#ifdef EQ_FUNCTION_CXWnd__GetScreenRect
+EQ_FUNCTION_AT_ADDRESS(class CXRect CXWnd::GetScreenRect(void) const, EQ_FUNCTION_CXWnd__GetScreenRect);
 #endif
 
 /* StringTable */
@@ -667,6 +704,20 @@ EQ_FUNCTION_AT_ADDRESS(void CItemDisplayWnd::SetSpell(short, bool, int), EQ_FUNC
 #ifdef EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay
 typedef int (__thiscall* EQ_FUNCTION_TYPE_CBuffWindow__RefreshBuffDisplay)(void* this_ptr);
 EQ_FUNCTION_AT_ADDRESS(void CBuffWindow::RefreshBuffDisplay(void), EQ_FUNCTION_CBuffWindow__RefreshBuffDisplay);
+#endif
+
+#define EQ_FUNCTION_CBuffWindow__RefreshIconArrangement 0x004090E9
+
+#define EQ_FUNCTION_CBuffWindow__OnProcessFrame 0x00408F9F
+#ifdef EQ_FUNCTION_CBuffWindow__OnProcessFrame
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CBuffWindow__OnProcessFrame)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(void CBuffWindow::OnProcessFrame(), EQ_FUNCTION_CBuffWindow__OnProcessFrame);
+#endif
+
+#define EQ_FUNCTION_CBuffWindow__PostDraw 0x004095FE
+#ifdef EQ_FUNCTION_CBuffWindow__PostDraw
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CBuffWindow__PostDraw)(void* this_ptr);
+EQ_FUNCTION_AT_ADDRESS(void CBuffWindow::PostDraw(void), EQ_FUNCTION_CBuffWindow__PostDraw);
 #endif
 
 /* CSpellBookWnd */
@@ -1018,6 +1069,47 @@ void EQ_GetTickTimeString(int ticks, char result[], size_t resultSize)
         _snprintf_s(secondsText, sizeof(secondsText), _TRUNCATE, "%ds", seconds);
 
         strncat_s(timeText, sizeof(timeText), secondsText, _TRUNCATE);
+    }
+
+    strncpy_s(result, resultSize, timeText, _TRUNCATE);
+}
+
+void EQ_GetShortTickTimeString(int ticks, char result[], size_t resultSize)
+{
+    int hours   = 0;
+    int minutes = 0;
+    int seconds = 0;
+
+    EQ_CalculateTickTime(ticks, hours, minutes, seconds);
+
+    char timeText[128] = {0};
+
+    if (hours > 0)
+    {
+        char hoursText[128];
+        _snprintf_s(hoursText, sizeof(hoursText), _TRUNCATE, "%dh", hours);
+
+        strncpy_s(timeText, sizeof(timeText), hoursText, _TRUNCATE);
+    }
+    else
+    {
+        if (minutes > 0)
+        {
+            char minutesText[128];
+            _snprintf_s(minutesText, sizeof(minutesText), _TRUNCATE, "%dm", minutes);
+
+            strncpy_s(timeText, sizeof(timeText), minutesText, _TRUNCATE);
+        }
+        else
+        {
+            if (seconds > 0)
+            {
+                char secondsText[128];
+                _snprintf_s(secondsText, sizeof(secondsText), _TRUNCATE, "%ds", seconds);
+
+                strncpy_s(timeText, sizeof(timeText), secondsText, _TRUNCATE);
+            }
+        }
     }
 
     strncpy_s(result, resultSize, timeText, _TRUNCATE);
@@ -1715,7 +1807,7 @@ void EQ_SetMousePosition(int x, int y)
 
 void EQ_UseItem(int slotId)
 {
-    if (slotId >= EQ_SLOT_FIRST && slotId <= EQ_SLOT_LAST)
+    if (slotId >= EQ_INVENTORY_SLOT_FIRST && slotId <= EQ_INVENTORY_SLOT_LAST)
     {
         CInvSlot* slot = EQ_CLASS_CInvSlotMgr->FindInvSlot(slotId + 1); // have to add 1 because FindInvSlot does not start at 0 index
 

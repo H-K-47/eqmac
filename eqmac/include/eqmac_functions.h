@@ -143,6 +143,8 @@ class CXStr;
 class CXWndManager;
 class CSidlScreenWnd;
 class CXWnd;
+class CXPoint;
+class CXRect;
 class StringTable;
 class EQ_Main;
 class CDisplay;
@@ -151,6 +153,8 @@ class EQPlayer;
 class EQ_Character;
 class EQ_Item;
 class EQ_Spell;
+class CInvSlot;
+class CInvSlotMgr;
 class CHotButtonWnd;
 class CLootWnd;
 class CTradeWnd;
@@ -189,6 +193,22 @@ class CXWnd
 {
 public:
     //
+};
+
+class CXPoint
+{
+public:
+    DWORD X;
+    DWORD Y;
+};
+
+class CXRect
+{
+public:
+    DWORD X1;
+    DWORD Y1;
+    DWORD X2;
+    DWORD Y2;
 };
 
 class StringTable
@@ -263,6 +283,9 @@ public:
     int EQ_Character::UseSkill(unsigned char skill, class EQPlayer* targetSpawn);
 };
 
+EQ_Character** EQ_CLASS_ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character;
+#define EQ_CLASS_EQ_Character (*EQ_CLASS_ppEQ_Character)
+
 class EQ_Item
 {
 public:
@@ -275,8 +298,20 @@ public:
     //
 };
 
-EQ_Character** EQ_CLASS_ppEQ_Character = (EQ_Character**)EQ_POINTER_EQ_Character;
-#define EQ_CLASS_EQ_Character (*EQ_CLASS_ppEQ_Character)
+class CInvSlot
+{
+public:
+    void CInvSlot::HandleRButtonUp(int x, int y);
+};
+
+class CInvSlotMgr
+{
+public:
+    class CInvSlot* CInvSlotMgr::FindInvSlot(int slotId);
+};
+
+CInvSlotMgr** EQ_CLASS_ppCInvSlotMgr = (CInvSlotMgr**)EQ_POINTER_CInvSlotMgr;
+#define EQ_CLASS_CInvSlotMgr (*EQ_CLASS_ppCInvSlotMgr)
 
 class CHotButtonWnd : public CSidlScreenWnd
 {
@@ -568,7 +603,20 @@ typedef int (__thiscall* EQ_FUNCTION_TYPE_EQ_Character__UseSkill)(void* this_ptr
 EQ_FUNCTION_AT_ADDRESS(int EQ_Character::UseSkill(unsigned char, class EQPlayer*), EQ_FUNCTION_EQ_Character__UseSkill);
 #endif
 
-//int EQ_Character::UseSkill(unsigned char skill, class EQPlayer* spawn);
+/* CInvSlot */
+
+#define EQ_FUNCTION_CInvSlot__HandleRButtonUp 0x00422804
+#ifdef EQ_FUNCTION_CInvSlot__HandleRButtonUp
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CInvSlot__HandleRButtonUp)(void* this_ptr, int x, int y);
+EQ_FUNCTION_AT_ADDRESS(void CInvSlot::HandleRButtonUp(int, int), EQ_FUNCTION_CInvSlot__HandleRButtonUp);
+#endif
+
+/* CInvSlotMgr */
+
+#define EQ_FUNCTION_CInvSlotMgr__FindInvSlot 0x00423010
+#ifdef EQ_FUNCTION_CInvSlotMgr__FindInvSlot
+EQ_FUNCTION_AT_ADDRESS(class CInvSlot* CInvSlotMgr::FindInvSlot(int), EQ_FUNCTION_CInvSlotMgr__FindInvSlot);
+#endif
 
 /* CHotButtonWnd */
 
@@ -1663,6 +1711,27 @@ void EQ_SetMousePosition(int x, int y)
 {
     EQ_WriteMemory<WORD>(EQ_MOUSE_X_REAL, x);
     EQ_WriteMemory<WORD>(EQ_MOUSE_Y_REAL, y);
+}
+
+void EQ_UseItem(int slotId)
+{
+    if (slotId >= EQ_SLOT_FIRST && slotId <= EQ_SLOT_LAST)
+    {
+        CInvSlot* slot = EQ_CLASS_CInvSlotMgr->FindInvSlot(slotId + 1); // have to add 1 because FindInvSlot does not start at 0 index
+
+        if (slot != NULL)
+        {
+            WORD mouseX = EQ_ReadMemory<WORD>(EQ_MOUSE_X);
+            WORD mouseY = EQ_ReadMemory<WORD>(EQ_MOUSE_Y);
+
+            slot->HandleRButtonUp(mouseX, mouseY);
+
+            //char text[128];
+            //_snprintf_s(text, sizeof(text), _TRUNCATE, "0x%X: %d", slot, slotId);
+
+            //EQ_CLASS_CEverQuest->dsp_chat(text);
+        }
+    }
 }
 
 #endif // EQMAC_FUNCTIONS_H

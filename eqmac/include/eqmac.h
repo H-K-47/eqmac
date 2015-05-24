@@ -73,6 +73,8 @@ const float EQ_PI = 3.14159265358979f;
 
 #define EQ_POINTER_EqSoundManager 0x0063DEA8
 
+#define EQ_POINTER_CInvSlotMgr 0x0063D6B4
+
 #define EQ_POINTER_FONT_ARIAL10 0x0063D3A8
 #define EQ_POINTER_FONT_ARIAL12 0x0063D3AC
 #define EQ_POINTER_FONT_ARIAL14 0x0063D3B0
@@ -911,6 +913,38 @@ enum ZoneReason
 #define EQ_KEY_MAIL            0xEC
 #define EQ_KEY_MEDIASELECT     0xED
 #define EQ_KEY_MEDIA_SELECT    EQ_KEY_MEDIASELECT
+
+#define EQ_SLOT_EAR_LEFT    0
+#define EQ_SLOT_HEAD        1
+#define EQ_SLOT_FACE        2
+#define EQ_SLOT_EAR_RIGHT   3
+#define EQ_SLOT_NECK        4
+#define EQ_SLOT_SHOULDERS   5
+#define EQ_SLOT_ARMS        6
+#define EQ_SLOT_BACK        7
+#define EQ_SLOT_WRIST_LEFT  8
+#define EQ_SLOT_WRIST_RIGHT 9
+#define EQ_SLOT_RANGED      10
+#define EQ_SLOT_HANDS       11
+#define EQ_SLOT_PRIMARY     12
+#define EQ_SLOT_SECONDARY   13
+#define EQ_SLOT_RING_LEFT   14
+#define EQ_SLOT_RING_RIGHT  15
+#define EQ_SLOT_CHEST       16
+#define EQ_SLOT_LEGS        17
+#define EQ_SLOT_FEET        18
+#define EQ_SLOT_WAIST       19
+#define EQ_SLOT_AMMO        20
+#define EQ_SLOT_BAG1        21
+#define EQ_SLOT_BAG2        22
+#define EQ_SLOT_BAG3        23
+#define EQ_SLOT_BAG4        24
+#define EQ_SLOT_BAG5        25
+#define EQ_SLOT_BAG6        26
+#define EQ_SLOT_BAG7        27
+#define EQ_SLOT_BAG8        28
+#define EQ_SLOT_FIRST       EQ_SLOT_EAR_LEFT
+#define EQ_SLOT_LAST        EQ_SLOT_BAG8
 
 const size_t EQ_STRINGSIZE_TEXT_COLOR_NAME = 21;
 
@@ -2270,5 +2304,14 @@ typedef struct _EQCLOOTWND
 /* 0x01B8 */ struct _EQITEMINFO* Item[EQ_NUM_LOOT_WINDOW_ITEMS];
 /* ...... */
 } EQCLOOTWND, *PEQCLOOTWND;
+
+typedef struct _EQCINVSLOT
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD Unknown0004;
+/* 0x0008 */ DWORD Unknown0008;
+/* 0x000C */ DWORD SlotId;
+/* ...... */
+} EQCINVSLOT, *PEQCINVSLOT;
 
 #endif // EQMAC_H

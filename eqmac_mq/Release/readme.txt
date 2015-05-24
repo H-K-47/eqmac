@@ -264,6 +264,37 @@ TODO...
 
 /casting "Spell Name"
 
+/useitem #
+0  = Left Ear
+1  = Head
+2  = Face
+3  = Right Ear
+4  = Neck
+5  = Shoulders
+6  = Arms
+7  = Back
+8  = Left Wrist
+9  = Right Wrist
+10 = Ranged
+11 = Hands
+12 = Primary
+13 = Secondary
+14 = Left Ring
+15 = Right Ring
+16 = Chest
+17 = Legs
+18 = Feet
+19 = Waist
+20 = Ammo
+21 = Bag 1
+22 = Bag 2
+23 = Bag 3
+24 = Bag 4
+25 = Bag 5
+26 = Bag 6
+27 = Bag 7
+28 = Bag 8
+
 /beep
 
 /warp

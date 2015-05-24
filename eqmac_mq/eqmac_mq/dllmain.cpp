@@ -86,6 +86,8 @@ EQ_FUNCTION_TYPE_CSpellBookWnd__FinishMemorizing       EQMACMQ_REAL_CSpellBookWn
 
 EQ_FUNCTION_TYPE_CLootWnd__Deactivate EQMACMQ_REAL_CLootWnd__Deactivate = NULL;
 
+EQ_FUNCTION_TYPE_CInvSlot__HandleRButtonUp EQMACMQ_REAL_CInvSlot__HandleRButtonUp = NULL;
+
 bool g_killSwitchIsEnabled = true;
 bool g_loggingIsEnabled = false;
 bool g_standWhenMovingIsEnabled = true;
@@ -8024,7 +8026,7 @@ void EQMACMQ_DoEsp()
                 if (g_espShowTextYourselfHpIsEnabled == true)
                 {
                     int hpCurrent = spawn->HpCurrent;
-                    int hpMax = spawn->HpMax;
+                    int hpMax     = spawn->HpMax;
 
                     if (hpCurrent > 0 && hpMax > 0)
                     {
@@ -8047,7 +8049,7 @@ void EQMACMQ_DoEsp()
                     if (charInfo)
                     {
                         int manaCurrent = charInfo->Mana;
-                        int manaMax = EQ_CLASS_EQ_Character->Max_Mana();
+                        int manaMax     = EQ_CLASS_EQ_Character->Max_Mana();
 
                         if (manaCurrent > 0 && manaMax > 0 && manaCurrent < manaMax)
                         {
@@ -8801,6 +8803,8 @@ void EQMACMQ_DoMessageTextGeneric(const char* text, int textColor)
 
 void EQMACMQ_DoMessageTextGainedExperience()
 {
+    // this function doesn't work correctly yet
+
     PEQCHARINFO charInfo = (PEQCHARINFO)EQ_OBJECT_CharInfo;
 
     if (charInfo == NULL)
@@ -9112,6 +9116,8 @@ void EQMACMQ_DoBankList()
 
     EQ_CLASS_CEverQuest->dsp_chat("Bank:");
 
+    bool bIsBankEmpty = true;
+
     for (size_t i = 0; i < EQ_NUM_INVENTORY_BANK_SLOTS; i++)
     {
         PEQITEMINFO item = (PEQITEMINFO)charInfo->InventoryBankItem[i];
@@ -9119,6 +9125,10 @@ void EQMACMQ_DoBankList()
         if (item == NULL)
         {
             continue;
+        }
+        else
+        {
+            bIsBankEmpty = false;
         }
 
         char bankText[128];
@@ -9185,6 +9195,11 @@ void EQMACMQ_DoBankList()
                 EQ_CLASS_CEverQuest->dsp_chat(bankTextEx);
             }
         }
+    }
+
+    if (bIsBankEmpty == true)
+    {
+        EQ_CLASS_CEverQuest->dsp_chat("Your bank is empty.");
     }
 }
 
@@ -9806,6 +9821,27 @@ int __fastcall EQMACMQ_DETOUR_CLootWnd__Deactivate(void* this_ptr, void* not_use
             script = script->Next;
         }
     }
+
+    return result;
+}
+
+int __fastcall EQMACMQ_DETOUR_CInvSlot__HandleRButtonUp(void* this_ptr, void* not_used, int a1, int a2)
+{
+    // a1 = x
+    // a2 = y
+
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_CInvSlot__HandleRButtonUp(this_ptr, a1, a2);
+    }
+
+    int result = EQMACMQ_REAL_CInvSlot__HandleRButtonUp(this_ptr, a1, a2);
+
+    //FILE* file = fopen("eqmac_mq-debug-CInvSlot__HandleRButtonUp.txt", "a");
+    //fprintf(file, "this_ptr: 0x%X\n", this_ptr);
+    //fprintf(file, "a1: %d\n", a1);
+    //fprintf(file, "a2: %d\n", a2);
+    //fclose(file);
 
     return result;
 }
@@ -12245,6 +12281,23 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
     }
 
+    // useitem
+    if (strncmp(a2, "/useitem ", 9) == 0)
+    {
+        char command[128];
+
+        int slotId = -1;
+
+        int result = sscanf_s(a2, "%s %d", command, sizeof(command), &slotId);
+
+        if (result == 2)
+        {
+            EQ_UseItem(slotId);
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
     // mouseto
     if (strncmp(a2, "/mouseto ", 9) == 0)
     {
@@ -13249,6 +13302,8 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
 
     DetourRemove((PBYTE)EQMACMQ_REAL_CLootWnd__Deactivate, (PBYTE)EQMACMQ_DETOUR_CLootWnd__Deactivate);
 
+    DetourRemove((PBYTE)EQMACMQ_REAL_CInvSlot__HandleRButtonUp, (PBYTE)EQMACMQ_DETOUR_CInvSlot__HandleRButtonUp);
+
     EQ_LUA_Close();
 
     Sleep(1000);
@@ -13375,6 +13430,8 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
     EQMACMQ_REAL_CSpellBookWnd__FinishMemorizing       = (EQ_FUNCTION_TYPE_CSpellBookWnd__FinishMemorizing)      DetourFunction((PBYTE)EQ_FUNCTION_CSpellBookWnd__FinishMemorizing,       (PBYTE)EQMACMQ_DETOUR_CSpellBookWnd__FinishMemorizing);
 
     EQMACMQ_REAL_CLootWnd__Deactivate = (EQ_FUNCTION_TYPE_CLootWnd__Deactivate)DetourFunction((PBYTE)EQ_FUNCTION_CLootWnd__Deactivate, (PBYTE)EQMACMQ_DETOUR_CLootWnd__Deactivate);
+
+    EQMACMQ_REAL_CInvSlot__HandleRButtonUp = (EQ_FUNCTION_TYPE_CInvSlot__HandleRButtonUp)DetourFunction((PBYTE)EQ_FUNCTION_CInvSlot__HandleRButtonUp, (PBYTE)EQMACMQ_DETOUR_CInvSlot__HandleRButtonUp);
 
     return 0;
 }

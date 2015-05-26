@@ -134,6 +134,8 @@ const float EQ_PI = 3.14159265358979f;
 #define EQ_NUM_HOTBUTTONS_TOTAL 100
 #define EQ_NUM_CONTAINER_SLOTS 10
 
+#define EQ_FONT_SIZE_DEFAULT 3
+
 #define EQ_OFFSET_ITEM_INFO_NAME             0x000 // STRING [0x40]
 #define EQ_OFFSET_ITEM_INFO_LORE_NAME        0x040 // STRING [0x50]
 #define EQ_OFFSET_ITEM_INFO_ID_FILE          0x090 // STRING [0x06]
@@ -1377,6 +1379,12 @@ typedef struct _EQRGBCOLOR
     BYTE R;
 } EQRGBCOLOR, *PEQRGBCOLOR;
 
+typedef struct _EQFONT
+{
+/* 0x0000 */ DWORD Unknown0000;
+/* 0x0004 */ DWORD Size;
+} EQFONT, *PEQFONT;
+
 typedef struct _EQCAMERAINFO
 {
 /* 0x0000 */ DWORD Unknown0000;
@@ -2241,7 +2249,7 @@ typedef struct _EQWND
 /* 0x0056 */ BYTE IsMouseOver; // mouse is hovering over
 /* 0x0057 */ BYTE Unknown0057;
 /* 0x0058 */ DWORD WindowStyleFlags;
-/* 0x005C */ PVOID Unknown005C;
+/* 0x005C */ struct _EQFONT* FontPointer;
 /* 0x0060 */ PEQCXSTR Text;
 /* 0x0064 */ PEQCXSTR ToolTipText;
 /* 0x0068 */ BYTE Unknown0068[28];

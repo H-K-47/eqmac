@@ -558,6 +558,8 @@ bool g_itemDisplayWindowTextSpellsIsEnabled = true;
 
 bool g_buffWindowTimersIsEnabled = true;
 
+unsigned int g_buffWindowTimersFontSize = 3;
+
 bool g_healthBarsIsEnabled = true;
 
 bool g_healthBarsClipToViewPortIsEnabled = true;
@@ -1670,6 +1672,8 @@ bool EQMACMQ_LoadConfig(const char* filename)
     // BuffWindowTimers
 
     g_buffWindowTimersIsEnabled = EQMACMQ_ConfigReadBool(filename, "BuffWindowTimers", "bEnabled", g_buffWindowTimersIsEnabled);
+
+    g_buffWindowTimersFontSize = EQMACMQ_ConfigReadInt(filename, "BuffWindowTimers", "iFontSize", g_buffWindowTimersFontSize);
 
     // BuffInfo
 
@@ -10156,6 +10160,8 @@ int __fastcall EQMACMQ_DETOUR_CBuffWindow__PostDraw(void* this_ptr, void* not_us
         {
             if (buffButtonWnd->EQWnd.ToolTipText != NULL)
             {
+                buffButtonWnd->EQWnd.FontPointer->Size = g_buffWindowTimersFontSize;
+
                 char originalToolTipText[128];
                 strncpy_s(originalToolTipText, sizeof(originalToolTipText), buffButtonWnd->EQWnd.ToolTipText->Text, _TRUNCATE);
 
@@ -10166,6 +10172,8 @@ int __fastcall EQMACMQ_DETOUR_CBuffWindow__PostDraw(void* this_ptr, void* not_us
                 ((CXWnd*)buffButtonWnd)->DrawTooltipAtPoint(relativeRect.X1, relativeRect.Y1);
 
                 EQ_CXStr_Set(&buffButtonWnd->EQWnd.ToolTipText, originalToolTipText);
+
+                buffButtonWnd->EQWnd.FontPointer->Size = EQ_FONT_SIZE_DEFAULT;
             }
         }
     }
@@ -10256,6 +10264,12 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
                 {
                     _snprintf_s(extraText, sizeof(extraText), _TRUNCATE, " - %d%%", hpPercent);
 
+                    // remove the leading space for players because a space already exists
+                    if (spawn->Type == EQ_SPAWN_TYPE_PLAYER)
+                    {
+                        memmove(extraText, extraText + 1, strlen(extraText));
+                    }
+
                     strncat_s(nameText, sizeof(nameText), extraText, _TRUNCATE);
                 }
                 else
@@ -10278,7 +10292,7 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteState(void* this_ptr, void*
 
                     if (spawnGuildTag != NULL)
                     {
-                        _snprintf_s(nameText, sizeof(nameText), _TRUNCATE, "%s - %d%%\n%s", spawnNameText, hpPercent, spawnGuildTag);
+                        _snprintf_s(nameText, sizeof(nameText), _TRUNCATE, "%s- %d%%\n%s", spawnNameText, hpPercent, spawnGuildTag);
                     }
                 }
             }

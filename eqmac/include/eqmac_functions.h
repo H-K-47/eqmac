@@ -251,6 +251,8 @@ public:
     PEQSTRINGSPRITE CDisplay::ChangeDagStringSprite(PEQDAGINFO dag, int fontTexture, char* text);
     int __cdecl CDisplay::SetNameSpriteState(class EQPlayer* spawn, bool show);
     int __cdecl CDisplay::SetNameSpriteTint(class EQPlayer* spawn);
+    void CDisplay::CreatePlayerActor(class EQPlayer* spawn);
+    void CDisplay::DeleteActor(PEQACTORINSTANCEINFO actorInstance);
 };
 
 CDisplay** EQ_CLASS_ppCDisplay = (CDisplay**)EQ_POINTER_CDisplay;
@@ -512,6 +514,18 @@ EQ_FUNCTION_AT_ADDRESS(int CDisplay::SetNameSpriteState(class EQPlayer*, bool), 
 #ifdef EQ_FUNCTION_CDisplay__SetNameSpriteTint
 typedef int (__thiscall* EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteTint)(void* this_ptr, class EQPlayer* spawn);
 EQ_FUNCTION_AT_ADDRESS(int CDisplay::SetNameSpriteTint(class EQPlayer*), EQ_FUNCTION_CDisplay__SetNameSpriteTint);
+#endif
+
+#define EQ_FUNCTION_CDisplay__CreatePlayerActor 0x004ADF2C
+#ifdef EQ_FUNCTION_CDisplay__CreatePlayerActor
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CDisplay__CreatePlayerActor)(void* this_ptr, class EQPlayer* spawn);
+EQ_FUNCTION_AT_ADDRESS(void CDisplay::CreatePlayerActor(class EQPlayer*), EQ_FUNCTION_CDisplay__CreatePlayerActor);
+#endif
+
+#define EQ_FUNCTION_CDisplay__DeleteActor 0x004B0507
+#ifdef EQ_FUNCTION_CDisplay__DeleteActor
+typedef int (__thiscall* EQ_FUNCTION_TYPE_CDisplay__DeleteActor)(void* this_ptr, PEQACTORINSTANCEINFO actorInstance);
+EQ_FUNCTION_AT_ADDRESS(void CDisplay::DeleteActor(PEQACTORINSTANCEINFO actorInstance), EQ_FUNCTION_CDisplay__DeleteActor);
 #endif
 
 /* CEverQuest */

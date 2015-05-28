@@ -1884,7 +1884,11 @@ typedef struct _EQACTORINSTANCEINFO
 /* 0x0034 */ FLOAT ScaleFactor;
 /* 0x0038 */ FLOAT BoundingRadius;
 /* 0x003C */ BYTE Unknown003C[36];
+union
+{
 /* 0x0060 */ struct _EQSPAWNINFO* UserData;
+/* 0x0060 */ struct _EQSPAWNINFO* SpawnInfo;
+};
 /* ...... */ 
 } EQACTORINSTANCEINFO, *PEQACTORINSTANCEINFO;
 

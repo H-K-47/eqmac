@@ -295,6 +295,14 @@ TODO...
 27 = Bag 7
 28 = Bag 8
 
+/spawnalert
+/spawnalertonspawn
+/spawnalertondespawn
+/spawnalertshowplayer          OR    /spawnalertshowpc
+/spawnalertshowplayercorpse    OR    /spawnalertshowpccorpse
+/spawnalertshownpc
+/spawnalertshownpccorpse
+
 /beep
 
 /warp

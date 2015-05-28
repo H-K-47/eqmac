@@ -74,6 +74,9 @@ EQ_FUNCTION_TYPE_CBuffWindow__PostDraw            EQMACMQ_REAL_CBuffWindow__Post
 EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteState EQMACMQ_REAL_CDisplay__SetNameSpriteState = NULL;
 EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteTint  EQMACMQ_REAL_CDisplay__SetNameSpriteTint  = NULL;
 
+EQ_FUNCTION_TYPE_CDisplay__CreatePlayerActor EQMACMQ_REAL_CDisplay__CreatePlayerActor = NULL;
+EQ_FUNCTION_TYPE_CDisplay__DeleteActor       EQMACMQ_REAL_CDisplay__DeleteActor       = NULL;
+
 EQ_FUNCTION_TYPE_EQ_Character__eqspa_movement_rate EQMACMQ_REAL_EQ_Character__eqspa_movement_rate = NULL;
 
 EQ_FUNCTION_TYPE_EQ_Character__CastSpell EQMACMQ_REAL_EQ_Character__CastSpell = NULL;
@@ -731,6 +734,16 @@ bool g_skillHackIsEnabled = true;
 unsigned int g_skillHackSwimming = 200;
 unsigned int g_skillHackTracking = 200;
 unsigned int g_skillHackSenseHeading = 200;
+
+bool g_spawnAlertIsEnabled = true;
+
+bool g_spawnAlertOnSpawnIsEnabled   = true;
+bool g_spawnAlertOnDespawnIsEnabled = true;
+
+bool g_spawnAlertShowPlayerIsEnabled       = true;
+bool g_spawnAlertShowPlayerCorpseIsEnabled = true;
+bool g_spawnAlertShowNpcIsEnabled          = true;
+bool g_spawnAlertShowNpcCorpseIsEnabled    = true;
 
 // Cohen-Sutherland algorithm
 // http://en.wikipedia.org/wiki/Cohen%E2%80%93Sutherland_algorithm
@@ -1794,6 +1807,18 @@ bool EQMACMQ_LoadConfig(const char* filename)
     g_meleeSkillSlamIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bSlam", g_meleeSkillSlamIsEnabled);
     g_meleeSkillDisarmIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bDisarm", g_meleeSkillDisarmIsEnabled);
     g_meleeSkillSenseHeadingIsEnabled = EQMACMQ_ConfigReadBool(filename, "Melee", "bSenseHeading", g_meleeSkillSenseHeadingIsEnabled);
+
+    // Spawn Alert
+
+    g_spawnAlertIsEnabled = EQMACMQ_ConfigReadBool(filename, "SpawnAlert", "bEnabled", g_spawnAlertIsEnabled);
+
+    g_spawnAlertOnSpawnIsEnabled   = EQMACMQ_ConfigReadBool(filename, "SpawnAlert", "bOnSpawn",   g_spawnAlertOnSpawnIsEnabled);
+    g_spawnAlertOnDespawnIsEnabled = EQMACMQ_ConfigReadBool(filename, "SpawnAlert", "bOnDespawn", g_spawnAlertOnDespawnIsEnabled);
+
+    g_spawnAlertShowPlayerIsEnabled       = EQMACMQ_ConfigReadBool(filename, "SpawnAlert", "bShowPlayer",       g_spawnAlertShowPlayerIsEnabled);
+    g_spawnAlertShowPlayerCorpseIsEnabled = EQMACMQ_ConfigReadBool(filename, "SpawnAlert", "bShowPlayerCorpse", g_spawnAlertShowPlayerCorpseIsEnabled);
+    g_spawnAlertShowNpcIsEnabled          = EQMACMQ_ConfigReadBool(filename, "SpawnAlert", "bShowNpc",          g_spawnAlertShowNpcIsEnabled);
+    g_spawnAlertShowNpcCorpseIsEnabled    = EQMACMQ_ConfigReadBool(filename, "SpawnAlert", "bShowNpcCorpse",    g_spawnAlertShowNpcCorpseIsEnabled);
 
     return true;
 }
@@ -3486,6 +3511,76 @@ void EQMACMQ_ToggleLogging()
     if (g_writeTextToChatWindowIsEnabled == true)
     {
         EQ_WriteBoolVarToChat("Logging", g_loggingIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleSpawnAlert()
+{
+    EQ_ToggleBool(g_spawnAlertIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Spawn Alert", g_spawnAlertIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleSpawnAlertOnSpawn()
+{
+    EQ_ToggleBool(g_spawnAlertOnSpawnIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Spawn Alert On Spawn", g_spawnAlertOnSpawnIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleSpawnAlertOnDespawn()
+{
+    EQ_ToggleBool(g_spawnAlertOnDespawnIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Spawn Alert On Despawn", g_spawnAlertOnDespawnIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleSpawnAlertShowPlayer()
+{
+    EQ_ToggleBool(g_spawnAlertShowPlayerIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Spawn Alert Show Player", g_spawnAlertShowPlayerIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleSpawnAlertShowPlayerCorpse()
+{
+    EQ_ToggleBool(g_spawnAlertShowPlayerCorpseIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Spawn Alert Show Player Corpse", g_spawnAlertShowPlayerCorpseIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleSpawnAlertShowNpc()
+{
+    EQ_ToggleBool(g_spawnAlertShowNpcIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Spawn Alert Show NPC", g_spawnAlertShowNpcIsEnabled);
+    }
+}
+
+void EQMACMQ_ToggleSpawnAlertShowNpcCorpse()
+{
+    EQ_ToggleBool(g_spawnAlertShowNpcCorpseIsEnabled);
+
+    if (g_writeTextToChatWindowIsEnabled == true)
+    {
+        EQ_WriteBoolVarToChat("Spawn Alert Show NPC Corpse", g_spawnAlertShowNpcCorpseIsEnabled);
     }
 }
 
@@ -10158,7 +10253,7 @@ int __fastcall EQMACMQ_DETOUR_CBuffWindow__PostDraw(void* this_ptr, void* not_us
 
         if (buffButtonWnd != NULL)
         {
-            if (buffButtonWnd->EQWnd.ToolTipText != NULL)
+            if (buffButtonWnd->EQWnd.ToolTipText != NULL && buffButtonWnd->EQWnd.FontPointer != NULL)
             {
                 buffButtonWnd->EQWnd.FontPointer->Size = g_buffWindowTimersFontSize;
 
@@ -10167,9 +10262,9 @@ int __fastcall EQMACMQ_DETOUR_CBuffWindow__PostDraw(void* this_ptr, void* not_us
 
                 EQ_CXStr_Set(&buffButtonWnd->EQWnd.ToolTipText, buffTimeText);
 
-                CXRect relativeRect = ((CXWnd*)buffButtonWnd)->GetScreenRect();
+                CXRect screenRect = ((CXWnd*)buffButtonWnd)->GetScreenRect();
 
-                ((CXWnd*)buffButtonWnd)->DrawTooltipAtPoint(relativeRect.X1, relativeRect.Y1);
+                ((CXWnd*)buffButtonWnd)->DrawTooltipAtPoint(screenRect.X1, screenRect.Y1);
 
                 EQ_CXStr_Set(&buffButtonWnd->EQWnd.ToolTipText, originalToolTipText);
 
@@ -10449,6 +10544,144 @@ int __fastcall EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint(void* this_ptr, void* 
     {
         flash++;
     }
+
+    return result;
+}
+
+int __fastcall EQMACMQ_DETOUR_CDisplay__CreatePlayerActor(void* this_ptr, void* not_used, class EQPlayer* a1)
+{
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_CDisplay__CreatePlayerActor(this_ptr, a1);
+    }
+
+    int result = EQMACMQ_REAL_CDisplay__CreatePlayerActor(this_ptr, a1);
+
+    if (a1 == NULL || EQ_IsInGame() == false || g_spawnAlertIsEnabled == false || g_spawnAlertOnSpawnIsEnabled == false)
+    {
+        return result;
+    }
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)a1;
+
+    if (playerSpawn == NULL || spawn == playerSpawn)
+    {
+        return result;
+    }
+
+    if (g_spawnAlertShowPlayerIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
+    {
+        return result;
+    }
+
+    if (g_spawnAlertShowPlayerCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+    {
+        return result;
+    }
+
+    if (g_spawnAlertShowNpcIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC)
+    {
+        return result;
+    }
+
+    if (g_spawnAlertShowNpcCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+    {
+        return result;
+    }
+
+    char spawnTypeText[128];
+    strncpy_s(spawnTypeText, sizeof(spawnTypeText), "Unknown", _TRUNCATE);
+
+    if (spawn->Type == EQ_SPAWN_TYPE_PLAYER || spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+    {
+        strncpy_s(spawnTypeText, sizeof(spawnTypeText), "Player", _TRUNCATE);
+    }
+    else if (spawn->Type == EQ_SPAWN_TYPE_NPC || spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+    {
+        strncpy_s(spawnTypeText, sizeof(spawnTypeText), "NPC", _TRUNCATE);
+    }
+
+    char alertText[128];
+    _snprintf_s
+    (
+        alertText, sizeof(alertText), _TRUNCATE,
+        "Spawn Alert: (%s) %s",
+        spawnTypeText,
+        EQ_CLASS_CEverQuest->trimName(spawn->Name)
+    );
+
+    EQ_CLASS_CEverQuest->dsp_chat(alertText);
+
+    return result;
+}
+
+int __fastcall EQMACMQ_DETOUR_CDisplay__DeleteActor(void* this_ptr, void* not_used, PEQACTORINSTANCEINFO a1)
+{
+    if (g_bExit == 1)
+    {
+        return EQMACMQ_REAL_CDisplay__DeleteActor(this_ptr, a1);
+    }
+
+    int result = EQMACMQ_REAL_CDisplay__DeleteActor(this_ptr, a1);
+
+    if (a1 == NULL || EQ_IsInGame() == false || g_spawnAlertIsEnabled == false || g_spawnAlertOnDespawnIsEnabled == false)
+    {
+        return result;
+    }
+
+    PEQSPAWNINFO playerSpawn = (PEQSPAWNINFO)EQ_OBJECT_PlayerSpawn;
+
+    PEQSPAWNINFO spawn = (PEQSPAWNINFO)a1->SpawnInfo;
+
+    if (spawn == NULL || playerSpawn == NULL || spawn == playerSpawn)
+    {
+        return result;
+    }
+
+    if (g_spawnAlertShowPlayerIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER)
+    {
+        return result;
+    }
+
+    if (g_spawnAlertShowPlayerCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+    {
+        return result;
+    }
+
+    if (g_spawnAlertShowNpcIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC)
+    {
+        return result;
+    }
+
+    if (g_spawnAlertShowNpcCorpseIsEnabled == false && spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+    {
+        return result;
+    }
+
+    char spawnTypeText[128];
+    strncpy_s(spawnTypeText, sizeof(spawnTypeText), "Unknown", _TRUNCATE);
+
+    if (spawn->Type == EQ_SPAWN_TYPE_PLAYER || spawn->Type == EQ_SPAWN_TYPE_PLAYER_CORPSE)
+    {
+        strncpy_s(spawnTypeText, sizeof(spawnTypeText), "Player", _TRUNCATE);
+    }
+    else if (spawn->Type == EQ_SPAWN_TYPE_NPC || spawn->Type == EQ_SPAWN_TYPE_NPC_CORPSE)
+    {
+        strncpy_s(spawnTypeText, sizeof(spawnTypeText), "NPC", _TRUNCATE);
+    }
+
+    char alertText[128];
+    _snprintf_s
+    (
+        alertText, sizeof(alertText), _TRUNCATE,
+        "Despawn Alert: (%s) %s",
+        spawnTypeText,
+        EQ_CLASS_CEverQuest->trimName(spawn->Name)
+    );
+
+    EQ_CLASS_CEverQuest->dsp_chat(alertText);
 
     return result;
 }
@@ -11862,6 +12095,49 @@ int __fastcall EQMACMQ_DETOUR_CEverQuest__InterpretCmd(void* this_ptr, void* not
                     EQ_WriteBoolVarToChat("Melee Skill Sense Heading", g_meleeSkillSenseHeadingIsEnabled);
                 }
             }
+        }
+
+        return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
+    }
+
+    // spawn alert
+    if (strncmp(a2, "/spawnalert", 11) == 0)
+    {
+        if (strcmp(a2, "/spawnalert") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlert();
+        }
+        else if (strcmp(a2, "/spawnalertonspawn") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlertOnSpawn();
+        }
+        else if (strcmp(a2, "/spawnalertondespawn") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlertOnDespawn();
+        }
+        else if (strcmp(a2, "/spawnalertshowplayer") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlertShowPlayer();
+        }
+        else if (strcmp(a2, "/spawnalertshowplayercorpse") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlertShowPlayerCorpse();
+        }
+        else if (strcmp(a2, "/spawnalertshowpc") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlertShowPlayer();
+        }
+        else if (strcmp(a2, "/spawnalertshowpccorpse") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlertShowPlayerCorpse();
+        }
+        else if (strcmp(a2, "/spawnalertshownpc") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlertShowNpc();
+        }
+        else if (strcmp(a2, "/spawnalertshownpccorpse") == 0)
+        {
+            EQMACMQ_ToggleSpawnAlertShowNpcCorpse();
         }
 
         return EQMACMQ_REAL_CEverQuest__InterpretCmd(this_ptr, NULL, NULL);
@@ -13364,6 +13640,9 @@ DWORD WINAPI EQMACMQ_ThreadLoop(LPVOID param)
     DetourRemove((PBYTE)EQMACMQ_REAL_CDisplay__SetNameSpriteState, (PBYTE)EQMACMQ_DETOUR_CDisplay__SetNameSpriteState);
     DetourRemove((PBYTE)EQMACMQ_REAL_CDisplay__SetNameSpriteTint,  (PBYTE)EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint);
 
+    DetourRemove((PBYTE)EQMACMQ_REAL_CDisplay__CreatePlayerActor, (PBYTE)EQMACMQ_DETOUR_CDisplay__CreatePlayerActor);
+    DetourRemove((PBYTE)EQMACMQ_REAL_CDisplay__DeleteActor,       (PBYTE)EQMACMQ_DETOUR_CDisplay__DeleteActor);
+
     DetourRemove((PBYTE)EQMACMQ_REAL_EQ_Character__eqspa_movement_rate, (PBYTE)EQMACMQ_DETOUR_EQ_Character__eqspa_movement_rate);
 
     DetourRemove((PBYTE)EQMACMQ_REAL_EQ_Character__CastSpell, (PBYTE)EQMACMQ_DETOUR_EQ_Character__CastSpell);
@@ -13493,6 +13772,9 @@ DWORD WINAPI EQMACMQ_ThreadLoad(LPVOID param)
 
     EQMACMQ_REAL_CDisplay__SetNameSpriteState = (EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteState)DetourFunction((PBYTE)EQ_FUNCTION_CDisplay__SetNameSpriteState, (PBYTE)EQMACMQ_DETOUR_CDisplay__SetNameSpriteState);
     EQMACMQ_REAL_CDisplay__SetNameSpriteTint  = (EQ_FUNCTION_TYPE_CDisplay__SetNameSpriteTint) DetourFunction((PBYTE)EQ_FUNCTION_CDisplay__SetNameSpriteTint,  (PBYTE)EQMACMQ_DETOUR_CDisplay__SetNameSpriteTint);
+
+    EQMACMQ_REAL_CDisplay__CreatePlayerActor = (EQ_FUNCTION_TYPE_CDisplay__CreatePlayerActor)DetourFunction((PBYTE)EQ_FUNCTION_CDisplay__CreatePlayerActor, (PBYTE)EQMACMQ_DETOUR_CDisplay__CreatePlayerActor);
+    EQMACMQ_REAL_CDisplay__DeleteActor       = (EQ_FUNCTION_TYPE_CDisplay__DeleteActor)      DetourFunction((PBYTE)EQ_FUNCTION_CDisplay__DeleteActor,       (PBYTE)EQMACMQ_DETOUR_CDisplay__DeleteActor);
 
     EQMACMQ_REAL_EQ_Character__eqspa_movement_rate = (EQ_FUNCTION_TYPE_EQ_Character__eqspa_movement_rate)DetourFunction((PBYTE)EQ_FUNCTION_EQ_Character__eqspa_movement_rate, (PBYTE)EQMACMQ_DETOUR_EQ_Character__eqspa_movement_rate);
 
